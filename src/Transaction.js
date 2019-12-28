@@ -6,6 +6,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Button from 'react-bootstrap/Button';
+import Collapse from 'react-bootstrap/Collapse';
 
 export class UTXO {
 	constructor(script, amount, txn, index) {
@@ -38,6 +39,8 @@ class Hex extends React.Component {
 class Input extends React.Component {
 	constructor(props) {
 		super(props);
+        this.state = {};
+        this.state.open =false;
 	}
 	render() {
         const maybeDecode = (d, elt) => d ?
@@ -68,25 +71,34 @@ class Input extends React.Component {
 					</Row>
                     <Row>
                     <Button onClick={this.props.update}> Go </Button>
+                    <Button onClick={() => this.setState({open: !this.state.open})}
+                        aria-controls="input-data"
+                        aria-expanded={this.state.open}>
+                            Show More Infor
+                    </Button>
                     </Row>
 				</ListGroup.Item>
-				<ListGroup.Item>
-					<h4>Sequence</h4>
-					<Row>
-						<Col>
-                            {this.props.txinput.sequence == Transaction.DEFAULT_SEQUENCE ? "Disabled" : this.props.txinput.sequence}
-						</Col>
-					</Row>
-				</ListGroup.Item>
-                {script}
-				<ListGroup.Item>
-					<h4>Witness</h4>
-					<Row>
-						<Col xs={12}>
-							<ListGroup> {witness} </ListGroup>
-						</Col>
-					</Row>
-				</ListGroup.Item>
+                <Collapse in={this.state.open}>
+                    <div>
+                    <ListGroup.Item>
+                        <h4>Sequence</h4>
+                        <Row>
+                            <Col>
+                                {this.props.txinput.sequence == Transaction.DEFAULT_SEQUENCE ? "Disabled" : this.props.txinput.sequence}
+                            </Col>
+                        </Row>
+                    </ListGroup.Item>
+                    {script}
+                    <ListGroup.Item>
+                        <h4>Witness</h4>
+                        <Row>
+                            <Col xs={12}>
+                                <ListGroup> {witness} </ListGroup>
+                            </Col>
+                        </Row>
+                    </ListGroup.Item>
+                    </div>
+                </Collapse>
 			</ListGroup>
 		);
 	}
