@@ -1,5 +1,5 @@
 .App {
-  text-align: center;
+  height: 100%;
 }
 
 .App-logo {
@@ -35,4 +35,37 @@
   to {
     transform: rotate(360deg);
   }
+}
+.txhex {
+width : 100%;
+}
+.txcontainer {
+background-color: lightgrey;
+}
+.utxocontainer {
+background-color: lightgrey;
+}
+.viewer {
+height:50%;
+}
+
+.container-fluid {
+    height: 100%;
+}
+
+.container-fluid > .row {
+    height: 100%;
+}
+.App > .row {
+    height: 100%;
+}
+.App > .row > .col {
+    height: 100%;
+}
+.App > .row > div {
+    height: 100%;
+}
+
+.App > div {
+    height: 100%;
 }
