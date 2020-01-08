@@ -1,187 +1,101 @@
 
-import { DefaultNodeModel } from '@projectstorm/react-diagrams';
+import './Transaction.css';
+import { CustomNodeModel } from './custom_node/CustomNodeModel';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
 
-export class UTXO {
-	constructor(script, amount, txn, index) {
-		this.txid = txn.getTXID();
-		this.index = index;
-		this.script = script;
-		this.amount = amount;
-        this.spends = [];
-	}
-}
-export class UTXOModel extends DefaultNodeModel {
-	constructor(utxo, update, name, color, txn) {
-		super(name, color.get());
-		this.utxo = utxo;
-        this.txn = txn;
-		this.registerListener({
-			selectionChanged: update
-		});
-	}
-}
+import Hex from './Hex';
+import {call, keyFn} from './util';
+import {hash_to_hex} from './Hex';
+import {UTXOModel, UTXO } from './UTXO';
 
-class Hex extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        return (<code className="txhex" onClick={this.props.onClick}>{this.props.value} </code>)
-    }
-}
 class Input extends React.Component {
 	constructor(props) {
 		super(props);
         this.state = {};
         this.state.open =false;
+        this.hash= hash_to_hex(this.props.txinput.hash);
 	}
 	render() {
-        const maybeDecode = (d, elt) => d ?
-        Bitcoin.script.toASM(Bitcoin.script.decompile(elt)) : elt.toString('hex')
-		const witness = this.props.txinput.witness.map((elt,i) =>
-			<ListGroup.Item key={i}>
-				<Row>
-				<Col xs={1}>  </Col>
-				<Col> <Hex readOnly className="txhex" value={maybeDecode(i === this.props.txinput.witness.length -1, elt)}></Hex>
-				</Col>
-				</Row>
-			</ListGroup.Item>);
+        const maybeDecode = (d, elt) =>
+            d ?  Bitcoin.script.toASM(Bitcoin.script.decompile(elt)) : elt.toString('hex');
+		const witness = [];/*this.props.txinput.witness.map((elt,i) =>
+            (<ListGroup.Item key={i}>
+				<Hex readOnly className="txhex" value={maybeDecode(i === (this.props.txinput.witness.length -1), elt)}></Hex>
+			</ListGroup.Item>)
+        );*/
         const scriptValue = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txinput.script));;
         const script = this.props.txinput.script.length > 0 ?
-                <ListGroup.Item>
-                    <h4>Script</h4>
-                    <Row>
-                        <Col><Hex readOnly className="txhex" value={scriptValue}></Hex></Col>
-                    </Row>
-                </ListGroup.Item> : <ListGroup.Item> <h4> No Script </h4> </ListGroup.Item>;
+            <>
+            <h4>Script</h4>
+            <Hex readOnly className="txhex" value={scriptValue}></Hex>
+            </>: null;
+        const sequence =  this.props.txinput.sequence === Transaction.DEFAULT_SEQUENCE ? null :
+                        <h4>Sequence: {this.props.txinput.sequence} </h4>
+                    ;
 		return(
-			<ListGroup>
-				<ListGroup.Item>
+			<div>
 					<h4> OutPoint </h4>
-					<Row>
-						<Col><Hex readOnly className="txhex" value={this.props.txinput.hash.toString('hex')} /></Col>
-						<Col xs={1}>{this.props.txinput.index}</Col>
-					</Row>
-                    <Row>
-                    <Button onClick={this.props.update}> Go </Button>
-                    <Button onClick={() => this.setState({open: !this.state.open})}
+                    <h5>Hash</h5>
+                    <Hex readOnly className="txhex" value={this.hash} />
+                    <h5>N: {this.props.txinput.index} </h5>
+
+                    <ListGroup horizontal>
+                        <ListGroup.Item action variant="primary" onClick={this.props.update}>
+                        Go
+                        </ListGroup.Item>
+                        <ListGroup.Item action variant="secondary" onClick={() => this.setState({open: !this.state.open})}
                         aria-controls="input-data"
                         aria-expanded={this.state.open}>
-                            Show More Infor
-                    </Button>
-                    </Row>
-				</ListGroup.Item>
+                            {this.state.open? "Less" : "More"}...
+                        </ListGroup.Item>
+                    </ListGroup>
                 <Collapse in={this.state.open}>
                     <div>
-                    <ListGroup.Item>
-                        <h4>Sequence</h4>
-                        <Row>
-                            <Col>
-                                {this.props.txinput.sequence == Transaction.DEFAULT_SEQUENCE ? "Disabled" : this.props.txinput.sequence}
-                            </Col>
-                        </Row>
-                    </ListGroup.Item>
-                    {script}
-                    <ListGroup.Item>
+                        {sequence}
+                        {script}
                         <h4>Witness</h4>
-                        <Row>
-                            <Col xs={12}>
-                                <ListGroup> {witness} </ListGroup>
-                            </Col>
-                        </Row>
-                    </ListGroup.Item>
+                        {witness}
                     </div>
                 </Collapse>
-			</ListGroup>
+			</div>
 		);
 	}
 }
 
 class Output extends React.Component {
-	constructor(props) {
-		super(props);
-	}
 	render() {
         const script = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txoutput.script));
 
 		return(
-			<div>
-				<Row>
-				<Col> {this.props.txoutput.value/100e6} BTC </Col>
-				</Row>
-				<Row>
-				<Col> <Hex readOnly className="txhex" value={script}/></Col>
-				</Row>
-				<Row>
-                <Button onClick={this.props.update}> Go </Button>
-				</Row>
-			</div>
+			<>
+				<h4> {this.props.txoutput.value/100e6} BTC </h4>
+				<Hex readOnly className="txhex" value={script}/>
+                <ListGroup>
+                    <ListGroup.Item action variant="primary" onClick={this.props.update}> Go </ListGroup.Item>
+                </ListGroup>
+			</>
 		);
 	}
 }
-export class UTXOComponent extends React.Component  {
 
-	constructor(props) {
-		super(props);
-	}
-	render() {
-		if (!this.props.entity) return null;
-		if (!this.props.entity.utxo) return null;
-        const spends = this.props.entity.utxo.spends.map((elt, i) =>
-                <ListGroup.Item key={i}>
-                    <Hex value={elt.tx.getTXID()}/>
-                    <Button onClick={()=>this.props.update({entity: elt})}> Go</Button>
-            </ListGroup.Item>);
-		return(
-			<div>
-				<h2> UTXO </h2>
-            <Button onClick={this.props.hide_details}>Hide</Button>
-				<h3> Outpoint </h3>
-				<Row>
-					<Col> <Hex className="txhex" readOnly value={this.props.entity.utxo.txid.toString('hex')}/></Col>
-					<Col xs={1}> {this.props.entity.utxo.index} </Col>
-                    <Button onClick={()=>this.props.update({entity: this.props.entity.txn})}>Go</Button>
-				</Row>
-				<h3> Amount </h3>
-				<Row>
-					<Col> {this.props.entity.utxo.amount} </Col>
-				</Row>
-				<h3> Script</h3>
-				<Row>
-					<Col> <Hex className="txhex" readOnly value={this.props.entity.utxo.script.toString('hex')}/></Col>
-				</Row>
-				<h3>Spends</h3>
-				<Row>
-					<Col>
-                        <ListGroup>
-                            {spends}
-                        </ListGroup>
-                    </Col>
-				</Row>
-			</div>
-		);
-	}
-}
 Bitcoin.Transaction.prototype.getTXID = function() {
-		return this.getHash().slice(0).reverse().toString('hex');
-
+    const b = new Buffer(32);
+    this.getHash().copy(b);
+    b.reverse();
+    return b.toString('hex');
 }
 export class Transaction extends Bitcoin.Transaction {
-	constructor() {
-		super();
-	}
 }
 
-export class TransactionModel extends DefaultNodeModel {
+export class TransactionModel extends CustomNodeModel {
 	constructor(tx, update, name, color) {
-		super("txn "+ tx.getTXID().substr(0, 8) + " " + name, color.get());
+		super(tx.getTXID().substr(0, 16), name, color.get());
+        this.type = "txn";
+        this.broadcastable = false;
+        this.broadcastable_hook = false;
 		this.tx = tx;
         this.utxo_models = [];
         this.utxo_links = [];
@@ -203,57 +117,91 @@ export class TransactionModel extends DefaultNodeModel {
         this.utxo_links.map((x)=>model.removeLink(x));
         this.input_links.map((x)=>model.removeLink(x));
     }
+    broadcast() {
+        call("submit_raw_transaction", [this.tx.toHex()]);
+    }
+    is_broadcastable() {
+        return this.broadcastable;
+    }
+    set_broadcastable(b=true) {
+        if (this.broadcastable_hook !== false && b !== this.broadcastable)
+            this.broadcastable_hook(b);
+        this.broadcastable = b;
+    }
+    set_broadcastable_hook(hook=false) {
+        this.broadcastable_hook =hook;
+    }
+
+    consume_inputs(txn_models, inputs_map, txns, model) {
+        const to_clear = [];
+        this.tx.ins.forEach((inp) => {
+            const key = keyFn(inp);
+            const to_prune = inputs_map.get(key) || [];
+            to_prune.forEach((i)=> {
+                if (txn_models[i].tx !== this.tx) {
+                    txn_models[i].remove(model);
+                    to_clear.push(txn_models[i].tx);
+                }
+            });
+        });
+        while (to_clear.length) {
+            const tx = to_clear.pop();
+            // now remove children
+            for (let i = 0; i < tx.outs.length; ++i) {
+                const key = keyFn({hash: tx.getHash(), index:i});
+                const to_prune = inputs_map.get(key);
+
+                if (to_prune) {
+                    to_prune.forEach((x)=> txn_models[x].remove(model));
+                    to_clear.push(...to_prune.map((i) => txns[i]));
+                }
+            }
+        }
+    }
 }
 
 export class TransactionComponent extends React.Component {
 	constructor(props) {
 		super(props);
+        this.state = {};
+        this.state.broadcastable = this.props.entity.is_broadcastable();
+        this.props.entity.set_broadcastable_hook((b) => this.setState({broadcastable: b}));
 	}
+    static getDerivedStateFromProps(props, state) {
+        state.broadcastable = props.entity.is_broadcastable();
+    }
+
 	render() {
-		if (!this.props.entity) return null;
-		if (!this.props.entity.tx) return null;
+        const broadcast =
+            this.state.broadcastable ? <ListGroup.Item action variant="primary" onClick={() => this.props.entity.broadcast()}>Broadcast</ListGroup.Item> : null;
 		const outs = this.props.entity.tx.outs.map((o,i) =>
             <ListGroup.Item key={i}>
                 <Output txoutput={o} update={() => this.props.update({entity: this.props.entity.utxo_models[i]})}/>
             </ListGroup.Item>);
 		const ins = this.props.entity.tx.ins.map((o,i) =>
-            <ListGroup.Item key={i}>
+            <ListGroup.Item key="input-{i}">
                 <Input txinput={o} update={() => this.props.update({entity: this.props.find_tx_model(o.hash, o.index)})}/>
             </ListGroup.Item>);
 		return (
 
             <div>
 			<h2> Transaction </h2>
-            <Button onClick={this.props.consume_inputs}>Broadcast</Button>
-            <Button onClick={this.props.hide_details}>Hide</Button>
-			<ListGroup>
+			<ListGroup variant="flush">
+            <ListGroup horizontal>
+                {broadcast}
+                <ListGroup.Item action variant="secondary" onClick={this.props.hide_details}>Hide</ListGroup.Item>
+            </ListGroup>
+            <h3> TXID</h3>
 			<ListGroup.Item>
-			<Row>
-				<Col xs={1}><h3> TXID</h3></Col>
-			</Row>
-			<Row >
-			<Col> <Hex className="txhex" readOnly value={this.props.entity.tx.getTXID()}></Hex></Col>
-			</Row>
+			    <Hex className="txhex" readOnly value={this.props.entity.tx.getTXID()}></Hex>
 			</ListGroup.Item>
+            <h3> Inputs</h3>
+            {ins}
+            <h3>Outputs</h3>
+            {outs}
+            <h3> Tx Hex </h3>
 			<ListGroup.Item>
-				<h3> Inputs</h3>
-				<Row> <Col xs={12}><ListGroup>{ins}</ListGroup></Col></Row>
-			</ListGroup.Item>
-			<ListGroup.Item>
-				<h3>Outputs</h3>
-				<Row>
-					<Col xs={12}>
-						<ListGroup>{outs}</ListGroup>
-					</Col>
-			</Row>
-			</ListGroup.Item>
-			<ListGroup.Item>
-				<h3> Tx Hex </h3>
-				<Row>
-					<Col md={{ span: 10, offset: 1 }}>
-						<Hex value= {this.props.entity.tx.toHex()} readOnly className="txhex"> </Hex>
-					</Col>
-				</Row>
+                <Hex value= {this.props.entity.tx.toHex()} readOnly className="txhex"> </Hex>
 			</ListGroup.Item>
 			</ListGroup>
             </div>
