@@ -20,17 +20,12 @@ function preprocess_data(data) {
     let txns = data.program.map(k => Transaction.fromHex(k.hex));
     let txn_labels = data.program.map(k => k.label);
     let txn_colors = data.program.map(k => new NodeColor(k.color));
+    let utxo_labels = data.program.map(k => k.utxo_metadata || []);
 
-    let labels_to_widths = new Map();
-    labels_to_widths.set("create_tx", 50);
-    labels_to_widths.set("vault_to_vault", 50);
-    labels_to_widths.set("to_cold", 500);
-    labels_to_widths.set("to_hot", 500);
-    labels_to_widths.set("tree", 500);
-    return {txns: txns, labels_to_widths: labels_to_widths, txn_colors: txn_colors, txn_labels:txn_labels};
+    return {txns: txns,  txn_colors: txn_colors, txn_labels:txn_labels, utxo_labels};
 }
 function r2(update, obj) {
-    let {txns, labels_to_widths, txn_colors, txn_labels} =obj;
+    let {txns, txn_colors, txn_labels, utxo_labels} =obj;
 	let inputs_map = new Map();
 	for (let x = 0; x < txns.length; ++x) {
 		const txn = txns[x];
@@ -47,9 +42,8 @@ function r2(update, obj) {
 	for (let x = 0, count = 50; x < txns.length; ++x) {
 		const txn = txns[x];
         txid_map.set(txn.getTXID(), x);
-        const txn_model = new TransactionModel(txn, update, txn_labels[x], txn_colors[x]);
+        const txn_model = new TransactionModel(txn, update, txn_labels[x], txn_colors[x], utxo_labels[x]);
 		txn_models.push(txn_model);
-        const width = labels_to_widths.get(txn_labels[x]);
         const parent_hash = hash_to_hex(txn.ins[0].hash);
         const parent_idx = txid_map.get(parent_hash);
         if (parent_idx !== undefined) {

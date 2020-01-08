@@ -39,7 +39,6 @@ export class SpendLinkSegment extends React.Component {
     */
 	constructor(props) {
 		super(props);
-        console.log(props);
         // TODO: make link appear once, make percent_idx random
 		this.percent_idx = 0;
         this.mounted = false;

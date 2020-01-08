@@ -11,9 +11,9 @@ const client = new Client({
 
 /* GET users listing. */
 router.post('/', function(req, res, next) {
-    const {amounts} = req.body;
-    console.log(amounts);
-    client.command("sendmanycompacted", amounts).then((vault) =>
+    const {amounts, radix, gas} = req.body;
+    console.log(amounts, radix, gas);
+    client.command("sendmanycompacted", amounts, radix, gas).then((vault) =>
         res.json(vault)
     ).catch(console.log);
 });

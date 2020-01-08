@@ -162,7 +162,12 @@ class CreateBatchPayForm extends React.Component {
         }
         const amounts = new Map(this.form.amount.value.trim().split(/\r?\n/)
             .map(l => l.trim().split(" ")));
-        this.props.vaultman.create_batchpay({amounts:Object.fromEntries(amounts.entries())});
+        let radix = this.form.radix.valueAsNumber || 4;
+        if (radix === 0) {
+            radix = amounts.size;
+        }
+        let gas = this.form.gas.valueAsNumber || 0;
+        this.props.vaultman.create_batchpay({amounts:Object.fromEntries(amounts.entries()), radix, gas});
         this.props.hide();
 
     };
@@ -171,6 +176,13 @@ class CreateBatchPayForm extends React.Component {
                 <Form  onSubmit={this.handleSubmit.bind(this)}>
                     <Form.Control as="textarea" placeholder="bcrt1q0548jkmkzksch8hc367jm77up40yydqh87e3qa 1.4"
                         ref={(amt) => this.form.amount = amt} rows="6"/>
+                    <FormControl type="number" placeholder="Radix -- n for n, 1 for linear, 0 for packed, -n for at most n descendants" className=" mr-sm-1"
+                        ref={r => this.form.radix = r}
+                        min="-1" max="21000000" step="1"/>
+
+                    <FormControl type="number" placeholder="gas ports" className=" mr-sm-1"
+                        ref={r => this.form.gas = r}
+                        min="472" max="14610" step="1"/>
                     <Button  type="submit" >Submit</Button>
                 </Form>
 

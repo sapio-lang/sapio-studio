@@ -10,6 +10,7 @@ import Hex from './Hex';
 import {call, keyFn} from './util';
 import {hash_to_hex} from './Hex';
 import {UTXOModel, UTXO } from './UTXO';
+import {NodeColor } from './Vault';
 
 class Input extends React.Component {
 	constructor(props) {
@@ -91,7 +92,7 @@ export class Transaction extends Bitcoin.Transaction {
 }
 
 export class TransactionModel extends CustomNodeModel {
-	constructor(tx, update, name, color) {
+	constructor(tx, update, name, color, utxo_labels) {
 		super(tx.getTXID().substr(0, 16), name, color.get());
         this.type = "txn";
         this.broadcastable = false;
@@ -103,7 +104,9 @@ export class TransactionModel extends CustomNodeModel {
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = color.clone();
             subcolor.fade();
-            let utxo = new UTXOModel(new UTXO(tx.outs[y].script, tx.outs[y].value, tx, y), update, "utxo "+name + " " +tx.outs[y].value/100e6 + " BTC", subcolor, this);
+            console.log(utxo_labels[y]);
+            let metadata  = utxo_labels[y] || {color: subcolor.get(), label: "utxo " + name };
+            let utxo = new UTXOModel(new UTXO(tx.outs[y].script, tx.outs[y].value, tx, y), update, metadata.label +" " +tx.outs[y].value/100e6 + " BTC", new NodeColor(metadata.color), this);
             this.utxo_models.push(utxo);
             this.utxo_links.push(this.addOutPort('output ' + y).link(utxo.addInPort('create')));
         }
