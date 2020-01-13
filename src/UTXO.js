@@ -1,13 +1,7 @@
-
-import { DefaultNodeModel } from '@projectstorm/react-diagrams';
-import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Button from 'react-bootstrap/Button';
-import Collapse from 'react-bootstrap/Collapse';
 import Hex from './Hex';
+import {UTXONodeModel} from './utxo_node/UTXONodeModel';
 export class UTXO {
 	constructor(script, amount, txn, index) {
 		this.txid = txn.getTXID();
@@ -17,7 +11,7 @@ export class UTXO {
         this.spends = [];
 	}
 }
-export class UTXOModel extends DefaultNodeModel {
+export class UTXOModel extends UTXONodeModel {
 	constructor(utxo, update, name, color, txn) {
 		super(name, color.get());
 		this.utxo = utxo;

@@ -1,10 +1,7 @@
 import React from 'react';
 import './App.css';
-import * as Bitcoin from 'bitcoinjs-lib';
 
-import createEngine, { DiagramModel, DefaultNodeModel, DefaultPortModel, DagreEngine,
-    LinkModel, PathFindingLinkFactory,
-    RightAngleLinkModel
+import createEngine, { DiagramModel,
 } from '@projectstorm/react-diagrams';
 import { AbstractModelFactory, CanvasWidget } from '@projectstorm/react-canvas-core';
 
@@ -13,14 +10,13 @@ import {Vault, VaultBase} from './Vault';
 import {UTXOComponent} from './UTXO';
 import {TransactionComponent} from './Transaction';
 import {CustomNodeFactory} from './custom_node/CustomNodeFactory';
-import {call, keyFn} from './util';
+import {call} from './util';
 import {hash_to_hex} from './Hex';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
-import ListGroup from 'react-bootstrap/ListGroup';
 import Button from 'react-bootstrap/Button';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -29,8 +25,8 @@ import FormControl from 'react-bootstrap/FormControl';
 import Modal from 'react-bootstrap/Modal';
 import Collapse from 'react-bootstrap/Collapse';
 import Tab from 'react-bootstrap/Tab';
-import Tabs from 'react-bootstrap/Tabs';
 import {SpendLinkFactory} from "./SpendLink"
+import {UTXONodeFactory} from './utxo_node/UTXONodeFactory';
 
 
 class VaultManager {
@@ -47,7 +43,7 @@ class VaultManager {
             this.app.vault.process_finality(is_tx_confirmed, this.app.model);
             this.app.forceUpdate();
         }
-        setTimeout(this.periodic_check.bind(this), 5000)
+        setTimeout(this.periodic_check.bind(this), 1000)
     }
     async create_vault(args) {
         call("/create_vault", args)
@@ -315,6 +311,7 @@ class App extends React.Component {
         this.state.entity = {type: null};
         this.state.details = false;
         this.engine = createEngine();
+        this.engine.getNodeFactories().registerFactory(new UTXONodeFactory());
         this.engine.getNodeFactories().registerFactory(new CustomNodeFactory());
         this.engine.getLinkFactories().registerFactory(new SpendLinkFactory());
         this.model = new DiagramModel();

@@ -5,16 +5,15 @@ import {SpendPortModel} from '../SpendLink';
 /**
  * Example of a custom model using pure javascript
  */
-export class CustomNodeModel extends NodeModel {
-    constructor(name, purpose, color, options={}) {
+export class UTXONodeModel extends NodeModel {
+    constructor(name, color, options={}) {
         super({
             name,
             color,
-            type: 'custom-node',
+            type: 'utxo-node',
             ...options
         });
         this.color = color || 'red';
-        this.purpose = purpose;
         this.portsOut = [];
         this.portsIn = [];
         this.name= name;
@@ -60,7 +59,7 @@ export class CustomNodeModel extends NodeModel {
     }
     addInPort(label, after) {
         after = after || true;
-        const p = new SpendPortModel({
+        const p = new DefaultPortModel({
             in: true,
             name: label,
             label: label,
@@ -74,7 +73,7 @@ export class CustomNodeModel extends NodeModel {
 
     addOutPort(label, after){
         after = after || true;
-        const p = new DefaultPortModel({
+        const p = new SpendPortModel({
             in: false,
             name: label,
             label: label,

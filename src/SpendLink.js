@@ -1,14 +1,8 @@
 import {
 	DefaultPortModel,
-    PortModel,
-    PortModelOptions,
-    PortModelAlignment,
-    PortModelGenerics,
 	DefaultLinkFactory,
 	DefaultLinkModel,
-    LinkModel
 } from '@projectstorm/react-diagrams';
-import { AbstractModelFactory } from '@projectstorm/react-canvas-core';
 import { DeserializeEvent} from '@projectstorm/react-canvas-core';
 import * as React from 'react';
 
