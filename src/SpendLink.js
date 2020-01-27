@@ -10,7 +10,7 @@ export class SpendLinkModel extends DefaultLinkModel {
 	constructor() {
 		super({
 			type: 'spend',
-			width: 10
+			width: 5
 		});
 	}
 }

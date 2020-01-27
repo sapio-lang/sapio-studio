@@ -1,6 +1,7 @@
 import { DefaultPortModel, NodeModel } from '@projectstorm/react-diagrams';
 import { NodeModelGenerics, PortModelAlignment } from '@projectstorm/react-diagrams-core';
 import {SpendPortModel} from '../SpendLink';
+import {OutputPortModel} from '../OutputLink';
 
 /**
  * Example of a custom model using pure javascript
@@ -74,7 +75,7 @@ export class CustomNodeModel extends NodeModel {
 
     addOutPort(label, after){
         after = after || true;
-        const p = new DefaultPortModel({
+        const p = new OutputPortModel({
             in: false,
             name: label,
             label: label,

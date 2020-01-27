@@ -106,7 +106,7 @@ export class TransactionModel extends CustomNodeModel {
             subcolor.fade();
             console.log(utxo_labels[y]);
             let metadata  = utxo_labels[y] || {color: subcolor.get(), label:  name };
-            let utxo = new UTXOModel(new UTXO(tx.outs[y].script, tx.outs[y].value, tx, y), update, metadata.label +" " +tx.outs[y].value/100e6 + " BTC", new NodeColor(metadata.color), this);
+            let utxo = new UTXOModel(new UTXO(tx.outs[y].script, tx.outs[y].value, tx, y), update, metadata.label, new NodeColor(metadata.color), this);
             this.utxo_models.push(utxo);
             this.utxo_links.push(this.addOutPort('output ' + y).link(utxo.addInPort('create')));
         }

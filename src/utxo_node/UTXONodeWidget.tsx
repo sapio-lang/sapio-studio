@@ -106,7 +106,7 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 				confirmed={this.props.node.isConfirmed()}
 				background={this.props.node.color}>
 				<Title>
-					<TitleName>UTXO</TitleName>
+					<TitleName>UTXO {this.props.node.value/100e6} BTC</TitleName>
 				</Title>
 				<Ports>
 					<PortsContainer>{_.map(this.props.node.getInPorts(), this.generatePort)}</PortsContainer>

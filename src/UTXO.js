@@ -13,7 +13,7 @@ export class UTXO {
 }
 export class UTXOModel extends UTXONodeModel {
 	constructor(utxo, update, name, color, txn) {
-		super(name, color.get());
+		super(name, color.get(), utxo.amount);
 		this.utxo = utxo;
         this.txn = txn;
 		this.registerListener({

@@ -6,7 +6,7 @@ import {SpendPortModel} from '../SpendLink';
  * Example of a custom model using pure javascript
  */
 export class UTXONodeModel extends NodeModel {
-    constructor(name, color, options={}) {
+    constructor(name, color, value, options={}) {
         super({
             name,
             color,
@@ -16,6 +16,7 @@ export class UTXONodeModel extends NodeModel {
         this.color = color || 'red';
         this.portsOut = [];
         this.portsIn = [];
+        this.value = value;
         this.name= name;
         this.confirmed=false;
 
