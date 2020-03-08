@@ -104,7 +104,6 @@ export class TransactionModel extends CustomNodeModel {
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = color.clone();
             subcolor.fade();
-            console.log(utxo_labels[y]);
             let metadata  = utxo_labels[y] || {color: subcolor.get(), label:  name };
             let utxo = new UTXOModel(new UTXO(tx.outs[y].script, tx.outs[y].value, tx, y), update, metadata.label, new NodeColor(metadata.color), this);
             this.utxo_models.push(utxo);

@@ -118,7 +118,7 @@ class CreateVaultForm extends React.Component {
         if (form.checkValidity() === false) {
             event.stopPropagation();
         }
-        this.props.vaultman.create_vault({amount:this.form.amount.valueAsNumber, steps:this.form.steps.valueAsNumber, step_period:this.form.steps.valueAsNumber, maturity:this.form.maturity.valueAsNumber});
+        this.props.vaultman.create_vault({amount:this.form.amount.valueAsNumber, steps:this.form.steps.valueAsNumber, step_period:this.form.step_period.valueAsNumber, maturity:this.form.maturity.valueAsNumber});
         this.props.hide();
 
     };
@@ -158,11 +158,16 @@ class CreateBatchPayForm extends React.Component {
         }
         const amounts = new Map(this.form.amount.value.trim().split(/\r?\n/)
             .map(l => l.trim().split(" ")));
-        let radix = this.form.radix.valueAsNumber || 4;
-        if (radix === 0) {
-            radix = amounts.size;
+        let radix = this.form.radix.valueAsNumber;
+        console.log("radix " +radix);
+        if (Number.isNaN(radix)) {
+            radix = 4;
         }
-        const gas = this.form.gas.valueAsNumber || 0;
+        console.log("radix " +radix);
+        let gas = this.form.gas.valueAsNumber;
+        if (Number.isNaN(gas)){
+            gas = 0;
+        }
         const pairing_mode = this.form.pairing_mode.value;
         this.props.vaultman.create_batchpay({amounts:Object.fromEntries(amounts.entries()), radix, gas, pairing_mode});
         this.props.hide();

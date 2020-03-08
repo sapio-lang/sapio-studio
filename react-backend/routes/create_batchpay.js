@@ -16,7 +16,6 @@ client.methods.sendmanycompacted =  { features: {}, supported: true };
 router.post('/', function(req, res, next) {
     const {amounts, radix, gas, pairing_mode} = req.body;
     console.log(amounts, radix, gas, pairing_mode);
-    console.log(client.methods);
     client.command("sendmanycompacted", {amounts, radix, gas, pairing_mode}).then((vault) =>
         res.json(vault)
     ).catch(console.log);
