@@ -46,7 +46,7 @@ class VaultManager {
         setTimeout(this.periodic_check.bind(this), 1000)
     }
     async create_vault(args) {
-        call("/create_vault", args)
+        call("/backend/create_vault", args)
             .then(data => new Vault(this.app.update_viewer.bind(this.app), data))
             .then(async vault => {
                 this.app.vault.unload(this.app.model);
@@ -61,7 +61,7 @@ class VaultManager {
     }
 
     async create_batchpay(args) {
-        call("/create_batchpay", args)
+        call("/backend/create_batchpay", args)
             .then(data => {
                 return new Vault(this.app.update_viewer.bind(this.app), data);
             })
@@ -100,7 +100,7 @@ class VaultManager {
             .filter((tm) => tm.is_broadcastable())
             .map((tm)=>tm.tx.getTXID());
         if (txids.length > 0)
-            return await call("/get_transactions", txids);
+            return await call("/backend/get_transactions", txids);
         return [];
     }
 }
