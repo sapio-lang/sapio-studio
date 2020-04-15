@@ -21,6 +21,7 @@ import {SpendLinkFactory} from "./SpendLink"
 import {UTXONodeFactory} from './utxo_node/UTXONodeFactory';
 import { VaultManager } from './VaultManager';
 import { AppNavbar } from "./AppNavbar";
+import {CompilerServer} from "./ContractCompilerServer";
 
 
 class App extends React.Component {
@@ -46,6 +47,10 @@ class App extends React.Component {
         this.vaultman = new VaultManager(this);
         this.vaultman.create_vault({amount:1, steps:10, maturity:5, step_period:1})
         this.redistributeFn = () => null;
+
+
+        /* Socket Functionality */
+        this.cm = new CompilerServer();
     };
 
 
