@@ -26,9 +26,11 @@ export class CreateVaultModal extends React.Component {
             let args = this.props.dynamic_forms[option];
             tab_options.push((
 
-                    <Tab.Pane eventKey="{key}" title="{option}">
+                    <Tab.Pane eventKey={key} title={option}>
                         <MenuForm hide={this.props.hide} vaultman={this.props.vaultman} 
-                        args = {args} />
+                        args = {args} 
+                        type={option}
+                        compiler={this.props.compiler}/>
                     </Tab.Pane>
             ));
             counter++;

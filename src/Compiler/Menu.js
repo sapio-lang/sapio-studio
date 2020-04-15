@@ -17,11 +17,18 @@ export class MenuForm extends React.Component {
         this.form = {};
     }
     handleSubmit(event) {
+        const compiler = this.props.compiler;
         event.preventDefault();
         const form = event.currentTarget;
         if (form.checkValidity() === false) {
             event.stopPropagation();
         }
+        let contract = {};
+        for (let arg in this.props.args) {
+            contract[arg] = this.form[arg].value;
+        }
+        console.log(contract);
+        compiler.create(this.props.type, contract);
         /*
         const amounts = new Map(this.form.amount.value.trim().split(/\r?\n/)
             .map(l => l.trim().split(" ")));
@@ -38,6 +45,7 @@ export class MenuForm extends React.Component {
         const pairing_mode = this.form.pairing_mode.value;
         this.props.vaultman.create_batchpay({ amounts: Object.fromEntries(amounts.entries()), radix, gas, pairing_mode });
         */
+
         this.props.hide();
     }
     render() {
@@ -47,7 +55,10 @@ export class MenuForm extends React.Component {
             form_groups.push((<Form.Group>
                 <Form.Label> {arg} </Form.Label>
                 <Form.Label> {type} </Form.Label>
-                <Form.Control as="textarea" placeholder="bcrt1q0548jkmkzksch8hc367jm77up40yydqh87e3qa 1.4" ref={(amt) => this.form.amount = amt} rows="6" />
+                <Form.Control as="textarea"
+                placeholder="bcrt1q0548jkmkzksch8hc367jm77up40yydqh87e3qa 1.4"
+                ref={(amt) => this.form[arg]= amt}
+                rows="1" />
             </Form.Group>));
         }
         return (<Form onSubmit={this.handleSubmit.bind(this)}>

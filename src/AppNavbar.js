@@ -22,8 +22,11 @@ export class AppNavbar extends React.Component {
                     View
                 </Nav.Link>
             </Nav>
-            <CreateVaultModal show={this.state.modal_create} hide={() => this.setState({ modal_create: false })} vaultman={this.props.vaultman} 
-            dynamic_forms={this.props.dynamic_forms}/>
+            <CreateVaultModal
+                show={this.state.modal_create} hide={() => this.setState({ modal_create: false })}
+                vaultman={this.props.vaultman} 
+                compiler={this.props.compiler}
+                dynamic_forms={this.props.dynamic_forms}/>
             <ViewVaultModal show={this.state.modal_view} hide={() => this.setState({ modal_view: false })} vaultman={this.props.vaultman} />
 
 

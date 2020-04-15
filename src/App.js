@@ -97,7 +97,10 @@ class App extends React.Component {
         return (
             <div className="App">
                 <Container fluid>
-                    <AppNavbar vaultman={this.vaultman} dynamic_forms={this.state.dynamic_forms}/>
+                    <AppNavbar
+                        vaultman={this.vaultman}
+                        dynamic_forms={this.state.dynamic_forms}
+                        compiler={this.cm} />
                     <Row>
                         <Col xs={this.state.details? 6: 12}
                             sm={this.state.details? 7: 12}
