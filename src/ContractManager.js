@@ -24,7 +24,7 @@ function preprocess_data(data) {
 
     return {txns: txns,  txn_colors: txn_colors, txn_labels:txn_labels, utxo_labels};
 }
-function r2(update, obj) {
+function process_data(update, obj) {
     let {txns, txn_colors, txn_labels, utxo_labels} =obj;
 	let inputs_map = new Map();
 	for (let x = 0; x < txns.length; ++x) {
@@ -89,7 +89,7 @@ export class ContractModel extends ContractBase {
         this.obj = preprocess_data(obj);
         this.txns = this.obj.txns;
         let {inputs_map, utxo_models, txn_models, txid_map}=
-            r2(update_viewer, this.obj);
+            process_data(update_viewer, this.obj);
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
