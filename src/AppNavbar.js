@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
-import { CreateVaultModal, ViewVaultModal } from './VaultManager';
+import { CreateVaultModal, ViewVaultModal } from "./CreateVaultModal";
 export class AppNavbar extends React.Component {
     constructor(props) {
         super(props);
