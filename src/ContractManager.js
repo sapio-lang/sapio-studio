@@ -69,7 +69,7 @@ function r2(update, obj) {
     return {inputs_map:inputs_map, utxo_models:to_add, txn_models:txn_models, txid_map:txid_map};
 }
 
-export class VaultBase {
+export class ContractBase {
     constructor() {
         this.utxo_models = [];
         this.inputs_map = new Map();
@@ -83,7 +83,7 @@ export class VaultBase {
 
     }
 }
-export class Vault extends VaultBase {
+export class ContractModel extends ContractBase {
     constructor(update_viewer, obj) {
         super();
         this.obj = preprocess_data(obj);
