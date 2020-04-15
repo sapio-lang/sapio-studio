@@ -5,7 +5,8 @@ import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import Modal from 'react-bootstrap/Modal';
 import Tab from 'react-bootstrap/Tab';
-import { CreateVaultForm, CreateBatchPayForm } from './CreateVaultForm';
+import { CreateVaultForm } from './forms/CreateVaultForm';
+import { CreateBatchPayForm } from "./forms/CreateBatchPayForm";
 export class CreateVaultModal extends React.Component {
     constructor(props) {
         super(props);
