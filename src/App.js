@@ -21,7 +21,7 @@ import {SpendLinkFactory} from "./SpendLink"
 import {UTXONodeFactory} from './utxo_node/UTXONodeFactory';
 import { VaultManager } from './VaultManager';
 import { AppNavbar } from "./AppNavbar";
-import {CompilerServer} from "./ContractCompilerServer";
+import {CompilerServer} from "./Compiler/ContractCompilerServer";
 
 
 class App extends React.Component {
@@ -30,6 +30,7 @@ class App extends React.Component {
         this.state = {};
         this.state.entity = {type: null};
         this.state.details = false;
+        this.state.dynamic_forms = {};
         this.engine = createEngine();
         this.engine.getNodeFactories().registerFactory(new UTXONodeFactory());
         this.engine.getNodeFactories().registerFactory(new CustomNodeFactory());
@@ -50,7 +51,7 @@ class App extends React.Component {
 
 
         /* Socket Functionality */
-        this.cm = new CompilerServer();
+        this.cm = new CompilerServer(null, this);
     };
 
 
@@ -96,7 +97,7 @@ class App extends React.Component {
         return (
             <div className="App">
                 <Container fluid>
-                    <AppNavbar vaultman={this.vaultman}/>
+                    <AppNavbar vaultman={this.vaultman} dynamic_forms={this.state.dynamic_forms}/>
                     <Row>
                         <Col xs={this.state.details? 6: 12}
                             sm={this.state.details? 7: 12}
