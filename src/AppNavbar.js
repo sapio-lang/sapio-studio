@@ -11,7 +11,7 @@ export class AppNavbar extends React.Component {
     }
     render() {
         return (<Navbar>
-            <Navbar.Brand> VaultMan </Navbar.Brand>
+            <Navbar.Brand> Sapio Explorer </Navbar.Brand>
 
             <Nav className="justify-content-end w-100">
                 <Nav.Link eventKey="create" onSelect={() => this.setState({ modal_create: true })} aria-controls="create-vault-form" aria-expanded={this.state.modal_create}>
