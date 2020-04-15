@@ -6,7 +6,7 @@ import createEngine, { DiagramModel,
 import { AbstractModelFactory, CanvasWidget } from '@projectstorm/react-canvas-core';
 
 import { DemoCanvasWidget } from './DemoCanvasWidget.tsx';
-import {Vault, VaultBase} from './Vault';
+import {Vault, VaultBase} from './ContractManager';
 import {UTXOComponent} from './UTXO';
 import {TransactionComponent} from './Transaction';
 import {CustomNodeFactory} from './custom_node/CustomNodeFactory';

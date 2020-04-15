@@ -10,7 +10,7 @@ import Hex from './Hex';
 import {call, keyFn} from './util';
 import {hash_to_hex} from './Hex';
 import {UTXOModel, UTXO } from './UTXO';
-import {NodeColor } from './Vault';
+import {NodeColor } from './ContractManager';
 
 class Input extends React.Component {
 	constructor(props) {
