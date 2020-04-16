@@ -1,4 +1,3 @@
-import FormControl from 'react-bootstrap/FormControl';
 export class CompilerServer {
     constructor(location, app) {
         // TODO: Fix!

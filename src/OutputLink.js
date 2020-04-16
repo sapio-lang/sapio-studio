@@ -1,9 +1,4 @@
-import {
-	DefaultPortModel,
-	DefaultLinkFactory,
-	DefaultLinkModel,
-} from '@projectstorm/react-diagrams';
-import { DeserializeEvent} from '@projectstorm/react-canvas-core';
+import { DefaultLinkFactory, DefaultLinkModel, DefaultPortModel } from '@projectstorm/react-diagrams';
 import * as React from 'react';
 
 export class OutputLinkModel extends DefaultLinkModel {

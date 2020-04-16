@@ -1,6 +1,6 @@
 import { ContractModel } from './ContractManager';
-import { call } from './util';
 import { hash_to_hex } from './Hex';
+import { call } from './util';
 export class BitcoinNodeManager {
     constructor(app) {
         this.app = app;

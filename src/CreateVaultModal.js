@@ -1,11 +1,11 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
-import Nav from 'react-bootstrap/Nav';
 import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import Modal from 'react-bootstrap/Modal';
+import Nav from 'react-bootstrap/Nav';
 import Tab from 'react-bootstrap/Tab';
-import {MenuForm} from './Compiler/Menu';
+import { MenuForm } from './Compiler/Menu';
 export class CreateContractModal extends React.Component {
     constructor(props) {
         super(props);
@@ -17,21 +17,21 @@ export class CreateContractModal extends React.Component {
         let counter = 0;
         let default_key = null;
         for (let option in this.props.dynamic_forms) {
-            let key = "dyanimic_form_"+option+ counter;
+            let key = "dyanimic_form_" + option + counter;
             default_key = default_key || key;
             nav_options.push((
-            <Nav.Item>
-                <Nav.Link eventKey={key}> {option} </Nav.Link>
-            </Nav.Item>));
+                <Nav.Item>
+                    <Nav.Link eventKey={key}> {option} </Nav.Link>
+                </Nav.Item>));
             let args = this.props.dynamic_forms[option];
             tab_options.push((
 
-                    <Tab.Pane eventKey={key} title={option}>
-                        <MenuForm hide={this.props.hide} bitcoin_node_manager={this.props.bitcoin_node_manager} 
-                        args = {args} 
+                <Tab.Pane eventKey={key} title={option}>
+                    <MenuForm hide={this.props.hide} bitcoin_node_manager={this.props.bitcoin_node_manager}
+                        args={args}
                         type={option}
-                        compiler={this.props.compiler}/>
-                    </Tab.Pane>
+                        compiler={this.props.compiler} />
+                </Tab.Pane>
             ));
             counter++;
         }

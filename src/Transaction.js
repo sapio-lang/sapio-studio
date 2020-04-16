@@ -1,16 +1,15 @@
 
-import './Transaction.css';
-import { CustomNodeModel } from './custom_node/CustomNodeModel';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import ListGroup from 'react-bootstrap/ListGroup';
 import Collapse from 'react-bootstrap/Collapse';
+import ListGroup from 'react-bootstrap/ListGroup';
+import { NodeColor } from './ContractManager';
+import { CustomNodeModel } from './custom_node/CustomNodeModel';
+import Hex, { hash_to_hex } from './Hex';
+import './Transaction.css';
+import { call, keyFn } from './util';
+import { UTXO, UTXOModel } from './UTXO';
 
-import Hex from './Hex';
-import {call, keyFn} from './util';
-import {hash_to_hex} from './Hex';
-import {UTXOModel, UTXO } from './UTXO';
-import {NodeColor } from './ContractManager';
 
 class Input extends React.Component {
 	constructor(props) {

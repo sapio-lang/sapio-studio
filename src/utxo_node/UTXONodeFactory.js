@@ -1,7 +1,7 @@
+import { AbstractReactFactory } from '@projectstorm/react-canvas-core';
 import * as React from 'react';
 import { UTXONodeModel } from './UTXONodeModel';
 import { UTXONodeWidget } from './UTXONodeWidget';
-import { AbstractReactFactory } from '@projectstorm/react-canvas-core';
 
 export class UTXONodeFactory extends AbstractReactFactory {
 	constructor() {

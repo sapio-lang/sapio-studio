@@ -1,6 +1,6 @@
 import React from 'react';
-import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
 import { CreateContractModal, ViewContractModal } from "./CreateVaultModal";
 export class AppNavbar extends React.Component {
     constructor(props) {
@@ -33,10 +33,10 @@ export class AppNavbar extends React.Component {
             <CreateContractModal
                 show={this.state.modal_create}
                 hide={() => this.setState({ modal_create: false })}
-                bitcoin_node_manager={this.props.bitcoin_node_manager} 
+                bitcoin_node_manager={this.props.bitcoin_node_manager}
                 compiler={this.props.compiler}
-                dynamic_forms={this.props.dynamic_forms}/>
-            <ViewContractModal 
+                dynamic_forms={this.props.dynamic_forms} />
+            <ViewContractModal
                 show={this.state.modal_view}
                 hide={() => this.setState({ modal_view: false })}
                 bitcoin_node_manager={this.props.bitcoin_node_manager} />

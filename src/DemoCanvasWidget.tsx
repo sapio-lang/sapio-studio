@@ -1,7 +1,6 @@
-import * as React from 'react';
 import styled from '@emotion/styled';
-import { DiagramModel, DagreEngine, DiagramEngine,
-} from '@projectstorm/react-diagrams';
+import { DagreEngine, DiagramEngine, DiagramModel } from '@projectstorm/react-diagrams';
+import * as React from 'react';
 
 export interface DemoCanvasWidgetProps {
     model: DiagramModel;

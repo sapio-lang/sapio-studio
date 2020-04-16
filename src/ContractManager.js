@@ -1,7 +1,5 @@
-import {Transaction, TransactionModel} from './Transaction';
-import {keyFn} from "./util";
-import {SpendPortModel} from "./SpendLink";
-import { PortModelAlignment } from '@projectstorm/react-diagrams-core';
+import { Transaction, TransactionModel } from './Transaction';
+import { keyFn } from "./util";
 export class NodeColor {
     constructor(c) {
         this.c = c;

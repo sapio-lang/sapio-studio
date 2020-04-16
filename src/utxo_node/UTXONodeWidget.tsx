@@ -1,10 +1,10 @@
-import './Ants.css';
-import * as React from 'react';
-import * as _ from 'lodash';
-import { DiagramEngine } from '@projectstorm/react-diagrams-core';
-import { DefaultPortLabel } from '@projectstorm/react-diagrams';
-import { UTXONodeModel } from './UTXONodeModel';
 import styled from '@emotion/styled';
+import { DefaultPortLabel } from '@projectstorm/react-diagrams';
+import { DiagramEngine } from '@projectstorm/react-diagrams-core';
+import * as _ from 'lodash';
+import * as React from 'react';
+import './Ants.css';
+import { UTXONodeModel } from './UTXONodeModel';
 //import { css } from '@emotion/core';
 
 
