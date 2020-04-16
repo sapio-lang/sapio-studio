@@ -1,7 +1,7 @@
 import { ContractModel } from './ContractManager';
 import { call } from './util';
 import { hash_to_hex } from './Hex';
-export class VaultManager {
+export class BitcoinNodeManager {
     constructor(app) {
         this.app = app;
         this.confirmed_txs = new Set();

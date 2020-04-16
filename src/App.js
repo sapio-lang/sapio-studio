@@ -19,7 +19,7 @@ import Container from 'react-bootstrap/Container';
 import Collapse from 'react-bootstrap/Collapse';
 import {SpendLinkFactory} from "./SpendLink"
 import {UTXONodeFactory} from './utxo_node/UTXONodeFactory';
-import { VaultManager } from './VaultManager';
+import { BitcoinNodeManager } from './BitcoinNode';
 import { AppNavbar } from "./AppNavbar";
 import {CompilerServer} from "./Compiler/ContractCompilerServer";
 
@@ -45,7 +45,7 @@ class App extends React.Component {
         this.form = {};
         this.state.modal_create = false;
         this.state.modal_view = false;
-        this.vaultman = new VaultManager(this);
+        this.vaultman = new BitcoinNodeManager(this);
         this.vaultman.create_vault({amount:1, steps:10, maturity:5, step_period:1})
         this.redistributeFn = () => null;
 
