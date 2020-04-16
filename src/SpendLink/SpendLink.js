@@ -16,7 +16,38 @@ export class SpendPortModel extends DefaultPortModel {
 		return new SpendLinkModel();
 	}
 }
-const percentages = Array.from(Array(101).keys()).map(x => x/100.0);
+const all_nodes = new Map();
+let unique_key = 0;
+let percent_idx = 0;
+function update_loop() {
+	const percentage = percent_idx/100.0;
+	for (const [k, node] of all_nodes) {
+		if (!node.circle || !node.path) {
+			continue;
+		}
+		const point = node.path.getPointAtLength(node.path.getTotalLength() * percentage);
+		node.color = "orange";
+		node.x = point.x;
+		node.y = point.y;
+
+	}
+	percent_idx = (percent_idx + 1) % 101;
+	setTimeout(update_loop, 1000 / 60);
+};
+update_loop();
+function animation_loop() {
+	for (const [k, node] of all_nodes) {
+		if (!node.circle || !node.path) {
+			continue;
+		}
+		node.circle.setAttribute("fill", node.color);
+		node.circle.setAttribute('cx', node.x);
+		node.circle.setAttribute('cy', node.y);
+	}
+	requestAnimationFrame(animation_loop)
+};
+animation_loop();
+
 export class SpendLinkSegment extends React.Component {
     /*
 	path: SVGPathElement | null;
@@ -29,38 +60,23 @@ export class SpendLinkSegment extends React.Component {
 	constructor(props) {
 		super(props);
         // TODO: make link appear once, make percent_idx random
-		this.percent_idx = 0;
         this.mounted = false;
         this.circle = null;
-        this.path = null;
-		this.callback = () => {
-			if (!this.circle || !this.path) {
-				return;
-			}
-
-
-			let point = this.path.getPointAtLength(this.path.getTotalLength() * (percentages[this.percent_idx]));
-
-			this.circle.setAttribute('cx', point.x);
-			this.circle.setAttribute('cy', point.y);
-			this.percent_idx += 1;
-			if (this.percent_idx > 100) {
-				this.percent_idx = 0;
-			}
-
-			if (this.mounted) {
-				requestAnimationFrame(this.callback);
-			}
-		};
+		this.path = null;
+		this.x = 0;
+		this.y = 0;
+		this.color = "none";
+		this.key = unique_key++;
+		all_nodes.set(this.key, this);
 	}
 
 	componentDidMount() {
 		this.mounted = true;
-		requestAnimationFrame(this.callback);
 	}
 
 	componentWillUnmount() {
 		this.mounted = false;
+		all_nodes.delete(this.key);
 	}
 
 	render() {
