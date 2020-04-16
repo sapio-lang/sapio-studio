@@ -40,12 +40,12 @@ class App extends React.Component {
         this.model.setLocked(true);
         this.engine.setModel(this.model);
 
-        this.vault = new ContractBase();
-        this.state.vault = this.vault;
+        this.current_contract = new ContractBase();
+        this.state.current_contract = this.current_contract;
         this.form = {};
         this.state.modal_create = false;
         this.state.modal_view = false;
-        this.vaultman = new BitcoinNodeManager(this);
+        this.bitcoin_node_manager = new BitcoinNodeManager(this);
         this.redistributeFn = () => null;
 
 
@@ -79,9 +79,9 @@ class App extends React.Component {
                                     hide_details={this.hide_details.bind(this)}
                                     update={this.update_viewer.bind(this)}
                                     find_tx_model={(txid, n) => {
-                                        const idx = this.state.vault.txid_map.get(hash_to_hex(txid));
+                                        const idx = this.state.current_contract.txid_map.get(hash_to_hex(txid));
                                         if (idx === undefined) return null;
-                                        return this.state.vault.txn_models[idx].utxo_models[n];
+                                        return this.state.current_contract.txn_models[idx].utxo_models[n];
                                     }
                                     }
                                 />
@@ -97,7 +97,7 @@ class App extends React.Component {
             <div className="App">
                 <Container fluid>
                     <AppNavbar
-                        vaultman={this.vaultman}
+                        bitcoin_node_manager={this.bitcoin_node_manager}
                         dynamic_forms={this.state.dynamic_forms}
                         compiler={this.cm} />
                     <Row>

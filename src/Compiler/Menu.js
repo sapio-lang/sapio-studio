@@ -30,7 +30,7 @@ export class MenuForm extends React.Component {
         }
         console.log(contract);
         compiler.create(this.props.type, contract,
-            this.props.vaultman.load_new_model.bind(this.props.vaultman));
+            this.props.bitcoin_node_manager.load_new_model.bind(this.props.bitcoin_node_manager));
 
         this.props.hide();
     }
