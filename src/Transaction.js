@@ -4,7 +4,7 @@ import React from 'react';
 import Collapse from 'react-bootstrap/Collapse';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { NodeColor } from './ContractManager';
-import { CustomNodeModel } from './custom_node/CustomNodeModel';
+import { CustomNodeModel } from './DiagramComponents/custom_node/CustomNodeModel';
 import Hex, { hash_to_hex } from './Hex';
 import './Transaction.css';
 import { call, keyFn } from './util';

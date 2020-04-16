@@ -11,10 +11,10 @@ import { AppNavbar } from "./AppNavbar";
 import { BitcoinNodeManager } from './BitcoinNode';
 import { CompilerServer } from "./Compiler/ContractCompilerServer";
 import { ContractBase, ContractModel } from './ContractManager';
-import { CustomNodeFactory } from './custom_node/CustomNodeFactory';
+import { CustomNodeFactory } from './DiagramComponents/custom_node/CustomNodeFactory';
 import { DemoCanvasWidget } from './DemoCanvasWidget.tsx';
-import { SpendLinkFactory } from "./SpendLink/SpendLinkFactory";
-import { UTXONodeFactory } from './utxo_node/UTXONodeFactory';
+import { SpendLinkFactory } from "./DiagramComponents/SpendLink/SpendLinkFactory";
+import { UTXONodeFactory } from './DiagramComponents/UTXONode/UTXONodeFactory';
 import { EntityViewer } from './EntityViewer';
 
 

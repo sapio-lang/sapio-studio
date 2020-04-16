@@ -1,7 +1,7 @@
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from './Hex';
-import { UTXONodeModel } from './utxo_node/UTXONodeModel';
+import { UTXONodeModel } from './DiagramComponents/UTXONode/UTXONodeModel';
 export class UTXO {
 	constructor(script, amount, txn, index) {
 		this.txid = txn.getTXID();
