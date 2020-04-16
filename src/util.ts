@@ -1,5 +1,5 @@
 
-export function call(method, args) {
+export function call(method:string, args:any) {
     return fetch(method, {method: "post", body:
         JSON.stringify(args),
         headers: {
@@ -11,6 +11,11 @@ export function call(method, args) {
 
 };
 
-export function keyFn(key) {
-return key.hash.toString('hex') +','+ key.index;
-};
+interface Key {
+    index: number,
+    hash: Buffer
+}
+export type OpaqueKey = string;
+export function keyFn(key: Key): OpaqueKey {
+    return key.hash.toString('hex')+','+key.index;
+}
