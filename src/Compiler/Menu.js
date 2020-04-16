@@ -29,8 +29,7 @@ export class MenuForm extends React.Component {
             contract[arg] = JSON.parse(this.form[arg].value);
         }
         console.log(contract);
-        compiler.create(this.props.type, contract,
-            this.props.bitcoin_node_manager.load_new_model.bind(this.props.bitcoin_node_manager));
+        compiler.create(this.props.type, contract, this.props.load_new_model);
 
         this.props.hide();
     }

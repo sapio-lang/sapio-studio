@@ -1,27 +1,26 @@
-import React from 'react';
-import './App.css';
-
-import createEngine, { DiagramModel,
-} from '@projectstorm/react-diagrams';
-import { AbstractModelFactory, CanvasWidget } from '@projectstorm/react-canvas-core';
-
-import { DemoCanvasWidget } from './DemoCanvasWidget.tsx';
-import {ContractBase} from './ContractManager';
-import {UTXOComponent} from './UTXO';
-import {TransactionComponent} from './Transaction';
-import {CustomNodeFactory} from './custom_node/CustomNodeFactory';
-import {hash_to_hex} from './Hex';
-
+import { CanvasWidget } from '@projectstorm/react-canvas-core';
+import createEngine, { DiagramModel } from '@projectstorm/react-diagrams';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Row from 'react-bootstrap/Row';
+import React from 'react';
 import Col from 'react-bootstrap/Col';
-import Container from 'react-bootstrap/Container';
 import Collapse from 'react-bootstrap/Collapse';
-import { SpendLinkFactory } from "./SpendLink/SpendLinkFactory";
-import {UTXONodeFactory} from './utxo_node/UTXONodeFactory';
-import { BitcoinNodeManager } from './BitcoinNode';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import './App.css';
 import { AppNavbar } from "./AppNavbar";
-import {CompilerServer} from "./Compiler/ContractCompilerServer";
+import { BitcoinNodeManager } from './BitcoinNode';
+import { CompilerServer } from "./Compiler/ContractCompilerServer";
+import { ContractBase, ContractModel } from './ContractManager';
+import { CustomNodeFactory } from './custom_node/CustomNodeFactory';
+import { DemoCanvasWidget } from './DemoCanvasWidget.tsx';
+import { hash_to_hex } from './Hex';
+import { SpendLinkFactory } from "./SpendLink/SpendLinkFactory";
+import { TransactionComponent } from './Transaction';
+import { UTXOComponent } from './UTXO';
+import { UTXONodeFactory } from './utxo_node/UTXONodeFactory';
+
+
+
 
 
 class ModelManager {
@@ -52,6 +51,7 @@ class App extends React.Component {
         this.model.setGridSize(50);
         this.model.setLocked(true);
         this.model_manager = new ModelManager(this.model);
+        this.model_number = 0;
         this.engine.setModel(this.model);
 
         this.current_contract = new ContractBase();
@@ -60,7 +60,6 @@ class App extends React.Component {
         this.state.modal_create = false;
         this.state.modal_view = false;
         this.bitcoin_node_manager = new BitcoinNodeManager(this);
-        this.redistributeFn = () => null;
 
 
         /* Socket Functionality */
@@ -68,6 +67,19 @@ class App extends React.Component {
     };
 
 
+    load_new_model(data) {
+        let contract = new ContractModel(this.update_viewer.bind(this), data);
+        this.model_manager.unload(this.current_contract);
+        this.model_manager.load(contract)
+        this.current_contract = contract;
+        this.setState({ contract });
+        this.setState({model_number:this.model_number});
+        this.model_number += 1;
+        this.bitcoin_node_manager.update_broadcastable();
+        this.forceUpdate(() => {
+        });
+        // TODO: Fix this! Sketchy...
+    }
 
     update_viewer (data) {
         if (data.isSelected === false || data.entity === null) {
@@ -79,12 +91,6 @@ class App extends React.Component {
 
     hide_details() {
         this.setState({details: false});
-    }
-    redistribute() {
-        this.redistributeFn();
-    }
-    setRedistribute(fn) {
-        this.redistributeFn = fn;
     }
 
     render() {
@@ -111,8 +117,8 @@ class App extends React.Component {
             <div className="App">
                 <Container fluid>
                     <AppNavbar
-                        bitcoin_node_manager={this.bitcoin_node_manager}
                         dynamic_forms={this.state.dynamic_forms}
+                        load_new_model={(x) => this.load_new_model(x)}
                         compiler={this.cm} />
                     <Row>
                         <Col xs={this.state.details? 6: 12}
@@ -120,7 +126,8 @@ class App extends React.Component {
                             md={this.state.details? 8: 12}
                             lg={this.state.details? 9: 12}
                             xl={this.state.details? 10: 12}>
-                            <DemoCanvasWidget engine={this.engine} model={this.model} registerChange={this.setRedistribute.bind(this)}>
+                            <DemoCanvasWidget engine={this.engine} model={this.model} 
+                                model_number={this.state.model_number}>
                                 <CanvasWidget engine={this.engine} key={"main"} model={this.model}/>
                             </DemoCanvasWidget>
                         </Col>

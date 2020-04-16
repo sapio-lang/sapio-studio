@@ -33,7 +33,7 @@ export class AppNavbar extends React.Component {
             <CreateContractModal
                 show={this.state.modal_create}
                 hide={() => this.setState({ modal_create: false })}
-                bitcoin_node_manager={this.props.bitcoin_node_manager}
+                load_new_model={this.props.load_new_model}
                 compiler={this.props.compiler}
                 dynamic_forms={this.props.dynamic_forms} />
             <ViewContractModal

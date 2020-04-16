@@ -6,8 +6,8 @@ export interface DemoCanvasWidgetProps {
     model: DiagramModel;
     engine: DiagramEngine;
     color?: string;
-    background?: string
-    registerChange(x : any) : void;
+    background?: string;
+    model_number: number;
 }
 
 const Container = styled.div<{ color: string; background: string }>`
@@ -48,6 +48,7 @@ const Container = styled.div<{ color: string; background: string }>`
 
 export class DemoCanvasWidget extends React.Component<DemoCanvasWidgetProps, any> {
     engine: DagreEngine;
+    model_number: number;
     constructor(props: any) {
         super(props);
         this.engine = new DagreEngine({
@@ -59,8 +60,7 @@ export class DemoCanvasWidget extends React.Component<DemoCanvasWidgetProps, any
             },
             includeLinks: false
         });
-        this.props.registerChange(this.redistribute.bind(this));
-
+        this.model_number = -1;
     }
     redistribute () {
         this.engine.redistribute(this.props.model);
@@ -78,5 +78,12 @@ export class DemoCanvasWidget extends React.Component<DemoCanvasWidgetProps, any
             {this.props.children}
             </Container>
         );
+    }
+    componentDidUpdate() {
+        if (this.props.model_number > this.model_number) {
+            this.model_number = this.props.model_number;
+            console.log("check")
+            setTimeout(() =>this.redistribute(), 0);
+        }
     }
 }

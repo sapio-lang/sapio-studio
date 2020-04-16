@@ -17,16 +17,6 @@ export class BitcoinNodeManager {
         }
         setTimeout(this.periodic_check.bind(this), 1000);
     }
-    load_new_model(data) {
-        let contract = new ContractModel(this.app.update_viewer.bind(this.app), data);
-        this.app.model_manager.unload(this.app.current_contract);
-        this.app.model_manager.load(contract)
-        this.app.current_contract = contract;
-        this.app.setState({ contract });
-        this.update_broadcastable();
-        this.app.forceUpdate();
-        setTimeout(() => { this.app.redistribute(); this.app.engine.zoomToFit(); }, 100);
-    }
     update_broadcastable() {
         this.app.current_contract.txn_models
             .forEach((tm) => {

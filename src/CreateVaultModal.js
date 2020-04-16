@@ -27,7 +27,7 @@ export class CreateContractModal extends React.Component {
             tab_options.push((
 
                 <Tab.Pane eventKey={key} title={option}>
-                    <MenuForm hide={this.props.hide} bitcoin_node_manager={this.props.bitcoin_node_manager}
+                    <MenuForm hide={this.props.hide} load_new_model={this.props.load_new_model}
                         args={args}
                         type={option}
                         compiler={this.props.compiler} />
