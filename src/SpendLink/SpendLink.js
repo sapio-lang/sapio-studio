@@ -1,4 +1,4 @@
-import { DefaultLinkFactory, DefaultLinkModel, DefaultPortModel } from '@projectstorm/react-diagrams';
+import { DefaultLinkModel, DefaultPortModel } from '@projectstorm/react-diagrams';
 import * as React from 'react';
 
 export class SpendLinkModel extends DefaultLinkModel {
@@ -87,20 +87,4 @@ export class SpendLinkSegment extends React.Component {
 	}
 }
 
-export class SpendLinkFactory extends DefaultLinkFactory {
-	constructor() {
-		super('spend');
-	}
 
-	generateModel() {
-		return new SpendLinkModel();
-	}
-
-	generateLinkSegment(model, selected, path) {
-		return (
-			<g>
-				<SpendLinkSegment model={model} path={path} />
-			</g>
-		);
-	}
-}

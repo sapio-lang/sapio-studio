@@ -1,7 +1,7 @@
 import { NodeModel } from '@projectstorm/react-diagrams';
 import { PortModelAlignment } from '@projectstorm/react-diagrams-core';
 import { OutputPortModel } from '../OutputLink';
-import { SpendPortModel } from '../SpendLink';
+import { SpendPortModel } from '../SpendLink/SpendLink';
 
 /**
  * Example of a custom model using pure javascript

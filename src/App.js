@@ -17,7 +17,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Collapse from 'react-bootstrap/Collapse';
-import {SpendLinkFactory} from "./SpendLink"
+import { SpendLinkFactory } from "./SpendLink/SpendLinkFactory";
 import {UTXONodeFactory} from './utxo_node/UTXONodeFactory';
 import { BitcoinNodeManager } from './BitcoinNode';
 import { AppNavbar } from "./AppNavbar";
