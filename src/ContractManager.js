@@ -84,8 +84,6 @@ export class ContractBase {
         this.txn_models = [];
         this.txid_map = new Map();
     }
-    load(){}
-    unload() {}
     process_finality(is_final) {
         console.log("called empty")
 
@@ -103,13 +101,6 @@ export class ContractModel extends ContractBase {
         this.txn_models = txn_models;
         this.txid_map = txid_map;
 
-    }
-    load(model) {
-        model.addAll(...this.txn_models);
-        model.addAll(...this.utxo_models);
-    }
-    unload(model) {
-        this.txn_models.forEach((m) => m.remove(model))
     }
     process_finality(is_final, model) {
         is_final.forEach((txid)=> {

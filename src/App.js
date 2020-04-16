@@ -24,6 +24,19 @@ import { AppNavbar } from "./AppNavbar";
 import {CompilerServer} from "./Compiler/ContractCompilerServer";
 
 
+class ModelManager {
+    constructor(model) {
+        this.model = model;
+    }
+    load(contract) {
+        this.model.addAll(...contract.txn_models);
+        this.model.addAll(...contract.utxo_models);
+    }
+    unload(contract) {
+        contract.txn_models.forEach((m) => m.remove(this.model))
+    }
+}
+
 class App extends React.Component {
     constructor(props) {
         super(props);
@@ -38,6 +51,7 @@ class App extends React.Component {
         this.model = new DiagramModel();
         this.model.setGridSize(50);
         this.model.setLocked(true);
+        this.model_manager = new ModelManager(this.model);
         this.engine.setModel(this.model);
 
         this.current_contract = new ContractBase();

@@ -19,8 +19,8 @@ export class BitcoinNodeManager {
     }
     load_new_model(data) {
         let contract = new ContractModel(this.app.update_viewer.bind(this.app), data);
-        this.app.current_contract.unload(this.app.model);
-        contract.load(this.app.model);
+        this.app.model_manager.unload(this.app.current_contract);
+        this.app.model_manager.load(contract)
         this.app.current_contract = contract;
         this.app.setState({ contract });
         this.update_broadcastable();
