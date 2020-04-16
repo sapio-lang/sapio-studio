@@ -1,6 +1,6 @@
 import React from 'react';
-import { TransactionDetail } from './Transaction';
-import { UTXODetail } from './UTXO';
+import { TransactionDetail } from "./TransactionDetail";
+import { UTXODetail } from "./UTXODetail";
 export class EntityViewer extends React.Component {
     constructor(props) {
         super(props);

@@ -1,71 +1,16 @@
 
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import Collapse from 'react-bootstrap/Collapse';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { NodeColor } from './ContractManager';
 import { CustomNodeModel } from './DiagramComponents/custom_node/CustomNodeModel';
-import Hex, { hash_to_hex } from './Hex';
+import Hex from './Hex';
 import './Transaction.css';
 import { call, keyFn } from './util';
 import { UTXO, UTXOModel } from './UTXO';
 
 
-class InputDetail extends React.Component {
-	constructor(props) {
-		super(props);
-        this.state = {};
-        this.state.open =false;
-        this.hash= hash_to_hex(this.props.txinput.hash);
-	}
-	render() {
-        const maybeDecode = (d, elt) =>
-            d ?  Bitcoin.script.toASM(Bitcoin.script.decompile(elt)) : elt.toString('hex');
-		const witness = [];/*this.props.txinput.witness.map((elt,i) =>
-            (<ListGroup.Item key={i}>
-				<Hex readOnly className="txhex" value={maybeDecode(i === (this.props.txinput.witness.length -1), elt)}></Hex>
-			</ListGroup.Item>)
-        );*/
-        const scriptValue = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txinput.script));;
-        const script = this.props.txinput.script.length > 0 ?
-            <>
-            <h4>Script</h4>
-            <Hex readOnly className="txhex" value={scriptValue}></Hex>
-            </>: null;
-        const sequence =  this.props.txinput.sequence === Transaction.DEFAULT_SEQUENCE ? null :
-                        <h4>Sequence: {this.props.txinput.sequence} </h4>
-                    ;
-		return(
-			<div>
-					<h4> OutPoint </h4>
-                    <h5>Hash</h5>
-                    <Hex readOnly className="txhex" value={this.hash} />
-                    <h5>N: {this.props.txinput.index} </h5>
-
-                    <ListGroup horizontal>
-                        <ListGroup.Item action variant="primary" onClick={this.props.update}>
-                        Go
-                        </ListGroup.Item>
-                        <ListGroup.Item action variant="secondary" onClick={() => this.setState({open: !this.state.open})}
-                        aria-controls="input-data"
-                        aria-expanded={this.state.open}>
-                            {this.state.open? "Less" : "More"}...
-                        </ListGroup.Item>
-                    </ListGroup>
-                <Collapse in={this.state.open}>
-                    <div>
-                        {sequence}
-                        {script}
-                        <h4>Witness</h4>
-                        {witness}
-                    </div>
-                </Collapse>
-			</div>
-		);
-	}
-}
-
-class Output extends React.Component {
+export class Output extends React.Component {
 	render() {
         const script = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txoutput.script));
 
@@ -161,52 +106,4 @@ export class TransactionModel extends CustomNodeModel {
     }
 }
 
-export class TransactionDetail extends React.Component {
-	constructor(props) {
-		super(props);
-        this.state = {};
-        this.state.broadcastable = this.props.entity.is_broadcastable();
-        this.props.entity.set_broadcastable_hook((b) => this.setState({broadcastable: b}));
-	}
-    static getDerivedStateFromProps(props, state) {
-        state.broadcastable = props.entity.is_broadcastable();
-    }
 
-	render() {
-        const broadcast =
-            this.state.broadcastable ? <ListGroup.Item action variant="primary" onClick={() => this.props.entity.broadcast()}>Broadcast</ListGroup.Item> : null;
-		const outs = this.props.entity.tx.outs.map((o,i) =>
-            <ListGroup.Item key={i}>
-                <Output txoutput={o} update={() => this.props.update({entity: this.props.entity.utxo_models[i]})}/>
-            </ListGroup.Item>);
-		const ins = this.props.entity.tx.ins.map((o,i) =>
-            <ListGroup.Item key="input-{i}">
-                <InputDetail txinput={o} update={() => this.props.update({entity: this.props.find_tx_model(o.hash, o.index)})}/>
-            </ListGroup.Item>);
-		return (
-
-            <div>
-			<h2> Transaction </h2>
-			<ListGroup variant="flush">
-            <ListGroup horizontal>
-                {broadcast}
-                <ListGroup.Item action variant="secondary" onClick={this.props.hide_details}>Hide</ListGroup.Item>
-            </ListGroup>
-            <h3> TXID</h3>
-			<ListGroup.Item>
-			    <Hex className="txhex" readOnly value={this.props.entity.tx.getTXID()}></Hex>
-			</ListGroup.Item>
-            <h3> Inputs</h3>
-            {ins}
-            <h3>Outputs</h3>
-            {outs}
-            <h3> Tx Hex </h3>
-			<ListGroup.Item>
-                <Hex value= {this.props.entity.tx.toHex()} readOnly className="txhex"> </Hex>
-			</ListGroup.Item>
-			</ListGroup>
-            </div>
-		);
-	}
-
-}
