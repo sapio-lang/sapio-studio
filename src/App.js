@@ -46,7 +46,6 @@ class App extends React.Component {
         this.state.modal_create = false;
         this.state.modal_view = false;
         this.vaultman = new BitcoinNodeManager(this);
-        this.vaultman.create_vault({amount:1, steps:10, maturity:5, step_period:1})
         this.redistributeFn = () => null;
 
 

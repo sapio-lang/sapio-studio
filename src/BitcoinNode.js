@@ -27,34 +27,6 @@ export class BitcoinNodeManager {
         this.app.forceUpdate();
         setTimeout(() => { this.app.redistribute(); this.app.engine.zoomToFit(); }, 100);
     }
-    async create_vault(args) {
-        call("/backend/create_vault", args)
-            .then(data => new ContractModel(this.app.update_viewer.bind(this.app), data))
-            .then(async (vault) => {
-                this.app.vault.unload(this.app.model);
-                vault.load(this.app.model);
-                this.app.vault = vault;
-                this.app.setState({ vault });
-                this.update_broadcastable();
-                this.app.forceUpdate();
-                setTimeout(() => { this.app.redistribute(); this.app.engine.zoomToFit(); }, 100);
-            });
-    }
-    async create_batchpay(args) {
-        call("/backend/create_batchpay", args)
-            .then(data => {
-                return new ContractModel(this.app.update_viewer.bind(this.app), data);
-            })
-            .then(async (vault) => {
-                this.app.vault.unload(this.app.model);
-                vault.load(this.app.model);
-                this.app.vault = vault;
-                this.app.setState({ vault });
-                this.update_broadcastable();
-                this.app.forceUpdate();
-                setTimeout(() => { this.app.redistribute(); this.app.engine.zoomToFit(); }, 100);
-            });
-    }
     update_broadcastable() {
         this.app.vault.txn_models
             .forEach((tm) => {

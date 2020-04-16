@@ -42,17 +42,9 @@ export class CreateVaultModal extends React.Component {
 
             <Tab.Container defaultActiveKey="vault">
                 <Nav variant="tabs" justify className="navbar">
-                    <Nav.Item> <Nav.Link eventKey="vault"> Vault </Nav.Link> </Nav.Item>
-                    <Nav.Item> <Nav.Link eventKey="batchpay"> BatchPay </Nav.Link> </Nav.Item>
                     {nav_options}
                 </Nav>
                 <Tab.Content>
-                    <Tab.Pane eventKey="vault" title="Vault">
-                        <CreateVaultForm hide={this.props.hide} vaultman={this.props.vaultman} />
-                    </Tab.Pane>
-                    <Tab.Pane eventKey="batchpay" title="BatchPay">
-                        <CreateBatchPayForm hide={this.props.hide} vaultman={this.props.vaultman} />
-                    </Tab.Pane>
                     {tab_options}
                 </Tab.Content>
             </Tab.Container>
