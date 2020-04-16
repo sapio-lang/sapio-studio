@@ -40,13 +40,15 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {};
-        this.state.entity = {type: null};
+        this.state.entity = { type: null };
         this.state.details = false;
         this.state.dynamic_forms = {};
+        // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();
         this.engine.getNodeFactories().registerFactory(new UTXONodeFactory());
         this.engine.getNodeFactories().registerFactory(new CustomNodeFactory());
         this.engine.getLinkFactories().registerFactory(new SpendLinkFactory());
+        // model is the system of nodes
         this.model = new DiagramModel();
         this.model.setGridSize(50);
         this.model.setLocked(true);
@@ -54,11 +56,18 @@ class App extends React.Component {
         this.model_number = 0;
         this.engine.setModel(this.model);
 
+        /* current_contract is the contract loaded into the
+         * backend logic interface */
         this.current_contract = new ContractBase();
+        /* state.current_contract is the contract loaded into the
+         * ux
+         * TODO: Can these be unified?
+         */
         this.state.current_contract = this.current_contract;
         this.form = {};
         this.state.modal_create = false;
         this.state.modal_view = false;
+        /* Bitcoin Node State */
         this.bitcoin_node_manager = new BitcoinNodeManager(this);
 
 
@@ -73,7 +82,7 @@ class App extends React.Component {
         this.model_manager.load(contract)
         this.current_contract = contract;
         this.setState({ contract });
-        this.setState({model_number:this.model_number});
+        this.setState({ model_number: this.model_number });
         this.model_number += 1;
         this.bitcoin_node_manager.update_broadcastable();
         this.forceUpdate(() => {
@@ -81,37 +90,37 @@ class App extends React.Component {
         // TODO: Fix this! Sketchy...
     }
 
-    update_viewer (data) {
+    update_viewer(data) {
         if (data.isSelected === false || data.entity === null) {
-            this.setState({details:false});
+            this.setState({ details: false });
         } else if (data.entity) {
-            this.setState({entity:data.entity, details:true});
+            this.setState({ entity: data.entity, details: true });
         }
     }
 
     hide_details() {
-        this.setState({details: false});
+        this.setState({ details: false });
     }
 
     render() {
         const transaction_component = this.state.entity.type === "txn" ?
-                                <TransactionComponent entity={this.state.entity}
-                                    hide_details={this.hide_details.bind(this)}
-                                    update={this.update_viewer.bind(this)}
-                                    find_tx_model={(txid, n) => {
-                                        const idx = this.state.current_contract.txid_map.get(hash_to_hex(txid));
-                                        if (idx === undefined) return null;
-                                        return this.state.current_contract.txn_models[idx].utxo_models[n];
-                                    }
-                                    }
-                                />
-            :null;
+            <TransactionComponent entity={this.state.entity}
+                hide_details={this.hide_details.bind(this)}
+                update={this.update_viewer.bind(this)}
+                find_tx_model={(txid, n) => {
+                    const idx = this.state.current_contract.txid_map.get(hash_to_hex(txid));
+                    if (idx === undefined) return null;
+                    return this.state.current_contract.txn_models[idx].utxo_models[n];
+                }
+                }
+            />
+            : null;
         const utxo_component = this.state.entity.type === "utxo" ?
-                                <UTXOComponent entity={this.state.entity}
-                                    hide_details={this.hide_details.bind(this)}
-                                    update={this.update_viewer.bind(this)}
-                                />
-            :null;
+            <UTXOComponent entity={this.state.entity}
+                hide_details={this.hide_details.bind(this)}
+                update={this.update_viewer.bind(this)}
+            />
+            : null;
 
         return (
             <div className="App">
@@ -121,18 +130,18 @@ class App extends React.Component {
                         load_new_model={(x) => this.load_new_model(x)}
                         compiler={this.cm} />
                     <Row>
-                        <Col xs={this.state.details? 6: 12}
-                            sm={this.state.details? 7: 12}
-                            md={this.state.details? 8: 12}
-                            lg={this.state.details? 9: 12}
-                            xl={this.state.details? 10: 12}>
-                            <DemoCanvasWidget engine={this.engine} model={this.model} 
+                        <Col xs={this.state.details ? 6 : 12}
+                            sm={this.state.details ? 7 : 12}
+                            md={this.state.details ? 8 : 12}
+                            lg={this.state.details ? 9 : 12}
+                            xl={this.state.details ? 10 : 12}>
+                            <DemoCanvasWidget engine={this.engine} model={this.model}
                                 model_number={this.state.model_number}>
-                                <CanvasWidget engine={this.engine} key={"main"} model={this.model}/>
+                                <CanvasWidget engine={this.engine} key={"main"} model={this.model} />
                             </DemoCanvasWidget>
                         </Col>
                         <Collapse in={this.state.details}>
-                            <Col  xs={6} sm={5} md={4} lg={3} xl={2}>
+                            <Col xs={6} sm={5} md={4} lg={3} xl={2}>
                                 {transaction_component}
                                 {utxo_component}
                             </Col>
