@@ -6,12 +6,12 @@ import { SpendPortModel } from '../SpendLink/SpendLink';
 /**
  * Example of a custom model using pure javascript
  */
-export class CustomNodeModel extends NodeModel {
+export class TransactionNodeModel extends NodeModel {
     constructor(name, purpose, color, options={}) {
         super({
             name,
             color,
-            type: 'custom-node',
+            type: 'transaction-node',
             ...options
         });
         this.color = color || 'red';

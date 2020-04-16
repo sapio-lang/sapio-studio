@@ -11,7 +11,7 @@ import { AppNavbar } from "./AppNavbar";
 import { BitcoinNodeManager } from './BitcoinNode';
 import { CompilerServer } from "./Compiler/ContractCompilerServer";
 import { ContractBase, ContractModel } from './ContractManager';
-import { CustomNodeFactory } from './DiagramComponents/custom_node/CustomNodeFactory';
+import { TransactionNodeFactory } from './DiagramComponents/TransactionNode/TransactionNodeFactory';
 import { DemoCanvasWidget } from './DemoCanvasWidget.tsx';
 import { SpendLinkFactory } from "./DiagramComponents/SpendLink/SpendLinkFactory";
 import { UTXONodeFactory } from './DiagramComponents/UTXONode/UTXONodeFactory';
@@ -44,7 +44,7 @@ class App extends React.Component {
         // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();
         this.engine.getNodeFactories().registerFactory(new UTXONodeFactory());
-        this.engine.getNodeFactories().registerFactory(new CustomNodeFactory());
+        this.engine.getNodeFactories().registerFactory(new TransactionNodeFactory());
         this.engine.getLinkFactories().registerFactory(new SpendLinkFactory());
         // model is the system of nodes
         this.model = new DiagramModel();

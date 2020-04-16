@@ -4,7 +4,7 @@ import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import * as _ from 'lodash';
 import * as React from 'react';
 import './Ants.css';
-import { CustomNodeModel } from './CustomNodeModel';
+import { TransactionNodeModel } from './TransactionNodeModel';
 //import { css } from '@emotion/core';
 
 
@@ -62,7 +62,7 @@ flex-direction: column;
 
 
 export interface DefaultNodeProps {
-	node: CustomNodeModel ;
+	node: TransactionNodeModel ;
 	engine: DiagramEngine;
 }
 
@@ -70,7 +70,7 @@ export interface DefaultNodeProps {
  * Default node that models the CustomNodeModel. It creates two columns
  * for both all the input ports on the left, and the output ports on the right.
  */
-export class CustomNodeWidget extends React.Component<DefaultNodeProps> {
+export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
 	generatePort = (port :any) => {
 		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.id} />;
 	};

@@ -3,7 +3,7 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { NodeColor } from './ContractManager';
-import { CustomNodeModel } from './DiagramComponents/custom_node/CustomNodeModel';
+import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
 import Hex from './Hex';
 import './Transaction.css';
 import { call, keyFn } from './util';
@@ -35,7 +35,7 @@ Bitcoin.Transaction.prototype.getTXID = function() {
 export class Transaction extends Bitcoin.Transaction {
 }
 
-export class TransactionModel extends CustomNodeModel {
+export class TransactionModel extends TransactionNodeModel {
 	constructor(tx, update, name, color, utxo_labels) {
 		super(tx.getTXID().substr(0, 16), name, color.get());
         this.type = "txn";
