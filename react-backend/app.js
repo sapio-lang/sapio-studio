@@ -4,10 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var create_vault_router = require('./routes/create_vault');
 var get_transactions_router = require('./routes/gettransactions');
 var submit_raw_transaction_router = require('./routes/submitrawtransaction');
-var create_batchpay_router= require('./routes/create_batchpay');
 
 var app = express();
 
@@ -21,10 +19,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/create_vault', create_vault_router);
 app.use('/get_transactions', get_transactions_router);
 app.use('/submit_raw_transaction', submit_raw_transaction_router);
-app.use('/create_batchpay', create_batchpay_router);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
