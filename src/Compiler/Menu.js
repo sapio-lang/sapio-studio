@@ -25,26 +25,12 @@ export class MenuForm extends React.Component {
         }
         let contract = {};
         for (let arg in this.props.args) {
-            contract[arg] = this.form[arg].value;
+            console.log(this.props.args[arg]);
+            contract[arg] = JSON.parse(this.form[arg].value);
         }
         console.log(contract);
-        compiler.create(this.props.type, contract);
-        /*
-        const amounts = new Map(this.form.amount.value.trim().split(/\r?\n/)
-            .map(l => l.trim().split(" ")));
-        let radix = this.form.radix.valueAsNumber;
-        console.log("radix " + radix);
-        if (Number.isNaN(radix)) {
-                    radix = 4;
-        }
-        console.log("radix " + radix);
-        let gas = this.form.gas.valueAsNumber;
-        if (Number.isNaN(gas)) {
-                    gas = 0;
-        }
-        const pairing_mode = this.form.pairing_mode.value;
-        this.props.vaultman.create_batchpay({ amounts: Object.fromEntries(amounts.entries()), radix, gas, pairing_mode });
-        */
+        compiler.create(this.props.type, contract,
+            this.props.vaultman.load_new_model.bind(this.props.vaultman));
 
         this.props.hide();
     }

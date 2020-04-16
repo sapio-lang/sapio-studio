@@ -17,6 +17,16 @@ export class VaultManager {
         }
         setTimeout(this.periodic_check.bind(this), 1000);
     }
+    load_new_model(data) {
+        let vault = new ContractModel(this.app.update_viewer.bind(this.app), data);
+        this.app.vault.unload(this.app.model);
+        vault.load(this.app.model);
+        this.app.vault = vault;
+        this.app.setState({ vault });
+        this.update_broadcastable();
+        this.app.forceUpdate();
+        setTimeout(() => { this.app.redistribute(); this.app.engine.zoomToFit(); }, 100);
+    }
     async create_vault(args) {
         call("/backend/create_vault", args)
             .then(data => new ContractModel(this.app.update_viewer.bind(this.app), data))

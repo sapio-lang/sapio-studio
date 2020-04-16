@@ -51,7 +51,7 @@ export class CompilerServer {
     }
     created(contract, callback) {
         console.log(contract);
-        callback(contract);
+        callback(contract[2]);
     }
 }
 
