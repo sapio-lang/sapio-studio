@@ -7,18 +7,9 @@ import { call, keyFn } from './util';
 import { UTXO, UTXOModel } from './UTXO';
 
 
-Bitcoin.Transaction.prototype.getTXID = function() {
-    const b = new Buffer(32);
-    this.getHash().copy(b);
-    b.reverse();
-    return b.toString('hex');
-}
-export class Transaction extends Bitcoin.Transaction {
-}
-
 export class TransactionModel extends TransactionNodeModel {
 	constructor(tx, update, name, color, utxo_labels) {
-		super(tx.getTXID().substr(0, 16), name, color.get());
+		super(tx.getId().substr(0, 16), name, color.get());
         this.type = "txn";
         this.broadcastable = false;
         this.broadcastable_hook = false;

@@ -12,7 +12,7 @@ export class UTXODetail extends React.Component {
             return null;
         const spends = this.props.entity.utxo.spends.map((elt, i) => <>
             <ListGroup.Item key={i}>
-                <Hex value={elt.tx.getTXID()} />
+                <Hex value={elt.tx.getId()} />
             </ListGroup.Item>
             <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: elt })}> Go</ListGroup.Item>
         </>);

@@ -3,7 +3,6 @@ import React from 'react';
 import Collapse from 'react-bootstrap/Collapse';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Hex, { hash_to_hex } from '../Hex';
-import { Transaction } from '../Transaction';
 export class InputDetail extends React.Component {
     constructor(props) {
         super(props);
@@ -25,7 +24,7 @@ export class InputDetail extends React.Component {
                 <h4>Script</h4>
                 <Hex readOnly className="txhex" value={scriptValue}></Hex>
             </> : null;
-        const sequence = this.props.txinput.sequence === Transaction.DEFAULT_SEQUENCE ? null :
+        const sequence = this.props.txinput.sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE ? null :
             <h4>Sequence: {this.props.txinput.sequence} </h4>;
         return (<div>
             <h4> OutPoint </h4>

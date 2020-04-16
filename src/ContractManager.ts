@@ -1,6 +1,6 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import { hash_to_hex } from './Hex';
-import { Transaction, TransactionModel } from './Transaction';
+import { TransactionModel } from './Transaction';
 import { keyFn, OpaqueKey } from "./util";
 import { UTXOModel } from "./UTXO";
 import { LinkModel } from '@projectstorm/react-diagrams';
@@ -35,7 +35,7 @@ interface Data {
 }
 
 interface PreProcessedData {
-    txns: Array<Transaction>,
+    txns: Array<Bitcoin.Transaction>,
     txn_colors: Array<NodeColor>,
     txn_labels: Array<string>,
     utxo_labels: Array<Array<UTXOData | null>>,
@@ -48,7 +48,7 @@ interface ProcessedData {
 };
 
 function preprocess_data(data: Data): PreProcessedData {
-    let txns = data.program.map(k => Transaction.fromHex(k.hex));
+    let txns = data.program.map(k => Bitcoin.Transaction.fromHex(k.hex));
     let txn_labels = data.program.map(k => k.label);
     let txn_colors = data.program.map(k => new NodeColor(k.color));
     let utxo_labels = data.program.map(k => k.utxo_metadata);
@@ -56,10 +56,10 @@ function preprocess_data(data: Data): PreProcessedData {
     return { txns: txns, txn_colors: txn_colors, txn_labels: txn_labels, utxo_labels };
 }
 
-function process_inputs_map(txns: Array<Transaction>): Map<OpaqueKey, Array<number>> {
+function process_inputs_map(txns: Array<Bitcoin.Transaction>): Map<OpaqueKey, Array<number>> {
     const inputs_map = new Map();
     for (let x = 0; x < txns.length; ++x) {
-        const txn: Transaction = txns[x];
+        const txn: Bitcoin.Transaction = txns[x];
         for (let y = 0; y < txn.ins.length; ++y) {
             const inp: Bitcoin.TxInput = txn.ins[y];
             const key = keyFn(inp);
@@ -71,7 +71,7 @@ function process_inputs_map(txns: Array<Transaction>): Map<OpaqueKey, Array<numb
     return inputs_map;
 }
 
-function process_txn_models(txns: Array<Transaction>,
+function process_txn_models(txns: Array<Bitcoin.Transaction>,
     update: any,
     txn_labels: Array<string>,
     txn_colors: Array<NodeColor>,
@@ -87,7 +87,7 @@ function process_txn_models(txns: Array<Transaction>,
     return [txid_map, txn_models];
 }
 function process_utxo_models(
-    txns: Array<Transaction>,
+    txns: Array<Bitcoin.Transaction>,
     txn_models: Array<TransactionModel>,
     inputs_map: Map<OpaqueKey, Array<number>>)
     : Array<LinkModel | UTXOModel> {
@@ -103,7 +103,7 @@ function process_utxo_models(
             for (let z = 0; z < idxs.length; ++z) {
                 const tx_idx: number = idxs[z];
                 const spender = txn_models[tx_idx];
-                const spender_tx: Transaction = spender.tx;
+                const spender_tx: Bitcoin.Transaction = spender.tx;
                 const idx = spender_tx.ins.findIndex(elt => elt.index === y && elt.hash.toString('hex') === txn.getHash().toString('hex'));
                 const link = utxo_model.addOutPort('spend ' + z).link(spender.addInPort('input' + idx));
                 spender.input_links.push(link);
@@ -142,7 +142,7 @@ export class ContractBase {
 }
 export class ContractModel extends ContractBase {
     obj: PreProcessedData;
-    txns: Array<Transaction>;
+    txns: Array<Bitcoin.Transaction>;
     constructor(update_viewer: any, obj: Data) {
         super();
         this.obj = preprocess_data(obj);

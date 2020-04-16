@@ -20,7 +20,7 @@ export class BitcoinNodeManager {
     update_broadcastable() {
         this.app.current_contract.txn_models
             .forEach((tm) => {
-                const already_confirmed = this.confirmed_txs.has(tm.tx.getTXID());
+                const already_confirmed = this.confirmed_txs.has(tm.tx.getId());
                 const inputs_not_locals = tm.tx.ins.every((inp) => !this.app.current_contract.txid_map.has(hash_to_hex(inp.hash)));
                 const all_inputs_confirmed = tm.tx.ins.every((inp) => this.confirmed_txs.has(hash_to_hex(inp.hash)));
                 if (already_confirmed) {
@@ -40,7 +40,7 @@ export class BitcoinNodeManager {
     async check_txs() {
         const txids = this.app.current_contract.txn_models
             .filter((tm) => tm.is_broadcastable())
-            .map((tm) => tm.tx.getTXID());
+            .map((tm) => tm.tx.getId());
         if (txids.length > 0)
             return await call("/backend/get_transactions", txids);
         return [];
