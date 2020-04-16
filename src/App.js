@@ -36,11 +36,44 @@ class ModelManager {
     }
 }
 
+class EntityViewer extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+    render() {
+        const transaction_component = this.props.entity.type === "txn" ?
+            <TransactionComponent
+                entity={this.props.entity}
+                hide_details={this.props.hide_details}
+                update={this.props.update_viewer}
+                find_tx_model={(txid, n) => {
+                    const idx = this.props.current_contract.txid_map.get(hash_to_hex(txid));
+                    if (idx === undefined) return null;
+                    return this.props.current_contract.txn_models[idx].utxo_models[n];
+                }
+                }
+            />
+            : null;
+        const utxo_component = this.props.entity.type === "utxo" ?
+            <UTXOComponent
+                entity={this.props.entity}
+                hide_details={this.props.hide_details}
+                update={this.props.update_viewer}
+            />
+            : null;
+        return (<>
+        {transaction_component}
+        {utxo_component}
+        </>)
+    }
+}
+
 class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {};
-        this.state.entity = { type: null };
+        this.state.entity = {type:null};
         this.state.details = false;
         this.state.dynamic_forms = {};
         // engine is the processor for graphs, we need to load all our custom factories here
@@ -103,24 +136,6 @@ class App extends React.Component {
     }
 
     render() {
-        const transaction_component = this.state.entity.type === "txn" ?
-            <TransactionComponent entity={this.state.entity}
-                hide_details={this.hide_details.bind(this)}
-                update={this.update_viewer.bind(this)}
-                find_tx_model={(txid, n) => {
-                    const idx = this.state.current_contract.txid_map.get(hash_to_hex(txid));
-                    if (idx === undefined) return null;
-                    return this.state.current_contract.txn_models[idx].utxo_models[n];
-                }
-                }
-            />
-            : null;
-        const utxo_component = this.state.entity.type === "utxo" ?
-            <UTXOComponent entity={this.state.entity}
-                hide_details={this.hide_details.bind(this)}
-                update={this.update_viewer.bind(this)}
-            />
-            : null;
 
         return (
             <div className="App">
@@ -142,8 +157,12 @@ class App extends React.Component {
                         </Col>
                         <Collapse in={this.state.details}>
                             <Col xs={6} sm={5} md={4} lg={3} xl={2}>
-                                {transaction_component}
-                                {utxo_component}
+                                <EntityViewer
+                                entity = {this.state.entity}
+                                hide_details = {() => this.hide_details()}
+                                current_contract = {this.state.current_contract}
+                                update_viewer = {this.update_viewer.bind(this)}
+                                />
                             </Col>
                         </Collapse>
                     </Row>
