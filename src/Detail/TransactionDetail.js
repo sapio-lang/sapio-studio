@@ -1,8 +1,8 @@
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex from './Hex';
+import Hex from '../Hex';
 import { InputDetail } from "./InputDetail";
-import { Output } from './Transaction';
+import { Output } from '../Transaction';
 export class TransactionDetail extends React.Component {
     constructor(props) {
         super(props);

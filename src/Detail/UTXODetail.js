@@ -1,6 +1,6 @@
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex from './Hex';
+import Hex from '../Hex';
 export class UTXODetail extends React.Component {
     constructor(props) {
         super(props);

@@ -2,8 +2,8 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import Collapse from 'react-bootstrap/Collapse';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex, { hash_to_hex } from './Hex';
-import { Transaction } from './Transaction';
+import Hex, { hash_to_hex } from '../Hex';
+import { Transaction } from '../Transaction';
 export class InputDetail extends React.Component {
     constructor(props) {
         super(props);
