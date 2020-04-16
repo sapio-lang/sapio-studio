@@ -22,7 +22,7 @@ export class UTXOModel extends UTXONodeModel {
         this.type = "utxo";
 	}
 }
-export class UTXOComponent extends React.Component  {
+export class UTXODetail extends React.Component  {
 
 	constructor(props) {
 		super(props);

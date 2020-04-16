@@ -11,7 +11,7 @@ import { call, keyFn } from './util';
 import { UTXO, UTXOModel } from './UTXO';
 
 
-class Input extends React.Component {
+class InputDetail extends React.Component {
 	constructor(props) {
 		super(props);
         this.state = {};
@@ -161,7 +161,7 @@ export class TransactionModel extends CustomNodeModel {
     }
 }
 
-export class TransactionComponent extends React.Component {
+export class TransactionDetail extends React.Component {
 	constructor(props) {
 		super(props);
         this.state = {};
@@ -181,7 +181,7 @@ export class TransactionComponent extends React.Component {
             </ListGroup.Item>);
 		const ins = this.props.entity.tx.ins.map((o,i) =>
             <ListGroup.Item key="input-{i}">
-                <Input txinput={o} update={() => this.props.update({entity: this.props.find_tx_model(o.hash, o.index)})}/>
+                <InputDetail txinput={o} update={() => this.props.update({entity: this.props.find_tx_model(o.hash, o.index)})}/>
             </ListGroup.Item>);
 		return (
 
