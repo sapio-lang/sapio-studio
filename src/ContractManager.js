@@ -1,5 +1,6 @@
 import { Transaction, TransactionModel } from './Transaction';
 import { keyFn } from "./util";
+import { hash_to_hex } from './Hex';
 export class NodeColor {
     constructor(c) {
         this.c = c;
@@ -101,6 +102,12 @@ export class ContractModel extends ContractBase {
         this.txn_models = txn_models;
         this.txid_map = txid_map;
 
+    }
+    lookup(txid, n) {
+        const idx = this.txid_map.get(hash_to_hex(txid));
+        if (idx === undefined)
+            return null;
+        return this.txn_models[idx].utxo_models[n];
     }
     process_finality(is_final, model) {
         is_final.forEach((txid)=> {

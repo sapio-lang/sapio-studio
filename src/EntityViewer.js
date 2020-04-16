@@ -1,5 +1,4 @@
 import React from 'react';
-import { hash_to_hex } from './Hex';
 import { TransactionComponent } from './Transaction';
 import { UTXOComponent } from './UTXO';
 export class EntityViewer extends React.Component {
@@ -14,14 +13,7 @@ export class EntityViewer extends React.Component {
                     entity={this.props.entity}
                     hide_details={this.props.hide_details}
                     update={this.props.update_viewer}
-                    find_tx_model={(txid, n) => {
-                        const idx = this.props.current_contract.txid_map.get(hash_to_hex(txid));
-                        if (idx === undefined)
-                            return null;
-                        return this.props.current_contract.txn_models[idx].utxo_models[n];
-                    }} />
-
-                );
+                    find_tx_model={this.props.current_contract.lookup} />);
             case "utxo":
                 return (<UTXOComponent
                     entity={this.props.entity}
