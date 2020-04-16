@@ -14,7 +14,7 @@ export class TransactionDetail extends React.Component {
         state.broadcastable = props.entity.is_broadcastable();
     }
     render() {
-        const broadcast = this.state.broadcastable ? <ListGroup.Item action variant="primary" onClick={() => this.props.entity.broadcast()}>Broadcast</ListGroup.Item> : null;
+        const broadcast = this.state.broadcastable ? <ListGroup.Item action variant="primary" onClick={() => this.props.broadcast(this.props.entity.tx)}>Broadcast</ListGroup.Item> : null;
         const outs = this.props.entity.tx.outs.map((o, i) => <ListGroup.Item key={i}>
             <OutputDetail txoutput={o} update={() => this.props.update({ entity: this.props.entity.utxo_models[i] })} />
         </ListGroup.Item>);

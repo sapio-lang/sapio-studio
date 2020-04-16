@@ -124,6 +124,7 @@ class App extends React.Component {
                             <Col xs={6} sm={5} md={4} lg={3} xl={2}>
                                 <EntityViewer
                                 entity = {this.state.entity}
+                                broadcast = {(x) => this.props.bitcoin_node_manager.broadcast(x)}
                                 hide_details = {() => this.hide_details()}
                                 current_contract = {this.state.current_contract}
                                 update_viewer = {this.update_viewer.bind(this)}

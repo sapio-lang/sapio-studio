@@ -4,7 +4,7 @@ import { NodeColor, UTXOFormatData} from './ContractManager';
 import { OutputLinkModel } from './DiagramComponents/OutputLink';
 import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
 import './Transaction.css';
-import { call, keyFn, OpaqueKey } from './util';
+import { keyFn, OpaqueKey } from './util';
 import { UTXOMetaData, UTXOModel } from './UTXO';
 import { SpendLinkModel } from './DiagramComponents/SpendLink/SpendLink';
 
@@ -45,9 +45,6 @@ export class TransactionModel extends TransactionNodeModel {
         this.utxo_models.map((x)=>model.removeNode(x));
         this.utxo_links.map((x)=>model.removeLink(x));
         this.input_links.map((x)=>model.removeLink(x));
-    }
-    broadcast() {
-        call("submit_raw_transaction", [this.tx.toHex()]);
     }
     is_broadcastable() {
         return this.broadcastable;

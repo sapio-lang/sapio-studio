@@ -1,8 +1,19 @@
-import { Input } from 'bitcoinjs-lib/types/transaction';
+import { Input, Transaction } from 'bitcoinjs-lib/types/transaction';
 import App from './App';
 import { hash_to_hex } from './Hex';
-import { call } from './util';
 type TXID = string;
+
+export function call(method:string, args:any) {
+    return fetch(method, {method: "post", body:
+        JSON.stringify(args),
+        headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json'
+        },
+    })
+        .then(res=>res.json());
+
+};
 export class BitcoinNodeManager {
     app : App;
     confirmed_txs : Set<TXID>;
@@ -40,6 +51,10 @@ export class BitcoinNodeManager {
                     tm.set_broadcastable(false);
                 }
             });
+    }
+
+    async broadcast(tx:Transaction) {
+        await call("submit_raw_transaction", [tx.toHex()]);
     }
     async check_txs() : Promise<Array<TXID>> {
         const txids = this.app.current_contract.txn_models

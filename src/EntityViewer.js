@@ -10,6 +10,7 @@ export class EntityViewer extends React.Component {
         switch (this.props.entity.type) {
             case "txn":
                 return (<TransactionDetail
+                    broadcast={this.props.broadcast}
                     entity={this.props.entity}
                     hide_details={this.props.hide_details}
                     update={this.props.update_viewer}
