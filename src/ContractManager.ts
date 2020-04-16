@@ -3,7 +3,7 @@ import { hash_to_hex } from './Hex';
 import { TransactionModel } from './Transaction';
 import { keyFn, OpaqueKey } from "./util";
 import { UTXOModel } from "./UTXO";
-import { LinkModel } from '@projectstorm/react-diagrams';
+import { OutputLinkModel } from './DiagramComponents/OutputLink';
 export class NodeColor {
     c: string;
     constructor(c: string) {
@@ -19,7 +19,7 @@ export class NodeColor {
     }
 
 }
-interface UTXOData {
+export interface UTXOFormatData {
     color: string,
     label: string,
 }
@@ -27,7 +27,7 @@ interface TransactionData {
     hex: string,
     color: string,
     label: string,
-    utxo_metadata: Array<UTXOData | null>
+    utxo_metadata: Array<UTXOFormatData | null>
 }
 
 interface Data {
@@ -38,13 +38,13 @@ interface PreProcessedData {
     txns: Array<Bitcoin.Transaction>,
     txn_colors: Array<NodeColor>,
     txn_labels: Array<string>,
-    utxo_labels: Array<Array<UTXOData | null>>,
+    utxo_labels: Array<Array<UTXOFormatData | null>>,
 };
 interface ProcessedData {
     inputs_map: Map<OpaqueKey, Array<number>>,
     txid_map: Map<string, number>,
     txn_models: Array<TransactionModel>,
-    utxo_models: Array<LinkModel| UTXOModel>
+    utxo_models: Array<OutputLinkModel| UTXOModel>
 };
 
 function preprocess_data(data: Data): PreProcessedData {
@@ -75,7 +75,7 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
     update: any,
     txn_labels: Array<string>,
     txn_colors: Array<NodeColor>,
-    utxo_labels: Array<Array<UTXOData | null>>): [Map<string, number>, Array<TransactionModel>] {
+    utxo_labels: Array<Array<UTXOFormatData | null>>): [Map<string, number>, Array<TransactionModel>] {
     let txid_map = new Map();
     let txn_models: Array<TransactionModel> = [];
     for (let x = 0; x < txns.length; ++x) {
@@ -90,8 +90,8 @@ function process_utxo_models(
     txns: Array<Bitcoin.Transaction>,
     txn_models: Array<TransactionModel>,
     inputs_map: Map<OpaqueKey, Array<number>>)
-    : Array<LinkModel | UTXOModel> {
-    const to_add: Array<LinkModel | UTXOModel> = [];
+    : Array<OutputLinkModel | UTXOModel> {
+    const to_add: Array<OutputLinkModel | UTXOModel> = [];
     for (let x = 0; x < txns.length; ++x) {
         const txn = txns[x];
         const len = txn.outs.length;
@@ -126,7 +126,7 @@ function process_data(update: any, obj: PreProcessedData) : ProcessedData {
 }
 
 export class ContractBase {
-    utxo_models: Array<UTXOModel|LinkModel>;
+    utxo_models: Array<UTXOModel|OutputLinkModel>;
     inputs_map: Map<OpaqueKey, Array<number>>;
     txn_models: Array<TransactionModel>;
     txid_map: Map<string, number>

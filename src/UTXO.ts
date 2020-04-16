@@ -7,7 +7,7 @@ export class UTXOMetaData {
 	index: number;
 	script: Buffer;
 	amount: number;
-	spends: Array<number>;
+	spends: Array<TransactionModel>;
 	constructor(script: Buffer, amount:number, txn:Transaction, index:number) {
 		this.txid = txn.getId();
 		this.index = index;
