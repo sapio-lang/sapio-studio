@@ -1,30 +1,11 @@
 
 import * as Bitcoin from 'bitcoinjs-lib';
-import React from 'react';
-import ListGroup from 'react-bootstrap/ListGroup';
 import { NodeColor } from './ContractManager';
 import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
-import Hex from './Hex';
 import './Transaction.css';
 import { call, keyFn } from './util';
 import { UTXO, UTXOModel } from './UTXO';
 
-
-export class Output extends React.Component {
-	render() {
-        const script = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txoutput.script));
-
-		return(
-			<>
-				<h4> {this.props.txoutput.value/100e6} BTC </h4>
-				<Hex readOnly className="txhex" value={script}/>
-                <ListGroup>
-                    <ListGroup.Item action variant="primary" onClick={this.props.update}> Go </ListGroup.Item>
-                </ListGroup>
-			</>
-		);
-	}
-}
 
 Bitcoin.Transaction.prototype.getTXID = function() {
     const b = new Buffer(32);
