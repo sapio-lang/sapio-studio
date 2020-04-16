@@ -1,5 +1,5 @@
 import { UTXONodeModel } from './DiagramComponents/UTXONode/UTXONodeModel';
-export class UTXO {
+export class UTXOMetaData {
 	constructor(script, amount, txn, index) {
 		this.txid = txn.getId();
 		this.index = index;

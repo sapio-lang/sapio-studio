@@ -4,7 +4,7 @@ import { NodeColor } from './ContractManager';
 import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
 import './Transaction.css';
 import { call, keyFn } from './util';
-import { UTXO, UTXOModel } from './UTXO';
+import { UTXOMetaData, UTXOModel } from './UTXO';
 
 
 export class TransactionModel extends TransactionNodeModel {
@@ -21,7 +21,7 @@ export class TransactionModel extends TransactionNodeModel {
             const subcolor = color.clone();
             subcolor.fade();
             let metadata  = utxo_labels[y] || {color: subcolor.get(), label:  name };
-            let utxo = new UTXOModel(new UTXO(tx.outs[y].script, tx.outs[y].value, tx, y), update, metadata.label, new NodeColor(metadata.color), this);
+            let utxo = new UTXOModel(new UTXOMetaData(tx.outs[y].script, tx.outs[y].value, tx, y), update, metadata.label, new NodeColor(metadata.color), this);
             this.utxo_models.push(utxo);
             this.utxo_links.push(this.addOutPort('output ' + y).link(utxo.addInPort('create')));
         }
