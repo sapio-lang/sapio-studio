@@ -3,21 +3,29 @@ import React from 'react';
 import Collapse from 'react-bootstrap/Collapse';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Hex, { hash_to_hex } from '../Hex';
-export class InputDetail extends React.Component {
-    constructor(props) {
+import ListGroupItem from 'react-bootstrap/ListGroupItem';
+interface IProps {
+    txinput : Bitcoin.TxInput;
+    goto: () => void;
+
+}
+interface IState {
+    open: boolean;
+
+}
+export class InputDetail extends React.Component<IProps, IState> {
+    constructor(props: IProps) {
         super(props);
-        this.state = {};
-        this.state.open = false;
-        this.hash = hash_to_hex(this.props.txinput.hash);
+        this.state = {open: false};
     }
     render() {
-        const maybeDecode = (d, elt) => d ? Bitcoin.script.toASM(Bitcoin.script.decompile(elt)) : elt.toString('hex');
-        const witness = []; /*this.props.txinput.witness.map((elt,i) =>
+        // const maybeDecode = (d, elt) => d ? Bitcoin.script.toASM(Bitcoin.script.decompile(elt)) : elt.toString('hex');
+        const witness : Array<ListGroupItem> = []; /*this.props.txinput.witness.map((elt,i) =>
             (<ListGroup.Item key={i}>
                 <Hex readOnly className="txhex" value={maybeDecode(i === (this.props.txinput.witness.length -1), elt)}></Hex>
             </ListGroup.Item>)
         );*/
-        const scriptValue = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txinput.script));
+        const scriptValue = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txinput.script)?? new Buffer(""));
         ;
         const script = this.props.txinput.script.length > 0 ?
             <>
@@ -26,16 +34,15 @@ export class InputDetail extends React.Component {
             </> : null;
         const sequence = this.props.txinput.sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE ? null :
             <h4>Sequence: {this.props.txinput.sequence} </h4>;
+        // missing horizontal
         return (<div>
             <h4> OutPoint </h4>
             <h5>Hash</h5>
-            <Hex readOnly className="txhex" value={this.hash} />
+            <Hex readOnly className="txhex" value={hash_to_hex(this.props.txinput.hash) } />
             <h5>N: {this.props.txinput.index} </h5>
 
-            <ListGroup horizontal>
-                <ListGroup.Item action variant="primary" onClick={this.props.goto}>
-                    Go
-                        </ListGroup.Item>
+            <ListGroup>
+                <ListGroup.Item action variant="primary" onClick={this.props.goto}> Go </ListGroup.Item>
                 <ListGroup.Item action variant="secondary" onClick={() => this.setState({ open: !this.state.open })} aria-controls="input-data" aria-expanded={this.state.open}>
                     {this.state.open ? "Less" : "More"}...
                         </ListGroup.Item>

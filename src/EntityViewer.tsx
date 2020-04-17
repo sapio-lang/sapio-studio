@@ -28,7 +28,7 @@ export class EntityViewer extends React.Component<EntityViewerProps> {
                     entity={this.props.entity as TransactionModel}
                     hide_details={this.props.hide_details}
                     update={this.props.update_viewer}
-                    find_tx_model={this.props.current_contract.lookup} />);
+                    find_tx_model={(a:Buffer, b:number) => this.props.current_contract.lookup(a,b)} />);
             case UTXOModel:
                 return (<UTXODetail
                     entity={this.props.entity as UTXOModel}

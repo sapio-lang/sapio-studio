@@ -78,7 +78,7 @@ class App extends React.Component {
         update_broadcastable(contract, new Set());
         this.model_manager.unload(this.state.current_contract);
         this.model_manager.load(contract)
-        this.setState({ contract, model_number: this.model_number++ });
+        this.setState({ current_contract: contract, model_number: this.model_number++ });
         this.forceUpdate();
     }
 
