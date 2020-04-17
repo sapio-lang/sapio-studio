@@ -33,7 +33,7 @@ export class InputDetail extends React.Component {
             <h5>N: {this.props.txinput.index} </h5>
 
             <ListGroup horizontal>
-                <ListGroup.Item action variant="primary" onClick={this.props.update}>
+                <ListGroup.Item action variant="primary" onClick={this.props.goto}>
                     Go
                         </ListGroup.Item>
                 <ListGroup.Item action variant="secondary" onClick={() => this.setState({ open: !this.state.open })} aria-controls="input-data" aria-expanded={this.state.open}>

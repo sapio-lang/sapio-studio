@@ -9,7 +9,7 @@ export interface Viewer {
 }
 export interface UpdateMessage {
     entity: Viewer;
-    isSelected: boolean;
+    isSelected?: boolean;
 }
 interface EntityViewerProps {
     broadcast: (a: Transaction) => Promise<any>;

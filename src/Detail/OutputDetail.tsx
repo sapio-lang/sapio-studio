@@ -6,7 +6,7 @@ import { UTXOModel } from '../UTXO';
 
 interface OutputDetailProps {
     txoutput: UTXOModel;
-    update: () => void
+    goto: () => void
 }
 export class OutputDetail extends React.Component<OutputDetailProps> {
     render() {
@@ -16,7 +16,7 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
             <h4> {this.props.txoutput.value / 100e6} BTC </h4>
             <Hex readOnly className="txhex" value={script} />
             <ListGroup>
-                <ListGroup.Item action variant="primary" onClick={this.props.update}> Go </ListGroup.Item>
+                <ListGroup.Item action variant="primary" onClick={this.props.goto}> Go </ListGroup.Item>
             </ListGroup>
         </>);
     }
