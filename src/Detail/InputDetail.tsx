@@ -3,9 +3,8 @@ import React from 'react';
 import Collapse from 'react-bootstrap/Collapse';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Hex, { hash_to_hex } from '../Hex';
-import ListGroupItem from 'react-bootstrap/ListGroupItem';
 interface IProps {
-    txinput : Bitcoin.TxInput;
+    txinput: Bitcoin.TxInput;
     goto: () => void;
 
 }
@@ -13,19 +12,27 @@ interface IState {
     open: boolean;
 
 }
+function maybeDecode(to_asm: boolean, elt: Buffer): string {
+    if (to_asm) {
+        return Bitcoin.script.toASM(Bitcoin.script.decompile(elt) ?? new Buffer(""))
+    } else {
+        return elt.toString('hex');
+    }
+}
 export class InputDetail extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
-        this.state = {open: false};
+        this.state = { open: false };
     }
     render() {
-        // const maybeDecode = (d, elt) => d ? Bitcoin.script.toASM(Bitcoin.script.decompile(elt)) : elt.toString('hex');
-        const witness : Array<ListGroupItem> = []; /*this.props.txinput.witness.map((elt,i) =>
+        const witness: any[] = this.props.txinput.witness.map((elt, i) =>
             (<ListGroup.Item key={i}>
-                <Hex readOnly className="txhex" value={maybeDecode(i === (this.props.txinput.witness.length -1), elt)}></Hex>
+                <Hex readOnly
+                    className="txhex"
+                    value={maybeDecode(i === (this.props.txinput.witness.length - 1), elt)} />
             </ListGroup.Item>)
-        );*/
-        const scriptValue = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txinput.script)?? new Buffer(""));
+        );
+        const scriptValue = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txinput.script) ?? new Buffer(""));
         ;
         const script = this.props.txinput.script.length > 0 ?
             <>
@@ -38,7 +45,7 @@ export class InputDetail extends React.Component<IProps, IState> {
         return (<div>
             <h4> OutPoint </h4>
             <h5>Hash</h5>
-            <Hex readOnly className="txhex" value={hash_to_hex(this.props.txinput.hash) } />
+            <Hex readOnly className="txhex" value={hash_to_hex(this.props.txinput.hash)} />
             <h5>N: {this.props.txinput.index} </h5>
 
             <ListGroup>
