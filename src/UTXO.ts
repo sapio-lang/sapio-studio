@@ -4,11 +4,11 @@ import { UTXONodeModel } from './DiagramComponents/UTXONode/UTXONodeModel';
 import { Viewer } from './EntityViewer';
 import { TransactionModel } from './Transaction';
 export class UTXOMetaData {
-	txid: string;
 	index: number;
 	script: Buffer;
 	amount: number;
 	spends: Array<TransactionModel>;
+	txid: string;
 	constructor(script: Buffer, amount:number, txn:Transaction, index:number) {
 		this.txid = txn.getId();
 		this.index = index;
@@ -20,7 +20,6 @@ export class UTXOMetaData {
 export class UTXOModel extends UTXONodeModel implements Viewer {
 	txn: TransactionModel;
 	utxo: UTXOMetaData;
-	type: string;
 	constructor(utxo:UTXOMetaData, update:any, name:string, color:NodeColor, txn:TransactionModel) {
 		super(name, color.get(), utxo.amount);
 		this.utxo = utxo;
@@ -28,7 +27,6 @@ export class UTXOModel extends UTXONodeModel implements Viewer {
 		this.registerListener({
 			selectionChanged: update
 		});
-        this.type = "utxo";
 	}
 }
 

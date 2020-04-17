@@ -11,7 +11,6 @@ import { UTXOMetaData, UTXOModel } from './UTXO';
 
 
 export class TransactionModel extends TransactionNodeModel implements Viewer {
-    type: string;
     broadcastable: boolean;
     broadcastable_hook: (b:boolean) => void;
     tx: Bitcoin.Transaction;
@@ -20,7 +19,6 @@ export class TransactionModel extends TransactionNodeModel implements Viewer {
     public input_links: Array<SpendLinkModel>;
 	constructor(tx:Bitcoin.Transaction, update:any, name:string, color:NodeColor, utxo_labels: Array<UTXOFormatData|null>) {
 		super(tx.getId().substr(0, 16), name, color.get());
-        this.type = "txn";
         this.broadcastable = false;
         this.broadcastable_hook = (b)=>{};
 		this.tx = tx;

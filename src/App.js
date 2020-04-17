@@ -8,7 +8,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import './App.css';
 import { AppNavbar } from "./AppNavbar";
-import { BitcoinNodeManager } from './BitcoinNode';
+import { BitcoinNodeManager, update_broadcastable} from './BitcoinNode';
 import { CompilerServer } from "./Compiler/ContractCompilerServer";
 import { ContractBase, ContractModel } from './ContractManager';
 import { TransactionNodeFactory } from './DiagramComponents/TransactionNode/TransactionNodeFactory';
@@ -56,17 +56,16 @@ class App extends React.Component {
 
         /* current_contract is the contract loaded into the
          * backend logic interface */
-        this.current_contract = new ContractBase();
         /* state.current_contract is the contract loaded into the
          * ux
          * TODO: Can these be unified?
          */
-        this.state.current_contract = this.current_contract;
+        this.state.current_contract = new ContractBase();
         this.form = {};
         this.state.modal_create = false;
         this.state.modal_view = false;
         /* Bitcoin Node State */
-        this.bitcoin_node_manager = new BitcoinNodeManager(this);
+        this.bitcoin_node_manager = null;
 
 
         /* Socket Functionality */
@@ -76,16 +75,11 @@ class App extends React.Component {
 
     load_new_model(data) {
         let contract = new ContractModel(this.update_viewer.bind(this), data);
-        this.model_manager.unload(this.current_contract);
+        update_broadcastable(contract, new Set());
+        this.model_manager.unload(this.state.current_contract);
         this.model_manager.load(contract)
-        this.current_contract = contract;
-        this.setState({ contract });
-        this.setState({ model_number: this.model_number });
-        this.model_number += 1;
-        this.bitcoin_node_manager.update_broadcastable();
-        this.forceUpdate(() => {
-        });
-        // TODO: Fix this! Sketchy...
+        this.setState({ contract, model_number: this.model_number++ });
+        this.forceUpdate();
     }
 
     update_viewer(data) {
@@ -104,6 +98,8 @@ class App extends React.Component {
 
         return (
             <div className="App">
+                <BitcoinNodeManager current_contract={this.state.current_contract} app={this} ref={(bnm) => this.bitcoin_node_manager = bnm}/>
+
                 <Container fluid>
                     <AppNavbar
                         dynamic_forms={this.state.dynamic_forms}
@@ -124,7 +120,7 @@ class App extends React.Component {
                             <Col xs={6} sm={5} md={4} lg={3} xl={2}>
                                 <EntityViewer
                                 entity = {this.state.entity}
-                                broadcast = {(x) => this.props.bitcoin_node_manager.broadcast(x)}
+                                broadcast = {(x) => this.bitcoin_node_manager.broadcast(x)}
                                 hide_details = {() => this.hide_details()}
                                 current_contract = {this.state.current_contract}
                                 update_viewer = {this.update_viewer.bind(this)}

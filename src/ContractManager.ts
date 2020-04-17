@@ -139,6 +139,11 @@ export class ContractBase {
     process_finality(is_final: Array<string>, model: any) {
         console.log("called empty");
     }
+
+    lookup(txid: Buffer, n: number): UTXOModel|null {
+        console.log("called empty");
+        return null;
+    }
 }
 export class ContractModel extends ContractBase {
     obj: PreProcessedData;
@@ -155,7 +160,7 @@ export class ContractModel extends ContractBase {
         this.txid_map = txid_map;
         console.log(this);
     }
-    lookup(txid: string, n: number) {
+    lookup(txid: Buffer, n: number): UTXOModel|null {
         const idx = this.txid_map.get(hash_to_hex(txid));
         if (idx === undefined)
             return null;
