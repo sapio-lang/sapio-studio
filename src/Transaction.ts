@@ -1,15 +1,16 @@
 
 import * as Bitcoin from 'bitcoinjs-lib';
-import { NodeColor, UTXOFormatData} from './ContractManager';
+import { NodeColor, UTXOFormatData } from './ContractManager';
 import { OutputLinkModel } from './DiagramComponents/OutputLink';
+import { SpendLinkModel } from './DiagramComponents/SpendLink/SpendLink';
 import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
+import { Viewer } from './EntityViewer';
 import './Transaction.css';
 import { keyFn, OpaqueKey } from './util';
 import { UTXOMetaData, UTXOModel } from './UTXO';
-import { SpendLinkModel } from './DiagramComponents/SpendLink/SpendLink';
 
 
-export class TransactionModel extends TransactionNodeModel {
+export class TransactionModel extends TransactionNodeModel implements Viewer {
     type: string;
     broadcastable: boolean;
     broadcastable_hook: (b:boolean) => void;
