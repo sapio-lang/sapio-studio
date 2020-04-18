@@ -4,10 +4,39 @@ interface Key {
     index: number,
     hash: Buffer
 }
-export type OpaqueKey = string;
-export function keyFn(key: Key): OpaqueKey {
-    return key.hash.toString('hex') + ',' + key.index;
+type OpaqueKey = string;
+
+
+export class InputMap<T> {
+    map: Map<OpaqueKey, Map<number, Array<T>>>
+    constructor() {
+        this.map = new Map();
+    }
+    add(t:Key, model:T) {
+        const key1 = t.hash.toString('hex');
+        let vals = this.map.get(key1);
+        if (vals === undefined) {
+            vals = new Map();
+            this.map.set(key1, vals);
+        }
+        
+        let vals2 = vals.get(t.index);
+        if (vals2 == undefined) {
+            vals2 = new Array();
+            vals.set(t.index, vals2);
+        }
+        vals2.push(model)
+
+    }
+    get(t:Key) : Array<T>|undefined {
+        return this.map.get(t.hash.toString('hex'))?.get(t.index);
+    }
+
 }
+
+
+
+
 export function pretty_amount(amount: number) {
     if (amount > 1000) {
         return (amount / 100_000_000) + " BTC";
