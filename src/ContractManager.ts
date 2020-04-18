@@ -1,7 +1,7 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import { hash_to_hex } from './Hex';
 import { TransactionModel } from './Transaction';
-import { keyFn, OpaqueKey } from "./util";
+import { keyFn, OpaqueKey, TXIDAndWTXIDMap } from "./util";
 import { UTXOModel } from "./UTXO";
 import { OutputLinkModel } from './DiagramComponents/OutputLink';
 export class NodeColor {
@@ -42,7 +42,7 @@ interface PreProcessedData {
 };
 interface ProcessedData {
     inputs_map: Map<OpaqueKey, Array<number>>,
-    txid_map: Map<string, number>,
+    txid_map: TXIDAndWTXIDMap<TransactionModel>,
     txn_models: Array<TransactionModel>,
     utxo_models: Array<OutputLinkModel| UTXOModel>
 };
@@ -75,13 +75,13 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
     update: any,
     txn_labels: Array<string>,
     txn_colors: Array<NodeColor>,
-    utxo_labels: Array<Array<UTXOFormatData | null>>): [Map<string, number>, Array<TransactionModel>] {
-    let txid_map = new Map();
+    utxo_labels: Array<Array<UTXOFormatData | null>>): [TXIDAndWTXIDMap<TransactionModel>, Array<TransactionModel>] {
+    let txid_map : TXIDAndWTXIDMap<TransactionModel> = new TXIDAndWTXIDMap();
     let txn_models: Array<TransactionModel> = [];
     for (let x = 0; x < txns.length; ++x) {
         const txn = txns[x];
-        txid_map.set(txn.getId(), x);
         const txn_model = new TransactionModel(txn, update, txn_labels[x], txn_colors[x], utxo_labels[x]);
+        txid_map.add(txn_model);
         txn_models.push(txn_model);
     }
     return [txid_map, txn_models];
@@ -129,12 +129,12 @@ export class ContractBase {
     utxo_models: Array<UTXOModel|OutputLinkModel>;
     inputs_map: Map<OpaqueKey, Array<number>>;
     txn_models: Array<TransactionModel>;
-    txid_map: Map<string, number>
+    txid_map: TXIDAndWTXIDMap<TransactionModel>
     constructor() {
         this.utxo_models = [];
         this.inputs_map = new Map();
         this.txn_models = [];
-        this.txid_map = new Map();
+        this.txid_map = new TXIDAndWTXIDMap();
     }
     process_finality(is_final: Array<string>, model: any) {
         console.log("called empty");
@@ -160,21 +160,27 @@ export class ContractModel extends ContractBase {
         this.txid_map = txid_map;
         console.log(this);
     }
+    // TODO: Return an Array of UTXOModels
     lookup(txid: Buffer, n: number): UTXOModel|null {
-        const idx = this.txid_map.get(hash_to_hex(txid));
+        // TODO: Reimplement in terms of WTXID
+        return null;
+/*        const idx = this.txid_map.get(hash_to_hex(txid));
         if (idx === undefined)
             return null;
-        return this.txn_models[idx].utxo_models[n];
+        return this.txn_models[idx].utxo_models[n]; 
+        */
     }
     process_finality(is_final: Array<string>, model: any) {
-        is_final.forEach((txid) => {
+        return null;
+        // TODO: Reimplement in terms of WTXID
+        /*is_final.forEach((txid) => {
             const key = this.txid_map.get(txid);
             if (key === undefined){ return; }
             const m = this.txn_models[key];
             m.setConfirmed(true);
             m.utxo_models.forEach((m) => m.setConfirmed(true));
             m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
-        });
+        });*/
     }
 }
 

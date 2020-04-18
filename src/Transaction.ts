@@ -6,11 +6,11 @@ import { SpendLinkModel } from './DiagramComponents/SpendLink/SpendLink';
 import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
 import { Viewer } from './EntityViewer';
 import './Transaction.css';
-import { keyFn, OpaqueKey } from './util';
+import { keyFn, OpaqueKey, HasKeys, WTXID, TXID, get_wtxid_backwards } from './util';
 import { UTXOMetaData, UTXOModel } from './UTXO';
 
 
-export class TransactionModel extends TransactionNodeModel implements Viewer {
+export class TransactionModel extends TransactionNodeModel implements Viewer, HasKeys {
     broadcastable: boolean;
     broadcastable_hook: (b:boolean) => void;
     tx: Bitcoin.Transaction;
@@ -38,7 +38,14 @@ export class TransactionModel extends TransactionNodeModel implements Viewer {
 		this.registerListener({
 			selectionChanged: update
 		});
-	}
+    }
+
+    get_wtxid() : WTXID {
+        return get_wtxid_backwards(this.tx);
+    }
+    get_txid() : TXID {
+        return this.tx.getId();
+    }
     remove_from_model(model:any) {
         model.removeNode(this);
         this.utxo_models.map((x)=>model.removeNode(x));
