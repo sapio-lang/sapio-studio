@@ -29,7 +29,7 @@ export class InputDetail extends React.Component<IProps, IState> {
             (<ListGroup.Item key={i}>
                 <Hex readOnly
                     className="txhex"
-                    value={maybeDecode(i === (this.props.txinput.witness.length - 1), elt)} />
+                    value={maybeDecode(true || i === (this.props.txinput.witness.length - 1), elt)} />
             </ListGroup.Item>)
         );
         const scriptValue = Bitcoin.script.toASM(Bitcoin.script.decompile(this.props.txinput.script) ?? new Buffer(""));

@@ -3,6 +3,7 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from '../Hex';
 import { UTXOModel } from '../UTXO';
 import { UpdateMessage } from '../EntityViewer';
+import { pretty_amount } from '../util';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -34,7 +35,7 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
                 <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: this.props.entity.txn})}>Go</ListGroup.Item>
             </ListGroup>
             <h3> Amount </h3>
-            <h4> {this.props.entity.utxo.amount / 100e6} BTC</h4>
+            <h4> {pretty_amount(this.props.entity.utxo.amount)} </h4>
             <h3> Script</h3>
             <Hex className="txhex" readOnly value={this.props.entity.utxo.script.toString('hex')} />
             <h3>Spends</h3>

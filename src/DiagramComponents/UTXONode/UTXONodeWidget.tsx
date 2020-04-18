@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
+import { pretty_amount } from '../../util';
 //import { css } from '@emotion/core';
 
 
@@ -106,7 +107,7 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 				confirmed={this.props.node.isConfirmed()}
 				background={this.props.node.color}>
 				<Title>
-					<TitleName>UTXO {this.props.node.value/100e6} BTC</TitleName>
+					<TitleName>UTXO {pretty_amount(this.props.node.value)}</TitleName>
 				</Title>
 				<Ports>
 					<PortsContainer>{_.map(this.props.node.getInPorts(), this.generatePort)}</PortsContainer>
