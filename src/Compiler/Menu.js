@@ -37,7 +37,7 @@ export class MenuForm extends React.Component {
         let form_groups = [];
         for (let arg in this.props.args) {
             let type = this.props.args[arg];
-            form_groups.push((<Form.Group>
+            form_groups.push((<Form.Group key={arg}>
                 <Form.Label> {arg} </Form.Label>
                 <Form.Control type="text"
                 placeholder={JSON.stringify(type)}

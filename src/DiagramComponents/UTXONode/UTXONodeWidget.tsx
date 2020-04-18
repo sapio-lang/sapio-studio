@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
-import { DefaultPortLabel } from '@projectstorm/react-diagrams';
-import { DiagramEngine } from '@projectstorm/react-diagrams-core';
+import { DefaultPortLabel, DefaultPortModel } from '@projectstorm/react-diagrams';
+import { DiagramEngine, PortModel } from '@projectstorm/react-diagrams-core';
 import * as _ from 'lodash';
 import * as React from 'react';
 import './Ants.css';
@@ -47,7 +47,7 @@ flex-grow: 1;
 display: flex;
 flex-direction: column;
 
-&:first-child {
+&:first-of-type {
     margin-right: 10px;
 }
 
@@ -73,11 +73,13 @@ interface DefaultNodeProps {
 export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
     circle: SVGCircleElement | null;
     callback: () => any;
-    mounted: boolean;
+	mounted: boolean;
+	id: number;
     constructor(props:any) {
         super(props);
         this.circle = null;
-        this.mounted=false;
+		this.mounted=false;
+		this.id = Math.random()
         this.callback = () =>
         {
             if (this.circle == null) return;
@@ -86,8 +88,8 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 			this.circle.setAttribute('cy', point.y.toString());
         }
     }
-	generatePort = (port :any) => {
-		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.id} />;
+	generatePort = (port :DefaultPortModel) => {
+		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
 	};
 
 	componentDidMount() {
@@ -100,20 +102,23 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 	}
 
 	render() {
+		const ports_in = _.map(this.props.node.getInPorts(), this.generatePort);
+		const ports_out = _.map(this.props.node.getOutPorts(), this.generatePort);
 		return (
 			<UTXONode
 				data-default-utxonode-name={this.props.node.name}
+				key={this.id}
 				selected={this.props.node.isSelected()}
 				confirmed={this.props.node.isConfirmed()}
 				background={this.props.node.color}>
-				<Title>
+				<Title key="amount">
 					<TitleName>UTXO {pretty_amount(this.props.node.value)}</TitleName>
 				</Title>
-				<Ports>
-					<PortsContainer>{_.map(this.props.node.getInPorts(), this.generatePort)}</PortsContainer>
-					<PortsContainer>{_.map(this.props.node.getOutPorts(), this.generatePort)}</PortsContainer>
+				<Ports key="ports">
+					<PortsContainer key="inputs">{ports_in}</PortsContainer>
+					<PortsContainer key="outputs">{ports_out}</PortsContainer>
 				</Ports>
-				<Title>
+				<Title key="name">
 					<TitleName>{this.props.node.name}</TitleName>
 				</Title>
 			</UTXONode>

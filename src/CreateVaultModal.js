@@ -20,13 +20,13 @@ export class CreateContractModal extends React.Component {
             let key = "dyanimic_form_" + option + counter;
             default_key = default_key || key;
             nav_options.push((
-                <Nav.Item>
-                    <Nav.Link eventKey={key}> {option} </Nav.Link>
+                <Nav.Item key={option}>
+                    <Nav.Link eventKey={key} > {option} </Nav.Link>
                 </Nav.Item>));
             let args = this.props.dynamic_forms[option];
             tab_options.push((
 
-                <Tab.Pane eventKey={key} title={option}>
+                <Tab.Pane eventKey={key} key={option} title={option}>
                     <MenuForm hide={this.props.hide} load_new_model={this.props.load_new_model}
                         args={args}
                         type={option}

@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { DefaultPortLabel } from '@projectstorm/react-diagrams';
+import { DefaultPortLabel, DefaultPortModel } from '@projectstorm/react-diagrams';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import * as _ from 'lodash';
 import * as React from 'react';
@@ -47,7 +47,7 @@ flex-grow: 1;
 display: flex;
 flex-direction: column;
 
-&:first-child {
+&:first-of-type {
     margin-right: 10px;
 }
 
@@ -71,8 +71,8 @@ export interface DefaultNodeProps {
  * for both all the input ports on the left, and the output ports on the right.
  */
 export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
-	generatePort = (port :any) => {
-		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.id} />;
+	generatePort = (port :DefaultPortModel) => {
+		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
 	};
 
 	render() {
