@@ -39,11 +39,10 @@ export class MenuForm extends React.Component {
             let type = this.props.args[arg];
             form_groups.push((<Form.Group>
                 <Form.Label> {arg} </Form.Label>
-                <Form.Label> {type} </Form.Label>
-                <Form.Control as="textarea"
-                placeholder="bcrt1q0548jkmkzksch8hc367jm77up40yydqh87e3qa 1.4"
+                <Form.Control type="text"
+                placeholder={JSON.stringify(type)}
                 ref={(amt) => this.form[arg]= amt}
-                rows="1" />
+                 />
             </Form.Group>));
         }
         return (<Form onSubmit={this.handleSubmit.bind(this)}>
