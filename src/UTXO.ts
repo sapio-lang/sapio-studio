@@ -21,7 +21,11 @@ export class UTXOModel extends UTXONodeModel implements Viewer {
 	txn: TransactionModel;
 	utxo: UTXOMetaData;
 	constructor(utxo:UTXOMetaData, update:any, name:string, color:NodeColor, txn:TransactionModel) {
-		super(name, color.get(), utxo.amount);
+		super({
+			name,
+			color:color.get(),
+			value: utxo.amount,
+			confirmed: false});
 		this.utxo = utxo;
         this.txn = txn;
 		this.registerListener({

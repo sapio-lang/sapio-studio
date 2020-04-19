@@ -1,41 +1,57 @@
-import { DefaultPortModel, NodeModel } from '@projectstorm/react-diagrams';
-import { PortModelAlignment } from '@projectstorm/react-diagrams-core';
-import { SpendPortModel } from '../../SpendLink/SpendLink';
+import { DefaultPortModel, NodeModel, DefaultNodeModelOptions, DefaultNodeModelGenerics } from '@projectstorm/react-diagrams';
+import { PortModelAlignment, NodeModelGenerics, PortModel } from '@projectstorm/react-diagrams-core';
+import { SpendPortModel } from '../SpendLink/SpendLink';
+import { BasePositionModelOptions, BaseModel, BaseModelGenerics, DeserializeEvent } from '@projectstorm/react-canvas-core';
+import _ from 'lodash';
 
+export interface UTXONodeModelOptions extends BasePositionModelOptions {
+    name: string;
+    color: string;
+    amount: number;
+    confirmed: boolean;
+}
+export interface UTXONodeModelGenerics extends NodeModelGenerics {
+    OPTIONS: UTXONodeModelOptions;
+}
 /**
  * Example of a custom model using pure javascript
  */
-export class UTXONodeModel extends NodeModel {
-    constructor(name, color, value, options={}) {
+export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
+    protected portsIn: DefaultPortModel[];
+    protected portsOut: SpendPortModel[];
+    constructor(options:any={}, name?: string, color?: string, amount?: number, confirmed: boolean = false) {
+        color = color || 'red';
         super({
             name,
             color,
+            amount,
+            confirmed : false,
             type: 'utxo-node',
             ...options
         });
-        this.color = color || 'red';
         this.portsOut = [];
         this.portsIn = [];
-        this.value = value;
-        this.name= name;
-        this.confirmed=false;
 
     }
-    setConfirmed(opt) {
-        this.confirmed =opt;
+    getAmount() : number {
+        return this.options.amount || 0;
+    }
+    setConfirmed(opt: boolean) {
+        this.options.confirmed = opt;
         this.setSelected(true);
     }
-    isConfirmed() {
-        return this.confirmed;
+    isConfirmed(): boolean {
+        return this.options.confirmed;
     }
 
-    doClone(lookupTable, clone) {
+    doClone(lookupTable: {}, clone: any) {
         clone.portsIn = [];
         clone.portsOut = [];
         super.doClone(lookupTable, clone);
     }
 
-    removePort(port) {
+    // TODO: Fix Port type?
+    removePort(port: any) {
         super.removePort(port);
         if (port.getOptions().in) {
             this.portsIn.splice(this.portsIn.indexOf(port));
@@ -45,7 +61,8 @@ export class UTXONodeModel extends NodeModel {
     }
 
 
-    addPort(port) {
+    // TODO: Fix Port type?
+    addPort(port: any) {
         super.addPort(port);
         if (port.getOptions().in) {
             if (this.portsIn.indexOf(port) === -1) {
@@ -58,7 +75,7 @@ export class UTXONodeModel extends NodeModel {
         }
         return port;
     }
-    addInPort(label, after) {
+    addInPort(label: string, after?: boolean) {
         after = after || true;
         const p = new DefaultPortModel({
             in: true,
@@ -72,7 +89,7 @@ export class UTXONodeModel extends NodeModel {
         return this.addPort(p);
     }
 
-    addOutPort(label, after){
+    addOutPort(label: string, after?: boolean) {
         after = after || true;
         const p = new SpendPortModel({
             in: false,
@@ -86,21 +103,14 @@ export class UTXONodeModel extends NodeModel {
         return this.addPort(p);
     }
 
-    serialize() {
-        return {
-            ...super.serialize(),
-            color: this.options.color
-        };
-    }
 
-    deserialize(ob, engine) {
-        super.deserialize(ob, engine);
-        this.color = ob.color;
-    }
-    getInPorts() {
+    getInPorts(): DefaultPortModel[] {
         return this.portsIn;
     }
-    getOutPorts() {
+    getOutPorts(): SpendPortModel[] {
         return this.portsOut;
     }
+
+
 }
+

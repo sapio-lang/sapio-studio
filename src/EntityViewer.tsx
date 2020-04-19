@@ -7,6 +7,10 @@ import { TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
 export interface Viewer {
 }
+
+export class EmptyViewer implements Viewer {
+
+}
 export interface UpdateMessage {
     entity: Viewer;
     isSelected?: boolean;

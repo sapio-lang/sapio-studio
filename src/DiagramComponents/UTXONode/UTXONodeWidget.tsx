@@ -106,20 +106,20 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 		const ports_out = _.map(this.props.node.getOutPorts(), this.generatePort);
 		return (
 			<UTXONode
-				data-default-utxonode-name={this.props.node.name}
+				data-default-utxonode-name={this.props.node.getOptions().name}
 				key={this.id}
 				selected={this.props.node.isSelected()}
 				confirmed={this.props.node.isConfirmed()}
-				background={this.props.node.color}>
+				background={this.props.node.getOptions().color}>
 				<Title key="amount">
-					<TitleName>UTXO {pretty_amount(this.props.node.value)}</TitleName>
+					<TitleName>UTXO {pretty_amount(this.props.node.getOptions().amount)}</TitleName>
 				</Title>
 				<Ports key="ports">
 					<PortsContainer key="inputs">{ports_in}</PortsContainer>
 					<PortsContainer key="outputs">{ports_out}</PortsContainer>
 				</Ports>
 				<Title key="name">
-					<TitleName>{this.props.node.name}</TitleName>
+					<TitleName>{this.props.node.getOptions().name}</TitleName>
 				</Title>
 			</UTXONode>
 		);

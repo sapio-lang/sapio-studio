@@ -30,7 +30,7 @@ interface TransactionData {
     utxo_metadata: Array<UTXOFormatData | null>
 }
 
-interface Data {
+export interface Data {
     program: Array<TransactionData>
 }
 
@@ -44,7 +44,8 @@ interface ProcessedData {
     inputs_map: InputMap<TransactionModel>,
     txid_map: TXIDAndWTXIDMap<TransactionModel>,
     txn_models: Array<TransactionModel>,
-    utxo_models: Array<OutputLinkModel | UTXOModel>
+    utxo_models: Array<UTXOModel>
+    link_models: Array<OutputLinkModel>
 };
 
 function preprocess_data(data: Data): PreProcessedData {
@@ -108,8 +109,9 @@ function process_utxo_models(
     txns: Array<Bitcoin.Transaction>,
     txn_models: Array<TransactionModel>,
     inputs_map: InputMap<TransactionModel>)
-    : Array<OutputLinkModel | UTXOModel> {
-    const to_add: Array<OutputLinkModel | UTXOModel> = [];
+    : [Array<UTXOModel>, Array<OutputLinkModel>] {
+    const to_add: Array<UTXOModel> = [];
+    const to_add_links: Array<OutputLinkModel> = [];
     for (let x = 0; x < txns.length; ++x) {
         const txn = txns[x];
         const len = txn.outs.length;
@@ -127,21 +129,22 @@ function process_utxo_models(
             }
         }
         to_add.push(...txn_models[x].utxo_models);
-        to_add.push(...txn_models[x].utxo_links);
+        to_add_links.push(...txn_models[x].utxo_links);
     }
-    return to_add;
+    return [to_add, to_add_links];
 }
 function process_data(update: any, obj: PreProcessedData): ProcessedData {
     let { txns, txn_colors, txn_labels, utxo_labels } = obj;
     let [txid_map, txn_models] = process_txn_models(txns, update, txn_labels, txn_colors, utxo_labels);
     let inputs_map = process_inputs_map(txn_models);
 
-    const to_add = process_utxo_models(txns, txn_models, inputs_map);
-    return { inputs_map: inputs_map, utxo_models: to_add, txn_models: txn_models, txid_map: txid_map };
+    const [to_add, to_add_links] = process_utxo_models(txns, txn_models, inputs_map);
+    return { inputs_map: inputs_map, utxo_models: to_add, txn_models: txn_models, txid_map: txid_map, link_models:to_add_links };
 }
 
 export class ContractBase {
-    protected utxo_models: Array<UTXOModel | OutputLinkModel>;
+    utxo_models: Array<UTXOModel>;
+    link_models: Array<OutputLinkModel>;
     txn_models: Array<TransactionModel>;
     protected inputs_map: InputMap<TransactionModel>
     txid_map: TXIDAndWTXIDMap<TransactionModel>
@@ -150,6 +153,7 @@ export class ContractBase {
         this.inputs_map = new InputMap();
         this.txn_models = [];
         this.txid_map = new TXIDAndWTXIDMap();
+        this.link_models = [];
     }
     process_finality(is_final: Array<string>, model: any) {
         console.log("called empty");
@@ -161,15 +165,20 @@ export class ContractBase {
     }
 }
 export class ContractModel extends ContractBase {
-    constructor(update_viewer: any, obj: Data) {
+    constructor();
+    constructor(update_viewer: any, obj: Data);
+    constructor(update_viewer?: any, obj?: Data) {
         super();
+        if (update_viewer === undefined || obj === undefined)
+            return;
         let new_obj = preprocess_data(obj);
-        let { inputs_map, utxo_models, txn_models, txid_map } =
+        let { inputs_map, utxo_models, txn_models, txid_map, link_models } =
             process_data(update_viewer, new_obj);
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
         this.txid_map = txid_map;
+        this.link_models = link_models;
         console.log(this);
     }
     // TODO: Return an Array of UTXOModels

@@ -14,7 +14,7 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
         const decomp = Bitcoin.script.decompile(this.props.txoutput.utxo.script)?? new Buffer("");
         const script = Bitcoin.script.toASM(decomp);
         return (<>
-            <h4> {pretty_amount(this.props.txoutput.value)} </h4>
+            <h4> {pretty_amount(this.props.txoutput.utxo.amount)} </h4>
             <Hex readOnly className="txhex" value={script} />
             <ListGroup>
                 <ListGroup.Item action variant="primary" onClick={this.props.goto}> Go </ListGroup.Item>
