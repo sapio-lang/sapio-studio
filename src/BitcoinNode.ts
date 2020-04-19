@@ -28,7 +28,7 @@ interface IState {
 export function update_broadcastable(current_contract: ContractModel, confirmed_txs: Set<TXID>) {
     current_contract.txn_models
         .forEach((tm) => {
-            const already_confirmed = confirmed_txs.has(tm.tx.getId());
+            const already_confirmed = confirmed_txs.has(tm.get_txid());
             const inputs_not_locals = tm.tx.ins.every((inp: Input) => 
                 !current_contract.txid_map.has_by_txid(hash_to_hex(inp.hash)));
             const all_inputs_confirmed = tm.tx.ins.every((inp: Input) => confirmed_txs.has(hash_to_hex(inp.hash)));
@@ -50,7 +50,7 @@ async function check_txs(current_contract: ContractModel): Promise<Array<TXID>> 
     // TODO: SHould query by WTXID
     const txids = current_contract.txn_models
         .filter((tm) => tm.is_broadcastable())
-        .map((tm) => tm.tx.getId());
+        .map((tm) => tm.get_txid());
     if (txids.length > 0)
         return await call("/backend/get_transactions", txids);
     return [];

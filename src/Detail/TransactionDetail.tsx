@@ -47,7 +47,7 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
                 </ListGroup>
                 <h3> TXID</h3>
                 <ListGroup.Item>
-                    <Hex className="txhex" readOnly value={this.props.entity.tx.getId()}></Hex>
+                    <Hex className="txhex" readOnly value={this.props.entity.get_txid()}></Hex>
                 </ListGroup.Item>
                 <h3> Inputs</h3>
                 {ins}

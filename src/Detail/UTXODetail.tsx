@@ -18,7 +18,7 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
             return null;
         const spends = this.props.entity.utxo.spends.map((elt, i) => <div key={get_wtxid_backwards(elt.tx)}>
             <ListGroup.Item>
-                <Hex value={elt.tx.getId()} />
+                <Hex value={elt.get_txid()} />
             </ListGroup.Item>
             <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: elt})}> Go</ListGroup.Item>
         </div>);
@@ -29,7 +29,7 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
             </ListGroup>
             <h3> Outpoint </h3>
             <h4>Hash</h4>
-            <Hex className="txhex" readOnly value={this.props.entity.txn.getID()} />
+            <Hex className="txhex" readOnly value={this.props.entity.txn.get_txid()} />
             <h4>N: {this.props.entity.utxo.index}</h4>
             <ListGroup>
                 <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: this.props.entity.txn})}>Go</ListGroup.Item>
