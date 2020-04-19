@@ -3,7 +3,7 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from '../Hex';
 import { UTXOModel } from '../UTXO';
 import { UpdateMessage } from '../EntityViewer';
-import { pretty_amount } from '../util';
+import { pretty_amount, get_wtxid_backwards } from '../util';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -16,12 +16,12 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
             return null;
         if (!this.props.entity.utxo)
             return null;
-        const spends = this.props.entity.utxo.spends.map((elt, i) => <>
-            <ListGroup.Item key={i}>
+        const spends = this.props.entity.utxo.spends.map((elt, i) => <div key={get_wtxid_backwards(elt.tx)}>
+            <ListGroup.Item>
                 <Hex value={elt.tx.getId()} />
             </ListGroup.Item>
             <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: elt})}> Go</ListGroup.Item>
-        </>);
+        </div>);
         return (<div>
             <h2> UTXO </h2>
             <ListGroup>

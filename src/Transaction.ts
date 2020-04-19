@@ -6,7 +6,7 @@ import { SpendLinkModel } from './DiagramComponents/SpendLink/SpendLink';
 import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
 import { Viewer } from './EntityViewer';
 import './Transaction.css';
-import { get_wtxid_backwards, HasKeys, TXID, WTXID, InputMap } from './util';
+import { get_wtxid_backwards, HasKeys, InputMap, TXID } from './util';
 import { UTXOMetaData, UTXOModel } from './UTXO';
 
 
@@ -14,10 +14,12 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
     broadcastable: boolean;
     broadcastable_hook: (b: boolean) => void;
     tx: Bitcoin.Transaction;
+    witness_set: Array<Array<Buffer[]>>;
+
     utxo_models: Array<UTXOModel>;
     public utxo_links: Array<OutputLinkModel>;
     public input_links: Array<SpendLinkModel>;
-    constructor(tx: Bitcoin.Transaction, update: any, name: string, color: NodeColor, utxo_labels: Array<UTXOFormatData | null>) {
+    constructor(tx: Bitcoin.Transaction, all_witnesses: Buffer[][][], update: any, name: string, color: NodeColor, utxo_labels: Array<UTXOFormatData | null>) {
         super(tx.getId().substr(0, 16), name, color.get());
         this.broadcastable = false;
         this.broadcastable_hook = (b) => { };
@@ -25,6 +27,7 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
         this.utxo_models = [];
         this.utxo_links = [];
         this.input_links = [];
+        this.witness_set = all_witnesses;
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = color.clone();
             subcolor.fade();
@@ -40,9 +43,6 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
         });
     }
 
-    get_wtxid(): WTXID {
-        return get_wtxid_backwards(this.tx);
-    }
     get_txid(): TXID {
         return this.tx.getId();
     }

@@ -7,6 +7,7 @@ interface Key {
 type OpaqueKey = string;
 
 
+// Maps an Input (TXID) to all Spenders
 export class InputMap<T> {
     map: Map<OpaqueKey, Map<number, Array<T>>>
     constructor() {
@@ -50,40 +51,29 @@ export function get_wtxid_backwards(tx: Transaction) {
     return tx.getHash(true).toString('hex');
 }
 
-export type WTXID = string;
 export type TXID = string;
 export interface HasKeys {
-    get_wtxid: () => WTXID;
     get_txid: () => TXID;
 }
+// Maps an TXID to a Transaction,
 export class TXIDAndWTXIDMap<K extends HasKeys>  {
-    map: Map<WTXID, K>;
-    map2: Map<TXID, Set<WTXID>>;
+    map: Map<TXID, K>;
     constructor() {
         this.map = new Map();
-        this.map2 = new Map();
     }
     add(t: K): void {
-        this.map.set(t.get_wtxid(), t);
-        let set = this.map2.get(t.get_txid()) ?? new Set();
-        set.add(t.get_wtxid());
+        this.map.set(t.get_txid(), t);
     }
-    get_by_txid(t: K): Set<WTXID> | undefined {
-        return this.map2.get(t.get_txid());
+    get_by_txid(t: K): K | undefined {
+        return this.map.get(t.get_txid());
     }
-    get_by_wtxid(t: K): K | undefined {
-        return this.map.get(t.get_wtxid());
+    get_by_txid_s(t: TXID): K | undefined {
+        return this.map.get(t);
     }
     delete_by_txid(t: K) {
-        this.get_by_txid(t)?.forEach(
-            (x) => this.map.delete(t.get_wtxid())
-        );
+        this.map.delete(t.get_txid());
     }
     has_by_txid(t: TXID): boolean {
-        return this.map2.has(t);
+        return this.map.has(t);
     }
-    has_by_wtxid(t: K): boolean {
-        return this.map2.has(t.get_txid());
-    }
-
 }
