@@ -24,7 +24,7 @@ export class UTXOModel extends UTXONodeModel implements Viewer {
 		super({
 			name,
 			color:color.get(),
-			value: utxo.amount,
+			amount: utxo.amount,
 			confirmed: false});
 		this.utxo = utxo;
         this.txn = txn;

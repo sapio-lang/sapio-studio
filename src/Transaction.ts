@@ -8,6 +8,7 @@ import { Viewer } from './EntityViewer';
 import './Transaction.css';
 import { get_wtxid_backwards, HasKeys, InputMap, TXID } from './util';
 import { UTXOMetaData, UTXOModel } from './UTXO';
+import { DiagramModel, LinkModel } from '@projectstorm/react-diagrams';
 
 
 export class TransactionModel extends TransactionNodeModel implements Viewer, HasKeys {
@@ -46,11 +47,11 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
     get_txid(): TXID {
         return this.tx.getId();
     }
-    remove_from_model(model: any) {
+    remove_from_model(model: DiagramModel) {
         model.removeNode(this);
         this.utxo_models.map((x) => model.removeNode(x));
-        this.utxo_links.map((x) => model.removeLink(x));
-        this.input_links.map((x) => model.removeLink(x));
+        this.utxo_links.map((x) => model.removeLink(<LinkModel><unknown>x));
+        this.input_links.map((x) => model.removeLink(<LinkModel><unknown>x));
     }
     is_broadcastable() {
         return this.broadcastable;
