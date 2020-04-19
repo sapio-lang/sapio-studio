@@ -92,3 +92,14 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
 }
 
 
+export class PhantomTransactionModel extends TransactionModel {
+    override_txid : TXID;
+    constructor(override_txid: TXID, tx: Bitcoin.Transaction, all_witnesses: Buffer[][][], update: any, name: string, color: NodeColor, utxo_labels: Array<UTXOFormatData | null>) {
+        super(tx, all_witnesses, update, name, color, utxo_labels);
+        this.override_txid = override_txid;
+
+    }
+    get_txid() : TXID {
+        return this.override_txid;
+    }
+}

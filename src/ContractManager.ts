@@ -1,9 +1,10 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import * as _ from 'lodash';
 import { OutputLinkModel } from './DiagramComponents/OutputLink';
-import { TransactionModel } from './Transaction';
-import { InputMap, TXIDAndWTXIDMap } from "./util";
+import { TransactionModel, PhantomTransactionModel } from './Transaction';
+import { InputMap, TXIDAndWTXIDMap, TXID, txid_buf_to_string } from "./util";
 import { UTXOModel } from "./UTXO";
+import { number } from 'bitcoinjs-lib/types/script';
 export class NodeColor {
     c: string;
     constructor(c: string) {
@@ -103,33 +104,61 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
             txn_models.push(txn_model);
         }
     ).value();
+    let to_create : Map<TXID, Array<Bitcoin.TxInput>> = new Map();
+    for (const txn_model of txn_models) {
+        for (const input of txn_model.tx.ins) {
+            const txid = txid_buf_to_string(input.hash);
+            if (txid_map.has_by_txid(txid)) {
+                continue;
+            }
+            console.log("missing", txid);
+            // Doesn't matter if already exists in array!
+            // De Duplicated later...
+            let inps = to_create.get(txid) || [];
+            inps.push(input);
+            to_create.set(txid, inps);
+        }
+    }
+    console.log(to_create);
+    to_create.forEach((inps, txid) => {
+        const mock_txn = new Bitcoin.Transaction();
+        let n_outputs :number = 1+ _.chain(inps).map((el) => el.index).max().value();
+        console.log("missing input", txid, n_outputs);
+        for (let i = 0; i < n_outputs; ++i) {
+            mock_txn.addOutput(new Buffer(""), 0);
+        }
+        const color = new NodeColor("white");
+        const utxo_metadata : Array<UTXOFormatData|null> = new Array(n_outputs);
+        utxo_metadata.fill(null);
+        const txn_model = new PhantomTransactionModel(txid, mock_txn, [], update, "Missing", color, utxo_metadata);
+        txid_map.add(txn_model);
+        txn_models.push(txn_model);
+        console.log(txn_model);
+    });
+
     return [txid_map, txn_models];
 }
 function process_utxo_models(
-    txns: Array<Bitcoin.Transaction>,
     txn_models: Array<TransactionModel>,
     inputs_map: InputMap<TransactionModel>)
     : [Array<UTXOModel>, Array<OutputLinkModel>] {
     const to_add: Array<UTXOModel> = [];
     const to_add_links: Array<OutputLinkModel> = [];
-    for (let x = 0; x < txns.length; ++x) {
-        const txn = txns[x];
-        const len = txn.outs.length;
-        for (let y = 0; y < len; ++y) {
-            const utxo_model = txn_models[x].utxo_models[y];
-            const transaction_models: Array<TransactionModel> = inputs_map.get({ hash: txns[x].getHash(), index: y }) ?? [];
-            for (let z = 0; z < transaction_models.length; ++z) {
-                const spender: TransactionModel = transaction_models[z];
+    for (let m_txn of txn_models) {
+        const txn = m_txn.tx;
+        m_txn.utxo_models.forEach((utxo_model, output_index) => {
+            const spenders: Array<TransactionModel> = inputs_map.get_txid_s(m_txn.get_txid(), output_index) ?? [];
+            spenders.forEach((spender, spend_index) => {
                 const spender_tx: Bitcoin.Transaction = spender.tx;
-                const idx = spender_tx.ins.findIndex(elt => elt.index === y && elt.hash.toString('hex') === txn.getHash().toString('hex'));
-                const link = utxo_model.addOutPort('spend ' + z).link(spender.addInPort('input' + idx));
+                const idx = spender_tx.ins.findIndex(elt => elt.index === output_index && elt.hash.toString('hex') === txn.getHash().toString('hex'));
+                const link = utxo_model.addOutPort('spend ' + spend_index).link(spender.addInPort('input' + idx));
                 spender.input_links.push(link);
                 utxo_model.utxo.spends.push(spender);
                 to_add.push(link);
-            }
-        }
-        to_add.push(...txn_models[x].utxo_models);
-        to_add_links.push(...txn_models[x].utxo_links);
+            });
+        });
+        to_add.push(...m_txn.utxo_models);
+        to_add_links.push(...m_txn.utxo_links);
     }
     return [to_add, to_add_links];
 }
@@ -138,7 +167,7 @@ function process_data(update: any, obj: PreProcessedData): ProcessedData {
     let [txid_map, txn_models] = process_txn_models(txns, update, txn_labels, txn_colors, utxo_labels);
     let inputs_map = process_inputs_map(txn_models);
 
-    const [to_add, to_add_links] = process_utxo_models(txns, txn_models, inputs_map);
+    const [to_add, to_add_links] = process_utxo_models(txn_models, inputs_map);
     return { inputs_map: inputs_map, utxo_models: to_add, txn_models: txn_models, txid_map: txid_map, link_models:to_add_links };
 }
 
@@ -183,9 +212,8 @@ export class ContractModel extends ContractBase {
     }
     // TODO: Return an Array of UTXOModels
     lookup(txid: Buffer, n: number): UTXOModel | null {
-        let copy = new Buffer(txid.length);
-        txid.forEach((v, i) => {copy[txid.length-1-i] = v;});
-        const txn_model : TransactionModel|undefined = this.txid_map.get_by_txid_s(copy.toString('hex'));
+        let txid_s = txid_buf_to_string(txid);
+        const txn_model : TransactionModel|undefined = this.txid_map.get_by_txid_s(txid_s);
         if (!txn_model) return null;
         return txn_model.utxo_models[n];
     }

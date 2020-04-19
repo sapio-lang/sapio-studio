@@ -7,6 +7,11 @@ interface Key {
 type OpaqueKey = string;
 
 
+export function txid_buf_to_string(txid: Buffer) : TXID {
+    let copy = new Buffer(txid.length);
+    txid.forEach((v, i) => { copy[txid.length - 1 - i] = v; });
+    return copy.toString('hex');
+}
 // Maps an Input (TXID) to all Spenders
 export class InputMap<T> {
     map: Map<OpaqueKey, Map<number, Array<T>>>
@@ -14,7 +19,7 @@ export class InputMap<T> {
         this.map = new Map();
     }
     add(t:Key, model:T) {
-        const key1 = t.hash.toString('hex');
+        const key1 = txid_buf_to_string(t.hash);
         let vals = this.map.get(key1);
         if (vals === undefined) {
             vals = new Map();
@@ -30,9 +35,12 @@ export class InputMap<T> {
 
     }
     get(t:Key) : Array<T>|undefined {
-        return this.map.get(t.hash.toString('hex'))?.get(t.index);
+        return this.map.get(txid_buf_to_string(t.hash))?.get(t.index);
     }
 
+    get_txid_s(t:string, i:number) : Array<T>|undefined {
+        return this.map.get(t)?.get(i);
+    }
 }
 
 
