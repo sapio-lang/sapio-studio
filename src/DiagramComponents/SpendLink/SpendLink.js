@@ -104,7 +104,7 @@ export class SpendLinkSegment extends React.Component {
 					ref={ref => {
 						this.circle = ref;
 					}}
-					r={10}
+					r={7.5}
 					fill="orange"
 				/>
 			</>

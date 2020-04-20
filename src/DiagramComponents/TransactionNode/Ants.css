@@ -1,1 +1,10 @@
 @keyframes ants { to { background-position: 100% 100% } }
+
+.PortsContainer {
+flex-direction: row;
+display: flex;
+justify-content: center;
+}
+.PortsContainer > * {
+flex-basis: 20%;
+}

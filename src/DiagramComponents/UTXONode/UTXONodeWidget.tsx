@@ -49,7 +49,6 @@ display: flex;
 border-radius: 25px 5px 0px 0px;
 background-color: ${p=>p.color};
 color: white;
-
 border-top: 5px solid black;
 border-left: 5px solid black;
 `;
@@ -64,34 +63,14 @@ border-bottom: 5px solid white;
 border-right: 5px solid white;
 `;
 
-const PortsContainer = styled.div`
-flex-grow: 1;
-display: flex;
-flex-direction: row;
-
-&:first-of-type {
-    margin-right: 10px;
-}
-
-&:only-child {
-    margin-right: 0px;
-}
-`;
 interface PortsContainer2Props {
 	children: React.ReactNode[]
 }
 class PortsContainer2 extends React.Component<PortsContainer2Props> {
 	render() {
-		let n = React.Children.count(this.props.children);
-		n = Math.ceil(Math.sqrt(n));
-		let pct = Math.round((1.0/n) * 100).toString() + "%";
-		let arg = "1 1 " + pct;
-		let rows = this.props.children.map((child: any) =>
-			(<div style={{flex: arg }}>{child}</div>)
-		);
 		return (
-			<div  style={{flexDirection:"row", display: "flex", flexWrap: "wrap"}}>
-			{rows}
+			<div  className="PortsContainer2">
+				{this.props.children}
 			</div>
 		);
 

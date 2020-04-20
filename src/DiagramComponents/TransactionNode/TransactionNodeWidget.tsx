@@ -54,19 +54,20 @@ color: white;
 `;
 // background-image: linear-gradient(rgba(255,255,255,1), rgba(255, 255, 255,1));
 
-export const PortsContainer = styled.div`
-flex-grow: 1;
-display: flex;
-flex-direction: row;
 
-&:first-of-type {
-    margin-right: 10px;
+interface PortsContainerProps {
+	children: React.ReactNode[]
 }
+class PortsContainer extends React.Component<PortsContainerProps> {
+	render() {
+		return (
+			<div  className="PortsContainer2">
+				{this.props.children}
+			</div>
+		);
 
-&:only-child {
-    margin-right: 0px;
+	}
 }
-`;
 
 /**
  * Marching ants border
