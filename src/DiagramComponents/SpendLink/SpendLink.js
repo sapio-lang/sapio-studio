@@ -3,10 +3,12 @@ import * as React from 'react';
 import Color from "color";
 
 export class SpendLinkModel extends DefaultLinkModel {
-	constructor() {
+	constructor(options={}) {
 		super({
 			type: 'spend',
-			width: 5
+			width: 15,
+			color: "white",
+			...options
 		});
 	}
 }
@@ -86,6 +88,7 @@ export class SpendLinkSegment extends React.Component {
 	}
 
 	render() {
+		const color = this.props.model.getOptions().color;
 		return (
 			<>
 				<path
@@ -94,7 +97,7 @@ export class SpendLinkSegment extends React.Component {
 						this.path = ref;
 					}}
 					strokeWidth={this.props.model.getOptions().width}
-					stroke="rgba(0,0,0,0.5)"
+					stroke={color}
 					d={this.props.path}
 				/>
 				<circle
