@@ -1,5 +1,6 @@
 import { DefaultLinkModel, DefaultPortModel } from '@projectstorm/react-diagrams';
 import * as React from 'react';
+import Color from "color";
 
 export class SpendLinkModel extends DefaultLinkModel {
 	constructor() {
@@ -19,20 +20,25 @@ export class SpendPortModel extends DefaultPortModel {
 const all_nodes = new Map();
 let unique_key = 0;
 let percent_idx = 0;
+let seconds = 10;
+let frames_per_second = 60;
+let increment = 100 / 60 /10;
 function update_loop() {
-	const percentage = percent_idx/100.0;
+	const percentage = percent_idx/(100);
+	const fade = 2*Math.abs(percentage - 0.5);
+	const color = Color("orange").fade(fade).toString();
 	for (const [k, node] of all_nodes) {
 		if (!node.circle || !node.path) {
 			continue;
 		}
 		const point = node.path.getPointAtLength(node.path.getTotalLength() * percentage);
-		node.color = "orange";
+		node.color = color;
 		node.x = point.x;
 		node.y = point.y;
 
 	}
-	percent_idx = (percent_idx + 1) % 101;
-	setTimeout(update_loop, 1000 / 60);
+	percent_idx = (percent_idx + increment) % 101;
+	setTimeout(update_loop, 1000 /frames_per_second);
 };
 update_loop();
 function animation_loop() {
