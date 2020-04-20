@@ -6,31 +6,37 @@ import * as React from 'react';
 import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { pretty_amount } from '../../util';
+import Color from 'color';
 //import { css } from '@emotion/core';
 
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
-const UTXONode = styled.div<{ background: string; selected: boolean; confirmed: boolean}>`
-border-radius: 50%;
-padding: 20px;
-background-color: ${p => p.background};
+// border-radius: 50%;
+// height: 0;
+// width: 150%;
+// padding-bottom:150%;
+const UTXONode = styled.div<{ selected: boolean; confirmed: boolean}>`
 font-family: sans-serif;
 color: white;
-border: 2px solid transparent;
 overflow: visible;
 font-size: 11px;
-box-shadow: ${p => (p.selected ? '4px 4px 2px rgba(0,192,255,0.5)': 'none')};
-background: ${p => {
-    const ants_color = p.selected ? 'rgba(0,192,255,0.5)': 'transparent';
-    return (!p.confirmed? 'linear-gradient('+p.background +','+ p.background+') padding-box, repeating-linear-gradient(-45deg, black 0, black 25%, '+ants_color+' 0, '+ants_color+' 50%) 0 / 1em 1em' : '')
-}};
-animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
+box-shadow: ${p => (p.selected ? '4px 1px 10px rgba(0,192,255,0.5)': 'none')};
+border-radius: 25px 5px;
 `;
+//border: 2px solid transparent;
+//background: ${p => {
+//    const ants_color = p.selected ? 'rgba(0,192,255,0.5)': 'transparent';
+//    return (!p.confirmed? 'linear-gradient('+p.background +','+ p.background+') padding-box, repeating-linear-gradient(-45deg, black 0, black 25%, '+ants_color+' 0, '+ants_color+' 50%) 0 / 1em 1em' : '')
+//}};
+//animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
 
-const Title = styled.div`
+const Title = styled.div<{color: string}>`
+background: ${p => (p.color)};
 display: flex;
+width:100%;
 white-space: nowrap;
 justify-items: center;
+text-align:center;
 `;
 
 const TitleName = styled.div`
@@ -38,14 +44,30 @@ flex-grow: 1;
 padding: 5px 5px;
 `;
 
-const Ports = styled.div`
+const PortsTop = styled.div<{color: string}>`
 display: flex;
+border-radius: 25px 5px 0px 0px;
+background-color: black;
+color: white;
+
+border-top: 5px solid black;
+border-left: 5px solid black;
+`;
+
+const PortsBottom = styled.div<{color: string}>`
+display: flex;
+border-radius: 0 0 25px 5px;
+background-color: white;
+color: black;
+
+border-bottom: 5px solid white;
+border-right: 5px solid white;
 `;
 
 const PortsContainer = styled.div`
 flex-grow: 1;
 display: flex;
-flex-direction: column;
+flex-direction: row;
 
 &:first-of-type {
     margin-right: 10px;
@@ -55,6 +77,26 @@ flex-direction: column;
     margin-right: 0px;
 }
 `;
+interface PortsContainer2Props {
+	children: React.ReactNode[]
+}
+class PortsContainer2 extends React.Component<PortsContainer2Props> {
+	render() {
+		let n = React.Children.count(this.props.children);
+		n = Math.ceil(Math.sqrt(n));
+		let pct = Math.round((1.0/n) * 100).toString() + "%";
+		let arg = "1 1 " + pct;
+		let rows = this.props.children.map((child: any) =>
+			(<div style={{flex: arg }}>{child}</div>)
+		);
+		return (
+			<div  style={{flexDirection:"row", display: "flex", flexWrap: "wrap"}}>
+			{rows}
+			</div>
+		);
+
+	}
+}
 
 /**
  * Marching ants border
@@ -71,22 +113,20 @@ interface DefaultNodeProps {
  * for both all the input ports on the left, and the output ports on the right.
  */
 export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
-    circle: SVGCircleElement | null;
+    node: HTMLDivElement | null;
     callback: () => any;
 	mounted: boolean;
 	id: number;
     constructor(props:any) {
         super(props);
-        this.circle = null;
+        this.node = null;
 		this.mounted=false;
 		this.id = Math.random()
         this.callback = () =>
         {
-            if (this.circle == null) return;
-            let point = this.props.node.getPosition();
-			this.circle.setAttribute('cx', point.x.toString());
-			this.circle.setAttribute('cy', point.y.toString());
-        }
+			if (this.node === null) return;
+
+		}
     }
 	generatePort = (port :DefaultPortModel) => {
 		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
@@ -104,24 +144,37 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 	render() {
 		const ports_in = _.map(this.props.node.getInPorts(), this.generatePort);
 		const ports_out = _.map(this.props.node.getOutPorts(), this.generatePort);
+		let color = Color(this.props.node.getOptions().color).alpha(0.2).toString();
+		let white = Color("white").fade(0.2).toString();
+		let black = Color("black").fade(0.2).toString();
+		const ports_top = ports_in.length == 0 ? null : (
+
+				<PortsTop key="ports" color ={black}>
+					<PortsContainer2 key="inputs">{ports_in}</PortsContainer2>
+				</PortsTop>
+		);
+		const ports_bottom = ports_out.length === 0? null :(	<PortsBottom color={white}>
+					<PortsContainer2 key="outputs">{ports_out}</PortsContainer2>
+				</PortsBottom>);
+
+
+
 		return (
 			<UTXONode
+				ref={(node) => this.node = node}
 				data-default-utxonode-name={this.props.node.getOptions().name}
 				key={this.id}
 				selected={this.props.node.isSelected()}
-				confirmed={this.props.node.isConfirmed()}
-				background={this.props.node.getOptions().color}>
-				<Title key="amount">
-					<TitleName>UTXO {pretty_amount(this.props.node.getOptions().amount)}</TitleName>
-				</Title>
-				<Ports key="ports">
-					<PortsContainer key="inputs">{ports_in}</PortsContainer>
-					<PortsContainer key="outputs">{ports_out}</PortsContainer>
-				</Ports>
-				<Title key="name">
+				confirmed={this.props.node.isConfirmed()}>
+					{ports_top}
+				<Title color={color}>
 					<TitleName>{this.props.node.getOptions().name}</TitleName>
 				</Title>
-			</UTXONode>
+				<Title color={color}>
+					<TitleName>{pretty_amount(this.props.node.getOptions().amount)}</TitleName>
+				</Title>
+					{ports_bottom}
+						</UTXONode>
 		);
 	}
 }
