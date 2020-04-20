@@ -91,6 +91,8 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
 		let color = Color(this.props.node.color).alpha(0.2).toString();
 		let white = Color("white").fade(0.2).toString();
 		let black = Color("black").fade(0.2).toString();
+		let yellow = Color("yellow").fade(0.2).toString();
+		const is_conf = this.props.node.isConfirmed() ? null: <div style={{background: yellow, color:"black", textAlign: "center"}}>UNCONFIRMED</div>;
 		return (
 			<Node
 				data-default-node-name={this.props.node.name}
@@ -104,6 +106,7 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
 					<TitleName>Transaction</TitleName>
 					<TitleName>{this.props.node.name}</TitleName>
 				</Title>
+				{is_conf}
 				<Title color={color}>
 					<TitleName>{this.props.node.purpose}</TitleName>
 				</Title>

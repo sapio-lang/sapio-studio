@@ -157,6 +157,8 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 					<PortsContainer2 key="outputs">{ports_out}</PortsContainer2>
 				</PortsBottom>);
 
+		let yellow = Color("yellow").fade(0.2).toString();
+		const is_conf = this.props.node.isConfirmed() ? null: <div style={{background: yellow, color:"black", textAlign: "center"}}>UNCONFIRMED</div>;
 
 
 		return (
@@ -170,6 +172,7 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 				<Title color={color}>
 					<TitleName>{this.props.node.getOptions().name}</TitleName>
 				</Title>
+				{is_conf}
 				<Title color={color}>
 					<TitleName>{pretty_amount(this.props.node.getOptions().amount)}</TitleName>
 				</Title>
