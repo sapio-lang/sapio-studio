@@ -5,28 +5,30 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import './Ants.css';
 import { TransactionNodeModel } from './TransactionNodeModel';
+import Color from 'color';
 //import { css } from '@emotion/core';
 
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
 export const Node = styled.div<{ background: string; selected: boolean; confirmed: boolean}>`
-border-radius: 5px;
-background-color: ${p => p.background};
 font-family: sans-serif;
 color: white;
-border: 2px solid transparent;
 overflow: visible;
 font-size: 11px;
-box-shadow: ${p => (p.selected ? '4px 4px 2px rgba(0,192,255,0.5)': 'none')};
-background: ${p => {
-    const ants_color = p.selected ? 'rgba(0,192,255,0.5)': 'transparent';
-    return (!p.confirmed? 'linear-gradient('+p.background +','+ p.background+') padding-box, repeating-linear-gradient(-45deg, black 0, black 25%, '+ants_color+' 0, '+ants_color+' 50%) 0 / 1em 1em' : '')
-}};
-animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
+box-shadow: ${p => (p.selected ? '4px 1px 10px rgba(0,192,255,0.5)': 'none')};
+border-radius: 5px 20px;
 `;
+// border-radius: 5px 25px;
+// background-color: ${p => p.background};
+// border: 2px solid transparent;
+// background: ${p => {
+//     const ants_color = p.selected ? 'rgba(0,192,255,0.5)': 'transparent';
+//     return (!p.confirmed? 'linear-gradient('+p.background +','+ p.background+') padding-box, repeating-linear-gradient(-45deg, black 0, black 25%, '+ants_color+' 0, '+ants_color+' 50%) 0 / 1em 1em' : '')
+// }};
+// animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
 
-export const Title = styled.div`
-background: rgba(0, 0, 0, 0.3);
+export const Title = styled.div<{color: string}>`
+background: ${p => (p.color)};
 display: flex;
 white-space: nowrap;
 justify-items: center;
@@ -37,15 +39,25 @@ flex-grow: 1;
 padding: 5px 5px;
 `;
 
-export const Ports = styled.div`
+export const PortsTop = styled.div<{color:string}>`
 display: flex;
-background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2));
+background-color: ${p => p.color};
+border-radius: 5px 25px 0px 0px;
+color: black;
 `;
+
+export const PortsBottom = styled.div<{color: string}>`
+display: flex;
+border-radius: 0 0 5px 25px;
+background-color: ${p => p.color};
+color: white;
+`;
+// background-image: linear-gradient(rgba(255,255,255,1), rgba(255, 255, 255,1));
 
 export const PortsContainer = styled.div`
 flex-grow: 1;
 display: flex;
-flex-direction: column;
+flex-direction: row;
 
 &:first-of-type {
     margin-right: 10px;
@@ -76,23 +88,28 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
 	};
 
 	render() {
+		let color = Color(this.props.node.color).alpha(0.2).toString();
+		let white = Color("white").fade(0.2).toString();
+		let black = Color("black").fade(0.2).toString();
 		return (
 			<Node
 				data-default-node-name={this.props.node.name}
 				selected={this.props.node.isSelected()}
 				confirmed={this.props.node.isConfirmed()}
 				background={this.props.node.color}>
-				<Title>
+				<PortsTop color={white}>
+					<PortsContainer>{_.map(this.props.node.getInPorts(), this.generatePort)}</PortsContainer>
+				</PortsTop>
+				<Title color={color}>
 					<TitleName>Transaction</TitleName>
 					<TitleName>{this.props.node.name}</TitleName>
 				</Title>
-				<Ports>
-					<PortsContainer>{_.map(this.props.node.getInPorts(), this.generatePort)}</PortsContainer>
-					<PortsContainer>{_.map(this.props.node.getOutPorts(), this.generatePort)}</PortsContainer>
-				</Ports>
-				<Title>
+				<Title color={color}>
 					<TitleName>{this.props.node.purpose}</TitleName>
 				</Title>
+				<PortsBottom color={black}>
+					<PortsContainer>{_.map(this.props.node.getOutPorts(), this.generatePort)}</PortsContainer>
+				</PortsBottom>
 			</Node>
 		);
 	}
