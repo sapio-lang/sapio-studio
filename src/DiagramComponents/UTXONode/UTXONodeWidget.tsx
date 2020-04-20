@@ -47,7 +47,7 @@ padding: 5px 5px;
 const PortsTop = styled.div<{color: string}>`
 display: flex;
 border-radius: 25px 5px 0px 0px;
-background-color: black;
+background-color: ${p=>p.color};
 color: white;
 
 border-top: 5px solid black;
@@ -57,7 +57,7 @@ border-left: 5px solid black;
 const PortsBottom = styled.div<{color: string}>`
 display: flex;
 border-radius: 0 0 25px 5px;
-background-color: white;
+background-color: ${p=>p.color};
 color: black;
 
 border-bottom: 5px solid white;
@@ -145,8 +145,8 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 		const ports_in = _.map(this.props.node.getInPorts(), this.generatePort);
 		const ports_out = _.map(this.props.node.getOutPorts(), this.generatePort);
 		let color = Color(this.props.node.getOptions().color).alpha(0.2).toString();
-		let white = Color("white").fade(0.2).toString();
-		let black = Color("black").fade(0.2).toString();
+		let white = Color("white").toString();
+		let black = Color("black").toString();
 		const ports_top = ports_in.length == 0 ? null : (
 
 				<PortsTop key="ports" color ={black}>

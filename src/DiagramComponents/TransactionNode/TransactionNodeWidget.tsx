@@ -89,8 +89,8 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
 
 	render() {
 		let color = Color(this.props.node.color).alpha(0.2).toString();
-		let white = Color("white").fade(0.2).toString();
-		let black = Color("black").fade(0.2).toString();
+		let white = Color("white").toString();
+		let black = Color("black").toString();
 		let yellow = Color("yellow").fade(0.2).toString();
 		const is_conf = this.props.node.isConfirmed() ? null: <div style={{background: yellow, color:"black", textAlign: "center"}}>UNCONFIRMED</div>;
 		return (
