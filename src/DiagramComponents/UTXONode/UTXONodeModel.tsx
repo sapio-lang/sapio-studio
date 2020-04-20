@@ -33,6 +33,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
         this.portsIn = [];
 
     }
+
     getAmount() : number {
         return this.options.amount || 0;
     }
@@ -81,7 +82,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
             in: true,
             name: label,
             label: label,
-            alignment: PortModelAlignment.LEFT
+            alignment: PortModelAlignment.TOP
         });
         if (!after) {
             this.portsIn.splice(0, 0, p);
@@ -95,7 +96,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
             in: false,
             name: label,
             label: label,
-            alignment: PortModelAlignment.RIGHT
+            alignment: PortModelAlignment.BOTTOM
         });
         if (!after) {
             this.portsOut.splice(0, 0, p);

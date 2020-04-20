@@ -65,7 +65,7 @@ export class TransactionNodeModel extends NodeModel {
             in: true,
             name: label,
             label: label,
-            alignment: PortModelAlignment.LEFT
+            alignment: PortModelAlignment.TOP
         });
         if (!after) {
             this.portsIn.splice(0, 0, p);
@@ -79,7 +79,7 @@ export class TransactionNodeModel extends NodeModel {
             in: false,
             name: label,
             label: label,
-            alignment: PortModelAlignment.RIGHT
+            alignment: PortModelAlignment.BOTTOM
         });
         if (!after) {
             this.portsOut.splice(0, 0, p);
