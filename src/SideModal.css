@@ -1,0 +1,41 @@
+/* 
+From:
+https://codepen.io/devuri/pen/aaqZqZ
+License: MIT
+*/
+/* MODAL FADE LEFT RIGHT BOTTOM */
+.modal.fade:not(.in).left .modal-dialog {
+	-webkit-transform: translate3d(-25%, 0, 0);
+	transform: translate3d(-25%, 0, 0);
+}
+.modal.fade:not(.in).right .modal-dialog {
+	-webkit-transform: translate3d(25%, 0, 0);
+	transform: translate3d(25%, 0, 0);
+}
+.modal.fade:not(.in).bottom .modal-dialog {
+	-webkit-transform: translate3d(0, 25%, 0);
+	transform: translate3d(0, 25%, 0);
+}
+
+.modal-right > .modal-dialog {
+	position:absolute;
+	top:0;
+	right:0;
+	margin:0;
+	width: 30%;
+}
+.modal.left .modal-dialog {
+	position:absolute;
+	top:0;
+	left:0;
+	margin:0;
+}
+
+.modal.left .modal-dialog.modal-sm {
+	max-width:300px;
+}
+
+.modal.left .modal-content, .modal-right > * > .modal-content {
+	min-height:100vh;
+	border:0;
+}

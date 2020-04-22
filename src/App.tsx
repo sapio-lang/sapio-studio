@@ -15,7 +15,7 @@ import { TransactionNodeFactory } from './DiagramComponents/TransactionNode/Tran
 import { DemoCanvasWidget } from './DemoCanvasWidget';
 import { SpendLinkFactory } from "./DiagramComponents/SpendLink/SpendLinkFactory";
 import { UTXONodeFactory } from './DiagramComponents/UTXONode/UTXONodeFactory';
-import { EntityViewer, Viewer, EmptyViewer, UpdateMessage } from './EntityViewer';
+import { EntityViewerModal, Viewer, EmptyViewer, UpdateMessage } from './EntityViewer';
 import { UTXOModel } from './UTXO';
 import { Transaction } from 'bitcoinjs-lib';
 import { TransactionModel } from './Transaction';
@@ -150,27 +150,20 @@ class App extends React.Component<any, AppState> {
                         load_new_model={(x: Data) => this.load_new_model(x)}
                         compiler={this.cm} />
                     <Row>
-                        <Col xs={this.state.details ? 6 : 12}
-                            sm={this.state.details ? 7 : 12}
-                            md={this.state.details ? 8 : 12}
-                            lg={this.state.details ? 9 : 12}
-                            xl={this.state.details ? 10 : 12}>
+                        <Col md={12} >
                             <DemoCanvasWidget engine={this.engine} model={this.model}
                                 model_number={this.state.model_number}>
                                 <CanvasWidget engine={this.engine as any} key={"main"} />
                             </DemoCanvasWidget>
                         </Col>
-                        <Collapse in={this.state.details}>
-                            <Col xs={6} sm={5} md={4} lg={3} xl={2}>
-                                <EntityViewer
-                                    entity={this.state.entity}
-                                    broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
-                                    hide_details={() => this.hide_details()}
-                                    current_contract={this.state.current_contract}
-                                    update_viewer={this.update_viewer.bind(this)}
-                                />
-                            </Col>
-                        </Collapse>
+                        <EntityViewerModal
+                            show={this.state.details}
+                            entity={this.state.entity}
+                            broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
+                            hide_details={() => this.hide_details()}
+                            current_contract={this.state.current_contract}
+                            update_viewer={this.update_viewer.bind(this)}
+                        />
                     </Row>
                 </Container>
             </div>

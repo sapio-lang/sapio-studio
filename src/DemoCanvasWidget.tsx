@@ -64,10 +64,6 @@ export class DemoCanvasWidget extends React.Component<DemoCanvasWidgetProps, any
     }
     redistribute () {
         this.engine.redistribute(this.props.model);
-
-        // only happens if pathfing is enabled (check line 25)
-        //
-        //this.reroute();
         this.props.engine.repaintCanvas();
     }
     render() {

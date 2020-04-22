@@ -1,46 +1,59 @@
+import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex from '../Hex';
-import { UTXOModel } from '../UTXO';
 import { UpdateMessage } from '../EntityViewer';
-import { pretty_amount, get_wtxid_backwards } from '../util';
+import Hex, { ASM } from '../Hex';
+import { get_wtxid_backwards, pretty_amount } from '../util';
+import { UTXOModel } from '../UTXO';
+import "./UTXODetail.css";
+import { OutpointDetail } from './OutpointDetail';
 
 interface UTXODetailProps {
     entity: UTXOModel;
-    update: (a:UpdateMessage) => void;
-    hide_details: () => void;
+    update: (a: UpdateMessage) => void;
 }
 export class UTXODetail extends React.Component<UTXODetailProps> {
+
     render() {
-        if (!this.props.entity)
-            return null;
-        if (!this.props.entity.utxo)
-            return null;
-        const spends = this.props.entity.utxo.spends.map((elt, i) => <div key={get_wtxid_backwards(elt.tx)}>
-            <ListGroup.Item>
-                <Hex value={elt.get_txid()} />
-            </ListGroup.Item>
-            <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: elt})}> Go</ListGroup.Item>
-        </div>);
-        return (<div>
-            <h2> UTXO </h2>
-            <ListGroup>
-                <ListGroup.Item action variant="secondary" onClick={this.props.hide_details}>Hide</ListGroup.Item>
+        console.log(this);
+        const decomp = Bitcoin.script.decompile(this.props.entity.utxo.script) ?? new Buffer("");
+        const script = Bitcoin.script.toASM(decomp);
+        const address = Bitcoin.address.fromOutputScript(this.props.entity.utxo.script,Bitcoin.networks.regtest);
+        const spends = this.props.entity.utxo.spends.map((elt, i) => <ListGroup.Item key={get_wtxid_backwards(elt.tx)}>
+            <ListGroup horizontal className="Spend">
+                <ListGroup.Item>
+                    <Hex value={elt.get_txid()} />
+                </ListGroup.Item>
+                <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: elt })}> Go</ListGroup.Item>
+
             </ListGroup>
-            <h3> Outpoint </h3>
-            <h4>Hash</h4>
-            <Hex className="txhex" readOnly value={this.props.entity.txn.get_txid()} />
-            <h4>N: {this.props.entity.utxo.index}</h4>
+        </ListGroup.Item>);
+        return (<div className="UTXODetail">
+            <h1>{pretty_amount(this.props.entity.utxo.amount)}</h1>
+            <hr></hr>
+            <OutpointDetail txid={this.props.entity.txn.get_txid()} n={this.props.entity.utxo.index} 
+                onClick= {() => this.props.update({ entity: this.props.entity.txn })}
+            />
+
             <ListGroup>
-                <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: this.props.entity.txn})}>Go</ListGroup.Item>
+                <ListGroup.Item>
+                    <h4> Address </h4>
+                </ListGroup.Item>
+                <ListGroup.Item>
+                    <ASM className="txhex" readOnly value={address} />
+                </ListGroup.Item>
             </ListGroup>
-            <h3> Amount </h3>
-            <h4> {pretty_amount(this.props.entity.utxo.amount)} </h4>
-            <h3> Script</h3>
-            <Hex className="txhex" readOnly value={this.props.entity.utxo.script.toString('hex')} />
-            <h3>Spends</h3>
-            <ListGroup variant="flush">
-                {spends}
+            <ListGroup>
+                <ListGroup.Item>
+                    <h4>Spends</h4>
+
+                </ListGroup.Item>
+                <ListGroup.Item>
+                    <ListGroup variant="flush">
+                        {spends}
+                    </ListGroup>
+
+                </ListGroup.Item>
             </ListGroup>
         </div>);
     }

@@ -17,4 +17,17 @@ height:100%;
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+    overflow: hidden;
+    scrollbar-width: none;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+    max-width:16em;
+    width:5vw;
+    min-width:4em;
+    margin: 0;
+    padding: 0;
 }
