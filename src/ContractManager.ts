@@ -5,6 +5,7 @@ import { TransactionModel, PhantomTransactionModel } from './Transaction';
 import { InputMap, TXIDAndWTXIDMap, TXID, txid_buf_to_string } from "./util";
 import { UTXOModel } from "./UTXO";
 import { number } from 'bitcoinjs-lib/types/script';
+import { SelectedEvent } from './App';
 export class NodeColor {
     c: string;
     constructor(c: string) {
@@ -71,7 +72,7 @@ function process_inputs_map(txns: Array<TransactionModel>): InputMap<Transaction
 }
 
 function process_txn_models(txns: Array<Bitcoin.Transaction>,
-    update: any,
+    update: (s:SelectedEvent) => void,
     txn_labels: Array<string>,
     txn_colors: Array<NodeColor>,
     utxo_labels: Array<Array<UTXOFormatData | null>>): [TXIDAndWTXIDMap<TransactionModel>, Array<TransactionModel>] {
@@ -162,7 +163,7 @@ function process_utxo_models(
     }
     return [to_add, to_add_links];
 }
-function process_data(update: any, obj: PreProcessedData): ProcessedData {
+function process_data(update: (e:SelectedEvent)=>void, obj: PreProcessedData): ProcessedData {
     let { txns, txn_colors, txn_labels, utxo_labels } = obj;
     let [txid_map, txn_models] = process_txn_models(txns, update, txn_labels, txn_colors, utxo_labels);
     let inputs_map = process_inputs_map(txn_models);
@@ -195,7 +196,7 @@ export class ContractBase {
 }
 export class ContractModel extends ContractBase {
     constructor();
-    constructor(update_viewer: any, obj: Data);
+    constructor(update_viewer: (e:SelectedEvent)=>void, obj: Data);
     constructor(update_viewer?: any, obj?: Data) {
         super();
         if (update_viewer === undefined || obj === undefined)

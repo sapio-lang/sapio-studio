@@ -1,19 +1,29 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import { UpdateMessage } from '../EntityViewer';
 import Hex, { ASM } from '../Hex';
 import { get_wtxid_backwards, pretty_amount } from '../util';
 import { UTXOModel } from '../UTXO';
 import "./UTXODetail.css";
 import { OutpointDetail } from './OutpointDetail';
+import { NodeModel } from '@projectstorm/react-diagrams';
 
 interface UTXODetailProps {
     entity: UTXOModel;
-    update: (a: UpdateMessage) => void;
 }
 export class UTXODetail extends React.Component<UTXODetailProps> {
 
+    componentWillMount() {
+        this.props.entity.setSelected(true);
+    }
+    componentWillUnmount() {
+        this.props.entity.setSelected(false);
+    }
+    goto(x:NodeModel) {
+        this.props.entity.setSelected(false);
+        x.setSelected(true);
+        
+    }
     render() {
         console.log(this);
         const decomp = Bitcoin.script.decompile(this.props.entity.utxo.script) ?? new Buffer("");
@@ -24,7 +34,7 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
                 <ListGroup.Item>
                     <Hex value={elt.get_txid()} />
                 </ListGroup.Item>
-                <ListGroup.Item action variant="primary" onClick={() => this.props.update({ entity: elt })}> Go</ListGroup.Item>
+                <ListGroup.Item action variant="primary" onClick={() => this.goto(elt)}> Go</ListGroup.Item>
 
             </ListGroup>
         </ListGroup.Item>);
@@ -32,7 +42,7 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
             <h1>{pretty_amount(this.props.entity.utxo.amount)}</h1>
             <hr></hr>
             <OutpointDetail txid={this.props.entity.txn.get_txid()} n={this.props.entity.utxo.index} 
-                onClick= {() => this.props.update({ entity: this.props.entity.txn })}
+                onClick= {() => this.goto(this.props.entity.txn)}
             />
 
             <ListGroup>

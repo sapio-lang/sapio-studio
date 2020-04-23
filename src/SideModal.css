@@ -19,14 +19,15 @@ License: MIT
 
 .modal-right > .modal-dialog {
 	position:absolute;
-	top:0;
 	right:0;
+	top:0;
 	margin:0;
 	width: 30%;
+	margin-top:60px;
 }
 .modal.left .modal-dialog {
 	position:absolute;
-	top:0;
+	top:40px;
 	left:0;
 	margin:0;
 }
@@ -38,4 +39,7 @@ License: MIT
 .modal.left .modal-content, .modal-right > * > .modal-content {
 	min-height:100vh;
 	border:0;
+}
+.modal-bright-backdrop{
+	background-color: transparent;
 }

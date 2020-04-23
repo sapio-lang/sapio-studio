@@ -1,4 +1,4 @@
-import { CanvasWidget, CanvasEngine } from '@projectstorm/react-canvas-core';
+import { CanvasWidget, CanvasEngine, BaseEntityEvent, BaseModel, BaseModelGenerics } from '@projectstorm/react-canvas-core';
 import createEngine, { DiagramModel, DiagramEngine, LinkModel } from '@projectstorm/react-diagrams';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
@@ -15,7 +15,7 @@ import { TransactionNodeFactory } from './DiagramComponents/TransactionNode/Tran
 import { DemoCanvasWidget } from './DemoCanvasWidget';
 import { SpendLinkFactory } from "./DiagramComponents/SpendLink/SpendLinkFactory";
 import { UTXONodeFactory } from './DiagramComponents/UTXONode/UTXONodeFactory';
-import { EntityViewerModal, Viewer, EmptyViewer, UpdateMessage } from './EntityViewer';
+import { EntityViewerModal, Viewer, EmptyViewer} from './EntityViewer';
 import { UTXOModel } from './UTXO';
 import { Transaction } from 'bitcoinjs-lib';
 import { TransactionModel } from './Transaction';
@@ -39,6 +39,8 @@ class ModelManager {
         contract.txn_models.forEach((m) => m.remove_from_model(this.model));
     }
 }
+
+export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & { isSelected: boolean; };
 
 interface AppState {
     entity: Viewer
@@ -111,27 +113,21 @@ class App extends React.Component<any, AppState> {
             () => setTimeout(() => this.forceUpdate(), 100));
     }
 
-    update_viewer(data: UpdateMessage) {
-        if (data.isSelected === undefined) {
-            data.isSelected = true;
-        }
-        if (data.isSelected === false || data.entity === null) {
-            this.setState({ details: false });
-        } else if (data.entity) {
-            if (data.entity instanceof UTXOModel || data.entity instanceof TransactionModel) {
-                this.model.setZoomLevel(100);
-                const { clientHeight, clientWidth } = this.engine.getCanvas();
-                const zoomf = this.model.getZoomLevel() / 100;
-                const {left, top} = this.engine.getCanvas().getBoundingClientRect();
 
-                const {x,y } = data.entity.getPosition();
-                const x_coord = x + left -clientWidth/2;
-                const y_coord = y + top - clientHeight/2;
+    update_viewer(data: SelectedEvent) {
+        if (data.isSelected === false || data.entity === null) return;
+        if (!(data.entity instanceof UTXOModel || data.entity instanceof TransactionModel)) return;
+        this.model.setZoomLevel(100);
+        const { clientHeight, clientWidth } = this.engine.getCanvas();
+        const zoomf = this.model.getZoomLevel() / 100;
+        const { left, top } = this.engine.getCanvas().getBoundingClientRect();
 
-                this.model.setOffset(-x_coord/zoomf, -y_coord/zoomf)
-                this.setState({ entity: data.entity, details: true });
-            }
-        }
+        const { x, y } = data.entity.getPosition();
+        const x_coord = x + left - clientWidth / 2;
+        const y_coord = y + top - clientHeight / 2;
+
+        this.model.setOffset(-x_coord / zoomf, -y_coord / zoomf)
+        this.setState({ entity: data.entity, details: true });
     }
 
     hide_details() {
@@ -162,7 +158,6 @@ class App extends React.Component<any, AppState> {
                             broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
                             hide_details={() => this.hide_details()}
                             current_contract={this.state.current_contract}
-                            update_viewer={this.update_viewer.bind(this)}
                         />
                     </Row>
                 </Container>

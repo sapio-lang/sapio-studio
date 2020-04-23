@@ -16,15 +16,10 @@ export interface Viewer {
 export class EmptyViewer implements Viewer {
 
 }
-export interface UpdateMessage {
-    entity: Viewer;
-    isSelected?: boolean;
-}
 interface EntityViewerProps {
     broadcast: (a: Transaction) => Promise<any>;
     entity: Viewer;
     hide_details: () => void;
-    update_viewer: (a: UpdateMessage) => void;
     current_contract: ContractModel;
     show: boolean;
 }
@@ -47,12 +42,9 @@ export class EntityViewerModal extends React.Component<EntityViewerProps> {
                 return (<TransactionDetail
                     broadcast={this.props.broadcast}
                     entity={this.props.entity as TransactionModel}
-                    update={this.props.update_viewer}
                     find_tx_model={(a:Buffer, b:number) => this.props.current_contract.lookup(a,b)} />);
             case UTXOModel:
-                return (<UTXODetail
-                    entity={this.props.entity as UTXOModel}
-                    update={this.props.update_viewer} />)
+                return (<UTXODetail entity={this.props.entity as UTXOModel} />);
             default:
                 return null;
         }
@@ -60,7 +52,8 @@ export class EntityViewerModal extends React.Component<EntityViewerProps> {
 
     render() {
 
-        return (<Modal show={this.props.show} onHide={this.props.hide_details} size="lg" className="modal-right">
+        return (<Modal show={this.props.show} onHide={this.props.hide_details} size="lg" className="modal-right"
+        backdropClassName="modal-bright-backdrop">
             <Modal.Header closeButton>
                 <Modal.Title> {this.name()} Details </Modal.Title>
             </Modal.Header>

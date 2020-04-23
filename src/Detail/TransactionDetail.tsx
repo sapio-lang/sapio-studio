@@ -5,13 +5,11 @@ import { InputDetail } from "./InputDetail";
 import { OutputDetail } from "./OutputDetail";
 import { TransactionModel } from '../Transaction';
 import { Transaction } from 'bitcoinjs-lib';
-import { UpdateMessage } from '../EntityViewer';
 import { UTXOModel } from '../UTXO';
 import { OutpointDetail, TXIDDetail } from './OutpointDetail';
 interface TransactionDetailProps {
     entity: TransactionModel;
     broadcast: (a: Transaction) => Promise<any>;
-    update: (a: UpdateMessage) => void;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
 }
 interface IState {
@@ -28,6 +26,17 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
         state.broadcastable = props.entity.is_broadcastable();
         return state;
     }
+
+    componentWillMount() {
+        this.props.entity.setSelected(true);
+    }
+    componentWillUnmount() {
+        this.props.entity.setSelected(false);
+    }
+    goto(x:UTXOModel|TransactionModel) {
+        this.props.entity.setSelected(false);
+        x.setSelected(true);
+    }
     render() {
         const broadcast = !this.state.broadcastable ? null :
             <ListGroup variant="flush">
@@ -37,14 +46,14 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
             </ListGroup>;
         const outs = this.props.entity.utxo_models.map((o, i) =>
             <ListGroup.Item key={i}>
-                <OutputDetail txoutput={o} goto={() => this.props.update({ entity: this.props.entity.utxo_models[i] })} />
+                <OutputDetail txoutput={o} goto={() => this.goto(this.props.entity.utxo_models[i])} />
             </ListGroup.Item>);
         const ins = this.props.entity.tx.ins.map((o, i) => {
             const witnesses: Buffer[][] = this.props.entity.witness_set.map((w) => w[i]);
             console.log(witnesses);
             return <ListGroup.Item key="input-{i}">
                 <InputDetail txinput={o} 
-                    goto={() => this.props.update({ entity: this.props.find_tx_model(o.hash, o.index) ?? this.props.entity })}
+                    goto={() => this.goto(this.props.find_tx_model(o.hash, o.index) ?? this.props.entity)}
                     witnesses={witnesses} />
             </ListGroup.Item>;
         });
