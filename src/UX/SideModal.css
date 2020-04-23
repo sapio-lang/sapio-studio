@@ -42,5 +42,7 @@ License: MIT
 	border:0;
 }
 .modal-bright-backdrop{
+	/* So it doesn't oclude the view, nor using inspect element */
 	background-color: transparent;
+	z-index: -1;
 }

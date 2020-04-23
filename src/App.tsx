@@ -1,7 +1,7 @@
 import { CanvasWidget, CanvasEngine, BaseEntityEvent, BaseModel, BaseModelGenerics } from '@projectstorm/react-canvas-core';
 import createEngine, { DiagramModel, DiagramEngine, LinkModel } from '@projectstorm/react-diagrams';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import React from 'react';
+import React, { FormEvent } from 'react';
 import Col from 'react-bootstrap/Col';
 import Collapse from 'react-bootstrap/Collapse';
 import Container from 'react-bootstrap/Container';
@@ -20,6 +20,11 @@ import { UTXOModel } from './Data/UTXO';
 import { Transaction } from 'bitcoinjs-lib';
 import { TransactionModel } from './Data/Transaction';
 import { UTXONodeModelGenerics } from './DiagramComponents/UTXONode/UTXONodeModel';
+import Form from 'react-bootstrap/Form';
+import FormControl from 'react-bootstrap/FormControl';
+import _ from 'lodash';
+import { OutputPortModel, OutputLinkModel } from './DiagramComponents/OutputLink';
+import { SpendPortModel } from './DiagramComponents/SpendLink/SpendLink';
 
 
 
@@ -33,7 +38,17 @@ class ModelManager {
     load(contract: ContractModel) {
         this.model.addAll(...contract.txn_models);
         this.model.addAll(...contract.utxo_models);
-        this.model.addAll(...(contract.link_models as unknown[] as LinkModel[]));
+        const utxo_links: LinkModel[] = contract.utxo_models
+                                .map((m: UTXOModel) => m.getOutPorts()).flat(1)
+                                .map((p: SpendPortModel)=>
+                                    Object.entries(p.getLinks()).map((v)=> v[1])).flat(1);
+        this.model.addAll(...utxo_links);
+        const tx_links : LinkModel[] = contract.txn_models
+                                .map((m: TransactionModel) => m.getOutPorts()).flat(1)
+                                .map((p: SpendPortModel)=>
+                                    Object.entries(p.getLinks()).map((v)=> v[1])).flat(1);
+
+        this.model.addAll(...tx_links);
     }
     unload(contract: ContractModel) {
         contract.txn_models.forEach((m) => m.remove_from_model(this.model));
@@ -122,11 +137,11 @@ class App extends React.Component<any, AppState> {
         const { clientHeight, clientWidth } = this.engine.getCanvas();
         const { left, top } = this.engine.getCanvas().getBoundingClientRect();
         let { x, y } = data.entity.getPosition();
-        x+= data.entity.width/2;
-        y+=data.entity.height;
+        x += data.entity.width / 2;
+        y += data.entity.height;
         const zoomf = this.model.getZoomLevel() / 100;
-        const x_coord = (left + clientWidth/3 - x) * zoomf;
-        const y_coord = (top + clientHeight/2 - y) * zoomf;
+        const x_coord = (left + clientWidth / 3 - x) * zoomf;
+        const y_coord = (top + clientHeight / 2 - y) * zoomf;
         this.model.setOffset(x_coord, y_coord)
         this.setState({ entity: data.entity, details: true });
     }
@@ -146,6 +161,8 @@ class App extends React.Component<any, AppState> {
                         dynamic_forms={this.state.dynamic_forms}
                         load_new_model={(x: Data) => this.load_new_model(x)}
                         compiler={this.cm} />
+                    <SimulationController contract={this.state.current_contract}
+                    app={this}/>
                     <Row>
                         <Col md={12} >
                             <DemoCanvasWidget engine={this.engine} model={this.model}
@@ -167,5 +184,82 @@ class App extends React.Component<any, AppState> {
     }
 }
 
+type Field = "time" | "min_time" | "max_time" | "blocks"| "min_blocks" | "max_blocks";
+class SimulationController extends React.Component<{contract:ContractModel, app:App}> {
+    time: number;
+    min_time: number;
+    max_time: number;
+    blocks: number;
+    min_blocks: number;
+    max_blocks: number;
+    timeout: NodeJS.Timeout;
+    constructor(props: any) {
+        super(props);
+        this.time = 50;
+        this.min_time = this.time -365*24*60*60;
+        this.max_time = this.time + 365*24*60*60;
+        this.blocks = 50;
+        this.min_blocks = 0;
+        this.max_blocks = 1_000_000_000;
+        this.timeout = setTimeout(() => null, 0);
+    }
+    changeHandler(from:Field, e: FormEvent) {
+        console.log(this);
+        const input = e.currentTarget as HTMLInputElement;
+        switch (from) {
+            case "min_time":
+                this.min_time = input.valueAsNumber;
+                break;
+            case "time":
+                this.time = input.valueAsNumber;
+                break;
+            case "max_time":
+                this.max_time = input.valueAsNumber;
+                break;
+            case "min_blocks":
+                this.min_blocks = input.valueAsNumber;
+                break;
+            case "blocks":
+                this.blocks = input.valueAsNumber;
+                break;
+            case "max_blocks":
+                this.max_blocks = input.valueAsNumber;
+                break;
+        }
+        console.log(this.time, this.min_time, this.max_time, this.blocks, this.min_blocks, this.max_blocks);
+        // wait a second from last update
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(()=> this.delayedUpdate(), 1000);
+    }
+    delayedUpdate() {
+        const time = (this.max_time - this.min_time)/100.0*this.time + this.min_time;
+        const blocks = (this.max_blocks - this.min_blocks)/100.0*this.blocks + this.min_blocks;
+        const unreachable = this.props.contract.reachable_at_time(time, blocks);
+        this.props.contract.txn_models.forEach((m) => {
+            m.setReachable(true);
+        });
+        unreachable.forEach((m) => {
+            m.setReachable(false);
+        });
+        this.props.app.engine.repaintCanvas();
+        this.props.app.forceUpdate();
+        console.log("FIRE", unreachable);
+    }
+    render() {
+        const changeHandler = this.changeHandler.bind(this);
+        return (<Form>
+            <Form.Group>
+                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("min_blocks", e)}></Form.Control>
+                <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("blocks", e)}></Form.Control>
+                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("max_blocks", e)}></Form.Control>
+            </Form.Group>
+            <Form.Group>
+                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("min_time", e)}></Form.Control>
+                <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("time", e)}></Form.Control>
+                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("max_time", e)}></Form.Control>
+            </Form.Group>
+        </Form>);
+    }
+}
 export default App;
 

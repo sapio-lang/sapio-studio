@@ -7,6 +7,7 @@ import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { pretty_amount } from '../../util';
 import Color from 'color';
+import Collapse from 'react-bootstrap/Collapse';
 //import { css } from '@emotion/core';
 
 
@@ -87,11 +88,14 @@ interface DefaultNodeProps {
 	engine: DiagramEngine;
 }
 
+interface IState {
+	is_reachable: boolean;
+}
 /**
  * Default node that models the UTXONodeModel. It creates two columns
  * for both all the input ports on the left, and the output ports on the right.
  */
-export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
+export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
     node: HTMLDivElement | null;
     callback: () => any;
 	mounted: boolean;
@@ -106,6 +110,8 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 			if (this.node === null) return;
 
 		}
+		this.state= {is_reachable: this.props.node.isReachable()};
+		this.props.node.registerReachableCallback((b: boolean) => this.setState({is_reachable: b}));
     }
 	generatePort = (port :DefaultPortModel) => {
 		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
@@ -139,8 +145,8 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 		let yellow = Color("yellow").fade(0.2).toString();
 		const is_conf = this.props.node.isConfirmed() ? null: <div style={{background: yellow, color:"black", textAlign: "center"}}>UNCONFIRMED</div>;
 
-
 		return (
+
 			<UTXONode
 				ref={(node) => this.node = node}
 				data-default-utxonode-name={this.props.node.getOptions().name}
@@ -148,6 +154,11 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps> {
 				selected={this.props.node.isSelected()}
 				confirmed={this.props.node.isConfirmed()}>
 					{ports_top}
+				<Collapse in={!this.state.is_reachable}>
+					<Title color="red">
+						!TIME TOO EARLY!
+					</Title>
+				</Collapse>
 				<Title color={color}>
 					<TitleName>{this.props.node.getOptions().name}</TitleName>
 				</Title>

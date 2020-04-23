@@ -6,6 +6,7 @@ import * as React from 'react';
 import './Ants.css';
 import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
+import Collapse from 'react-bootstrap/Collapse';
 //import { css } from '@emotion/core';
 
 
@@ -78,12 +79,22 @@ export interface DefaultNodeProps {
 	node: TransactionNodeModel ;
 	engine: DiagramEngine;
 }
+interface IState {
+	is_reachable: boolean;
+}
 
 /**
  * Default node that models the CustomNodeModel. It creates two columns
  * for both all the input ports on the left, and the output ports on the right.
  */
-export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
+export class TransactionNodeWidget extends React.Component<DefaultNodeProps, IState> {
+	constructor(props:any) {
+		super(props);
+		this.state = {is_reachable: this.props.node.is_reachable};
+		this.props.node.registerReachable((b:boolean) => {
+			return this.setState({ is_reachable: b });
+		});
+	}
 	generatePort = (port :DefaultPortModel) => {
 		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
 	};
@@ -103,6 +114,11 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
 				<PortsTop color={white}>
 					<PortsContainer>{_.map(this.props.node.getInPorts(), this.generatePort)}</PortsContainer>
 				</PortsTop>
+				<Collapse in={!this.state.is_reachable}>
+					<Title color="red">
+						!TIME TOO EARLY!
+					</Title>
+				</Collapse>
 				<Title color={color}>
 					<TitleName>Transaction</TitleName>
 					<TitleName>{this.props.node.name}</TitleName>
@@ -115,6 +131,7 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps> {
 					<PortsContainer>{_.map(this.props.node.getOutPorts(), this.generatePort)}</PortsContainer>
 				</PortsBottom>
 			</Node>
+
 		);
 	}
 }

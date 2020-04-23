@@ -20,6 +20,7 @@ export class TransactionNodeModel extends NodeModel {
         this.portsIn = [];
         this.name= name;
         this.confirmed=false;
+        this.is_reachable = true;
 
     }
     setConfirmed(opt) {
@@ -28,6 +29,16 @@ export class TransactionNodeModel extends NodeModel {
     }
     isConfirmed() {
         return this.confirmed;
+    }
+    setReachable(b){
+        this.is_reachable = b;
+        this.reachable_cb(b);
+    }
+    registerReachable(f) {
+        this.reachable_cb = f;
+    }
+    isReachable(){
+        return this.is_reachable;
     }
 
     doClone(lookupTable, clone) {

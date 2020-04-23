@@ -1,14 +1,18 @@
 import { DefaultPortModel, NodeModel, DefaultNodeModelOptions, DefaultNodeModelGenerics } from '@projectstorm/react-diagrams';
 import { PortModelAlignment, NodeModelGenerics, PortModel } from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
+import { SpendLinkModel } from "../SpendLink/SpendLinkModel";
 import { BasePositionModelOptions, BaseModel, BaseModelGenerics, DeserializeEvent } from '@projectstorm/react-canvas-core';
 import _ from 'lodash';
+import { TransactionModel } from '../../Data/Transaction';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
     name: string;
     color: string;
     amount: number;
     confirmed: boolean;
+    reachable: boolean;
+    reachable_callback: (b:boolean) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
@@ -27,13 +31,18 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
             amount,
             confirmed : false,
             type: 'utxo-node',
+            reachable: true,
+            reachable_callback: (b) => null,
             ...options
         });
         this.portsOut = [];
         this.portsIn = [];
+        this.addOutPort("spend");
 
     }
-
+    spent_by(spender: TransactionModel, s_idx: number, idx: number) : SpendLinkModel {
+        return this.addOutPort("spend"+s_idx).spend_link(spender.addInPort('input' + idx));
+    }
     getAmount() : number {
         return this.options.amount || 0;
     }
@@ -43,6 +52,20 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
     }
     isConfirmed(): boolean {
         return this.options.confirmed;
+    }
+
+    setReachable(b: boolean) {
+        this.options.reachable = b;
+        _(this.portsOut).forEach((port :SpendPortModel) => {
+            port.setReachable(b);
+        })
+        this.options.reachable_callback(b);
+    }
+    isReachable() : boolean {
+        return this.options.reachable;
+    }
+    registerReachableCallback(c: (b:boolean) => void) {
+        this.options.reachable_callback = c;
     }
 
     doClone(lookupTable: {}, clone: any) {

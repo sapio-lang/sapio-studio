@@ -1,14 +1,14 @@
 
-import * as Bitcoin from 'bitcoinjs-lib';
-import { NodeColor, UTXOFormatData } from './ContractManager';
-import { OutputLinkModel } from '../DiagramComponents/OutputLink';
-import { SpendLinkModel } from '../DiagramComponents/SpendLink/SpendLink';
-import { TransactionNodeModel } from '../DiagramComponents/TransactionNode/TransactionNodeModel';
-import { Viewer } from '../UX/EntityViewer';
-import './Transaction.css';
-import { get_wtxid_backwards, HasKeys, InputMap, TXID } from '../util';
-import { UTXOMetaData, UTXOModel } from './UTXO';
 import { DiagramModel, LinkModel } from '@projectstorm/react-diagrams';
+import * as Bitcoin from 'bitcoinjs-lib';
+import { OutputLinkModel } from '../DiagramComponents/OutputLink';
+import { SpendLinkModel } from '../DiagramComponents/SpendLink/SpendLinkModel';
+import { TransactionNodeModel } from '../DiagramComponents/TransactionNode/TransactionNodeModel';
+import { HasKeys, InputMap, TXID } from '../util';
+import { Viewer } from '../UX/EntityViewer';
+import { NodeColor, UTXOFormatData } from './ContractManager';
+import './Transaction.css';
+import { UTXOMetaData, UTXOModel } from './UTXO';
 
 
 export class TransactionModel extends TransactionNodeModel implements Viewer, HasKeys {
@@ -44,6 +44,12 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
         });
     }
 
+    setReachable(b:boolean) {
+        super.setReachable(b);
+        for(const utxo_model of this.utxo_models) {
+            utxo_model.setReachable(b);
+        }
+    }
     get_txid(): TXID {
         return this.tx.getId();
     }

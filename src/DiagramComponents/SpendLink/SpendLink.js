@@ -1,22 +1,27 @@
-import { DefaultLinkModel, DefaultPortModel } from '@projectstorm/react-diagrams';
+import { DefaultPortModel } from '@projectstorm/react-diagrams';
 import * as React from 'react';
 import Color from "color";
+import { SpendLinkModel } from './SpendLinkModel';
 
-export class SpendLinkModel extends DefaultLinkModel {
-	constructor(options={}) {
+export class SpendPortModel extends DefaultPortModel {
+	constructor(options) {
 		super({
-			type: 'spend',
-			width: 15,
-			color: "white",
 			...options
 		});
 	}
-}
-
-export class SpendPortModel extends DefaultPortModel {
-
+	setReachable(b) {
+		for( const [_, link] of Object.entries(this.getLinks())) {
+			link.setReachable(b);
+		}
+	}
 	createLinkModel(factory) {
 		return new SpendLinkModel();
+	}
+	spend_link(x, factory) {
+		let link = this.createLinkModel(factory);
+		link.setSourcePort(this);
+		link.setTargetPort(x)
+		return link;
 	}
 }
 const all_nodes = new Map();
@@ -24,7 +29,7 @@ let unique_key = 0;
 let percent_idx = 0;
 let seconds = 10;
 let frames_per_second = 60;
-let increment = 100 / 60 /10;
+let increment = 100 / frames_per_second / seconds;
 function update_loop() {
 	const percentage = percent_idx/(100);
 	const fade = 2*Math.abs(percentage - 0.5);
@@ -34,11 +39,16 @@ function update_loop() {
 			continue;
 		}
 		const point = node.path.getPointAtLength(node.path.getTotalLength() * percentage);
-		node.color = color;
 		node.x = point.x;
 		node.y = point.y;
+		if (node.is_reachable) {
+			node.color = color;
+		} else {
+			node.color = Color("transparent").toString();
+		}
 
 	}
+	requestAnimationFrame(animation_loop)
 	percent_idx = (percent_idx + increment) % 101;
 	setTimeout(update_loop, 1000 /frames_per_second);
 };
@@ -52,7 +62,6 @@ function animation_loop() {
 		node.circle.setAttribute('cx', node.x);
 		node.circle.setAttribute('cy', node.y);
 	}
-	requestAnimationFrame(animation_loop)
 };
 animation_loop();
 
@@ -76,6 +85,8 @@ export class SpendLinkSegment extends React.Component {
 		this.color = "none";
 		this.key = unique_key++;
 		all_nodes.set(this.key, this);
+		this.is_reachable = true;
+		this.props.model.registerReachableCallback((b) => this.is_reachable = b);
 	}
 
 	componentDidMount() {
@@ -105,11 +116,10 @@ export class SpendLinkSegment extends React.Component {
 						this.circle = ref;
 					}}
 					r={7.5}
-					fill="orange"
+					fill={"color"}
 				/>
 			</>
 		);
 	}
 }
-
 

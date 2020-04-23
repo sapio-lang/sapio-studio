@@ -1,6 +1,7 @@
 import { DefaultLinkFactory, DefaultLinkModel, DefaultPortModel } from '@projectstorm/react-diagrams';
 import * as React from 'react';
-import { SpendLinkModel, SpendPortModel } from './SpendLink/SpendLink';
+import { SpendPortModel } from './SpendLink/SpendLink';
+import { SpendLinkModel } from './SpendLink/SpendLinkModel';
 
 export class OutputLinkModel extends SpendLinkModel {
 	constructor() {
