@@ -1,10 +1,10 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
-import { ContractModel } from './ContractManager';
-import { TransactionDetail } from "./Detail/TransactionDetail";
-import { UTXODetail } from "./Detail/UTXODetail";
-import { TransactionModel } from './Transaction';
-import { UTXOModel } from './UTXO';
+import { ContractModel } from '../Data/ContractManager';
+import { TransactionDetail } from "../Detail/TransactionDetail";
+import { UTXODetail } from "../Detail/UTXODetail";
+import { TransactionModel } from '../Data/Transaction';
+import { UTXOModel } from '../Data/UTXO';
 import Modal from 'react-bootstrap/Modal';
 import Tab from 'react-bootstrap/Tab';
 import Nav from 'react-bootstrap/Nav';

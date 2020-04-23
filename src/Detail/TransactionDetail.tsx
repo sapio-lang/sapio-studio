@@ -1,11 +1,11 @@
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex from '../Hex';
+import Hex from './Hex';
 import { InputDetail } from "./InputDetail";
 import { OutputDetail } from "./OutputDetail";
-import { TransactionModel } from '../Transaction';
+import { TransactionModel } from '../Data/Transaction';
 import { Transaction } from 'bitcoinjs-lib';
-import { UTXOModel } from '../UTXO';
+import { UTXOModel } from '../Data/UTXO';
 import { OutpointDetail, TXIDDetail } from './OutpointDetail';
 interface TransactionDetailProps {
     entity: TransactionModel;

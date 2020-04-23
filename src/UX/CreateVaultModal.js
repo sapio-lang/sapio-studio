@@ -5,7 +5,7 @@ import FormControl from 'react-bootstrap/FormControl';
 import Modal from 'react-bootstrap/Modal';
 import Nav from 'react-bootstrap/Nav';
 import Tab from 'react-bootstrap/Tab';
-import { MenuForm } from './Compiler/Menu';
+import { MenuForm } from '../Compiler/Menu';
 export class CreateContractModal extends React.Component {
     constructor(props) {
         super(props);

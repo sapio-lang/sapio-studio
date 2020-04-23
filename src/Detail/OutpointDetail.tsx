@@ -1,6 +1,6 @@
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex from '../Hex';
+import Hex from './Hex';
 export class OutpointDetail extends React.Component<{
     txid: string;
     n: number;

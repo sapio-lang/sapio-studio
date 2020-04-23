@@ -2,7 +2,7 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import Collapse from 'react-bootstrap/Collapse';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex, { hash_to_hex } from '../Hex';
+import Hex, { hash_to_hex } from './Hex';
 import { OutpointDetail } from './OutpointDetail';
 import Form from 'react-bootstrap/Form';
 interface IProps {

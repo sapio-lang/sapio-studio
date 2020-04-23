@@ -1,11 +1,11 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import * as _ from 'lodash';
-import { OutputLinkModel } from './DiagramComponents/OutputLink';
+import { OutputLinkModel } from '../DiagramComponents/OutputLink';
 import { TransactionModel, PhantomTransactionModel } from './Transaction';
-import { InputMap, TXIDAndWTXIDMap, TXID, txid_buf_to_string } from "./util";
+import { InputMap, TXIDAndWTXIDMap, TXID, txid_buf_to_string } from "../util";
 import { UTXOModel } from "./UTXO";
 import { number } from 'bitcoinjs-lib/types/script';
-import { SelectedEvent } from './App';
+import { SelectedEvent } from '../App';
 export class NodeColor {
     c: string;
     constructor(c: string) {

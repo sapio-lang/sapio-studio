@@ -1,9 +1,9 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex, { ASM } from '../Hex';
+import Hex, { ASM } from './Hex';
 import { get_wtxid_backwards, pretty_amount } from '../util';
-import { UTXOModel } from '../UTXO';
+import { UTXOModel } from '../Data/UTXO';
 import "./UTXODetail.css";
 import { OutpointDetail } from './OutpointDetail';
 import { NodeModel } from '@projectstorm/react-diagrams';

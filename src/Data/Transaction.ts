@@ -1,12 +1,12 @@
 
 import * as Bitcoin from 'bitcoinjs-lib';
 import { NodeColor, UTXOFormatData } from './ContractManager';
-import { OutputLinkModel } from './DiagramComponents/OutputLink';
-import { SpendLinkModel } from './DiagramComponents/SpendLink/SpendLink';
-import { TransactionNodeModel } from './DiagramComponents/TransactionNode/TransactionNodeModel';
-import { Viewer } from './EntityViewer';
+import { OutputLinkModel } from '../DiagramComponents/OutputLink';
+import { SpendLinkModel } from '../DiagramComponents/SpendLink/SpendLink';
+import { TransactionNodeModel } from '../DiagramComponents/TransactionNode/TransactionNodeModel';
+import { Viewer } from '../UX/EntityViewer';
 import './Transaction.css';
-import { get_wtxid_backwards, HasKeys, InputMap, TXID } from './util';
+import { get_wtxid_backwards, HasKeys, InputMap, TXID } from '../util';
 import { UTXOMetaData, UTXOModel } from './UTXO';
 import { DiagramModel, LinkModel } from '@projectstorm/react-diagrams';
 

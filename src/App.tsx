@@ -7,18 +7,18 @@ import Collapse from 'react-bootstrap/Collapse';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import './App.css';
-import { AppNavbar } from "./AppNavbar";
-import { BitcoinNodeManager, update_broadcastable } from './BitcoinNode';
+import { AppNavbar } from "./UX/AppNavbar";
+import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
 import { CompilerServer } from "./Compiler/ContractCompilerServer";
-import { ContractBase, ContractModel, Data } from './ContractManager';
+import { ContractBase, ContractModel, Data } from './Data/ContractManager';
 import { TransactionNodeFactory } from './DiagramComponents/TransactionNode/TransactionNodeFactory';
-import { DemoCanvasWidget } from './DemoCanvasWidget';
+import { DemoCanvasWidget } from './UX/DemoCanvasWidget';
 import { SpendLinkFactory } from "./DiagramComponents/SpendLink/SpendLinkFactory";
 import { UTXONodeFactory } from './DiagramComponents/UTXONode/UTXONodeFactory';
-import { EntityViewerModal, Viewer, EmptyViewer } from './EntityViewer';
-import { UTXOModel } from './UTXO';
+import { EntityViewerModal, Viewer, EmptyViewer } from './UX/EntityViewer';
+import { UTXOModel } from './Data/UTXO';
 import { Transaction } from 'bitcoinjs-lib';
-import { TransactionModel } from './Transaction';
+import { TransactionModel } from './Data/Transaction';
 import { UTXONodeModelGenerics } from './DiagramComponents/UTXONode/UTXONodeModel';
 
 
