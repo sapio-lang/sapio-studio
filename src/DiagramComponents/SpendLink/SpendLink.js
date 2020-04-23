@@ -9,11 +9,6 @@ export class SpendPortModel extends DefaultPortModel {
 			...options
 		});
 	}
-	setReachable(b) {
-		for( const [_, link] of Object.entries(this.getLinks())) {
-			link.setReachable(b);
-		}
-	}
 	createLinkModel(factory) {
 		return new SpendLinkModel();
 	}
@@ -27,7 +22,7 @@ export class SpendPortModel extends DefaultPortModel {
 const all_nodes = new Map();
 let unique_key = 0;
 let percent_idx = 0;
-let seconds = 10;
+let seconds = 0.5;
 let frames_per_second = 60;
 let increment = 100 / frames_per_second / seconds;
 function update_loop() {
@@ -43,8 +38,10 @@ function update_loop() {
 		node.y = point.y;
 		if (node.is_reachable) {
 			node.color = color;
+			node.path_width = node.props.model.getOptions().width;
 		} else {
 			node.color = Color("transparent").toString();
+			node.path_width = node.props.model.getOptions().width/10;
 		}
 
 	}
@@ -61,6 +58,7 @@ function animation_loop() {
 		node.circle.setAttribute("fill", node.color);
 		node.circle.setAttribute('cx', node.x);
 		node.circle.setAttribute('cy', node.y);
+		node.path.setAttribute('strokeWidth', node.path_width);
 	}
 };
 animation_loop();
@@ -82,6 +80,7 @@ export class SpendLinkSegment extends React.Component {
 		this.path = null;
 		this.x = 0;
 		this.y = 0;
+		this.path_width = this.props.model.getOptions().width;
 		this.color = "none";
 		this.key = unique_key++;
 		all_nodes.set(this.key, this);

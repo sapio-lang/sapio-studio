@@ -45,9 +45,15 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
     }
 
     setReachable(b:boolean) {
+        // Turns on/off the widget banner
         super.setReachable(b);
+        //  Turns off the outputs animinations
         for(const utxo_model of this.utxo_models) {
             utxo_model.setReachable(b);
+        }
+        // Turns off the inputs animations
+        for(const input_link of this.input_links) {
+            input_link.setReachable(b);
         }
     }
     get_txid(): TXID {

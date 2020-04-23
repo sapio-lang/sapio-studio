@@ -1,5 +1,5 @@
 import { DefaultPortModel, NodeModel, DefaultNodeModelOptions, DefaultNodeModelGenerics } from '@projectstorm/react-diagrams';
-import { PortModelAlignment, NodeModelGenerics, PortModel } from '@projectstorm/react-diagrams-core';
+import { PortModelAlignment, NodeModelGenerics, PortModel, LinkModel } from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
 import { SpendLinkModel } from "../SpendLink/SpendLinkModel";
 import { BasePositionModelOptions, BaseModel, BaseModelGenerics, DeserializeEvent } from '@projectstorm/react-canvas-core';
@@ -56,8 +56,12 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
 
     setReachable(b: boolean) {
         this.options.reachable = b;
-        _(this.portsOut).forEach((port :SpendPortModel) => {
-            port.setReachable(b);
+        _(this.portsIn).forEach((port :DefaultPortModel) => {
+            for (const item  of Object.entries(port.getLinks())) {
+                if (item[1] instanceof SpendLinkModel) {
+                    item[1].setReachable(b);
+                }
+            }
         })
         this.options.reachable_callback(b);
     }

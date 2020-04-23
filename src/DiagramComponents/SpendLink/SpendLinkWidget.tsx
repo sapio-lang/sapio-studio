@@ -48,7 +48,6 @@ export class SpendLinkWidget extends DefaultLinkWidget {
     }
     render() {
         //ensure id is present for all points on the path
-        console.log("DOES THIS RUN")
 		var points = this.props.link.getPoints();
 		var paths = [];
 		this.refPaths = [];
