@@ -15,7 +15,7 @@ import { TransactionNodeFactory } from './DiagramComponents/TransactionNode/Tran
 import { DemoCanvasWidget } from './DemoCanvasWidget';
 import { SpendLinkFactory } from "./DiagramComponents/SpendLink/SpendLinkFactory";
 import { UTXONodeFactory } from './DiagramComponents/UTXONode/UTXONodeFactory';
-import { EntityViewerModal, Viewer, EmptyViewer} from './EntityViewer';
+import { EntityViewerModal, Viewer, EmptyViewer } from './EntityViewer';
 import { UTXOModel } from './UTXO';
 import { Transaction } from 'bitcoinjs-lib';
 import { TransactionModel } from './Transaction';
@@ -117,16 +117,17 @@ class App extends React.Component<any, AppState> {
     update_viewer(data: SelectedEvent) {
         if (data.isSelected === false || data.entity === null) return;
         if (!(data.entity instanceof UTXOModel || data.entity instanceof TransactionModel)) return;
+
         this.model.setZoomLevel(100);
         const { clientHeight, clientWidth } = this.engine.getCanvas();
-        const zoomf = this.model.getZoomLevel() / 100;
         const { left, top } = this.engine.getCanvas().getBoundingClientRect();
-
-        const { x, y } = data.entity.getPosition();
-        const x_coord = x + left - clientWidth / 2;
-        const y_coord = y + top - clientHeight / 2;
-
-        this.model.setOffset(-x_coord / zoomf, -y_coord / zoomf)
+        let { x, y } = data.entity.getPosition();
+        x+= data.entity.width/2;
+        y+=data.entity.height;
+        const zoomf = this.model.getZoomLevel() / 100;
+        const x_coord = (left + clientWidth/3 - x) * zoomf;
+        const y_coord = (top + clientHeight/2 - y) * zoomf;
+        this.model.setOffset(x_coord, y_coord)
         this.setState({ entity: data.entity, details: true });
     }
 

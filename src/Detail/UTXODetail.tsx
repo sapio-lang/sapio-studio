@@ -13,16 +13,11 @@ interface UTXODetailProps {
 }
 export class UTXODetail extends React.Component<UTXODetailProps> {
 
-    componentWillMount() {
-        this.props.entity.setSelected(true);
-    }
     componentWillUnmount() {
         this.props.entity.setSelected(false);
     }
     goto(x:NodeModel) {
-        this.props.entity.setSelected(false);
         x.setSelected(true);
-        
     }
     render() {
         console.log(this);

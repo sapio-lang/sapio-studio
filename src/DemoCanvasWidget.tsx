@@ -79,7 +79,10 @@ export class DemoCanvasWidget extends React.Component<DemoCanvasWidgetProps, any
         if (this.props.model_number > this.model_number) {
             this.model_number = this.props.model_number;
             console.log("check")
-            setTimeout(() =>this.redistribute(), 0);
+            setTimeout(() => {
+                this.redistribute()
+                this.props.engine.zoomToFit();
+            }, 0);
         }
     }
 }

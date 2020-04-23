@@ -27,14 +27,10 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
         return state;
     }
 
-    componentWillMount() {
-        this.props.entity.setSelected(true);
-    }
     componentWillUnmount() {
         this.props.entity.setSelected(false);
     }
     goto(x:UTXOModel|TransactionModel) {
-        this.props.entity.setSelected(false);
         x.setSelected(true);
     }
     render() {

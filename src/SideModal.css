@@ -22,8 +22,9 @@ License: MIT
 	right:0;
 	top:0;
 	margin:0;
-	width: 30%;
+	width: 33%;
 	margin-top:60px;
+	min-height:calc(100vh - 60px);
 }
 .modal.left .modal-dialog {
 	position:absolute;
@@ -37,7 +38,7 @@ License: MIT
 }
 
 .modal.left .modal-content, .modal-right > * > .modal-content {
-	min-height:100vh;
+	min-height:calc(100vh - 60px);
 	border:0;
 }
 .modal-bright-backdrop{
