@@ -6,7 +6,7 @@ import Form from 'react-bootstrap/Form';
 import { App } from './App';
 import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
-type Field = "start_time" | "first_tx_time" | "min_time" | "max_time" | "start_block" | "first_tx_block" | "min_blocks" | "max_blocks" | "none";
+type Field = "current_time" | "first_tx_time" | "min_time" | "max_time" | "start_block" | "first_tx_block" | "min_blocks" | "max_blocks" | "none";
 type SimAction = "clear";
 export class SimulationController extends React.Component<{
     contract: ContractModel;
@@ -14,11 +14,11 @@ export class SimulationController extends React.Component<{
 }, {
     date: Date;
     first_tx_time: Date;
-    start_time: Date;
+    current_time: Date;
     first_tx_block: number;
     start_block: number;
 }> {
-    start_time: number;
+    current_time: number;
     first_tx_time: number;
     min_time: Date;
     max_time: Date;
@@ -29,7 +29,7 @@ export class SimulationController extends React.Component<{
     timeout: NodeJS.Timeout;
     constructor(props: any) {
         super(props);
-        this.start_time = 0.5;
+        this.current_time = 0.5;
         this.first_tx_time = 0.5;
         this.min_time = new Date(Date.now());
         this.max_time = new Date(Date.now());
@@ -42,7 +42,7 @@ export class SimulationController extends React.Component<{
         this.state = {
             date: new Date(),
             first_tx_time: new Date(),
-            start_time: new Date(),
+            current_time: new Date(),
             first_tx_block: 0,
             start_block: 0,
         };
@@ -58,8 +58,8 @@ export class SimulationController extends React.Component<{
             case "first_tx_time":
                 this.first_tx_time = input.valueAsNumber / 100.0;
                 break;
-            case "start_time":
-                this.start_time = input.valueAsNumber / 100.0;
+            case "current_time":
+                this.current_time = input.valueAsNumber / 100.0;
                 break;
             case "max_time":
                 this.max_time = input.valueAsDate ?? this.max_time;
@@ -81,8 +81,8 @@ export class SimulationController extends React.Component<{
         }
         const [[first_tx_time_secs, start_time_secs], [first_tx_block, start_block]] = this.recompute_times()
         const first_tx_time = new Date(first_tx_time_secs * 1000)
-        const start_time = new Date(start_time_secs * 1000);
-        this.setState({ first_tx_time, start_time, first_tx_block, start_block });
+        const current_time = new Date(start_time_secs * 1000);
+        this.setState({ first_tx_time, current_time, first_tx_block, start_block });
 
         // wait a second from last update
         clearTimeout(this.timeout);
@@ -90,18 +90,18 @@ export class SimulationController extends React.Component<{
     }
     recompute_times(): [[number, number], [number, number]] {
         const time_delta = (this.max_time.getTime() - this.min_time.getTime());
-        const start_time = this.start_time * time_delta + this.min_time.getTime();
+        const current_time = this.current_time * time_delta + this.min_time.getTime();
         const first_tx_time = this.first_tx_time * time_delta + this.min_time.getTime();
         const block_delta = (this.max_blocks - this.min_blocks) / 100.0;
         const start_block = block_delta * this.start_block + this.min_blocks;
         const first_tx_block = block_delta * this.first_tx_block + this.min_blocks;
-        return [[first_tx_time / 1000, start_time / 1000], [first_tx_block, start_block]];
+        return [[first_tx_time / 1000, current_time / 1000], [first_tx_block, start_block]];
 
     }
     delayedUpdate() {
-        const [[first_tx_time, start_time], [first_tx_block, start_block]] = this.recompute_times()
-        const unreachable = this.props.contract.reachable_at_time(start_time, start_block, first_tx_time, first_tx_block);
-        const date = new Date(start_time * 1000);
+        const [[first_tx_time, current_time], [first_tx_block, start_block]] = this.recompute_times()
+        const unreachable = this.props.contract.reachable_at_time(current_time, start_block, first_tx_time, first_tx_block);
+        const date = new Date(current_time * 1000);
         this.setState({ date });
         this.updateForUnreachable(unreachable);
     }
@@ -203,10 +203,10 @@ export class SimulationController extends React.Component<{
                             <Form.Label>Current Time</Form.Label>
                         </Col>
                         <Col sm={8}>
-                            <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("start_time", e)}></Form.Control>
+                            <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("current_time", e)}></Form.Control>
                         </Col>
                         <Col sm={2}>
-                            {this.state.start_time.toLocaleString(undefined, { timeZone: 'UTC' })};
+                            {this.state.current_time.toLocaleString(undefined, { timeZone: 'UTC' })};
                         </Col>
                     </Row>
                 </Col>
