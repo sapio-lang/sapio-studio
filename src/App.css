@@ -56,7 +56,3 @@ height:50%;
 .container-fluid > .row {
     height: 100%;
 }
-.collapsing {
-  transition: none !important;
-  display: none;
-}

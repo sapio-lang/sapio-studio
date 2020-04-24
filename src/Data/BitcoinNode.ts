@@ -85,7 +85,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             this.props.app.forceUpdate();
         }
         if (this.mounted) {
-            this.next_periodic_check = setTimeout(this.periodic_check.bind(this), 1000);
+            this.next_periodic_check = setTimeout(this.periodic_check.bind(this), 5000*60);
         }
     }
 
