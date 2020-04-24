@@ -175,48 +175,57 @@ function get_base_transactions(txns: Array<TransactionModel>, map: TXIDAndWTXIDM
     return phantoms;
 }
 
-function reachable_by_time_arr(bases: Array<TransactionModel>, current_time: number, current_height: number, map: InputMap<TransactionModel>):
+function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, max_height: number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
-    return bases.map((b) => reachable_by_time(b, current_time, current_height, 0, 0, map)).flat(1);
+    console.log("MAX", max_time, max_height);
+    return bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, 0, 0, map)).flat(1);
 }
-function reachable_by_time(base: TransactionModel, current_time: number, current_height: number, simulated_time: number, simulated_height: number, map: InputMap<TransactionModel>):
+function unreachable_by_time_inner(base: TransactionModel, max_time: number, max_height: number, elapsed_time: number, elapsed_blocks: number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
     const spenders: Map<number, TransactionModel[]> = map.map.get(base.get_txid()) ?? new Map();
     return Array.from(spenders.values()).map((output_spender: TransactionModel[]) =>
         output_spender.map((spender: TransactionModel) => {
             const locktime = spender.tx.locktime;
             const sequences = spender.tx.ins.map((inp) => inp.sequence);
-            let greatest_time = 0;
-            let greatest_height = 0;
             // TODO: Handle MTP?
-            if (locktime < 500_000_000) {
-                greatest_height = locktime;
-            } else {
-                greatest_time = locktime;
-            }
-            let greatest_relative_height = 0;
-            let greatest_relative_time = 0;
+            let unlock_at_relative_height = 0;
+            let unlock_at_relative_time = 0;
+            let locktime_enabled = false;
             sequences.forEach((s) => {
-                if (s & 1 << 31) {
-                    // skip, no meaning
-                } else if (s & (1 << 22)) {
-                    greatest_relative_time = Math.max((s & 0x00FFFF) * 512, greatest_relative_time);
+                // Only enable locktime if at least one input is not UINT_MAX
+                if (s === 0xFFFFFFFF) return;
+                locktime_enabled = true;
+                // skip, no meaning if set (except perhaps to enable locktime)
+                if (s & 1 << 31) return;
+                // Only bottom of sequence applies
+                const s_mask = 0x00FFFF & s;
+                if (s & (1 << 22)) {
+                    // Interpret as a relative time, units 512 seconds per s_mask
+                    unlock_at_relative_time = Math.max(s_mask* 512, unlock_at_relative_time);
                 } else {
-                    greatest_relative_height = Math.max(s & 0x00FFFF, greatest_relative_height);
+                    // Interpret as a relative height, units blocks
+                    unlock_at_relative_height = Math.max(s_mask, unlock_at_relative_height);
                 }
             });
+            // before 500M, it is a height. After a UNIX time.
+            const is_height = locktime < 500_000_000;
+            let unlock_time = locktime_enabled && !is_height? locktime : 0;
+            let unlock_height = locktime_enabled && is_height? locktime: 0;
 
-            if (current_height < greatest_height) {}
-            else if (current_time < greatest_time) {}
-            else if (simulated_height + greatest_relative_height> current_height){}
-            else if (simulated_time + greatest_relative_time > current_time) {}
-            else {
-                return reachable_by_time(spender,
-                    current_time, current_height,
-                    simulated_time + greatest_relative_time,
-                    simulated_height + greatest_relative_height, map);
+            // The soonest time to satisfy both conditions
+            const time_when_spendable = Math.max(unlock_time, elapsed_time+unlock_at_relative_time);
+            const height_when_spendable = Math.max(unlock_height, elapsed_blocks+unlock_at_relative_height);
+            // Return All Descendants and us from here because none of these transactions can go through
+            // It is > because a block will accept ==
+            if (time_when_spendable > max_time || height_when_spendable > max_height) {
+                // TODO: Make this a Set type?
+                return all_descendants(spender, map).concat(spender);
             }
-            return all_descendants(spender, map).concat(spender);
+            // Recurse with the new times
+            return unreachable_by_time_inner(spender,
+                max_time, max_height,
+                time_when_spendable,
+                height_when_spendable, map);
         }).flat(1)
     ).flat(1);
 }
@@ -283,9 +292,9 @@ export class ContractModel extends ContractBase {
             m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
         });*/
     }
-    reachable_at_time(current_time : number, current_height : number) : Array<TransactionModel> {
+    reachable_at_time(max_time : number, max_height : number) : Array<TransactionModel> {
         const bases = get_base_transactions(this.txn_models, this.txid_map);
-        return reachable_by_time_arr(bases, current_time, current_height, this.inputs_map);
+        return unreachable_by_time(bases, max_time, max_height, this.inputs_map);
     }
 }
 
