@@ -175,10 +175,10 @@ function get_base_transactions(txns: Array<TransactionModel>, map: TXIDAndWTXIDM
     return phantoms;
 }
 
-function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, max_height: number, map: InputMap<TransactionModel>):
+function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, max_height: number, start_height:number, start_time:number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
     console.log("MAX", max_time, max_height);
-    return bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, 0, 0, map)).flat(1);
+    return bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, start_height, start_time, map)).flat(1);
 }
 function unreachable_by_time_inner(base: TransactionModel, max_time: number, max_height: number, elapsed_time: number, elapsed_blocks: number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
@@ -292,9 +292,9 @@ export class ContractModel extends ContractBase {
             m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
         });*/
     }
-    reachable_at_time(max_time : number, max_height : number) : Array<TransactionModel> {
+    reachable_at_time(max_time : number, max_height : number, start_time: number, start_height: number) : Array<TransactionModel> {
         const bases = get_base_transactions(this.txn_models, this.txid_map);
-        return unreachable_by_time(bases, max_time, max_height, this.inputs_map);
+        return unreachable_by_time(bases, max_time, max_height, start_time, start_height, this.inputs_map);
     }
 }
 

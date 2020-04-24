@@ -30,7 +30,7 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
     componentWillUnmount() {
         this.props.entity.setSelected(false);
     }
-    goto(x:UTXOModel|TransactionModel) {
+    goto(x: UTXOModel | TransactionModel) {
         x.setSelected(true);
     }
     render() {
@@ -48,22 +48,61 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
             const witnesses: Buffer[][] = this.props.entity.witness_set.map((w) => w[i]);
             console.log(witnesses);
             return <ListGroup.Item key="input-{i}">
-                <InputDetail txinput={o} 
+                <InputDetail txinput={o}
                     goto={() => this.goto(this.props.find_tx_model(o.hash, o.index) ?? this.props.entity)}
                     witnesses={witnesses} />
             </ListGroup.Item>;
         });
 
+        const sequences = this.props.entity.tx.ins.map((inp) => inp.sequence);
+        let greatest_relative_time = 0;
+        let greatest_relative_height = 0;
+        let locktime_enable = false;
+        for (const sequence of sequences) {
+            if (sequence == 0xFFFFFFFF) continue;
+            locktime_enable = true;
+            const s_mask = 0xFFFF & sequence;
+            if ((1 << 22) & sequence) {
+                greatest_relative_time = Math.max(greatest_relative_time, s_mask);
+            } else {
+                greatest_relative_time = Math.max(greatest_relative_height, s_mask);
+            }
+        }
+
+        greatest_relative_time *= 512;
+        let relative_time_string = "None";
+        greatest_relative_time /= 60 * 60;
+        if (greatest_relative_time < 24 && greatest_relative_time != 0) {
+            relative_time_string = greatest_relative_time.toString() + " Hours";
+        } else {
+            greatest_relative_time /= 24;
+            if (greatest_relative_time < 14) {
+                relative_time_string = greatest_relative_time.toString() + " Days";
+            } else {
+                greatest_relative_time /= 7;
+                if (greatest_relative_time < 10) {
+                    relative_time_string = greatest_relative_time.toString() + " Weeks";
+                } else {
+                    greatest_relative_time /= 30;
+                    relative_time_string = greatest_relative_time.toString() + " Weeks";
+                }
+            }
+        }
+        const relative_blocks_string = greatest_relative_height === 0? "None":greatest_relative_height + " Blocks";
+
+
         const locktime = this.props.entity.tx.locktime;
         const as_date = new Date(1970, 0, 1);
         as_date.setSeconds(locktime);
-        const lt = locktime === 0 ? "None" : locktime < 500_000_000 ? "Block #"+locktime.toString() : as_date.toUTCString() + " MTP";
+        const lt = ((!locktime_enable) || locktime === 0) ? "None" : locktime < 500_000_000 ? "Block #" + locktime.toString() : as_date.toUTCString() + " MTP";
         // note missing horizontal
         return (<>
             {broadcast}
             <hr />
             <TXIDDetail txid={this.props.entity.get_txid()} />
             <h6>Absolute Lock Time: {lt} </h6>
+            <h6>Relative Lock Time: {relative_time_string} </h6>
+            <h6>Relative Lock Time: {relative_blocks_string} </h6>
             <ListGroup variant="flush">
                 <ListGroup.Item>
                     <h4> Inputs</h4>
