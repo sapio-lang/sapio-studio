@@ -4,7 +4,10 @@ import Row from 'react-bootstrap/Row';
 import { ContractModel } from './Data/ContractManager';
 import Form from 'react-bootstrap/Form';
 import { App } from './App';
+import { TransactionModel } from './Data/Transaction';
+import Button from 'react-bootstrap/Button';
 type Field = "start_time" | "first_tx_time" | "min_time" | "max_time" | "start_block" | "first_tx_block" | "min_blocks" | "max_blocks";
+type SimAction = "clear";
 export class SimulationController extends React.Component<{
     contract: ContractModel;
     app: App;
@@ -75,20 +78,45 @@ export class SimulationController extends React.Component<{
         const start_block = block_delta * this.start_block + this.min_blocks;
         const first_tx_block = block_delta * this.first_tx_block + this.min_blocks;
         const unreachable = this.props.contract.reachable_at_time(start_time / 1000, start_block, first_tx_time / 1000, first_tx_block);
-        console.log(unreachable);
+        this.setState({ date });
+        this.updateForUnreachable(unreachable);
+    }
+    updateForUnreachable(unreachable:Array<TransactionModel>) {
+
         this.props.contract.txn_models.forEach((m) => {
             m.setReachable(true);
         });
         unreachable.forEach((m) => {
             m.setReachable(false);
         });
-        this.props.app.engine.repaintCanvas();
-        this.setState({ date });
-        this.props.app.forceUpdate();
+        setTimeout(() =>{this.props.app.engine.repaintCanvas();
+        this.props.app.forceUpdate();}, 0);
+    }
+    handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        if (e.currentTarget instanceof HTMLFormElement) {
+            const form = e.currentTarget as HTMLFormElement;
+            const submitter : any= form.elements["action" as any];
+            if ( submitter instanceof HTMLButtonElement) {
+                switch (submitter.name) {
+                    case "action":
+                        switch(submitter.value) {
+                            case "clear":
+                                setTimeout(() => this.updateForUnreachable([]), 0);
+                                break;
+
+                        }
+                        break;
+
+                    default:
+                }
+            }
+        }
+
     }
     render() {
         const changeHandler = this.changeHandler.bind(this);
-        return (<Form>
+        return (<Form onSubmit={(e:React.FormEvent)=>this.handleSubmit(e)}>
             <h2>Block Time</h2>
             <Form.Group as={Row}>
                 <Col sm={2}>
@@ -150,6 +178,7 @@ export class SimulationController extends React.Component<{
             <Form.Label>
                 {this.state.date.toString()}
             </Form.Label>
+            <Button type="submit" name={"action"} value={"clear"}>Clear Results</Button>
         </Form>);
     }
 }

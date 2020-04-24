@@ -20,6 +20,7 @@ import { SimulationController } from './Simulation';
 import { AppNavbar } from "./UX/AppNavbar";
 import { DemoCanvasWidget } from './UX/DemoCanvasWidget';
 import { EmptyViewer, EntityViewerModal, Viewer } from './UX/EntityViewer';
+import Collapse from 'react-bootstrap/Collapse';
 
 
 
@@ -60,6 +61,7 @@ interface AppState {
     modal_create: boolean;
     modal_view: boolean;
     model_number: number;
+    timing_simulator_enabled: boolean;
 }
 export class App extends React.Component<any, AppState> {
     engine: DiagramEngine;
@@ -80,6 +82,7 @@ export class App extends React.Component<any, AppState> {
             modal_create: false,
             modal_view: false,
             model_number: -1,
+            timing_simulator_enabled: false,
         };
         // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();
@@ -155,24 +158,32 @@ export class App extends React.Component<any, AppState> {
                     <AppNavbar
                         dynamic_forms={this.state.dynamic_forms}
                         load_new_model={(x: Data) => this.load_new_model(x)}
-                        compiler={this.cm} />
-                    <Row>
-                        <Col md={12} >
-                            <DemoCanvasWidget engine={this.engine} model={this.model}
-                                model_number={this.state.model_number}>
-                                <CanvasWidget engine={this.engine as any} key={"main"} />
-                            </DemoCanvasWidget>
-                        </Col>
-                        <EntityViewerModal
-                            show={this.state.details}
-                            entity={this.state.entity}
-                            broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
-                            hide_details={() => this.hide_details()}
-                            current_contract={this.state.current_contract}
+                        compiler={this.cm}
+                        toggle_timing_simulator={(b:boolean)=>this.setState({timing_simulator_enabled: b})}
                         />
-                    </Row>
-                    <SimulationController contract={this.state.current_contract}
-                        app={this} />
+
+                        <Collapse in={this.state.timing_simulator_enabled}>
+                            <div>
+                            <SimulationController contract={this.state.current_contract}
+                                app={this} />
+                            </div>
+                        </Collapse>
+
+                        <Row>
+                            <Col md={12} >
+                                <DemoCanvasWidget engine={this.engine} model={this.model}
+                                    model_number={this.state.model_number}>
+                                    <CanvasWidget engine={this.engine as any} key={"main"} />
+                                </DemoCanvasWidget>
+                            </Col>
+                            <EntityViewerModal
+                                show={this.state.details}
+                                entity={this.state.entity}
+                                broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
+                                hide_details={() => this.hide_details()}
+                                current_contract={this.state.current_contract}
+                            />
+                        </Row>
                 </Container>
             </div>
         );

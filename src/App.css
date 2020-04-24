@@ -56,19 +56,6 @@ height:50%;
 .container-fluid > .row {
     height: 100%;
 }
-.App > .row {
-    height: 100%;
-}
-.App > .row > .col {
-    height: 100%;
-}
-.App > .row > div {
-    height: 100%;
-}
-
-.App > div {
-    height: 95%;
-}
 .collapsing {
   transition: none !important;
   display: none;
