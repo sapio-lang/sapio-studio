@@ -205,16 +205,12 @@ function reachable_by_time(base: TransactionModel, current_time: number, current
                     greatest_relative_height = Math.max(s & 0x00FFFF, greatest_relative_height);
                 }
             });
-            console.log("TX:")
-            console.log(current_time, greatest_time);
-            console.log(greatest_relative_time, simulated_time);
 
             if (current_height < greatest_height) {}
             else if (current_time < greatest_time) {}
             else if (simulated_height + greatest_relative_height> current_height){}
             else if (simulated_time + greatest_relative_time > current_time) {}
             else {
-                console.log("passed")
                 return reachable_by_time(spender,
                     current_time, current_height,
                     simulated_time + greatest_relative_time,

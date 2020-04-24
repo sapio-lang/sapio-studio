@@ -54,13 +54,16 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
             </ListGroup.Item>;
         });
 
-
-
+        const locktime = this.props.entity.tx.locktime;
+        const as_date = new Date(1970, 0, 1);
+        as_date.setSeconds(locktime);
+        const lt = locktime === 0 ? "None" : locktime < 500_000_000 ? "Block #"+locktime.toString() : as_date.toUTCString() + " MTP";
         // note missing horizontal
         return (<>
             {broadcast}
             <hr />
             <TXIDDetail txid={this.props.entity.get_txid()} />
+            <h6>Absolute Lock Time: {lt} </h6>
             <ListGroup variant="flush">
                 <ListGroup.Item>
                     <h4> Inputs</h4>

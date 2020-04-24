@@ -39,14 +39,14 @@ class ModelManager {
         this.model.addAll(...contract.txn_models);
         this.model.addAll(...contract.utxo_models);
         const utxo_links: LinkModel[] = contract.utxo_models
-                                .map((m: UTXOModel) => m.getOutPorts()).flat(1)
-                                .map((p: SpendPortModel)=>
-                                    Object.entries(p.getLinks()).map((v)=> v[1])).flat(1);
+            .map((m: UTXOModel) => m.getOutPorts()).flat(1)
+            .map((p: SpendPortModel) =>
+                Object.entries(p.getLinks()).map((v) => v[1])).flat(1);
         this.model.addAll(...utxo_links);
-        const tx_links : LinkModel[] = contract.txn_models
-                                .map((m: TransactionModel) => m.getOutPorts()).flat(1)
-                                .map((p: SpendPortModel)=>
-                                    Object.entries(p.getLinks()).map((v)=> v[1])).flat(1);
+        const tx_links: LinkModel[] = contract.txn_models
+            .map((m: TransactionModel) => m.getOutPorts()).flat(1)
+            .map((p: SpendPortModel) =>
+                Object.entries(p.getLinks()).map((v) => v[1])).flat(1);
 
         this.model.addAll(...tx_links);
     }
@@ -162,7 +162,7 @@ class App extends React.Component<any, AppState> {
                         load_new_model={(x: Data) => this.load_new_model(x)}
                         compiler={this.cm} />
                     <SimulationController contract={this.state.current_contract}
-                    app={this}/>
+                        app={this} />
                     <Row>
                         <Col md={12} >
                             <DemoCanvasWidget engine={this.engine} model={this.model}
@@ -184,57 +184,59 @@ class App extends React.Component<any, AppState> {
     }
 }
 
-type Field = "time" | "min_time" | "max_time" | "blocks"| "min_blocks" | "max_blocks";
-class SimulationController extends React.Component<{contract:ContractModel, app:App}> {
+type Field = "time" | "min_time" | "max_time" | "blocks" | "min_blocks" | "max_blocks";
+class SimulationController extends React.Component<{ contract: ContractModel, app: App }, {date:Date}> {
     time: number;
-    min_time: number;
-    max_time: number;
+    min_time: Date;
+    max_time: Date;
     blocks: number;
     min_blocks: number;
     max_blocks: number;
     timeout: NodeJS.Timeout;
     constructor(props: any) {
         super(props);
-        this.time = 50;
-        this.min_time = this.time -365*24*60*60;
-        this.max_time = this.time + 365*24*60*60;
-        this.blocks = 50;
-        this.min_blocks = 0;
-        this.max_blocks = 1_000_000_000;
+        this.time = 0.5;
+        this.min_time = new Date(Date.now());
+        this.max_time = new Date(Date.now());
+        this.max_time.setDate(this.max_time.getDate() + 365);
+        this.blocks = 0.5;
+        this.min_blocks = (new Date().getFullYear() - 2008)*144*365 - 144*365/2;
+        this.max_blocks = this.min_blocks + 144*(365);
         this.timeout = setTimeout(() => null, 0);
+        this.state ={date: new Date()};
     }
-    changeHandler(from:Field, e: FormEvent) {
-        console.log(this);
+    changeHandler(from: Field, e: FormEvent) {
         const input = e.currentTarget as HTMLInputElement;
         switch (from) {
             case "min_time":
-                this.min_time = input.valueAsNumber;
+                this.min_time = input.valueAsDate??this.min_time;
                 break;
             case "time":
-                this.time = input.valueAsNumber;
+                this.time = input.valueAsNumber / 100.0;
                 break;
             case "max_time":
-                this.max_time = input.valueAsNumber;
+                this.max_time = input.valueAsDate??this.max_time;
                 break;
             case "min_blocks":
                 this.min_blocks = input.valueAsNumber;
                 break;
             case "blocks":
-                this.blocks = input.valueAsNumber;
+                this.blocks = input.valueAsNumber/ 100.0;
                 break;
             case "max_blocks":
                 this.max_blocks = input.valueAsNumber;
                 break;
         }
-        console.log(this.time, this.min_time, this.max_time, this.blocks, this.min_blocks, this.max_blocks);
         // wait a second from last update
         clearTimeout(this.timeout);
-        this.timeout = setTimeout(()=> this.delayedUpdate(), 1000);
+        this.timeout = setTimeout(() => this.delayedUpdate(), 1000);
     }
     delayedUpdate() {
-        const time = (this.max_time - this.min_time)/100.0*this.time + this.min_time;
-        const blocks = (this.max_blocks - this.min_blocks)/100.0*this.blocks + this.min_blocks;
-        const unreachable = this.props.contract.reachable_at_time(time, blocks);
+        const time = this.time*(this.max_time.getTime() - this.min_time.getTime()) + this.min_time.getTime();
+        const date = new Date(time);
+        const blocks = (this.max_blocks - this.min_blocks) / 100.0 * this.blocks + this.min_blocks;
+        const unreachable = this.props.contract.reachable_at_time(time/1000, blocks);
+        console.log(unreachable);
         this.props.contract.txn_models.forEach((m) => {
             m.setReachable(true);
         });
@@ -242,22 +244,37 @@ class SimulationController extends React.Component<{contract:ContractModel, app:
             m.setReachable(false);
         });
         this.props.app.engine.repaintCanvas();
+        this.setState({date})
         this.props.app.forceUpdate();
-        console.log("FIRE", unreachable);
     }
     render() {
         const changeHandler = this.changeHandler.bind(this);
         return (<Form>
-            <Form.Group>
-                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("min_blocks", e)}></Form.Control>
-                <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("blocks", e)}></Form.Control>
-                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("max_blocks", e)}></Form.Control>
+            <Form.Group as={Row}>
+                <Col sm={2}>
+                    <Form.Control defaultValue={this.min_blocks} type="number" onChange={(e: FormEvent) => changeHandler("min_blocks", e)}></Form.Control>
+                </Col>
+                <Col sm={8}>
+                    <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("blocks", e)}></Form.Control>
+                </Col>
+                <Col sm={2}>
+                    <Form.Control defaultValue={this.max_blocks} type="number" onChange={(e: FormEvent) => changeHandler("max_blocks", e)}></Form.Control>
+                </Col>
             </Form.Group>
-            <Form.Group>
-                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("min_time", e)}></Form.Control>
-                <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("time", e)}></Form.Control>
-                <Form.Control type="number" onChange={(e: FormEvent) => changeHandler("max_time", e)}></Form.Control>
+            <Form.Group as={Row}>
+                <Col sm={2}>
+                    <Form.Control defaultValue={this.min_time.toLocaleDateString("en-CA")} type="date" onChange={(e: FormEvent) => changeHandler("min_time", e)}></Form.Control>
+                </Col>
+                <Col sm={8}>
+                    <Form.Control type="range" onChange={(e: FormEvent) => changeHandler("time", e)}></Form.Control>
+                </Col>
+                <Col sm={2}>
+                    <Form.Control defaultValue={this.max_time.toLocaleDateString("en-CA")} type="date" onChange={(e: FormEvent) => changeHandler("max_time", e)}></Form.Control>
+                </Col>
             </Form.Group>
+            <Form.Label>
+                {this.state.date.toString()}
+            </Form.Label>
         </Form>);
     }
 }
