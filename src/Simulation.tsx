@@ -6,6 +6,7 @@ import Form from 'react-bootstrap/Form';
 import { App } from './App';
 import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
+import _ from 'lodash';
 type Field = "current_time" | "first_tx_time" | "min_time" | "max_time" | "current_block" | "first_tx_block" | "min_blocks" | "max_blocks" | "none";
 type SimAction = "clear" | "snap-time" | "snap-blocks";
 export class SimulationController extends React.Component<{
@@ -35,6 +36,7 @@ export class SimulationController extends React.Component<{
     min_blocks: number;
     max_blocks: number;
     timeout: NodeJS.Timeout;
+    throttled_update: () => void;
     constructor(props: any) {
         super(props);
         this.current_time = 0.5;
@@ -65,6 +67,7 @@ export class SimulationController extends React.Component<{
         };
 
 
+        this.throttled_update = _.throttle(() => this.delayedUpdate(),1000, {'trailing': true, 'leading': false});
     }
     changeHandler(from: Field, e: FormEvent) {
         const input = e.currentTarget as HTMLInputElement;
@@ -112,11 +115,7 @@ export class SimulationController extends React.Component<{
         const first_tx_time = new Date(first_tx_time_secs * 1000)
         const current_time = new Date(current_time_secs * 1000);
         this.setState({ first_tx_time, current_time, first_tx_block, current_block });
-        setTimeout(() => {
-            // wait a second from last update
-            clearTimeout(this.timeout);
-            this.timeout = setTimeout(() => this.delayedUpdate(), 200);
-        }, 0);
+        this.throttled_update();
     }
     recompute_times(): [[number, number], [number, number]] {
         const time_delta = (this.max_time.getTime() - this.min_time.getTime());
@@ -145,7 +144,6 @@ export class SimulationController extends React.Component<{
         });
         setTimeout(() => {
             this.props.app.engine.repaintCanvas();
-            this.props.app.forceUpdate();
         }, 0);
     }
     handleSubmit(e: SimAction) {

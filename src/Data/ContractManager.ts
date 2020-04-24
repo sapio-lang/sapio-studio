@@ -1,11 +1,9 @@
 import * as Bitcoin from 'bitcoinjs-lib';
-import * as _ from 'lodash';
-import { OutputLinkModel } from '../DiagramComponents/OutputLink';
-import { TransactionModel, PhantomTransactionModel } from './Transaction';
-import { InputMap, TXIDAndWTXIDMap, TXID, txid_buf_to_string } from "../util";
-import { UTXOModel } from "./UTXO";
-import { number } from 'bitcoinjs-lib/types/script';
+import _, { Collection } from 'lodash';
 import { SelectedEvent } from '../App';
+import { InputMap, TXID, TXIDAndWTXIDMap, txid_buf_to_string } from "../util";
+import { PhantomTransactionModel, TransactionModel } from './Transaction';
+import { UTXOModel } from "./UTXO";
 export class NodeColor {
     c: string;
     constructor(c: string) {
@@ -166,6 +164,17 @@ function process_data(update: (e: SelectedEvent) => void, obj: PreProcessedData)
     const to_add = process_utxo_models(txn_models, inputs_map);
     return { inputs_map: inputs_map, utxo_models: to_add, txn_models: txn_models, txid_map: txid_map};
 }
+
+type TimingData = { unlock_time: number, unlock_height: number, unlock_at_relative_height: number, unlock_at_relative_time: number, txn: TransactionModel };
+class TimingCache {
+    // Array should be de-duplicated!
+    cache: Map<TXID, [TimingData, Array<TransactionModel>|null]>;
+    constructor(){
+        this.cache = new Map();
+    }
+}
+export const timing_cache = new TimingCache();
+
 // In theory this just returns the PhantomTransactions, but in order to make it
 // work with future changes compute rather than infer this list
 function get_base_transactions(txns: Array<TransactionModel>, map: TXIDAndWTXIDMap<TransactionModel>): Array<TransactionModel> {
@@ -174,44 +183,111 @@ function get_base_transactions(txns: Array<TransactionModel>, map: TXIDAndWTXIDM
     });
     return phantoms;
 }
-
+// Based off of
+// https://stackoverflow.com/a/41170834
+function mergeAndDeduplicateSorted<T, T2>(array1:T[], array2:T[], iteratee: (t:T)=> T2 ) : Array<T> {
+    const mergedArray = [];
+    let i = 0;
+    let j = 0;
+    while (i < array1.length && j < array2.length) {
+        if (iteratee(array1[i]) < iteratee(array2[j])) {
+            mergedArray.push(array1[i]);
+            i++;
+        } else if (iteratee(array1[i]) > iteratee(array2[j])) {
+            mergedArray.push(array2[j]);
+            j++;
+        } else {
+            // Arbitrary
+            mergedArray.push(array1[i]);
+            i++;
+            j++;
+        }
+    }
+    if (i < array1.length) {
+        for (let p = i; p < array1.length; p++) {
+            mergedArray.push(array1[p]);
+        }
+    } else {
+        for (let p = j; p < array2.length; p++) {
+            mergedArray.push(array2[p]);
+        }
+    }
+    return mergedArray;
+};
 function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, max_height: number, start_height:number, start_time:number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
-    console.log("MAX", max_time, max_height);
-    return bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, start_height, start_time, map)).flat(1);
+    // Every Array is Sorted and Unique, but *may* overlap
+    const arrays =  bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, start_height, start_time, map));
+    // This algorithm is either O(# TransactionModels^2) because models can share descendants.
+    // The alternative would be to call flat (O(n^2)) and then call sort...
+    // The algorithm cannot be in place on the *first pass* because the arrays are from our cache
+    // and shouldn't be modified.
+    // Later passes could one day re-use allocations...
+    while(arrays.length>1) {
+        // Picks two random arrays to merge at a time to prevent adversarial cases...
+        const v1 = Math.floor(Math.random() * arrays.length);
+        let v2 = Math.floor(Math.random()*arrays.length);
+        // Rejection sample for v2...
+        while (v1 == v2) {
+            v2 = Math.floor(Math.random() * arrays.length);
+        }
+        arrays[v1] = _(mergeAndDeduplicateSorted(arrays[v1], arrays[v2], (t:TransactionModel) => t.get_txid())).sortedUniqBy((t:TransactionModel) => t.get_txid()).value();
+        const last = arrays.pop();
+        if (last === undefined) throw Error("Invariant Broken on Array Length");
+        if (arrays.length != v2) {
+            arrays[v2] = last;
+        }
+
+    }
+    return arrays.length > 0 ? arrays[0] : [];
 }
+function compute_timing(txn: TransactionModel) : TimingData {
+    let cache_entry = timing_cache.cache.get(txn.get_txid())
+    if (cache_entry) {
+        return cache_entry[0];
+    }
+    const locktime = txn.tx.locktime;
+    const sequences = txn.tx.ins.map((inp) => inp.sequence);
+    // TODO: Handle MTP?
+    let unlock_at_relative_height = 0;
+    let unlock_at_relative_time = 0;
+    let locktime_enabled = false;
+    sequences.forEach((s) => {
+        // Only enable locktime if at least one input is not UINT_MAX
+        if (s === 0xFFFFFFFF) return;
+        locktime_enabled = true;
+        // skip, no meaning if set (except perhaps to enable locktime)
+        if (s & 1 << 31) return;
+        // Only bottom of sequence applies
+        const s_mask = 0x00FFFF & s;
+        if (s & (1 << 22)) {
+            // Interpret as a relative time, units 512 seconds per s_mask
+            unlock_at_relative_time = Math.max(s_mask * 512, unlock_at_relative_time);
+        } else {
+            // Interpret as a relative height, units blocks
+            unlock_at_relative_height = Math.max(s_mask, unlock_at_relative_height);
+        }
+    });
+    // before 500M, it is a height. After a UNIX time.
+    const is_height = locktime < 500_000_000;
+    let unlock_time = locktime_enabled && !is_height ? locktime : 0;
+    let unlock_height = locktime_enabled && is_height ? locktime : 0;
+    cache_entry= [{ unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn }, null];
+    timing_cache.cache.set(txn.get_txid(), cache_entry);
+    return cache_entry[0];
+}
+function compute_timing_of_children(txn:TransactionModel, map:InputMap<TransactionModel>) : Collection<TimingData> {
+    const spenders: Map<number, TransactionModel[]> = map.map.get(txn.get_txid()) ?? new Map();
+    return _(Array.from(spenders.values())).flatMap((output_spender: TransactionModel[]) =>
+        output_spender.map(compute_timing));
+
+}
+
+
+
 function unreachable_by_time_inner(base: TransactionModel, max_time: number, max_height: number, elapsed_time: number, elapsed_blocks: number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
-    const spenders: Map<number, TransactionModel[]> = map.map.get(base.get_txid()) ?? new Map();
-    return Array.from(spenders.values()).map((output_spender: TransactionModel[]) =>
-        output_spender.map((spender: TransactionModel) => {
-            const locktime = spender.tx.locktime;
-            const sequences = spender.tx.ins.map((inp) => inp.sequence);
-            // TODO: Handle MTP?
-            let unlock_at_relative_height = 0;
-            let unlock_at_relative_time = 0;
-            let locktime_enabled = false;
-            sequences.forEach((s) => {
-                // Only enable locktime if at least one input is not UINT_MAX
-                if (s === 0xFFFFFFFF) return;
-                locktime_enabled = true;
-                // skip, no meaning if set (except perhaps to enable locktime)
-                if (s & 1 << 31) return;
-                // Only bottom of sequence applies
-                const s_mask = 0x00FFFF & s;
-                if (s & (1 << 22)) {
-                    // Interpret as a relative time, units 512 seconds per s_mask
-                    unlock_at_relative_time = Math.max(s_mask* 512, unlock_at_relative_time);
-                } else {
-                    // Interpret as a relative height, units blocks
-                    unlock_at_relative_height = Math.max(s_mask, unlock_at_relative_height);
-                }
-            });
-            // before 500M, it is a height. After a UNIX time.
-            const is_height = locktime < 500_000_000;
-            let unlock_time = locktime_enabled && !is_height? locktime : 0;
-            let unlock_height = locktime_enabled && is_height? locktime: 0;
-
+    return compute_timing_of_children(base, map).value().flatMap(({unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn}) =>{
             // The soonest time to satisfy both conditions
             const time_when_spendable = Math.max(unlock_time, elapsed_time+unlock_at_relative_time);
             const height_when_spendable = Math.max(unlock_height, elapsed_blocks+unlock_at_relative_height);
@@ -219,20 +295,27 @@ function unreachable_by_time_inner(base: TransactionModel, max_time: number, max
             // It is > because a block will accept ==
             if (time_when_spendable > max_time || height_when_spendable > max_height) {
                 // TODO: Make this a Set type?
-                return all_descendants(spender, map).concat(spender);
+                return all_descendants(txn, map);
             }
             // Recurse with the new times
-            return unreachable_by_time_inner(spender,
+            return unreachable_by_time_inner(txn,
                 max_time, max_height,
                 time_when_spendable,
                 height_when_spendable, map);
-        }).flat(1)
-    ).flat(1);
+        });
 }
 function all_descendants(t: TransactionModel, inputs_map: InputMap<TransactionModel>) : Array<TransactionModel> {
-    return Array.from(inputs_map.map.get(t.get_txid())?.values()??[]).flat(1).map(
-        (x) => all_descendants(x, inputs_map).concat([x])
-    ).flat(1);
+    let cache_entry = timing_cache.cache.get(t.get_txid());
+    if (cache_entry && cache_entry[1]) return cache_entry[1];
+    // This case probably never happens...
+    if (!cache_entry) {
+        cache_entry = [compute_timing(t), null];
+        timing_cache.cache.set(t.get_txid(), cache_entry);
+    }
+    cache_entry[1] = _(Array.from(inputs_map.map.get(t.get_txid())?.values()??[]).flat(1).map(
+        (x) => all_descendants(x, inputs_map)
+    ).flat(1)).uniqBy((t) => t.get_txid()).sortBy(t => t.get_txid()).value().concat(t);
+    return cache_entry[1];
 }
 
 

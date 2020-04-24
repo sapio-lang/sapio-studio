@@ -9,7 +9,7 @@ import Row from 'react-bootstrap/Row';
 import './App.css';
 import { CompilerServer } from "./Compiler/ContractCompilerServer";
 import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
-import { ContractModel, Data } from './Data/ContractManager';
+import { ContractModel, Data, timing_cache } from './Data/ContractManager';
 import { TransactionModel } from './Data/Transaction';
 import { UTXOModel } from './Data/UTXO';
 import { SpendPortModel } from './DiagramComponents/SpendLink/SpendLink';
@@ -48,6 +48,7 @@ class ModelManager {
     }
     unload(contract: ContractModel) {
         contract.txn_models.forEach((m) => m.remove_from_model(this.model));
+        timing_cache.cache.clear();
     }
 }
 
