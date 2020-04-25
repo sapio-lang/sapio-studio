@@ -6,7 +6,6 @@ import * as React from 'react';
 import './Ants.css';
 import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
-import Collapse from 'react-bootstrap/Collapse';
 //import { css } from '@emotion/core';
 
 
@@ -18,6 +17,20 @@ overflow: visible;
 font-size: 11px;
 box-shadow: ${p => (p.selected ? '4px 1px 10px rgba(0,192,255,0.5)': 'none')};
 border-radius: 5px 20px;
+
+&.unreachable:after {
+    content: "";
+	z-index: 2;
+	position:absolute;
+	top:0;
+	left:0;
+    height: 100%;
+    width: 100%;
+    background: rgba(0,0,0,0.7);
+	box-shadow: 0px 0px 20px rgba(0,0,0,0.9);
+	border-radius:3.5px 17px;
+	background-clip: border-box;
+}
 `;
 // border-radius: 5px 25px;
 // background-color: ${p => p.background};
@@ -110,15 +123,12 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps, ISt
 				data-default-node-name={this.props.node.name}
 				selected={this.props.node.isSelected()}
 				confirmed={this.props.node.isConfirmed()}
-				background={this.props.node.color}>
+				background={this.props.node.color}
+				className={this.state.is_reachable ? "reachable" : "unreachable"}
+				>
 				<PortsTop color={white}>
 					<PortsContainer>{_.map(this.props.node.getInPorts(), this.generatePort)}</PortsContainer>
 				</PortsTop>
-				<Collapse in={!this.state.is_reachable}>
-					<Title color="red">
-						!TIME TOO EARLY!
-					</Title>
-				</Collapse>
 				<Title color={color}>
 					<TitleName>Transaction</TitleName>
 					<TitleName>{this.props.node.name}</TitleName>

@@ -36,12 +36,8 @@ function update_loop() {
 		const point = node.path.getPointAtLength(node.path.getTotalLength() * percentage);
 		node.x = point.x;
 		node.y = point.y;
-		if (node.is_reachable) {
+		if (node.set_color) {
 			node.color = color;
-			node.path_width = node.props.model.getOptions().width;
-		} else {
-			node.color = Color("transparent").toString();
-			node.path_width = node.props.model.getOptions().width/10;
 		}
 
 	}
@@ -58,7 +54,6 @@ function animation_loop() {
 		node.circle.setAttribute("fill", node.color);
 		node.circle.setAttribute('cx', node.x);
 		node.circle.setAttribute('cy', node.y);
-		node.path.setAttribute('strokeWidth', node.path_width);
 	}
 };
 animation_loop();
@@ -80,12 +75,25 @@ export class SpendLinkSegment extends React.Component {
 		this.path = null;
 		this.x = 0;
 		this.y = 0;
-		this.path_width = this.props.model.getOptions().width;
+		this.stroke = this.props.model.getOptions().color;
 		this.color = "none";
 		this.key = unique_key++;
 		all_nodes.set(this.key, this);
-		this.is_reachable = true;
-		this.props.model.registerReachableCallback((b) => this.is_reachable = b);
+		this.set_color = true;
+		this.props.model.registerReachableCallback((is_reachable) => {
+			if (is_reachable) {
+				this.set_color = true;
+				this.color = "orange";
+				this.path.setAttribute("stroke",
+				Color(this.props.model.getOptions().color).toString());
+			} else {
+				this.set_color = false;
+				this.color = Color("transparent").toString();
+				this.path.setAttribute("stroke",
+				Color(this.props.model.getOptions().color).fade(0.8).toString());
+			}
+
+		});
 	}
 
 	componentDidMount() {
@@ -96,9 +104,9 @@ export class SpendLinkSegment extends React.Component {
 		this.mounted = false;
 		all_nodes.delete(this.key);
 	}
-
+	
 	render() {
-		const color = this.props.model.getOptions().color;
+
 		return (
 			<>
 				<path
@@ -106,8 +114,8 @@ export class SpendLinkSegment extends React.Component {
 					ref={ref => {
 						this.path = ref;
 					}}
+					stroke={this.props.model.getOptions().color}
 					strokeWidth={this.props.model.getOptions().width}
-					stroke={color}
 					d={this.props.path}
 				/>
 				<circle
@@ -115,7 +123,6 @@ export class SpendLinkSegment extends React.Component {
 						this.circle = ref;
 					}}
 					r={7.5}
-					fill={"color"}
 				/>
 			</>
 		);

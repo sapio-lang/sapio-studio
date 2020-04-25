@@ -1,13 +1,12 @@
 import styled from '@emotion/styled';
 import { DefaultPortLabel, DefaultPortModel } from '@projectstorm/react-diagrams';
-import { DiagramEngine, PortModel } from '@projectstorm/react-diagrams-core';
+import { DiagramEngine } from '@projectstorm/react-diagrams-core';
+import Color from 'color';
 import * as _ from 'lodash';
 import * as React from 'react';
+import { pretty_amount } from '../../util';
 import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
-import { pretty_amount } from '../../util';
-import Color from 'color';
-import Collapse from 'react-bootstrap/Collapse';
 //import { css } from '@emotion/core';
 
 
@@ -16,13 +15,26 @@ import Collapse from 'react-bootstrap/Collapse';
 // height: 0;
 // width: 150%;
 // padding-bottom:150%;
-const UTXONode = styled.div<{ selected: boolean; confirmed: boolean}>`
+const UTXONode = styled.div<{ selected: boolean; confirmed: boolean }>`
 font-family: sans-serif;
 color: white;
 overflow: visible;
 font-size: 11px;
-box-shadow: ${p => (p.selected ? '4px 1px 10px rgba(0,192,255,0.5)': 'none')};
+box-shadow: ${p => (p.selected ? '4px 1px 10px rgba(0,192,255,0.5)' : 'none')};
 border-radius: 25px 5px;
+&.unreachable:after {
+    content: "";
+	z-index: 2;
+	position:absolute;
+	top:0;
+	left:0;
+    height: 100%;
+    width: 100%;
+    background: rgba(0,0,0,0.7);
+	box-shadow: 0px 0px 20px rgba(0,0,0,0.9);
+	border-radius:22px 3.5px;
+	background-clip: border-box;
+}
 `;
 //border: 2px solid transparent;
 //background: ${p => {
@@ -31,7 +43,7 @@ border-radius: 25px 5px;
 //}};
 //animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
 
-const Title = styled.div<{color: string}>`
+const Title = styled.div<{ color: string }>`
 background: ${p => (p.color)};
 display: flex;
 width:100%;
@@ -45,19 +57,19 @@ flex-grow: 1;
 padding: 5px 5px;
 `;
 
-const PortsTop = styled.div<{color: string}>`
+const PortsTop = styled.div<{ color: string }>`
 display: flex;
 border-radius: 25px 5px 0px 0px;
-background-color: ${p=>p.color};
+background-color: ${p => p.color};
 color: white;
 border-top: 5px solid black;
 border-left: 5px solid black;
 `;
 
-const PortsBottom = styled.div<{color: string}>`
+const PortsBottom = styled.div<{ color: string }>`
 display: flex;
 border-radius: 0 0 25px 5px;
-background-color: ${p=>p.color};
+background-color: ${p => p.color};
 color: black;
 
 border-bottom: 5px solid white;
@@ -70,7 +82,7 @@ interface PortsContainer2Props {
 class PortsContainer2 extends React.Component<PortsContainer2Props> {
 	render() {
 		return (
-			<div  className="PortsContainer2">
+			<div className="PortsContainer2">
 				{this.props.children}
 			</div>
 		);
@@ -84,7 +96,7 @@ class PortsContainer2 extends React.Component<PortsContainer2Props> {
 
 
 interface DefaultNodeProps {
-	node: UTXONodeModel ;
+	node: UTXONodeModel;
 	engine: DiagramEngine;
 }
 
@@ -96,24 +108,23 @@ interface IState {
  * for both all the input ports on the left, and the output ports on the right.
  */
 export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
-    node: HTMLDivElement | null;
-    callback: () => any;
+	node: HTMLDivElement | null;
+	callback: () => any;
 	mounted: boolean;
 	id: number;
-    constructor(props:any) {
-        super(props);
-        this.node = null;
-		this.mounted=false;
+	constructor(props: any) {
+		super(props);
+		this.node = null;
+		this.mounted = false;
 		this.id = Math.random()
-        this.callback = () =>
-        {
+		this.callback = () => {
 			if (this.node === null) return;
 
 		}
-		this.state= {is_reachable: this.props.node.isReachable()};
-		this.props.node.registerReachableCallback((b: boolean) => this.setState({is_reachable: b}));
-    }
-	generatePort = (port :DefaultPortModel) => {
+		this.state = { is_reachable: this.props.node.isReachable() };
+		this.props.node.registerReachableCallback((b: boolean) => this.setState({ is_reachable: b }));
+	}
+	generatePort = (port: DefaultPortModel) => {
 		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
 	};
 
@@ -134,17 +145,18 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
 		let black = Color("black").toString();
 		const ports_top = ports_in.length == 0 ? null : (
 
-				<PortsTop key="ports" color ={black}>
-					<PortsContainer2 key="inputs">{ports_in}</PortsContainer2>
-				</PortsTop>
+			<PortsTop key="ports" color={black}>
+				<PortsContainer2 key="inputs">{ports_in}</PortsContainer2>
+			</PortsTop>
 		);
-		const ports_bottom = ports_out.length === 0? null :(	<PortsBottom color={white}>
-					<PortsContainer2 key="outputs">{ports_out}</PortsContainer2>
-				</PortsBottom>);
+		const ports_bottom = ports_out.length === 0 ? null : (<PortsBottom color={white}>
+			<PortsContainer2 key="outputs">{ports_out}</PortsContainer2>
+		</PortsBottom>);
 
 		let yellow = Color("yellow").fade(0.2).toString();
-		const is_conf = this.props.node.isConfirmed() ? null: <div style={{background: yellow, color:"black", textAlign: "center"}}>UNCONFIRMED</div>;
+		const is_conf = this.props.node.isConfirmed() ? null : <div style={{ background: yellow, color: "black", textAlign: "center" }}>UNCONFIRMED</div>;
 
+		const reachable_cl = this.state.is_reachable ? "reachable" : "unreachable";
 		return (
 
 			<UTXONode
@@ -152,13 +164,9 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
 				data-default-utxonode-name={this.props.node.getOptions().name}
 				key={this.id}
 				selected={this.props.node.isSelected()}
-				confirmed={this.props.node.isConfirmed()}>
-					{ports_top}
-				<Collapse in={!this.state.is_reachable}>
-					<Title color="red">
-						!TIME TOO EARLY!
-					</Title>
-				</Collapse>
+				confirmed={this.props.node.isConfirmed()}
+				className={reachable_cl}>
+				{ports_top}
 				<Title color={color}>
 					<TitleName>{this.props.node.getOptions().name}</TitleName>
 				</Title>
@@ -166,11 +174,11 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
 				<Title color={color}>
 					<TitleName>{pretty_amount(this.props.node.getOptions().amount)}</TitleName>
 				</Title>
-					{ports_bottom}
-						</UTXONode>
+				{ports_bottom}
+			</UTXONode>
 		);
 	}
 }
 
-            /*
-            */
+/*
+*/
