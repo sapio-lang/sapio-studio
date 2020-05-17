@@ -21,6 +21,7 @@ import { AppNavbar } from "./UX/AppNavbar";
 import { DemoCanvasWidget } from './UX/DemoCanvasWidget';
 import { EmptyViewer, EntityViewerModal, Viewer } from './UX/EntityViewer';
 import Collapse from 'react-bootstrap/Collapse';
+import "./Glyphs.css";
 
 
 
@@ -153,6 +154,7 @@ export class App extends React.Component<any, AppState> {
 
         return (
             <div className="App">
+
                 <BitcoinNodeManager current_contract={this.state.current_contract} app={this} ref={(bnm) => this.bitcoin_node_manager = bnm || this.bitcoin_node_manager} />
 
                 <Container fluid>
