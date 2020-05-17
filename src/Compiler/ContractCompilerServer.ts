@@ -28,28 +28,31 @@ export class CompilerServer {
             console.log('Connected!');
         };
         socket.onmessage = function (event) {
-            let { type, content } = JSON.parse(event.data)
+            let { action, content } = JSON.parse(event.data)
             let callback = () => null;
             if (that.expected_next.length) {
                 let expected = that.expected_next.shift();
                 if (!expected) return;
-                if (expected[0] == type) {
+                if (expected[0] == action) {
                     callback = expected[1];
                 } else {
-                    throw "Expected to get a " + expected[0] + ", but got a " + type;
+                    throw "Expected to get a " + expected[0] + ", but got a " + action;
                 }
-            } else if (ALLOWED_OPEN.has(type)) {
+            } else if (ALLOWED_OPEN.has(action)) {
 
             } else {
-                throw "Didn't expect to get a " + type;
+                throw "Didn't expect to get a " + action;
             }
             
-            let handler = DISPATCHER.get(type);
+            let handler = DISPATCHER.get(action);
             if (handler) {
                 handler(content, callback);
             }
         };
         socket.onclose = function () {
+
+            that.expected_next = [["menu", null]];
+            that.menu_content = [];
             setTimeout(() => that.connect(that), 500)
         };
         socket.onerror = function () {
@@ -66,7 +69,7 @@ export class CompilerServer {
         if (!this.socket) return;
         this.expected_next.push(["created", callback]);
         let json = 
-            JSON.stringify({'type':"create", 'content': {'type': type_arg, 'args':contract}});
+            JSON.stringify({'action':"create", 'content': {'type': type_arg, 'args':contract}});
         console.log(json);
         this.socket.send(json);
     }
