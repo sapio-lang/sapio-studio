@@ -23,7 +23,10 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
         console.log(this);
         const decomp = Bitcoin.script.decompile(this.props.entity.utxo.script) ?? new Buffer("");
         const script = Bitcoin.script.toASM(decomp);
-        const address = Bitcoin.address.fromOutputScript(this.props.entity.utxo.script,Bitcoin.networks.regtest);
+        let address = "UNKNOWN";
+        try {
+            address = Bitcoin.address.fromOutputScript(this.props.entity.utxo.script,Bitcoin.networks.regtest);
+        } catch {}
         const spends = this.props.entity.utxo.spends.map((elt, i) => <ListGroup.Item key={get_wtxid_backwards(elt.tx)} variant="dark">
             <ListGroup horizontal className="Spend">
                 <ListGroup.Item variant="dark">
