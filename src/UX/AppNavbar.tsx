@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import { CreateContractModal, ViewContractModal } from "./CreateVaultModal";
+import "./AppNavbar.css";
 export function AppNavbar(props: any): JSX.Element {
     const [modalView, setModalView] = useState(false);
     const [modalCreate, setModalCreate] = useState(false);
@@ -12,8 +13,8 @@ export function AppNavbar(props: any): JSX.Element {
         setSim(!showSim);
     }
 
-    return (<Navbar>
-        <Navbar.Brand> Sapio Explorer </Navbar.Brand>
+    return (<Navbar variant='dark'>
+        <Navbar.Brand> judica tux. </Navbar.Brand>
 
         <Nav className="justify-content-end w-100">
             <Nav.Link
