@@ -186,7 +186,7 @@ function get_base_transactions(txns: Array<TransactionModel>, map: TXIDAndWTXIDM
 // Based off of
 // https://stackoverflow.com/a/41170834
 function mergeAndDeduplicateSorted<T, T2>(array1:T[], array2:T[], iteratee: (t:T)=> T2 ) : Array<T> {
-    const mergedArray = [];
+    const mergedArray = new Array(array1.length+array2.length);
     let i = 0;
     let j = 0;
     while (i < array1.length && j < array2.length) {
