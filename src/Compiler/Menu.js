@@ -3,6 +3,8 @@ import Button from 'react-bootstrap/Button';
 import Form from "@rjsf/core";
 import Nav from 'react-bootstrap/Nav';
 import Tab from 'react-bootstrap/Tab';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 export class Menu extends React.Component {
     render() {
@@ -19,9 +21,13 @@ export class Menu extends React.Component {
                 </Nav.Item>));
             tab_options.push((
                 <Tab.Pane eventKey={key} key={option.title} title={option}>
-                    <Form schema={option}
-                    onSubmit={({formData},e)=> this.handleSubmit(formData, e, option.title)}
-                    />
+                    <Row>
+                        <Col sm={{span:10, offset:1}}>
+                            <Form schema={option}
+                                onSubmit={({formData},e)=> this.handleSubmit(formData, e, option.title)}
+                            />
+                        </Col>
+                    </Row>
                 </Tab.Pane>
             ));
         }
