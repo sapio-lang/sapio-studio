@@ -67,7 +67,7 @@ export class SimulationController extends React.Component<{
         };
 
 
-        this.throttled_update = _.throttle(() => this.delayedUpdate(),1000, {'trailing': true, 'leading': false});
+        this.throttled_update = _.throttle(() => this.delayedUpdate(),30, {'trailing': true, 'leading': false});
     }
     changeHandler(from: Field, e: FormEvent) {
         const input = e.currentTarget as HTMLInputElement;
