@@ -55,6 +55,12 @@ async function check_txs(current_contract: ContractModel): Promise<Array<TXID>> 
         return await call("/backend/get_transactions", txids);
     return [];
 }
+
+/*
+Currently non-functional, needs a server to be running somewhere.
+
+Should be upgraded to a socket managed driver that does not use polling.
+*/
 export class BitcoinNodeManager extends React.Component<IProps, IState> {
     mounted: boolean;
     next_periodic_check:NodeJS.Timeout|null;
