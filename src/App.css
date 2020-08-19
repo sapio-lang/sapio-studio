@@ -50,11 +50,23 @@ background-color: lightgrey;
 .viewer {
 height:50%;
 }
-
-.container-fluid {
+.App > .area {
+  display: grid;
+    grid-template-rows: max-content 1fr;
     height: 100%;
 }
 
-.container-fluid > .row {
+.App > .area > .area-inner {
+  display: grid;
+    grid-template-columns: 1fr max-content;
+    height: 100%;
+}
+
+.container-fluid.main-container {
+    height: 100%;
+    display: grid;
+}
+
+.container-fluid.main-container > .row {
     height: 100%;
 }

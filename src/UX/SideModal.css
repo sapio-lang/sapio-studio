@@ -46,3 +46,6 @@ License: MIT
 	background-color: transparent;
 	z-index: -1;
 }
+.EntityViewer {
+	background-color: transparent;
+}

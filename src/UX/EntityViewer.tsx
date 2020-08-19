@@ -6,10 +6,12 @@ import { UTXODetail } from "../Detail/UTXODetail";
 import { TransactionModel } from '../Data/Transaction';
 import { UTXOModel } from '../Data/UTXO';
 import Modal from 'react-bootstrap/Modal';
+import Collapse from 'react-bootstrap/Collapse';
 import Tab from 'react-bootstrap/Tab';
 import Nav from 'react-bootstrap/Nav';
 import Button from 'react-bootstrap/Button';
 import "./SideModal.css";
+import ListGroup from 'react-bootstrap/ListGroup';
 export interface Viewer {
 }
 
@@ -21,7 +23,6 @@ interface EntityViewerProps {
     entity: Viewer;
     hide_details: () => void;
     current_contract: ContractModel;
-    show: boolean;
 }
 
 export class EntityViewerModal extends React.Component<EntityViewerProps> {
@@ -51,16 +52,15 @@ export class EntityViewerModal extends React.Component<EntityViewerProps> {
     }
 
     render() {
-
-        return (<Modal show={this.props.show} onHide={this.props.hide_details} size="lg" className="modal-right"
-        backdropClassName="modal-bright-backdrop">
-            <Modal.Header closeButton>
-                <Modal.Title> {this.name()} Details </Modal.Title>
-            </Modal.Header>
-            {this.guts()}
-            <Modal.Footer>
-                <Button variant="secondary" onClick={this.props.hide_details}> Close </Button>
-            </Modal.Footer>
-        </Modal>);
+        return (
+            <div className="EntityViewer">
+                <ListGroup >
+                    <ListGroup.Item action onClick={() => this.props.hide_details()} variant="danger">
+                        close
+                    </ListGroup.Item>
+                </ListGroup>
+                {this.guts()}
+            </div>
+        );
     }
-    }
+}

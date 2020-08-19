@@ -36,18 +36,18 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
     render() {
         const broadcast = !this.state.broadcastable ? null :
             <ListGroup variant="flush">
-                <ListGroup.Item action variant="primary" onClick={() => this.props.broadcast(this.props.entity.tx)}>
+                <ListGroup.Item action variant="dark" onClick={() => this.props.broadcast(this.props.entity.tx)}>
                     Broadcast
             </ListGroup.Item>
             </ListGroup>;
         const outs = this.props.entity.utxo_models.map((o, i) =>
-            <ListGroup.Item key={i}>
+            <ListGroup.Item key={i} variant="dark">
                 <OutputDetail txoutput={o} goto={() => this.goto(this.props.entity.utxo_models[i])} />
             </ListGroup.Item>);
         const ins = this.props.entity.tx.ins.map((o, i) => {
             const witnesses: Buffer[][] = this.props.entity.witness_set.map((w) => w[i]);
             console.log(witnesses);
-            return <ListGroup.Item key="input-{i}">
+            return <ListGroup.Item key="input-{i}" variant="dark">
                 <InputDetail txinput={o}
                     goto={() => this.goto(this.props.find_tx_model(o.hash, o.index) ?? this.props.entity)}
                     witnesses={witnesses} />
@@ -104,29 +104,29 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
             <h6>Relative Lock Time: {relative_time_string} </h6>
             <h6>Relative Lock Time: {relative_blocks_string} </h6>
             <ListGroup variant="flush">
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <h4> Inputs</h4>
 
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <ListGroup variant="flush">{ins}</ListGroup>
                 </ListGroup.Item>
             </ListGroup>
             <ListGroup variant="flush">
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
 
                     <h4>Outputs</h4>
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <ListGroup variant="flush">{outs}</ListGroup>
                 </ListGroup.Item>
             </ListGroup>
             <ListGroup>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <h4> Tx Hex </h4>
 
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <Hex value={this.props.entity.tx.toHex()} readOnly className="txhex"> </Hex>
                 </ListGroup.Item>
             </ListGroup>

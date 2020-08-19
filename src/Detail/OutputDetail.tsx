@@ -17,7 +17,7 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
             <ListGroup variant="flush">
                 <h6> {pretty_amount(this.props.txoutput.utxo.amount)} </h6>
                 <Hex readOnly className="txhex" value={script} />
-                <ListGroup.Item action variant="primary" onClick={this.props.goto}> Go </ListGroup.Item>
+                <ListGroup.Item action variant="success" onClick={this.props.goto}> Go </ListGroup.Item>
             </ListGroup>
         </>);
     }

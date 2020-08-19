@@ -33,7 +33,7 @@ export class InputDetail extends React.Component<IProps, IState> {
     render() {
         const witness_display = this.state.witness_selection === undefined ? null :
             this.props.witnesses[this.state.witness_selection].map((elt, i) =>
-                (<ListGroup.Item key={i}>
+                (<ListGroup.Item key={i} variant="dark">
                     <Hex readOnly
                         className="txhex"
                         value={maybeDecode(true || i === (this.props.witnesses[this.state.witness_selection ?? 0].length - 1), elt)} />
@@ -47,18 +47,18 @@ export class InputDetail extends React.Component<IProps, IState> {
         // missing horizontal
         return (<div>
             <ListGroup variant="flush">
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <OutpointDetail txid={hash_to_hex(this.props.txinput.hash)} n={this.props.txinput.index}
                         onClick={this.props.goto} />
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     {sequence}
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <h6>Script:</h6>
                     <Hex readOnly className="txhex" value={scriptValue}></Hex>
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <Form onChange={() => {console.log(this.form); this.setState({ witness_selection: this.form.value ||undefined}) }}>
                         <Form.Group>
                             <Form.Label>

@@ -152,42 +152,55 @@ export class App extends React.Component<any, AppState> {
 
     render() {
 
+        const entity = !this.state.details ? null :
+            <EntityViewerModal
+                entity={this.state.entity}
+                broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
+                hide_details={() => this.hide_details()}
+                current_contract={this.state.current_contract}
+            />;
         return (
             <div className="App">
 
                 <BitcoinNodeManager current_contract={this.state.current_contract} app={this} ref={(bnm) => this.bitcoin_node_manager = bnm || this.bitcoin_node_manager} />
+                <div className="area">
 
-                <Container fluid>
-                    <AppNavbar
-                        dynamic_forms={this.state.dynamic_forms}
-                        load_new_model={(x: Data) => this.load_new_model(x)}
-                        compiler={this.cm}
-                        toggle_timing_simulator={(b:boolean)=>this.setState({timing_simulator_enabled: b})}
+                    <Container fluid>
+                        <AppNavbar
+                            dynamic_forms={this.state.dynamic_forms}
+                            load_new_model={(x: Data) => this.load_new_model(x)}
+                            compiler={this.cm}
+                            toggle_timing_simulator={(b: boolean) => this.setState({ timing_simulator_enabled: b })}
                         />
 
                         <Collapse in={this.state.timing_simulator_enabled}>
                             <div>
-                            <SimulationController contract={this.state.current_contract}
-                                app={this} />
+                                <SimulationController contract={this.state.current_contract}
+                                    app={this} />
                             </div>
                         </Collapse>
+                    </Container>
+                    <div className="area-inner">
+                        <Container fluid className="main-container">
 
-                        <Row>
-                            <Col md={12} >
-                                <DemoCanvasWidget engine={this.engine} model={this.model}
-                                    model_number={this.state.model_number}>
-                                    <CanvasWidget engine={this.engine as any} key={"main"} />
-                                </DemoCanvasWidget>
-                            </Col>
-                            <EntityViewerModal
-                                show={this.state.details}
-                                entity={this.state.entity}
-                                broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
-                                hide_details={() => this.hide_details()}
-                                current_contract={this.state.current_contract}
-                            />
-                        </Row>
-                </Container>
+                            <Row>
+                                <Col md={12} >
+                                    <DemoCanvasWidget engine={this.engine} model={this.model}
+                                        model_number={this.state.model_number}>
+                                        <CanvasWidget engine={this.engine as any} key={"main"} />
+                                    </DemoCanvasWidget>
+                                </Col>
+
+
+                            </Row>
+                        </Container>
+                        <Container fluid>
+                            {entity}
+                        </Container>
+
+                    </div>
+
+                </div>
             </div>
         );
     }

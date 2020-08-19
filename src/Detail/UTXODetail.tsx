@@ -24,12 +24,12 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
         const decomp = Bitcoin.script.decompile(this.props.entity.utxo.script) ?? new Buffer("");
         const script = Bitcoin.script.toASM(decomp);
         const address = Bitcoin.address.fromOutputScript(this.props.entity.utxo.script,Bitcoin.networks.regtest);
-        const spends = this.props.entity.utxo.spends.map((elt, i) => <ListGroup.Item key={get_wtxid_backwards(elt.tx)}>
+        const spends = this.props.entity.utxo.spends.map((elt, i) => <ListGroup.Item key={get_wtxid_backwards(elt.tx)} variant="dark">
             <ListGroup horizontal className="Spend">
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <Hex value={elt.get_txid()} />
                 </ListGroup.Item>
-                <ListGroup.Item action variant="primary" onClick={() => this.goto(elt)}> Go</ListGroup.Item>
+                <ListGroup.Item action variant="success" onClick={() => this.goto(elt)}> Go</ListGroup.Item>
 
             </ListGroup>
         </ListGroup.Item>);
@@ -41,19 +41,19 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
             />
 
             <ListGroup>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <h4> Address </h4>
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <ASM className="txhex" readOnly value={address} />
                 </ListGroup.Item>
             </ListGroup>
             <ListGroup>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <h4>Spends</h4>
 
                 </ListGroup.Item>
-                <ListGroup.Item>
+                <ListGroup.Item variant="dark">
                     <ListGroup variant="flush">
                         {spends}
                     </ListGroup>
