@@ -25,9 +25,9 @@ code {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-    max-width:16em;
-    width:5vw;
-    min-width:4em;
+    max-width:32em;
+    width:10vw;
+    min-width:100%;
     margin: 0;
     padding: 0;
 }
