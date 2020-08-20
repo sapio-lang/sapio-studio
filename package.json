@@ -23,6 +23,7 @@
     "closest": "^0.0.1",
     "color": "^3.1.2",
     "dagre": "^0.8.5",
+    "esm": "^3.2.25",
     "http-proxy-middleware": "^1.0.3",
     "lodash": "^4.17.15",
     "mathjs": "^6.2.5",
@@ -35,11 +36,13 @@
     "resize-observer-polyfill": "^1.5.1",
     "typescript": "^3.7.4"
   },
+  "main": "./desktop/main.js",
   "scripts": {
-    "start": "react-scripts start",
+    "start-react": "export BROWSER=none && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && electron ."
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -55,5 +58,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "electron": "^9.2.1"
   }
 }

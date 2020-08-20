@@ -14,7 +14,7 @@ export function AppNavbar(props: any): JSX.Element {
     }
 
     return (<Navbar variant='dark'>
-        <Navbar.Brand> judica tux. </Navbar.Brand>
+        <Navbar.Brand> tux. </Navbar.Brand>
 
         <Nav className="justify-content-end w-100">
             <Nav.Link

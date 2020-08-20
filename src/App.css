@@ -62,11 +62,12 @@ height:50%;
     height: 100%;
 }
 
-.container-fluid.main-container {
+.main-container {
     height: 100%;
     display: grid;
 }
 
-.container-fluid.main-container > .row {
+.main-container > .row {
     height: 100%;
+    width:100%;
 }

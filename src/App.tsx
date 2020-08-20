@@ -165,7 +165,7 @@ export class App extends React.Component<any, AppState> {
                 <BitcoinNodeManager current_contract={this.state.current_contract} app={this} ref={(bnm) => this.bitcoin_node_manager = bnm || this.bitcoin_node_manager} />
                 <div className="area">
 
-                    <Container fluid>
+                    <div>
                         <AppNavbar
                             dynamic_forms={this.state.dynamic_forms}
                             load_new_model={(x: Data) => this.load_new_model(x)}
@@ -179,24 +179,19 @@ export class App extends React.Component<any, AppState> {
                                     app={this} />
                             </div>
                         </Collapse>
-                    </Container>
+                    </div>
                     <div className="area-inner">
-                        <Container fluid className="main-container">
+                        <div className="main-container">
 
-                            <Row>
-                                <Col md={12} >
                                     <DemoCanvasWidget engine={this.engine} model={this.model}
                                         model_number={this.state.model_number}>
                                         <CanvasWidget engine={this.engine as any} key={"main"} />
                                     </DemoCanvasWidget>
-                                </Col>
 
-
-                            </Row>
-                        </Container>
-                        <Container fluid>
+                        </div>
+                        <div >
                             {entity}
-                        </Container>
+                        </div>
 
                     </div>
 
