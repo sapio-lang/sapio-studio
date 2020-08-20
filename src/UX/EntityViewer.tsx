@@ -54,12 +54,12 @@ export class EntityViewerModal extends React.Component<EntityViewerProps> {
     render() {
         return (
             <div className="EntityViewer">
+                {this.guts()}
                 <ListGroup >
                     <ListGroup.Item action onClick={() => this.props.hide_details()} variant="danger">
                         close
                     </ListGroup.Item>
                 </ListGroup>
-                {this.guts()}
             </div>
         );
     }
