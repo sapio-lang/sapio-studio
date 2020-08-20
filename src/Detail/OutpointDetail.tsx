@@ -14,16 +14,10 @@ export class OutpointDetail extends React.Component<{
             <ListGroup.Item variant="dark">
                 <ListGroup horizontal={'lg'} className="COutPoint">
                     <ListGroup.Item variant="dark">
-                        Hash
+                        Hash:Index
                 </ListGroup.Item>
                     <ListGroup.Item variant="dark">
-                        <Hex className="txhex" readOnly value={this.props.txid} />
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        Index
-                </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        {this.props.n}
+                        <Hex className="txhex" readOnly value={this.props.txid.toString() + ":" + this.props.n} />
                     </ListGroup.Item>
                     <ListGroup.Item action variant="success" onClick={this.props.onClick}>Go</ListGroup.Item>
                 </ListGroup>
