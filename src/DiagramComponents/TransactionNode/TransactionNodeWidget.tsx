@@ -6,6 +6,7 @@ import * as React from 'react';
 import './Ants.css';
 import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
+import { BaseEvent } from '@projectstorm/react-canvas-core';
 //import { css } from '@emotion/core';
 
 
@@ -93,6 +94,8 @@ export interface DefaultNodeProps {
 }
 interface IState {
 	is_reachable: boolean;
+	color: string;
+	purpose: string;
 }
 
 /**
@@ -102,17 +105,27 @@ interface IState {
 export class TransactionNodeWidget extends React.Component<DefaultNodeProps, IState> {
 	constructor(props:any) {
 		super(props);
-		this.state = {is_reachable: this.props.node.is_reachable};
+		this.state = {is_reachable: this.props.node.is_reachable, color: this.props.node.color, purpose: this.props.node.purpose};
 		this.props.node.registerReachable((b:boolean) => {
 			return this.setState({ is_reachable: b });
 		});
+		this.props.node.registerListener(
+			{
+				colorChanged: (e : BaseEvent) => {
+					this.setState({color: this.props.node.color});
+				},
+				purposeChanged: (e:BaseEvent) => {
+					this.setState({purpose: this.props.node.purpose});
+				}
+			}
+		);
 	}
 	generatePort = (port :DefaultPortModel) => {
 		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
 	};
 
 	render() {
-		let color = Color(this.props.node.color).alpha(0.2).toString();
+		let color = Color(this.state.color).alpha(0.2).toString();
 		let white = Color("white").toString();
 		let black = Color("black").toString();
 		let yellow = Color("yellow").fade(0.2).toString();
@@ -134,7 +147,7 @@ export class TransactionNodeWidget extends React.Component<DefaultNodeProps, ISt
 				</Title>
 				{is_conf}
 				<Title color={color}>
-					<TitleName>{this.props.node.purpose}</TitleName>
+					<TitleName>{this.state.purpose}</TitleName>
 				</Title>
 				<PortsBottom color={black}>
 					<PortsContainer>{_.map(this.props.node.getOutPorts(), this.generatePort)}</PortsContainer>

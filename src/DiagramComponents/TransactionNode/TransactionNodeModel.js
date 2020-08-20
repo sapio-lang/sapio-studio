@@ -2,6 +2,7 @@ import { NodeModel } from '@projectstorm/react-diagrams';
 import { PortModelAlignment } from '@projectstorm/react-diagrams-core';
 import { OutputPortModel } from '../OutputLink';
 import { SpendPortModel } from '../SpendLink/SpendLink';
+import Color from 'color';
 
 /**
  * Example of a custom model using pure javascript
@@ -23,6 +24,21 @@ export class TransactionNodeModel extends NodeModel {
         this.is_reachable = true;
 
     }
+
+    setColor(color) {
+        try {
+            Color(color)
+            this.color = color;
+            this.fireEvent({color}, 'colorChanged');
+        } catch {
+            return;
+        }
+    }
+    setPurpose(purpose) {
+        this.purpose = purpose;
+        this.fireEvent({ purpose }, 'purposeChanged');
+    }
+
     setConfirmed(opt) {
         this.confirmed =opt;
         this.setSelected(true);

@@ -43,7 +43,8 @@ export class EntityViewerModal extends React.Component<EntityViewerProps> {
                 return (<TransactionDetail
                     broadcast={this.props.broadcast}
                     entity={this.props.entity as TransactionModel}
-                    find_tx_model={(a:Buffer, b:number) => this.props.current_contract.lookup(a,b)} />);
+                    find_tx_model={(a:Buffer, b:number) => this.props.current_contract.lookup(a,b)}
+                    />);
             case UTXOModel:
                 return (<UTXODetail entity={this.props.entity as UTXOModel} />);
             default:

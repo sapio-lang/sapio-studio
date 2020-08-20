@@ -1,12 +1,13 @@
-import React from 'react';
+import { Transaction } from 'bitcoinjs-lib';
+import React, { ChangeEvent } from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
+import { TransactionModel } from '../Data/Transaction';
+import { UTXOModel } from '../Data/UTXO';
 import Hex from './Hex';
 import { InputDetail } from "./InputDetail";
+import { TXIDDetail } from './OutpointDetail';
 import { OutputDetail } from "./OutputDetail";
-import { TransactionModel } from '../Data/Transaction';
-import { Transaction } from 'bitcoinjs-lib';
-import { UTXOModel } from '../Data/UTXO';
-import { OutpointDetail, TXIDDetail } from './OutpointDetail';
+import _ from "lodash";
 interface TransactionDetailProps {
     entity: TransactionModel;
     broadcast: (a: Transaction) => Promise<any>;
@@ -32,6 +33,13 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
     }
     goto(x: UTXOModel | TransactionModel) {
         x.setSelected(true);
+    }
+    onchange_color(e:ChangeEvent<HTMLInputElement>) {
+        this.props.entity.setColor(e.target.value);
+
+    }
+    onchange_purpose(e:ChangeEvent<HTMLInputElement>) {
+        this.props.entity.setPurpose(e.target.value);
     }
     render() {
         const broadcast = !this.state.broadcastable ? null :
@@ -96,13 +104,25 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
         as_date.setSeconds(locktime);
         const lt = ((!locktime_enable) || locktime === 0) ? "None" : locktime < 500_000_000 ? "Block #" + locktime.toString() : as_date.toUTCString() + " MTP";
         // note missing horizontal
+        const inner_debounce_color = _.debounce(this.onchange_color.bind(this), 30);
+        const debounce_color = (e: ChangeEvent<HTMLInputElement>) => {e.persist(); inner_debounce_color(e)};
+        const inner_debounce_purpose = _.debounce(this.onchange_purpose.bind(this), 30);
+        const debounce_purpose = (e: ChangeEvent<HTMLInputElement>) => {e.persist(); inner_debounce_purpose(e)};
         return (<>
             {broadcast}
             <hr />
+
             <TXIDDetail txid={this.props.entity.get_txid()} />
             <ListGroup variant="flush">
             <ListGroup.Item variant="dark">
+                    <h6>Purpose: <input defaultValue={this.props.entity.purpose} onChange={debounce_purpose}/>
+                    </h6>
+            </ListGroup.Item>
 
+            <ListGroup.Item variant="dark">
+                    <h6>Color: <input defaultValue={this.props.entity.color} onChange={debounce_color}/> </h6>
+            </ListGroup.Item>
+            <ListGroup.Item variant="dark">
             <h6>Absolute Lock Time: {lt} </h6>
             </ListGroup.Item>
             <ListGroup.Item variant="dark">
