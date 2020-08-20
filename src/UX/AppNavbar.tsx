@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import { CreateContractModal, ViewContractModal } from "./CreateVaultModal";
+import { CreateContractModal, ViewContractModal, SapioCompilerModal } from "./CreateVaultModal";
 import "./AppNavbar.css";
 export function AppNavbar(props: any): JSX.Element {
     const [modalView, setModalView] = useState(false);
     const [modalCreate, setModalCreate] = useState(false);
+    const [modalSapioCompiler, setModalaSapioCompiler] = useState(false);
     const [showSim, setSim] = useState(true);
     const toggleSim = () => {
         console.log("TOG", showSim)
@@ -38,6 +39,14 @@ export function AppNavbar(props: any): JSX.Element {
                 aria-expanded={modalView}>
                 View
                 </Nav.Link>
+
+            <Nav.Link
+                eventKey="sapio-compiler"
+                onSelect={() => setModalaSapioCompiler(true)}
+                aria-controls="sapio-compiler-form"
+                aria-expanded={modalSapioCompiler}>
+                    Sapio
+                </Nav.Link>
         </Nav>
         <CreateContractModal
             show={modalCreate}
@@ -49,6 +58,11 @@ export function AppNavbar(props: any): JSX.Element {
             show={modalView}
             hide={() => setModalView(false)}
             bitcoin_node_manager={props.bitcoin_node_manager} />
+
+        <SapioCompilerModal
+            show={modalSapioCompiler}
+            hide={() => setModalaSapioCompiler(false)}
+            compiler = {props.compiler}/>
 
 
     </Navbar>);

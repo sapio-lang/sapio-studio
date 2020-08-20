@@ -182,11 +182,10 @@ export class App extends React.Component<any, AppState> {
                     </div>
                     <div className="area-inner">
                         <div className="main-container">
-
-                                    <DemoCanvasWidget engine={this.engine} model={this.model}
-                                        model_number={this.state.model_number}>
-                                        <CanvasWidget engine={this.engine as any} key={"main"} />
-                                    </DemoCanvasWidget>
+                            <DemoCanvasWidget engine={this.engine} model={this.model}
+                                model_number={this.state.model_number}>
+                                <CanvasWidget engine={this.engine as any} key={"main"} />
+                            </DemoCanvasWidget>
 
                         </div>
                         <div >
