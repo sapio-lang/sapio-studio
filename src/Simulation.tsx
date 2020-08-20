@@ -208,94 +208,73 @@ export class SimulationController extends React.Component<{
     render() {
         const changeHandler = this.changeHandler.bind(this);
         return (<Form onSubmit={(e: React.FormEvent) => e.preventDefault()}>
-            <h2>Block Height</h2>
             <Form.Group as={Row}>
-                <Col sm={2}>
+
+                <Col sm={1}>
+                    <h3>Block</h3>
+                </Col>
+                <Col sm={{span:2}}>
                     <h6>Start Height</h6>
                     <Form.Control value={this.state.min_blocks} type="number" onChange={(e: FormEvent) => changeHandler("min_blocks", e)}></Form.Control>
                 </Col>
-                <Col sm={8}>
-                    <Row>
-                        <Col sm={2}>
-                            <Form.Label>First Tx</Form.Label>
-                        </Col>
-                        <Col sm={8}>
+                <Col sm={7}>
+                            <Form.Label>First Tx {this.state.first_tx_block} </Form.Label>
                             <Form.Control value={this.state.first_tx_block_pct} type="range" onChange={(e: FormEvent) => changeHandler("first_tx_block", e)} />
-                        </Col>
-                        <Col sm={2}>
-                            {this.state.first_tx_block}
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col sm={2}>
-                            <Form.Label>Current Block</Form.Label>
-                        </Col>
-                        <Col sm={8}>
-                            <Form.Control value={this.state.current_block_pct} type="range" onChange={(e: FormEvent) => changeHandler("current_block", e)} />
-                        </Col>
-                        <Col sm={2}>
-                            {this.state.current_block}
-                        </Col>
-                    </Row>
                 </Col>
                 <Col sm={2}>
+                    <h6 style={{visibility:"hidden"}}>.</h6>
+                    <Button onClick={() => this.handleSubmit("snap-blocks")} name={"action"} value={"snap-blocks"}>Snap Blocks</Button>
+                </Col>
+            </Form.Group>
+
+            <Form.Group as={Row}>
+                <Col sm={{span:2, offset:1}}>
                     <h6>End Height</h6>
                     <Form.Control value={this.state.max_blocks} type="number" onChange={(e: FormEvent) => changeHandler("max_blocks", e)}></Form.Control>
                 </Col>
-            </Form.Group>
-            <h2>Clock Time</h2>
-            <Form.Group as={Row}>
+                <Col sm={7}>
+                            <Form.Label>Current Block {this.state.current_block} </Form.Label>
+                            <Form.Control value={this.state.current_block_pct} type="range" onChange={(e: FormEvent) => changeHandler("current_block", e)} />
+                </Col>
                 <Col sm={2}>
+                </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+                <Col sm={1}>
+                    <h3>Clock</h3>
+                </Col>
+                <Col sm={{span:2}}>
                     <h6>Start Date</h6>
                     <Form.Control value={this.state.min_time.toLocaleDateString("en-CA", { timeZone: 'UTC' })} type="date" onChange={(e: FormEvent) => changeHandler("min_time", e)}></Form.Control>
                 </Col>
-                <Col sm={8}>
-                    <Row>
-                        <Col sm={2}>
-                            <Form.Label>First Tx</Form.Label>
-                        </Col>
-                        <Col sm={8}>
+                <Col sm={7}>
+                            <Form.Label>First Tx {this.state.first_tx_time.toLocaleString(undefined, { timeZone: 'UTC' })}</Form.Label>
                             <Form.Control value={this.state.first_tx_time_pct} type="range" onChange={(e: FormEvent) => changeHandler("first_tx_time", e)}></Form.Control>
-                        </Col>
-                        <Col sm={2}>
-                            {this.state.first_tx_time.toLocaleString(undefined, { timeZone: 'UTC' })};
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col sm={2}>
-                            <Form.Label>Current Time</Form.Label>
-                        </Col>
-                        <Col sm={8}>
-                            <Form.Control value={this.state.current_time_pct} type="range" onChange={(e: FormEvent) => changeHandler("current_time", e)}></Form.Control>
-                        </Col>
-                        <Col sm={2}>
-                            {this.state.current_time.toLocaleString(undefined, { timeZone: 'UTC' })};
-                        </Col>
-                    </Row>
-                </Col>
-                <Col sm={2}>
-                    <h6>End Data</h6>
-                    <Form.Control value={this.state.max_time.toLocaleDateString("en-CA", { timeZone: 'UTC' })} type="date" onChange={(e: FormEvent) => changeHandler("max_time", e)}></Form.Control>
-                </Col>
-            </Form.Group>
-            <Form.Group as={Row}>
-                <Col sm={{ span: 3, offset: 3 }}>
-                    Simulation Showing
-                    <Form.Label >
-                        {this.state.date.toLocaleString(undefined, { timeZone: 'UTC' })} UTC
-                    </Form.Label>
-                </Col>
-                <Col sm={{ span: 1, offset: 3 }}>
-                    <Button onClick={() => this.handleSubmit("clear")} name={"action"} value={"clear"}>Clear Results</Button>
-                </Col>
-                <Col sm={{ span: 1, offset: 0 }}>
-                    <Button onClick={() => this.handleSubmit("snap-time")} name={"action"} value={"snap-time"}>Snap Time</Button>
-                </Col>
-                <Col sm={{ span: 1, offset: 0 }}>
-                    <Button onClick={() => this.handleSubmit("snap-blocks")} name={"action"} value={"snap-blocks"}>Snap Blocks</Button>
                 </Col>
 
+                <Col sm={2}>
+                    <h6 style={{visibility:"hidden"}}>.</h6>
+                    <Button onClick={() => this.handleSubmit("snap-time")} name={"action"} value={"snap-time"}>Snap Time</Button>
+                </Col>
             </Form.Group>
+
+
+            <Form.Group as={Row}>
+                <Col sm={{span:2, offset:1}}>
+                    <h6>End Date</h6>
+                    <Form.Control value={this.state.max_time.toLocaleDateString("en-CA", { timeZone: 'UTC' })} type="date" onChange={(e: FormEvent) => changeHandler("max_time", e)}></Form.Control>
+                </Col>
+                <Col sm={7}>
+                            <Form.Label> Current Time {this.state.current_time.toLocaleString(undefined, { timeZone: 'UTC' })} </Form.Label>
+                            <Form.Control value={this.state.current_time_pct} type="range" onChange={(e: FormEvent) => changeHandler("current_time", e)}></Form.Control>
+                </Col>
+
+                <Col sm={2}>
+                    <h6 style={{visibility:"hidden"}}>.</h6>
+                    <Button onClick={() => this.handleSubmit("clear")} name={"action"} value={"clear"} variant="danger">Clear</Button>
+                </Col>
+            </Form.Group>
+
         </Form>);
     }
 }
