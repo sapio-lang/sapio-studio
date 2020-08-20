@@ -49,3 +49,6 @@ License: MIT
 .EntityViewer {
 	background-color: transparent;
 }
+.modal {
+	font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
+}

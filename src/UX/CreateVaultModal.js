@@ -6,6 +6,7 @@ import Modal from 'react-bootstrap/Modal';
 import Nav from 'react-bootstrap/Nav';
 import Tab from 'react-bootstrap/Tab';
 import { Menu } from '../Compiler/Menu';
+import { txid_buf_to_string } from "../util";
 export class CreateContractModal extends React.Component {
     constructor(props) {
         super(props);
@@ -69,8 +70,72 @@ export class SapioCompilerModal extends React.Component {
                 <Modal.Title> Set Contract Generator URL </Modal.Title>
             </Modal.Header>
             <Form onSubmit={(e) => this.handleSubmit(e)}>
-                <FormControl name="ws" type="text" placeholder="url" defaultValue={this.props.compiler.location}/>
+                <FormControl name="ws" type="text" placeholder="url" defaultValue={this.props.compiler.location} />
                 <Button type="submit">Set</Button>
+            </Form>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>
+            </Modal.Footer>
+        </Modal>);
+    }
+}
+
+
+export class LoadHexModal extends React.Component {
+    constructor(props) {
+        super(props);
+        this.form = {};
+    }
+    handleSubmit(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const form = event.currentTarget;
+        this.props.load_new_model(JSON.parse(form.elements.data.value));
+        this.props.hide();
+    }
+    render() {
+        const txt = `
+        The data pasted should be of format:
+    Array<{ hex: string, color?: string, label?: string, utxo_metadata?: Array<{color: string, label:string} | null>>.
+
+    If you just have hex, e.g. [{'hex': 'ffaa...'}, ...].
+`;
+        return (<Modal show={this.props.show} onHide={this.props.hide}>
+            <Modal.Header closeButton>
+                <Modal.Title> Paste Hex JSON </Modal.Title>
+            </Modal.Header>
+            <Form onSubmit={(e) => this.handleSubmit(e)}>
+                <Form.Label>
+                    {txt}
+
+                </Form.Label>
+                <FormControl name="data" as="textarea" />
+                <Button type="submit">Load</Button>
+            </Form>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>
+            </Modal.Footer>
+        </Modal>);
+    }
+}
+
+export class SaveHexModal extends React.Component {
+    constructor(props) {
+        super(props);
+        this.form = {};
+    }
+    render() {
+
+        let non_phantoms = this.props.contract.txn_models.filter((item) => {
+            return -1 !== item.tx.ins.findIndex((inp) => this.props.contract.txid_map.has_by_txid(txid_buf_to_string(inp.hash)));
+        });
+        const data = { program: non_phantoms.map((t) => t.get_json()) };
+        return (<Modal show={this.props.show} onHide={this.props.hide}>
+            <Modal.Header closeButton>
+                <Modal.Title>Copy Hex JSON </Modal.Title>
+            </Modal.Header>
+            <Form onSubmit={(e) => this.handleSubmit(e)}>
+                <FormControl name="data" as="textarea" defaultValue={JSON.stringify(data)} />
             </Form>
             <Modal.Footer>
                 <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>

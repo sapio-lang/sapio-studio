@@ -16,7 +16,6 @@ import { UTXONodeModel } from './UTXONodeModel';
 // width: 150%;
 // padding-bottom:150%;
 const UTXONode = styled.div<{ selected: boolean; confirmed: boolean }>`
-font-family: sans-serif;
 color: white;
 overflow: visible;
 font-size: 11px;

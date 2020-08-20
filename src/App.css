@@ -1,4 +1,7 @@
 .App {
+  font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
+}
+.App {
   height: 100%;
   background-color: black;
   color: white;

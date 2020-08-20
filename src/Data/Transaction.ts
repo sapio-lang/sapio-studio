@@ -9,7 +9,7 @@ import { Viewer } from '../UX/EntityViewer';
 import { NodeColor, UTXOFormatData } from './ContractManager';
 import './Transaction.css';
 import { UTXOMetaData, UTXOModel } from './UTXO';
-
+import {TransactionData} from './ContractManager';
 
 export class TransactionModel extends TransactionNodeModel implements Viewer, HasKeys {
     broadcastable: boolean;
@@ -42,6 +42,15 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
         this.registerListener({
             selectionChanged: update
         });
+    }
+
+    get_json(): TransactionData {
+       return {
+           hex : this.tx.toHex(),
+           label: this.name,
+           color: this.color,
+           utxo_metadata: this.utxo_models.map((u) => { return {color: u.getOptions().color, label: u.getOptions().name}; } ),
+       };
     }
 
     setReachable(b:boolean) {

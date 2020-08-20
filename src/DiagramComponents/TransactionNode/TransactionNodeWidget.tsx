@@ -11,7 +11,6 @@ import Color from 'color';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
 export const Node = styled.div<{ background: string; selected: boolean; confirmed: boolean}>`
-font-family: sans-serif;
 color: white;
 overflow: visible;
 font-size: 11px;

@@ -170,6 +170,7 @@ export class App extends React.Component<any, AppState> {
                             dynamic_forms={this.state.dynamic_forms}
                             load_new_model={(x: Data) => this.load_new_model(x)}
                             compiler={this.cm}
+                            contract={this.state.current_contract}
                             toggle_timing_simulator={(b: boolean) => this.setState({ timing_simulator_enabled: b })}
                         />
 

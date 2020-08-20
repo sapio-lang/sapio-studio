@@ -23,11 +23,11 @@ export interface UTXOFormatData {
     color: string,
     label: string,
 }
-interface TransactionData {
+export interface TransactionData {
     hex: string,
-    color: string,
-    label: string,
-    utxo_metadata: Array<UTXOFormatData | null>
+    color?: string,
+    label?: string,
+    utxo_metadata?: Array<UTXOFormatData | null>
 }
 
 export interface Data {
@@ -49,9 +49,9 @@ interface ProcessedData {
 
 function preprocess_data(data: Data): PreProcessedData {
     let txns = data.program.map(k => Bitcoin.Transaction.fromHex(k.hex));
-    let txn_labels = data.program.map(k => k.label);
-    let txn_colors = data.program.map(k => new NodeColor(k.color));
-    let utxo_labels = data.program.map(k => k.utxo_metadata);
+    let txn_labels = data.program.map(k => k.label??"unlabeled");
+    let txn_colors = data.program.map(k => new NodeColor(k.color??"orange"));
+    let utxo_labels = data.program.map((k, i) => k.utxo_metadata??new Array(txns[i].outs.length));
 
     return { txns: txns, txn_colors: txn_colors, txn_labels: txn_labels, utxo_labels };
 }
