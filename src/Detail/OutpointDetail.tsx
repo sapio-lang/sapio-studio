@@ -38,12 +38,9 @@ export class TXIDDetail extends React.Component<{
     txid: string;
 }> {
     render() {
-        return (<ListGroup horizontal className="TXIDDetail">
+        return (<ListGroup variant="flush">
             <ListGroup.Item variant="dark">
-                <h4> TXID </h4>
-            </ListGroup.Item>
-            <ListGroup.Item className="TXID" variant="dark">
-                <Hex className="txhex" readOnly value={this.props.txid} />
+                <h4> TXID <Hex className="txhex" readOnly value={this.props.txid} /> </h4>
             </ListGroup.Item>
         </ListGroup>);
     }

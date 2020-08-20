@@ -100,9 +100,21 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
             {broadcast}
             <hr />
             <TXIDDetail txid={this.props.entity.get_txid()} />
+            <ListGroup variant="flush">
+            <ListGroup.Item variant="dark">
+
             <h6>Absolute Lock Time: {lt} </h6>
+            </ListGroup.Item>
+            <ListGroup.Item variant="dark">
             <h6>Relative Lock Time: {relative_time_string} </h6>
+
+            </ListGroup.Item>
+            <ListGroup.Item variant="dark">
             <h6>Relative Lock Time: {relative_blocks_string} </h6>
+
+            </ListGroup.Item>
+
+            </ListGroup>
             <ListGroup variant="flush">
                 <ListGroup.Item variant="dark">
                     <h4> Inputs</h4>
