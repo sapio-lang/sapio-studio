@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
 
@@ -10,7 +10,13 @@ function createWindow() {
         protocol: 'file:',
         slashes: true,
     });
-    mainWindow = new BrowserWindow({ width: 800, height: 600, show: false, backgroundColor: "black" });
+    mainWindow = new BrowserWindow({
+        width: 800, height: 600, show: false, backgroundColor: "black"
+        , webPreferences: {
+            nodeIntegration: true,
+        }
+
+    });
     mainWindow.location = startUrl;
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -35,4 +41,17 @@ app.on('activate', function () {
     if (mainWindow === null) {
         createWindow();
     }
+});
+
+const Client = require("bitcoin-core");
+
+const client = new Client({
+    network: 'regtest',
+    username: "btcusr",
+    password: "261299cf4f162e6d8e870760ee88b29537617c6aadc45f5ffd249b2309ca47fd"
+});
+ipcMain.handle('bitcoin-command', async (event, arg) => {
+    let result = await client.command(arg);
+    return result;
+
 });
