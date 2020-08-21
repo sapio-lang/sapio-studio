@@ -7,6 +7,7 @@ import { UTXOModel } from '../Data/UTXO';
 import "./UTXODetail.css";
 import { OutpointDetail } from './OutpointDetail';
 import { NodeModel } from '@projectstorm/react-diagrams';
+import { PhantomTransactionModel } from '../Data/Transaction';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -17,7 +18,8 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
         this.props.entity.setSelected(false);
     }
     goto(x:NodeModel) {
-        x.setSelected(true);
+        if (!(x instanceof PhantomTransactionModel))
+            x.setSelected(true);
     }
     render() {
         console.log(this);

@@ -1,7 +1,7 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React, { ChangeEvent } from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import { TransactionModel } from '../Data/Transaction';
+import { TransactionModel, PhantomTransactionModel } from '../Data/Transaction';
 import { UTXOModel } from '../Data/UTXO';
 import Hex from './Hex';
 import { InputDetail } from "./InputDetail";
@@ -32,7 +32,8 @@ export class TransactionDetail extends React.Component<TransactionDetailProps, I
         this.props.entity.setSelected(false);
     }
     goto(x: UTXOModel | TransactionModel) {
-        x.setSelected(true);
+        if (!(x instanceof PhantomTransactionModel))
+            x.setSelected(true);
     }
     onchange_color(e:ChangeEvent<HTMLInputElement>) {
         this.props.entity.setColor(e.target.value);
