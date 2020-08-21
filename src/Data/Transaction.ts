@@ -69,9 +69,11 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
         return this.tx.getId();
     }
     remove_from_model(model: DiagramModel) {
-        model.removeNode(this);
+        if (!(this instanceof PhantomTransactionModel)) {
+            model.removeNode(this);
+            this.utxo_links.map((x) => model.removeLink(<LinkModel><unknown>x));
+        }
         this.utxo_models.map((x) => model.removeNode(x));
-        this.utxo_links.map((x) => model.removeLink(<LinkModel><unknown>x));
         this.input_links.map((x) => model.removeLink(<LinkModel><unknown>x));
     }
     is_broadcastable() {

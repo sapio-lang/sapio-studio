@@ -10,7 +10,7 @@ import './App.css';
 import { CompilerServer } from "./Compiler/ContractCompilerServer";
 import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
 import { ContractModel, Data, timing_cache } from './Data/ContractManager';
-import { TransactionModel } from './Data/Transaction';
+import { TransactionModel, PhantomTransactionModel } from './Data/Transaction';
 import { UTXOModel } from './Data/UTXO';
 import { SpendPortModel } from './DiagramComponents/SpendLink/SpendLink';
 import { SpendLinkFactory } from "./DiagramComponents/SpendLink/SpendLinkFactory";
@@ -33,7 +33,7 @@ class ModelManager {
         this.model = model;
     }
     load(contract: ContractModel) {
-        this.model.addAll(...contract.txn_models);
+        this.model.addAll(...contract.txn_models.filter((v) => !(v instanceof PhantomTransactionModel )));
         this.model.addAll(...contract.utxo_models);
         const utxo_links: LinkModel[] = contract.utxo_models
             .map((m: UTXOModel) => m.getOutPorts()).flat(1)
@@ -41,6 +41,7 @@ class ModelManager {
                 Object.entries(p.getLinks()).map((v) => v[1])).flat(1);
         this.model.addAll(...utxo_links);
         const tx_links: LinkModel[] = contract.txn_models
+            .filter((v) => !(v instanceof PhantomTransactionModel))
             .map((m: TransactionModel) => m.getOutPorts()).flat(1)
             .map((p: SpendPortModel) =>
                 Object.entries(p.getLinks()).map((v) => v[1])).flat(1);
