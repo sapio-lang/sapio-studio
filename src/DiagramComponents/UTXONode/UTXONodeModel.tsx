@@ -37,11 +37,10 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
         });
         this.portsOut = [];
         this.portsIn = [];
-        this.addOutPort("spend");
 
     }
     spent_by(spender: TransactionModel, s_idx: number, idx: number) : SpendLinkModel {
-        return this.addOutPort("spend"+s_idx).spend_link(spender.addInPort('input' + idx));
+        return this.addOutPort("tx"+s_idx).spend_link(spender.addInPort('input' + idx));
     }
     getAmount() : number {
         return this.options.amount || 0;

@@ -37,7 +37,7 @@ export class TransactionModel extends TransactionNodeModel implements Viewer, Ha
             const out: Bitcoin.TxOutput = <Bitcoin.TxOutput>tx.outs[y];
             let utxo = new UTXOModel(new UTXOMetaData(out.script, out.value, tx, y), update, metadata.label, new NodeColor(metadata.color), this);
             this.utxo_models.push(utxo);
-            this.utxo_links.push(this.addOutPort('output ' + y).link(utxo.addInPort('create')));
+            this.utxo_links.push(this.addOutPort('out' + y).link(utxo.addInPort('create')));
         }
         this.registerListener({
             selectionChanged: update
