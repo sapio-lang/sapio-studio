@@ -7,6 +7,8 @@ import * as React from 'react';
 import { pretty_amount } from '../../util';
 import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
+import { BaseEvent } from '@projectstorm/react-canvas-core';
+import { UTXOModel } from '../../Data/UTXO';
 //import { css } from '@emotion/core';
 
 
@@ -101,6 +103,7 @@ interface DefaultNodeProps {
 
 interface IState {
 	is_reachable: boolean;
+	amount: number;
 }
 /**
  * Default node that models the UTXONodeModel. It creates two columns
@@ -120,8 +123,16 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
 			if (this.node === null) return;
 
 		}
-		this.state = { is_reachable: this.props.node.isReachable() };
+		this.state = { is_reachable: this.props.node.isReachable(), amount: this.props.node.getAmount() };
 		this.props.node.registerReachableCallback((b: boolean) => this.setState({ is_reachable: b }));
+		this.props.node.registerListener({
+			sync: (e: BaseEvent) => {
+				console.log(this.props.node);
+				this.setState({
+				amount: (this.props.node as UTXOModel).getAmount(),
+				});
+			}
+		})
 	}
 	generatePort = (port: DefaultPortModel) => {
 		return <DefaultPortLabel engine={this.props.engine} port={port} key={port.getID()} />;
@@ -171,7 +182,7 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
 				</Title>
 				{is_conf}
 				<Title color={color}>
-					<TitleName>{pretty_amount(this.props.node.getOptions().amount)}</TitleName>
+					<TitleName>{pretty_amount(this.state.amount)}</TitleName>
 				</Title>
 				{ports_bottom}
 			</UTXONode>

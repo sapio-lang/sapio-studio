@@ -22,6 +22,7 @@ export class TransactionNodeModel extends NodeModel {
         this.name= name;
         this.confirmed=false;
         this.is_reachable = true;
+        this.reachable_cb = this.reachable_cb ?? ((b) => null);
 
     }
 

@@ -95,7 +95,6 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     async fund_out(tx: Transaction) : Promise<Transaction>{
         const result = await ipcRenderer.invoke("bitcoin-command", [{method: "fundrawtransaction", parameters: [tx.toHex()]}]);
         const hex : string = result[0].hex;
-        console.log(hex);
         return Transaction.fromHex(hex);
     }
 

@@ -63,10 +63,22 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
     async create() {
         const funded = await this.props.fund_out(this.props.entity.txn.tx);
         this.props.entity.txn.tx = funded;
+        console.log("FUNDED", funded);
         UTXODetail.update(this.props.entity);
 
         const data = { program: this.props.contract.txn_models.map((t) => t.get_json()) };
         this.props.load_new_contract(data);
+    }
+    async query() {
+        const data = await this.props.fetch_utxo(this.props.entity.txn.get_txid(), this.props.entity.utxo.index);
+        console.log(data);
+        if (data[0]['confirmations'] > 0) {
+            this.props.entity.utxo.amount= 100e6*data[0].value;
+            this.props.entity.utxo.script= Bitcoin.address.toOutputScript(data[0]['scriptPubKey']['addresses'][0], Bitcoin.networks.regtest);
+            this.props.entity.setConfirmed(true);
+            this.props.entity.sync();
+            this.forceUpdate();
+        }
     }
     render() {
         console.log(this);
@@ -81,7 +93,7 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
            const creator = !is_mock ? null :
                 <ListGroup.Item action variant="success" onClick={()=>this.create()}>Create</ListGroup.Item>;
             const check_exists = is_mock?null:
-                <ListGroup.Item action variant="secondary">Query</ListGroup.Item>;
+                <ListGroup.Item action variant="secondary" onClick={()=> this.query()}>Query</ListGroup.Item>;
         
             const spends = this.props.entity.utxo.spends.map((elt, i) => <ListGroup.Item key={get_wtxid_backwards(elt.tx)} variant="dark">
                 <ListGroup horizontal className="Spend">
@@ -98,6 +110,10 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
                     {creator}
                     {check_exists}
                 </ListGroup>
+
+            <OutpointDetail txid={this.props.entity.txn.get_txid()} n={this.props.entity.utxo.index} 
+                onClick= {() => this.goto(this.props.entity.txn)}
+            />
                 {address}
                 <ListGroup>
                     <ListGroup.Item variant="dark">

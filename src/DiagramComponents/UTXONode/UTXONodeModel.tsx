@@ -20,7 +20,7 @@ export interface UTXONodeModelGenerics extends NodeModelGenerics {
 /**
  * Example of a custom model using pure javascript
  */
-export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
+export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
     protected portsIn: DefaultPortModel[];
     protected portsOut: SpendPortModel[];
     constructor(options:any={}, name?: string, color?: string, amount?: number, confirmed: boolean = false) {
@@ -39,12 +39,13 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
         this.portsIn = [];
 
     }
+    sync() {
+        this.fireEvent({}, 'sync');
+    }
     spent_by(spender: TransactionModel, s_idx: number, idx: number) : SpendLinkModel {
         return this.addOutPort("tx"+s_idx).spend_link(spender.addInPort('in' + idx));
     }
-    getAmount() : number {
-        return this.options.amount || 0;
-    }
+    abstract getAmount(): number;
     setConfirmed(opt: boolean) {
         this.options.confirmed = opt;
         this.setSelected(true);

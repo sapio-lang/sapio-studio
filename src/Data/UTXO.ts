@@ -32,5 +32,8 @@ export class UTXOModel extends UTXONodeModel implements Viewer {
 			selectionChanged: update
 		});
 	}
+	getAmount(): number {
+		return this.utxo.amount;
+	}
 }
 
