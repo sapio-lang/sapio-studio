@@ -175,7 +175,10 @@ function process_utxo_models(
             }
             spenders.forEach((spender, spend_idx) => {
                 const spender_tx: Bitcoin.Transaction = spender.tx;
-                const idx = spender_tx.ins.findIndex(elt => elt.index === output_index && elt.hash.toString('hex') === txn.getHash().toString('hex'));
+                const idx = spender_tx.ins.findIndex(elt => elt.index === output_index && txid_buf_to_string(elt.hash) === m_txn.get_txid());
+                if (idx === -1) {
+                    throw "Missing Spender Error";
+                }
                 const link = utxo_model.spent_by(spender, spend_idx, idx);
                 spender.input_links.push(link);
                 utxo_model.utxo.spends.push(spender);

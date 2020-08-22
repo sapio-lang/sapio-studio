@@ -40,7 +40,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
 
     }
     spent_by(spender: TransactionModel, s_idx: number, idx: number) : SpendLinkModel {
-        return this.addOutPort("tx"+s_idx).spend_link(spender.addInPort('input' + idx));
+        return this.addOutPort("tx"+s_idx).spend_link(spender.addInPort('in' + idx));
     }
     getAmount() : number {
         return this.options.amount || 0;
