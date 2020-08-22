@@ -1,8 +1,9 @@
-import { Input, Transaction } from 'bitcoinjs-lib/types/transaction';
+import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
 import App from '../App';
 import { hash_to_hex } from '../Detail/Hex';
 import { ContractModel } from './ContractManager';
+import { Input } from 'bitcoinjs-lib/types/transaction';
 const { ipcRenderer }  = window.require( "electron");
 type TXID = string;
 
@@ -90,6 +91,18 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
 
     async broadcast(tx: Transaction) {
         await ipcRenderer.invoke("bitcoin-command", [{method: "getrawtransaction", parameters: [tx.toHex()]}]);
+    }
+    async fund_out(tx: Transaction) : Promise<Transaction>{
+        const result = await ipcRenderer.invoke("bitcoin-command", [{method: "fundrawtransaction", parameters: [tx.toHex()]}]);
+        const hex : string = result[0].hex;
+        console.log(hex);
+        return Transaction.fromHex(hex);
+    }
+
+    async fetch_utxo(t: TXID, n:number) : Promise<any> {
+        const txout = await ipcRenderer.invoke("bitcoin-command", [{method: "gettxout", parameters: [t, n]}]);
+        console.log(txout);
+        return txout;
     }
     async check_txs(current_contract: ContractModel): Promise<Array<TXID>> {
         // TODO: SHould query by WTXID

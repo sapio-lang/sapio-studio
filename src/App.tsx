@@ -22,6 +22,7 @@ import { DemoCanvasWidget } from './UX/DemoCanvasWidget';
 import { EmptyViewer, EntityViewerModal, Viewer } from './UX/EntityViewer';
 import Collapse from 'react-bootstrap/Collapse';
 import "./Glyphs.css";
+import { TXID } from './util';
 
 
 
@@ -157,8 +158,11 @@ export class App extends React.Component<any, AppState> {
             <EntityViewerModal
                 entity={this.state.entity}
                 broadcast={(x: Transaction) => this.bitcoin_node_manager.broadcast(x)}
+                fund_out={(x: Transaction) => this.bitcoin_node_manager.fund_out(x)}
+                fetch_utxo = {(t:TXID, n:number)=> this.bitcoin_node_manager.fetch_utxo(t, n)}
                 hide_details={() => this.hide_details()}
                 current_contract={this.state.current_contract}
+                load_new_contract={(x: Data) => this.load_new_model(x)}
             />;
         return (
             <div className="App">

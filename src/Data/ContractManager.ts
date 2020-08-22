@@ -1,4 +1,5 @@
 import * as Bitcoin from 'bitcoinjs-lib';
+import { Output } from 'bitcoinjs-lib/types/transaction';
 import _, { Collection } from 'lodash';
 import { SelectedEvent } from '../App';
 import { InputMap, TXID, TXIDAndWTXIDMap, txid_buf_to_string } from "../util";
@@ -49,9 +50,9 @@ interface ProcessedData {
 
 function preprocess_data(data: Data): PreProcessedData {
     let txns = data.program.map(k => Bitcoin.Transaction.fromHex(k.hex));
-    let txn_labels = data.program.map(k => k.label??"unlabeled");
-    let txn_colors = data.program.map(k => new NodeColor(k.color??"orange"));
-    let utxo_labels = data.program.map((k, i) => k.utxo_metadata??new Array(txns[i].outs.length));
+    let txn_labels = data.program.map(k => k.label ?? "unlabeled");
+    let txn_colors = data.program.map(k => new NodeColor(k.color ?? "orange"));
+    let utxo_labels = data.program.map((k, i) => k.utxo_metadata ?? new Array(txns[i].outs.length));
 
     return { txns: txns, txn_colors: txn_colors, txn_labels: txn_labels, utxo_labels };
 }
@@ -122,7 +123,9 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
         let n_outputs: number = 1 + _.chain(inps).map((el) => el.index).max().value();
         console.log("missing input", txid, n_outputs);
         for (let i = 0; i < n_outputs; ++i) {
-            mock_txn.addOutput(new Buffer(""), 0);
+            // Set to MAX sats...
+            // TODO: a hack to make the flow technically correct and detectable
+            mock_txn.addOutput(new Buffer(""), 21e6 * 100e6);
         }
         const color = new NodeColor("white");
         const utxo_metadata: Array<UTXOFormatData | null> = new Array(n_outputs);
@@ -144,6 +147,32 @@ function process_utxo_models(
         const txn = m_txn.tx;
         m_txn.utxo_models.forEach((utxo_model, output_index) => {
             const spenders: Array<TransactionModel> = inputs_map.get_txid_s(m_txn.get_txid(), output_index) ?? [];
+            if (utxo_model.txn instanceof PhantomTransactionModel && spenders.length) {
+                const h_find = utxo_model.txn.get_txid();
+                if (spenders[0].witness_set.length) {
+                    const witstack = spenders[0].witness_set[0][utxo_model.utxo.index];
+                    if (witstack) {
+
+                        const program = witstack[witstack.length - 1];
+                        if (program) {
+                            Bitcoin.crypto.sha256(program)
+
+                            const script = new Buffer(34);
+                            script[0] = 0x0;
+                            script[1] = 0x20;
+                            program.copy(script, 2);
+                            utxo_model.txn.tx.outs[utxo_model.utxo.index].script = script;
+                            // TODO: Single Input assumption!
+                            utxo_model.txn.tx.outs[utxo_model.utxo.index].script = script;
+                            const max_amount = spenders.reduce((m, s) => Math.max(s.tx.outs.reduce((a, v) => a + (v as Output).value ?? 0, 0), m), 0);
+                            (utxo_model.txn.tx.outs[utxo_model.utxo.index] as Output).value = max_amount;
+                            utxo_model.utxo.amount = max_amount;
+                            console.log("MAX", max_amount, utxo_model.txn.tx);
+                            const address = Bitcoin.address.fromOutputScript(script, Bitcoin.networks.regtest);
+                        }
+                    }
+                }
+            }
             spenders.forEach((spender, spend_idx) => {
                 const spender_tx: Bitcoin.Transaction = spender.tx;
                 const idx = spender_tx.ins.findIndex(elt => elt.index === output_index && elt.hash.toString('hex') === txn.getHash().toString('hex'));
@@ -162,14 +191,14 @@ function process_data(update: (e: SelectedEvent) => void, obj: PreProcessedData)
     let inputs_map = process_inputs_map(txn_models);
 
     const to_add = process_utxo_models(txn_models, inputs_map);
-    return { inputs_map: inputs_map, utxo_models: to_add, txn_models: txn_models, txid_map: txid_map};
+    return { inputs_map: inputs_map, utxo_models: to_add, txn_models: txn_models, txid_map: txid_map };
 }
 
 type TimingData = { unlock_time: number, unlock_height: number, unlock_at_relative_height: number, unlock_at_relative_time: number, txn: TransactionModel };
 class TimingCache {
     // Array should be de-duplicated!
-    cache: Map<TXID, [TimingData, Array<TransactionModel>|null]>;
-    constructor(){
+    cache: Map<TXID, [TimingData, Array<TransactionModel> | null]>;
+    constructor() {
         this.cache = new Map();
     }
 }
@@ -185,8 +214,8 @@ function get_base_transactions(txns: Array<TransactionModel>, map: TXIDAndWTXIDM
 }
 // Based off of
 // https://stackoverflow.com/a/41170834
-function mergeAndDeduplicateSorted<T, T2>(array1:T[], array2:T[], iteratee: (t:T)=> T2 ) : Array<T> {
-    const mergedArray = new Array(array1.length+array2.length);
+function mergeAndDeduplicateSorted<T, T2>(array1: T[], array2: T[], iteratee: (t: T) => T2): Array<T> {
+    const mergedArray = new Array(array1.length + array2.length);
     let i = 0;
     let j = 0;
     while (i < array1.length && j < array2.length) {
@@ -214,24 +243,24 @@ function mergeAndDeduplicateSorted<T, T2>(array1:T[], array2:T[], iteratee: (t:T
     }
     return mergedArray;
 };
-function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, max_height: number, start_height:number, start_time:number, map: InputMap<TransactionModel>):
+function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, max_height: number, start_height: number, start_time: number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
     // Every Array is Sorted and Unique, but *may* overlap
-    const arrays =  bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, start_height, start_time, map));
+    const arrays = bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, start_height, start_time, map));
     // This algorithm is either O(# TransactionModels^2) because models can share descendants.
     // The alternative would be to call flat (O(n^2)) and then call sort...
     // The algorithm cannot be in place on the *first pass* because the arrays are from our cache
     // and shouldn't be modified.
     // Later passes could one day re-use allocations...
-    while(arrays.length>1) {
+    while (arrays.length > 1) {
         // Picks two random arrays to merge at a time to prevent adversarial cases...
         const v1 = Math.floor(Math.random() * arrays.length);
-        let v2 = Math.floor(Math.random()*arrays.length);
+        let v2 = Math.floor(Math.random() * arrays.length);
         // Rejection sample for v2...
         while (v1 == v2) {
             v2 = Math.floor(Math.random() * arrays.length);
         }
-        arrays[v1] = _(mergeAndDeduplicateSorted(arrays[v1], arrays[v2], (t:TransactionModel) => t.get_txid())).sortedUniqBy((t:TransactionModel) => t.get_txid()).value();
+        arrays[v1] = _(mergeAndDeduplicateSorted(arrays[v1], arrays[v2], (t: TransactionModel) => t.get_txid())).sortedUniqBy((t: TransactionModel) => t.get_txid()).value();
         const last = arrays.pop();
         if (last === undefined) throw Error("Invariant Broken on Array Length");
         if (arrays.length != v2) {
@@ -241,7 +270,7 @@ function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, m
     }
     return arrays.length > 0 ? arrays[0] : [];
 }
-function compute_timing(txn: TransactionModel) : TimingData {
+function compute_timing(txn: TransactionModel): TimingData {
     let cache_entry = timing_cache.cache.get(txn.get_txid())
     if (cache_entry) {
         return cache_entry[0];
@@ -272,11 +301,11 @@ function compute_timing(txn: TransactionModel) : TimingData {
     const is_height = locktime < 500_000_000;
     let unlock_time = locktime_enabled && !is_height ? locktime : 0;
     let unlock_height = locktime_enabled && is_height ? locktime : 0;
-    cache_entry= [{ unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn }, null];
+    cache_entry = [{ unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn }, null];
     timing_cache.cache.set(txn.get_txid(), cache_entry);
     return cache_entry[0];
 }
-function compute_timing_of_children(txn:TransactionModel, map:InputMap<TransactionModel>) : Collection<TimingData> {
+function compute_timing_of_children(txn: TransactionModel, map: InputMap<TransactionModel>): Collection<TimingData> {
     const spenders: Map<number, TransactionModel[]> = map.map.get(txn.get_txid()) ?? new Map();
     return _(Array.from(spenders.values())).flatMap((output_spender: TransactionModel[]) =>
         output_spender.map(compute_timing));
@@ -287,24 +316,24 @@ function compute_timing_of_children(txn:TransactionModel, map:InputMap<Transacti
 
 function unreachable_by_time_inner(base: TransactionModel, max_time: number, max_height: number, elapsed_time: number, elapsed_blocks: number, map: InputMap<TransactionModel>):
     Array<TransactionModel> {
-    return compute_timing_of_children(base, map).value().flatMap(({unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn}) =>{
-            // The soonest time to satisfy both conditions
-            const time_when_spendable = Math.max(unlock_time, elapsed_time+unlock_at_relative_time);
-            const height_when_spendable = Math.max(unlock_height, elapsed_blocks+unlock_at_relative_height);
-            // Return All Descendants and us from here because none of these transactions can go through
-            // It is > because a block will accept ==
-            if (time_when_spendable > max_time || height_when_spendable > max_height) {
-                // TODO: Make this a Set type?
-                return all_descendants(txn, map);
-            }
-            // Recurse with the new times
-            return unreachable_by_time_inner(txn,
-                max_time, max_height,
-                time_when_spendable,
-                height_when_spendable, map);
-        });
+    return compute_timing_of_children(base, map).value().flatMap(({ unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn }) => {
+        // The soonest time to satisfy both conditions
+        const time_when_spendable = Math.max(unlock_time, elapsed_time + unlock_at_relative_time);
+        const height_when_spendable = Math.max(unlock_height, elapsed_blocks + unlock_at_relative_height);
+        // Return All Descendants and us from here because none of these transactions can go through
+        // It is > because a block will accept ==
+        if (time_when_spendable > max_time || height_when_spendable > max_height) {
+            // TODO: Make this a Set type?
+            return all_descendants(txn, map);
+        }
+        // Recurse with the new times
+        return unreachable_by_time_inner(txn,
+            max_time, max_height,
+            time_when_spendable,
+            height_when_spendable, map);
+    });
 }
-function all_descendants(t: TransactionModel, inputs_map: InputMap<TransactionModel>) : Array<TransactionModel> {
+function all_descendants(t: TransactionModel, inputs_map: InputMap<TransactionModel>): Array<TransactionModel> {
     let cache_entry = timing_cache.cache.get(t.get_txid());
     if (cache_entry && cache_entry[1]) return cache_entry[1];
     // This case probably never happens...
@@ -312,7 +341,7 @@ function all_descendants(t: TransactionModel, inputs_map: InputMap<TransactionMo
         cache_entry = [compute_timing(t), null];
         timing_cache.cache.set(t.get_txid(), cache_entry);
     }
-    cache_entry[1] = _(Array.from(inputs_map.map.get(t.get_txid())?.values()??[]).flat(1).map(
+    cache_entry[1] = _(Array.from(inputs_map.map.get(t.get_txid())?.values() ?? []).flat(1).map(
         (x) => all_descendants(x, inputs_map)
     ).flat(1)).uniqBy((t) => t.get_txid()).sortBy(t => t.get_txid()).value().concat(t);
     return cache_entry[1];
@@ -375,10 +404,11 @@ export class ContractModel extends ContractBase {
             m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
         });*/
     }
-    reachable_at_time(max_time : number, max_height : number, start_time: number, start_height: number) : Array<TransactionModel> {
+    reachable_at_time(max_time: number, max_height: number, start_time: number, start_height: number): Array<TransactionModel> {
         const bases = get_base_transactions(this.txn_models, this.txid_map);
         return unreachable_by_time(bases, max_time, max_height, start_time, start_height, this.inputs_map);
     }
+
 }
 
 
