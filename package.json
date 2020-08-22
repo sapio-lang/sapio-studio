@@ -39,7 +39,7 @@
   },
   "main": "./desktop/main.js",
   "scripts": {
-    "start-react": "export BROWSER=none && react-scripts start",
+    "start-react": "export BROWSER=none REACT_EDITOR=none && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
