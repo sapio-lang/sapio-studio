@@ -4,50 +4,47 @@ import App from '../App';
 import { hash_to_hex } from '../Detail/Hex';
 import { ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
-const { ipcRenderer }  = window.require( "electron");
+const { ipcRenderer } = window.require('electron');
 type TXID = string;
-
 
 export function call(method: string, args: any) {
     return fetch(method, {
-        method: "post", body:
-            JSON.stringify(args),
+        method: 'post',
+        body: JSON.stringify(args),
         headers: {
-            'Accept': 'application/json, text/plain, */*',
-            'Content-Type': 'application/json'
+            Accept: 'application/json, text/plain, */*',
+            'Content-Type': 'application/json',
         },
-    })
-        .then(res => res.json());
-};
+    }).then((res) => res.json());
+}
 interface IProps {
-
     app: App;
     current_contract: ContractModel;
-
 }
-interface IState {
-
-}
-export function update_broadcastable(current_contract: ContractModel, confirmed_txs: Set<TXID>) {
-    current_contract.txn_models
-        .forEach((tm) => {
-            const already_confirmed = confirmed_txs.has(tm.get_txid());
-            const inputs_not_locals = tm.tx.ins.every((inp: Input) =>
-                !current_contract.txid_map.has_by_txid(hash_to_hex(inp.hash)));
-            const all_inputs_confirmed = tm.tx.ins.every((inp: Input) => confirmed_txs.has(hash_to_hex(inp.hash)));
-            if (already_confirmed) {
-                tm.set_broadcastable(false);
-            }
-            else if (inputs_not_locals) {
-                tm.set_broadcastable(true);
-            }
-            else if (all_inputs_confirmed) {
-                tm.set_broadcastable(true);
-            }
-            else {
-                tm.set_broadcastable(false);
-            }
-        });
+interface IState {}
+export function update_broadcastable(
+    current_contract: ContractModel,
+    confirmed_txs: Set<TXID>
+) {
+    current_contract.txn_models.forEach((tm) => {
+        const already_confirmed = confirmed_txs.has(tm.get_txid());
+        const inputs_not_locals = tm.tx.ins.every(
+            (inp: Input) =>
+                !current_contract.txid_map.has_by_txid(hash_to_hex(inp.hash))
+        );
+        const all_inputs_confirmed = tm.tx.ins.every((inp: Input) =>
+            confirmed_txs.has(hash_to_hex(inp.hash))
+        );
+        if (already_confirmed) {
+            tm.set_broadcastable(false);
+        } else if (inputs_not_locals) {
+            tm.set_broadcastable(true);
+        } else if (all_inputs_confirmed) {
+            tm.set_broadcastable(true);
+        } else {
+            tm.set_broadcastable(false);
+        }
+    });
 }
 
 /*
@@ -69,37 +66,53 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     }
     componentWillUnmount() {
         this.mounted = false;
-        if (this.next_periodic_check != null) clearTimeout(this.next_periodic_check);
+        if (this.next_periodic_check != null)
+            clearTimeout(this.next_periodic_check);
     }
     async periodic_check() {
         const contract = this.props.current_contract;
         if (!contract) {
-            this.next_periodic_check = setTimeout(this.periodic_check.bind(this), 1000);
+            this.next_periodic_check = setTimeout(
+                this.periodic_check.bind(this),
+                1000
+            );
         }
         const is_tx_confirmed = await this.check_txs(contract);
         let confirmed_txs: Set<TXID> = new Set();
         if (is_tx_confirmed.length > 0) {
             is_tx_confirmed.forEach((txid: TXID) => confirmed_txs.add(txid));
             update_broadcastable(contract, confirmed_txs);
-            this.props.current_contract.process_finality(is_tx_confirmed, this.props.app.model);
+            this.props.current_contract.process_finality(
+                is_tx_confirmed,
+                this.props.app.model
+            );
             this.props.app.forceUpdate();
         }
         if (this.mounted) {
-            this.next_periodic_check = setTimeout(this.periodic_check.bind(this), 5000 * 60);
+            this.next_periodic_check = setTimeout(
+                this.periodic_check.bind(this),
+                5000 * 60
+            );
         }
     }
 
     async broadcast(tx: Transaction) {
-        await ipcRenderer.invoke("bitcoin-command", [{method: "getrawtransaction", parameters: [tx.toHex()]}]);
+        await ipcRenderer.invoke('bitcoin-command', [
+            { method: 'getrawtransaction', parameters: [tx.toHex()] },
+        ]);
     }
-    async fund_out(tx: Transaction) : Promise<Transaction>{
-        const result = await ipcRenderer.invoke("bitcoin-command", [{method: "fundrawtransaction", parameters: [tx.toHex()]}]);
-        const hex : string = result[0].hex;
+    async fund_out(tx: Transaction): Promise<Transaction> {
+        const result = await ipcRenderer.invoke('bitcoin-command', [
+            { method: 'fundrawtransaction', parameters: [tx.toHex()] },
+        ]);
+        const hex: string = result[0].hex;
         return Transaction.fromHex(hex);
     }
 
-    async fetch_utxo(t: TXID, n:number) : Promise<any> {
-        const txout = await ipcRenderer.invoke("bitcoin-command", [{method: "gettxout", parameters: [t, n]}]);
+    async fetch_utxo(t: TXID, n: number): Promise<any> {
+        const txout = await ipcRenderer.invoke('bitcoin-command', [
+            { method: 'gettxout', parameters: [t, n] },
+        ]);
         console.log(txout);
         return txout;
     }
@@ -107,12 +120,15 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         // TODO: SHould query by WTXID
         const txids = current_contract.txn_models
             .filter((tm) => tm.is_broadcastable())
-            .map((tm) => {return {method : "getrawtransaction",
-                          parameters : [tm.get_txid()]
-                        };});
+            .map((tm) => {
+                return {
+                    method: 'getrawtransaction',
+                    parameters: [tm.get_txid()],
+                };
+            });
         if (txids.length > 0) {
-             let results = await ipcRenderer.invoke('bitcoin-command', txids);
-             console.log("RESULTS", results);
+            let results = await ipcRenderer.invoke('bitcoin-command', txids);
+            console.log('RESULTS', results);
         }
         return [];
     }
@@ -121,4 +137,3 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         return null;
     }
 }
-

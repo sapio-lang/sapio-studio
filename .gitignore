@@ -25,3 +25,4 @@ tags
 
 **/node_modules
 .vscode
+.idea

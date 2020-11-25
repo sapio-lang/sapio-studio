@@ -4,36 +4,47 @@ import { UTXONodeModel } from '../DiagramComponents/UTXONode/UTXONodeModel';
 import { Viewer } from '../UX/EntityViewer';
 import { TransactionModel } from './Transaction';
 export class UTXOMetaData {
-	index: number;
-	script: Buffer;
-	amount: number;
-	spends: Array<TransactionModel>;
-	txid: string;
-	constructor(script: Buffer, amount:number, txn:Transaction, index:number) {
-		this.txid = txn.getId();
-		this.index = index;
-		this.script = script;
-		this.amount = amount;
+    index: number;
+    script: Buffer;
+    amount: number;
+    spends: Array<TransactionModel>;
+    txid: string;
+    constructor(
+        script: Buffer,
+        amount: number,
+        txn: Transaction,
+        index: number
+    ) {
+        this.txid = txn.getId();
+        this.index = index;
+        this.script = script;
+        this.amount = amount;
         this.spends = [];
-	}
+    }
 }
 export class UTXOModel extends UTXONodeModel implements Viewer {
-	txn: TransactionModel;
-	utxo: UTXOMetaData;
-	constructor(utxo:UTXOMetaData, update:any, name:string, color:NodeColor, txn:TransactionModel) {
-		super({
-			name,
-			color:color.get(),
-			amount: utxo.amount,
-			confirmed: false});
-		this.utxo = utxo;
+    txn: TransactionModel;
+    utxo: UTXOMetaData;
+    constructor(
+        utxo: UTXOMetaData,
+        update: any,
+        name: string,
+        color: NodeColor,
+        txn: TransactionModel
+    ) {
+        super({
+            name,
+            color: color.get(),
+            amount: utxo.amount,
+            confirmed: false,
+        });
+        this.utxo = utxo;
         this.txn = txn;
-		this.registerListener({
-			selectionChanged: update
-		});
-	}
-	getAmount(): number {
-		return this.utxo.amount;
-	}
+        this.registerListener({
+            selectionChanged: update,
+        });
+    }
+    getAmount(): number {
+        return this.utxo.amount;
+    }
 }
-

@@ -6,7 +6,7 @@ import Modal from 'react-bootstrap/Modal';
 import Nav from 'react-bootstrap/Nav';
 import Tab from 'react-bootstrap/Tab';
 import { Menu } from '../Compiler/Menu';
-import { txid_buf_to_string } from "../util";
+import { txid_buf_to_string } from '../util';
 export class CreateContractModal extends React.Component {
     constructor(props) {
         super(props);
@@ -14,19 +14,30 @@ export class CreateContractModal extends React.Component {
     }
     render() {
         if (!this.props.dynamic_forms) return null;
-        return (<Modal show={this.props.show} onHide={this.props.hide} size="lg">
-            <Modal.Header closeButton>
-                <Modal.Title> Create a New Contract </Modal.Title>
-            </Modal.Header>
+        return (
+            <Modal show={this.props.show} onHide={this.props.hide} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title> Create a New Contract </Modal.Title>
+                </Modal.Header>
 
-
-            <Menu hide={this.props.hide} load_new_model={this.props.load_new_model}
-                args={this.props.dynamic_forms}
-                export compiler={this.props.compiler} />
-            <Modal.Footer>
-                <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>
-            </Modal.Footer>
-        </Modal>);
+                <Menu
+                    hide={this.props.hide}
+                    load_new_model={this.props.load_new_model}
+                    args={this.props.dynamic_forms}
+                    export
+                    compiler={this.props.compiler}
+                />
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => this.props.hide()}
+                    >
+                        {' '}
+                        Close{' '}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
     }
 }
 export class ViewContractModal extends React.Component {
@@ -35,18 +46,30 @@ export class ViewContractModal extends React.Component {
         this.form = {};
     }
     render() {
-        return (<Modal show={this.props.show} onHide={this.props.hide}>
-            <Modal.Header closeButton>
-                <Modal.Title> View Existing Contract </Modal.Title>
-            </Modal.Header>
-            <Form>
-                <FormControl as="select" placeholder="Existing Contract" className=" mr-sm-2" />
-                <Button type="submit">View</Button>
-            </Form>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>
-            </Modal.Footer>
-        </Modal>);
+        return (
+            <Modal show={this.props.show} onHide={this.props.hide}>
+                <Modal.Header closeButton>
+                    <Modal.Title> View Existing Contract </Modal.Title>
+                </Modal.Header>
+                <Form>
+                    <FormControl
+                        as="select"
+                        placeholder="Existing Contract"
+                        className=" mr-sm-2"
+                    />
+                    <Button type="submit">View</Button>
+                </Form>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => this.props.hide()}
+                    >
+                        {' '}
+                        Close{' '}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
     }
 }
 
@@ -65,21 +88,33 @@ export class SapioCompilerModal extends React.Component {
         this.props.hide();
     }
     render() {
-        return (<Modal show={this.props.show} onHide={this.props.hide}>
-            <Modal.Header closeButton>
-                <Modal.Title> Set Contract Generator URL </Modal.Title>
-            </Modal.Header>
-            <Form onSubmit={(e) => this.handleSubmit(e)}>
-                <FormControl name="ws" type="text" placeholder="url" defaultValue={this.props.compiler.location} />
-                <Button type="submit">Set</Button>
-            </Form>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>
-            </Modal.Footer>
-        </Modal>);
+        return (
+            <Modal show={this.props.show} onHide={this.props.hide}>
+                <Modal.Header closeButton>
+                    <Modal.Title> Set Contract Generator URL </Modal.Title>
+                </Modal.Header>
+                <Form onSubmit={(e) => this.handleSubmit(e)}>
+                    <FormControl
+                        name="ws"
+                        type="text"
+                        placeholder="url"
+                        defaultValue={this.props.compiler.location}
+                    />
+                    <Button type="submit">Set</Button>
+                </Form>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => this.props.hide()}
+                    >
+                        {' '}
+                        Close{' '}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
     }
 }
-
 
 export class LoadHexModal extends React.Component {
     constructor(props) {
@@ -100,22 +135,27 @@ export class LoadHexModal extends React.Component {
 
     If you just have hex, e.g. [{'hex': 'ffaa...'}, ...].
 `;
-        return (<Modal show={this.props.show} onHide={this.props.hide}>
-            <Modal.Header closeButton>
-                <Modal.Title> Paste Hex JSON </Modal.Title>
-            </Modal.Header>
-            <Form onSubmit={(e) => this.handleSubmit(e)}>
-                <Form.Label>
-                    {txt}
-
-                </Form.Label>
-                <FormControl name="data" as="textarea" />
-                <Button type="submit">Load</Button>
-            </Form>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>
-            </Modal.Footer>
-        </Modal>);
+        return (
+            <Modal show={this.props.show} onHide={this.props.hide}>
+                <Modal.Header closeButton>
+                    <Modal.Title> Paste Hex JSON </Modal.Title>
+                </Modal.Header>
+                <Form onSubmit={(e) => this.handleSubmit(e)}>
+                    <Form.Label>{txt}</Form.Label>
+                    <FormControl name="data" as="textarea" />
+                    <Button type="submit">Load</Button>
+                </Form>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => this.props.hide()}
+                    >
+                        {' '}
+                        Close{' '}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
     }
 }
 
@@ -125,21 +165,39 @@ export class SaveHexModal extends React.Component {
         this.form = {};
     }
     render() {
-
         let non_phantoms = this.props.contract.txn_models.filter((item) => {
-            return -1 !== item.tx.ins.findIndex((inp) => this.props.contract.txid_map.has_by_txid(txid_buf_to_string(inp.hash)));
+            return (
+                -1 !==
+                item.tx.ins.findIndex((inp) =>
+                    this.props.contract.txid_map.has_by_txid(
+                        txid_buf_to_string(inp.hash)
+                    )
+                )
+            );
         });
         const data = { program: non_phantoms.map((t) => t.get_json()) };
-        return (<Modal show={this.props.show} onHide={this.props.hide}>
-            <Modal.Header closeButton>
-                <Modal.Title>Copy Hex JSON </Modal.Title>
-            </Modal.Header>
-            <Form onSubmit={(e) => this.handleSubmit(e)}>
-                <FormControl name="data" as="textarea" defaultValue={JSON.stringify(data)} />
-            </Form>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={() => this.props.hide()}> Close </Button>
-            </Modal.Footer>
-        </Modal>);
+        return (
+            <Modal show={this.props.show} onHide={this.props.hide}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Copy Hex JSON </Modal.Title>
+                </Modal.Header>
+                <Form onSubmit={(e) => this.handleSubmit(e)}>
+                    <FormControl
+                        name="data"
+                        as="textarea"
+                        defaultValue={JSON.stringify(data)}
+                    />
+                </Form>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => this.props.hide()}
+                    >
+                        {' '}
+                        Close{' '}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
     }
 }
