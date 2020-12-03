@@ -17,7 +17,16 @@ interface UTXODetailProps {
     contract: ContractModel;
     load_new_contract: (x: Data) => void;
 }
-export class UTXODetail extends React.Component<UTXODetailProps> {
+
+interface UTXODetailState {
+    flash: String | null;
+}
+export class UTXODetail extends React.Component<UTXODetailProps, UTXODetailState> {
+    constructor(props: UTXODetailProps) {
+        super(props)
+        this.state = {flash: null};
+
+    }
 
     componentWillUnmount() {
         this.props.entity.setSelected(false);
@@ -61,13 +70,17 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
         }
     }
     async create() {
-        const funded = await this.props.fund_out(this.props.entity.txn.tx);
-        this.props.entity.txn.tx = funded;
-        console.log("FUNDED", funded);
-        UTXODetail.update(this.props.entity);
+        await this.props.fund_out(this.props.entity.txn.tx).then((funded) => {
+            this.props.entity.txn.tx = funded;
+            console.log("FUNDED", funded);
+            UTXODetail.update(this.props.entity);
 
-        const data = { program: this.props.contract.txn_models.map((t) => t.get_json()) };
-        this.props.load_new_contract(data);
+            const data = { program: this.props.contract.txn_models.map((t) => t.get_json()) };
+            this.props.load_new_contract(data);
+        }).catch((error) => {
+            this.setState({flash: error.message});
+            setTimeout(() => this.setState({flash: null}), 3000);
+        });
     }
     async query() {
         const data = await this.props.fetch_utxo(this.props.entity.txn.get_txid(), this.props.entity.utxo.index);
@@ -104,8 +117,14 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
 
                 </ListGroup>
             </ListGroup.Item>);
+            const flash = !this.state.flash ? null : <ListGroup>
+                <ListGroup.Item variant="danger">
+                    {this.state.flash}
+                </ListGroup.Item>
+            </ListGroup>;
             return (<div className="UTXODetail">
                 <h1>External UTXO</h1>
+                {flash}
                 <ListGroup>
                     {creator}
                     {check_exists}
