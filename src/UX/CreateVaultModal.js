@@ -3,8 +3,6 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import Modal from 'react-bootstrap/Modal';
-import Nav from 'react-bootstrap/Nav';
-import Tab from 'react-bootstrap/Tab';
 import { Menu } from '../Compiler/Menu';
 import { txid_buf_to_string } from '../util';
 export class CreateContractModal extends React.Component {
@@ -17,7 +15,7 @@ export class CreateContractModal extends React.Component {
         return (
             <Modal show={this.props.show} onHide={this.props.hide} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title> Create a New Contract </Modal.Title>
+                    <Modal.Title> Applications </Modal.Title>
                 </Modal.Header>
 
                 <Menu
