@@ -1,4 +1,3 @@
-
 .COutPoint {
 }
 .COutPoint > * {
@@ -10,13 +9,16 @@
     padding: 0.5em;
 }
 
-.Spend > *> .truncate {
+.Spend > * > .truncate {
     width: 16em;
 }
 
 .UTXODetail {
 }
-.UTXODetail > h1,h3,h4,h5 {
+.UTXODetail > h1,
+h3,
+h4,
+h5 {
     text-align: center;
 }
 
@@ -26,12 +28,11 @@
 }
 .TXIDDetail > * {
     padding: 0;
-    width:100%;
+    width: 100%;
     border: 1px transparent none;
-    
 }
 
-.TXIDDetail > *> code{
+.TXIDDetail > * > code {
     width: 16em;
     max-width: 90%;
 }

@@ -2,9 +2,9 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import { Output } from 'bitcoinjs-lib/types/transaction';
 import _, { Collection } from 'lodash';
 import { SelectedEvent } from '../App';
-import { InputMap, TXID, TXIDAndWTXIDMap, txid_buf_to_string } from "../util";
+import { InputMap, TXID, TXIDAndWTXIDMap, txid_buf_to_string } from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
-import { UTXOModel } from "./UTXO";
+import { UTXOModel } from './UTXO';
 export class NodeColor {
     c: string;
     constructor(c: string) {
@@ -13,51 +13,60 @@ export class NodeColor {
     get() {
         return this.c;
     }
-    fade() {
-    }
+    fade() {}
     clone() {
         return new NodeColor(this.c);
     }
-
 }
 export interface UTXOFormatData {
-    color: string,
-    label: string,
+    color: string;
+    label: string;
 }
 export interface TransactionData {
-    hex: string,
-    color?: string,
-    label?: string,
-    utxo_metadata?: Array<UTXOFormatData | null>
+    hex: string;
+    color?: string;
+    label?: string;
+    utxo_metadata?: Array<UTXOFormatData | null>;
 }
 
 export interface Data {
-    program: Array<TransactionData>
+    program: Array<TransactionData>;
 }
 
 interface PreProcessedData {
-    txns: Array<Bitcoin.Transaction>,
-    txn_colors: Array<NodeColor>,
-    txn_labels: Array<string>,
-    utxo_labels: Array<Array<UTXOFormatData | null>>,
-};
+    txns: Array<Bitcoin.Transaction>;
+    txn_colors: Array<NodeColor>;
+    txn_labels: Array<string>;
+    utxo_labels: Array<Array<UTXOFormatData | null>>;
+}
 interface ProcessedData {
-    inputs_map: InputMap<TransactionModel>,
-    txid_map: TXIDAndWTXIDMap<TransactionModel>,
-    txn_models: Array<TransactionModel>,
-    utxo_models: Array<UTXOModel>
-};
-
-function preprocess_data(data: Data): PreProcessedData {
-    let txns = data.program.map(k => Bitcoin.Transaction.fromHex(k.hex));
-    let txn_labels = data.program.map(k => k.label ?? "unlabeled");
-    let txn_colors = data.program.map(k => new NodeColor(k.color ?? "orange"));
-    let utxo_labels = data.program.map((k, i) => k.utxo_metadata ?? new Array(txns[i].outs.length));
-
-    return { txns: txns, txn_colors: txn_colors, txn_labels: txn_labels, utxo_labels };
+    inputs_map: InputMap<TransactionModel>;
+    txid_map: TXIDAndWTXIDMap<TransactionModel>;
+    txn_models: Array<TransactionModel>;
+    utxo_models: Array<UTXOModel>;
 }
 
-function process_inputs_map(txns: Array<TransactionModel>): InputMap<TransactionModel> {
+function preprocess_data(data: Data): PreProcessedData {
+    let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
+    let txn_labels = data.program.map((k) => k.label ?? 'unlabeled');
+    let txn_colors = data.program.map(
+        (k) => new NodeColor(k.color ?? 'orange')
+    );
+    let utxo_labels = data.program.map(
+        (k, i) => k.utxo_metadata ?? new Array(txns[i].outs.length)
+    );
+
+    return {
+        txns: txns,
+        txn_colors: txn_colors,
+        txn_labels: txn_labels,
+        utxo_labels,
+    };
+}
+
+function process_inputs_map(
+    txns: Array<TransactionModel>
+): InputMap<TransactionModel> {
     const inputs_map: InputMap<TransactionModel> = new InputMap();
     for (let x = 0; x < txns.length; ++x) {
         const txn: Bitcoin.Transaction = txns[x].tx;
@@ -69,17 +78,23 @@ function process_inputs_map(txns: Array<TransactionModel>): InputMap<Transaction
     return inputs_map;
 }
 
-function process_txn_models(txns: Array<Bitcoin.Transaction>,
+function process_txn_models(
+    txns: Array<Bitcoin.Transaction>,
     update: (s: SelectedEvent) => void,
     txn_labels: Array<string>,
     txn_colors: Array<NodeColor>,
-    utxo_labels: Array<Array<UTXOFormatData | null>>): [TXIDAndWTXIDMap<TransactionModel>, Array<TransactionModel>] {
+    utxo_labels: Array<Array<UTXOFormatData | null>>
+): [TXIDAndWTXIDMap<TransactionModel>, Array<TransactionModel>] {
     let txid_map: TXIDAndWTXIDMap<TransactionModel> = new TXIDAndWTXIDMap();
     let txn_models: Array<TransactionModel> = [];
-    _.chain(txns).map((t, idx) => { return { tx: t, x: idx } }).groupBy(({ tx }) => tx.getId()).forEach(
-        (values, key) => {
-            let label = "";
-            let color = new NodeColor("");
+    _.chain(txns)
+        .map((t, idx) => {
+            return { tx: t, x: idx };
+        })
+        .groupBy(({ tx }) => tx.getId())
+        .forEach((values, key) => {
+            let label = '';
+            let color = new NodeColor('');
             let utxo_label: Array<UTXOFormatData | null> = [];
             let all_witnesses: Buffer[][][] = [];
             for (let { tx, x } of values) {
@@ -97,11 +112,18 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
             for (let input of base_txn.ins) {
                 input.witness = [];
             }
-            const txn_model = new TransactionModel(base_txn, all_witnesses, update, label, color, utxo_label);
+            const txn_model = new TransactionModel(
+                base_txn,
+                all_witnesses,
+                update,
+                label,
+                color,
+                utxo_label
+            );
             txid_map.add(txn_model);
             txn_models.push(txn_model);
-        }
-    ).value();
+        })
+        .value();
     let to_create: Map<TXID, Array<Bitcoin.TxInput>> = new Map();
     for (const txn_model of txn_models) {
         for (const input of txn_model.tx.ins) {
@@ -109,7 +131,7 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
             if (txid_map.has_by_txid(txid)) {
                 continue;
             }
-            console.log("missing", txid);
+            console.log('missing', txid);
             // Doesn't matter if already exists in array!
             // De Duplicated later...
             let inps = to_create.get(txid) || [];
@@ -120,17 +142,32 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
     console.log(to_create);
     to_create.forEach((inps, txid) => {
         const mock_txn = new Bitcoin.Transaction();
-        let n_outputs: number = 1 + _.chain(inps).map((el) => el.index).max().value();
-        console.log("missing input", txid, n_outputs);
+        let n_outputs: number =
+            1 +
+            _.chain(inps)
+                .map((el) => el.index)
+                .max()
+                .value();
+        console.log('missing input', txid, n_outputs);
         for (let i = 0; i < n_outputs; ++i) {
             // Set to MAX sats...
             // TODO: a hack to make the flow technically correct and detectable
-            mock_txn.addOutput(new Buffer(""), 21e6 * 100e6);
+            mock_txn.addOutput(new Buffer(''), 21e6 * 100e6);
         }
-        const color = new NodeColor("white");
-        const utxo_metadata: Array<UTXOFormatData | null> = new Array(n_outputs);
+        const color = new NodeColor('white');
+        const utxo_metadata: Array<UTXOFormatData | null> = new Array(
+            n_outputs
+        );
         utxo_metadata.fill(null);
-        const txn_model = new PhantomTransactionModel(txid, mock_txn, [], update, "Missing", color, utxo_metadata);
+        const txn_model = new PhantomTransactionModel(
+            txid,
+            mock_txn,
+            [],
+            update,
+            'Missing',
+            color,
+            utxo_metadata
+        );
         txid_map.add(txn_model);
         txn_models.push(txn_model);
         console.log(txn_model);
@@ -140,44 +177,72 @@ function process_txn_models(txns: Array<Bitcoin.Transaction>,
 }
 function process_utxo_models(
     txn_models: Array<TransactionModel>,
-    inputs_map: InputMap<TransactionModel>)
-    : Array<UTXOModel> {
+    inputs_map: InputMap<TransactionModel>
+): Array<UTXOModel> {
     const to_add: Array<UTXOModel> = [];
     for (let m_txn of txn_models) {
         const txn = m_txn.tx;
         m_txn.utxo_models.forEach((utxo_model, output_index) => {
-            const spenders: Array<TransactionModel> = inputs_map.get_txid_s(m_txn.get_txid(), output_index) ?? [];
-            if (utxo_model.txn instanceof PhantomTransactionModel && spenders.length) {
+            const spenders: Array<TransactionModel> =
+                inputs_map.get_txid_s(m_txn.get_txid(), output_index) ?? [];
+            if (
+                utxo_model.txn instanceof PhantomTransactionModel &&
+                spenders.length
+            ) {
                 const h_find = utxo_model.txn.get_txid();
                 if (spenders[0].witness_set.length) {
-                    const witstack = spenders[0].witness_set[0][utxo_model.utxo.index];
+                    const witstack =
+                        spenders[0].witness_set[0][utxo_model.utxo.index];
                     if (witstack) {
-
                         const program = witstack[witstack.length - 1];
                         if (program) {
-                            Bitcoin.crypto.sha256(program)
+                            Bitcoin.crypto.sha256(program);
 
                             const script = new Buffer(34);
                             script[0] = 0x0;
                             script[1] = 0x20;
                             program.copy(script, 2);
-                            utxo_model.txn.tx.outs[utxo_model.utxo.index].script = script;
+                            utxo_model.txn.tx.outs[
+                                utxo_model.utxo.index
+                            ].script = script;
                             // TODO: Single Input assumption!
-                            utxo_model.txn.tx.outs[utxo_model.utxo.index].script = script;
-                            const max_amount = spenders.reduce((m, s) => Math.max(s.tx.outs.reduce((a, v) => a + (v as Output).value ?? 0, 0), m), 0);
-                            (utxo_model.txn.tx.outs[utxo_model.utxo.index] as Output).value = max_amount;
+                            utxo_model.txn.tx.outs[
+                                utxo_model.utxo.index
+                            ].script = script;
+                            const max_amount = spenders.reduce(
+                                (m, s) =>
+                                    Math.max(
+                                        s.tx.outs.reduce(
+                                            (a, v) =>
+                                                a + (v as Output).value ?? 0,
+                                            0
+                                        ),
+                                        m
+                                    ),
+                                0
+                            );
+                            (utxo_model.txn.tx.outs[
+                                utxo_model.utxo.index
+                            ] as Output).value = max_amount;
                             utxo_model.utxo.amount = max_amount;
-                            console.log("MAX", max_amount, utxo_model.txn.tx);
-                            const address = Bitcoin.address.fromOutputScript(script, Bitcoin.networks.regtest);
+                            console.log('MAX', max_amount, utxo_model.txn.tx);
+                            const address = Bitcoin.address.fromOutputScript(
+                                script,
+                                Bitcoin.networks.regtest
+                            );
                         }
                     }
                 }
             }
             spenders.forEach((spender, spend_idx) => {
                 const spender_tx: Bitcoin.Transaction = spender.tx;
-                const idx = spender_tx.ins.findIndex(elt => elt.index === output_index && txid_buf_to_string(elt.hash) === m_txn.get_txid());
+                const idx = spender_tx.ins.findIndex(
+                    (elt) =>
+                        elt.index === output_index &&
+                        txid_buf_to_string(elt.hash) === m_txn.get_txid()
+                );
                 if (idx === -1) {
-                    throw "Missing Spender Error";
+                    throw 'Missing Spender Error';
                 }
                 const link = utxo_model.spent_by(spender, spend_idx, idx);
                 spender.input_links.push(link);
@@ -188,16 +253,36 @@ function process_utxo_models(
     }
     return to_add;
 }
-function process_data(update: (e: SelectedEvent) => void, obj: PreProcessedData): ProcessedData {
+function process_data(
+    update: (e: SelectedEvent) => void,
+    obj: PreProcessedData
+): ProcessedData {
     let { txns, txn_colors, txn_labels, utxo_labels } = obj;
-    let [txid_map, txn_models] = process_txn_models(txns, update, txn_labels, txn_colors, utxo_labels);
+    let [txid_map, txn_models] = process_txn_models(
+        txns,
+        update,
+        txn_labels,
+        txn_colors,
+        utxo_labels
+    );
     let inputs_map = process_inputs_map(txn_models);
 
     const to_add = process_utxo_models(txn_models, inputs_map);
-    return { inputs_map: inputs_map, utxo_models: to_add, txn_models: txn_models, txid_map: txid_map };
+    return {
+        inputs_map: inputs_map,
+        utxo_models: to_add,
+        txn_models: txn_models,
+        txid_map: txid_map,
+    };
 }
 
-type TimingData = { unlock_time: number, unlock_height: number, unlock_at_relative_height: number, unlock_at_relative_time: number, txn: TransactionModel };
+type TimingData = {
+    unlock_time: number;
+    unlock_height: number;
+    unlock_at_relative_height: number;
+    unlock_at_relative_time: number;
+    txn: TransactionModel;
+};
 class TimingCache {
     // Array should be de-duplicated!
     cache: Map<TXID, [TimingData, Array<TransactionModel> | null]>;
@@ -209,15 +294,27 @@ export const timing_cache = new TimingCache();
 
 // In theory this just returns the PhantomTransactions, but in order to make it
 // work with future changes compute rather than infer this list
-function get_base_transactions(txns: Array<TransactionModel>, map: TXIDAndWTXIDMap<TransactionModel>): Array<TransactionModel> {
+function get_base_transactions(
+    txns: Array<TransactionModel>,
+    map: TXIDAndWTXIDMap<TransactionModel>
+): Array<TransactionModel> {
     let phantoms = txns.filter((item) => {
-        return -1 === item.tx.ins.findIndex((inp) => map.has_by_txid(txid_buf_to_string(inp.hash)));
+        return (
+            -1 ===
+            item.tx.ins.findIndex((inp) =>
+                map.has_by_txid(txid_buf_to_string(inp.hash))
+            )
+        );
     });
     return phantoms;
 }
 // Based off of
 // https://stackoverflow.com/a/41170834
-function mergeAndDeduplicateSorted<T, T2>(array1: T[], array2: T[], iteratee: (t: T) => T2): Array<T> {
+function mergeAndDeduplicateSorted<T, T2>(
+    array1: T[],
+    array2: T[],
+    iteratee: (t: T) => T2
+): Array<T> {
     const mergedArray = new Array();
     let i = 0;
     let j = 0;
@@ -245,11 +342,26 @@ function mergeAndDeduplicateSorted<T, T2>(array1: T[], array2: T[], iteratee: (t
         }
     }
     return mergedArray;
-};
-function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, max_height: number, start_height: number, start_time: number, map: InputMap<TransactionModel>):
-    Array<TransactionModel> {
+}
+function unreachable_by_time(
+    bases: Array<TransactionModel>,
+    max_time: number,
+    max_height: number,
+    start_height: number,
+    start_time: number,
+    map: InputMap<TransactionModel>
+): Array<TransactionModel> {
     // Every Array is Sorted and Unique, but *may* overlap
-    const arrays = bases.map((b) => unreachable_by_time_inner(b, max_time, max_height, start_height, start_time, map));
+    const arrays = bases.map((b) =>
+        unreachable_by_time_inner(
+            b,
+            max_time,
+            max_height,
+            start_height,
+            start_time,
+            map
+        )
+    );
     // This algorithm is either O(# TransactionModels^2) because models can share descendants.
     // The alternative would be to call flat (O(n^2)) and then call sort...
     // The algorithm cannot be in place on the *first pass* because the arrays are from our cache
@@ -263,18 +375,25 @@ function unreachable_by_time(bases: Array<TransactionModel>, max_time: number, m
         while (v1 == v2) {
             v2 = Math.floor(Math.random() * arrays.length);
         }
-        arrays[v1] = _(mergeAndDeduplicateSorted(arrays[v1], arrays[v2], (t: TransactionModel) => t.get_txid())).sortedUniqBy((t: TransactionModel) => t.get_txid()).value();
+        arrays[v1] = _(
+            mergeAndDeduplicateSorted(
+                arrays[v1],
+                arrays[v2],
+                (t: TransactionModel) => t.get_txid()
+            )
+        )
+            .sortedUniqBy((t: TransactionModel) => t.get_txid())
+            .value();
         const last = arrays.pop();
-        if (last === undefined) throw Error("Invariant Broken on Array Length");
+        if (last === undefined) throw Error('Invariant Broken on Array Length');
         if (arrays.length != v2) {
             arrays[v2] = last;
         }
-
     }
     return arrays.length > 0 ? arrays[0] : [];
 }
 function compute_timing(txn: TransactionModel): TimingData {
-    let cache_entry = timing_cache.cache.get(txn.get_txid())
+    let cache_entry = timing_cache.cache.get(txn.get_txid());
     if (cache_entry) {
         return cache_entry[0];
     }
@@ -286,57 +405,108 @@ function compute_timing(txn: TransactionModel): TimingData {
     let locktime_enabled = false;
     sequences.forEach((s) => {
         // Only enable locktime if at least one input is not UINT_MAX
-        if (s === 0xFFFFFFFF) return;
+        if (s === 0xffffffff) return;
         locktime_enabled = true;
         // skip, no meaning if set (except perhaps to enable locktime)
-        if (s & 1 << 31) return;
+        if (s & (1 << 31)) return;
         // Only bottom of sequence applies
-        const s_mask = 0x00FFFF & s;
+        const s_mask = 0x00ffff & s;
         if (s & (1 << 22)) {
             // Interpret as a relative time, units 512 seconds per s_mask
-            unlock_at_relative_time = Math.max(s_mask * 512, unlock_at_relative_time);
+            unlock_at_relative_time = Math.max(
+                s_mask * 512,
+                unlock_at_relative_time
+            );
         } else {
             // Interpret as a relative height, units blocks
-            unlock_at_relative_height = Math.max(s_mask, unlock_at_relative_height);
+            unlock_at_relative_height = Math.max(
+                s_mask,
+                unlock_at_relative_height
+            );
         }
     });
     // before 500M, it is a height. After a UNIX time.
     const is_height = locktime < 500_000_000;
     let unlock_time = locktime_enabled && !is_height ? locktime : 0;
     let unlock_height = locktime_enabled && is_height ? locktime : 0;
-    cache_entry = [{ unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn }, null];
+    cache_entry = [
+        {
+            unlock_time,
+            unlock_height,
+            unlock_at_relative_height,
+            unlock_at_relative_time,
+            txn,
+        },
+        null,
+    ];
     timing_cache.cache.set(txn.get_txid(), cache_entry);
     return cache_entry[0];
 }
-function compute_timing_of_children(txn: TransactionModel, map: InputMap<TransactionModel>): Collection<TimingData> {
-    const spenders: Map<number, TransactionModel[]> = map.map.get(txn.get_txid()) ?? new Map();
-    return _(Array.from(spenders.values())).flatMap((output_spender: TransactionModel[]) =>
-        output_spender.map(compute_timing));
-
+function compute_timing_of_children(
+    txn: TransactionModel,
+    map: InputMap<TransactionModel>
+): Collection<TimingData> {
+    const spenders: Map<number, TransactionModel[]> =
+        map.map.get(txn.get_txid()) ?? new Map();
+    return _(
+        Array.from(spenders.values())
+    ).flatMap((output_spender: TransactionModel[]) =>
+        output_spender.map(compute_timing)
+    );
 }
 
-
-
-function unreachable_by_time_inner(base: TransactionModel, max_time: number, max_height: number, elapsed_time: number, elapsed_blocks: number, map: InputMap<TransactionModel>):
-    Array<TransactionModel> {
-    return compute_timing_of_children(base, map).value().flatMap(({ unlock_time, unlock_height, unlock_at_relative_height, unlock_at_relative_time, txn }) => {
-        // The soonest time to satisfy both conditions
-        const time_when_spendable = Math.max(unlock_time, elapsed_time + unlock_at_relative_time);
-        const height_when_spendable = Math.max(unlock_height, elapsed_blocks + unlock_at_relative_height);
-        // Return All Descendants and us from here because none of these transactions can go through
-        // It is > because a block will accept ==
-        if (time_when_spendable > max_time || height_when_spendable > max_height) {
-            // TODO: Make this a Set type?
-            return all_descendants(txn, map);
-        }
-        // Recurse with the new times
-        return unreachable_by_time_inner(txn,
-            max_time, max_height,
-            time_when_spendable,
-            height_when_spendable, map);
-    });
+function unreachable_by_time_inner(
+    base: TransactionModel,
+    max_time: number,
+    max_height: number,
+    elapsed_time: number,
+    elapsed_blocks: number,
+    map: InputMap<TransactionModel>
+): Array<TransactionModel> {
+    return compute_timing_of_children(base, map)
+        .value()
+        .flatMap(
+            ({
+                unlock_time,
+                unlock_height,
+                unlock_at_relative_height,
+                unlock_at_relative_time,
+                txn,
+            }) => {
+                // The soonest time to satisfy both conditions
+                const time_when_spendable = Math.max(
+                    unlock_time,
+                    elapsed_time + unlock_at_relative_time
+                );
+                const height_when_spendable = Math.max(
+                    unlock_height,
+                    elapsed_blocks + unlock_at_relative_height
+                );
+                // Return All Descendants and us from here because none of these transactions can go through
+                // It is > because a block will accept ==
+                if (
+                    time_when_spendable > max_time ||
+                    height_when_spendable > max_height
+                ) {
+                    // TODO: Make this a Set type?
+                    return all_descendants(txn, map);
+                }
+                // Recurse with the new times
+                return unreachable_by_time_inner(
+                    txn,
+                    max_time,
+                    max_height,
+                    time_when_spendable,
+                    height_when_spendable,
+                    map
+                );
+            }
+        );
 }
-function all_descendants(t: TransactionModel, inputs_map: InputMap<TransactionModel>): Array<TransactionModel> {
+function all_descendants(
+    t: TransactionModel,
+    inputs_map: InputMap<TransactionModel>
+): Array<TransactionModel> {
     let cache_entry = timing_cache.cache.get(t.get_txid());
     if (cache_entry && cache_entry[1]) return cache_entry[1];
     // This case probably never happens...
@@ -344,18 +514,24 @@ function all_descendants(t: TransactionModel, inputs_map: InputMap<TransactionMo
         cache_entry = [compute_timing(t), null];
         timing_cache.cache.set(t.get_txid(), cache_entry);
     }
-    cache_entry[1] = _(Array.from(inputs_map.map.get(t.get_txid())?.values() ?? []).flat(1).map(
-        (x) => all_descendants(x, inputs_map)
-    ).flat(1)).uniqBy((t) => t.get_txid()).sortBy(t => t.get_txid()).value().concat(t);
+    cache_entry[1] = _(
+        Array.from(inputs_map.map.get(t.get_txid())?.values() ?? [])
+            .flat(1)
+            .map((x) => all_descendants(x, inputs_map))
+            .flat(1)
+    )
+        .uniqBy((t) => t.get_txid())
+        .sortBy((t) => t.get_txid())
+        .value()
+        .concat(t);
     return cache_entry[1];
 }
-
 
 export class ContractBase {
     utxo_models: Array<UTXOModel>;
     txn_models: Array<TransactionModel>;
-    protected inputs_map: InputMap<TransactionModel>
-    txid_map: TXIDAndWTXIDMap<TransactionModel>
+    protected inputs_map: InputMap<TransactionModel>;
+    txid_map: TXIDAndWTXIDMap<TransactionModel>;
     constructor() {
         this.utxo_models = [];
         this.inputs_map = new InputMap();
@@ -363,11 +539,11 @@ export class ContractBase {
         this.txid_map = new TXIDAndWTXIDMap();
     }
     process_finality(is_final: Array<string>, model: any) {
-        console.log("called empty");
+        console.log('called empty');
     }
 
     lookup(txid: Buffer, n: number): UTXOModel | null {
-        console.log("called empty");
+        console.log('called empty');
         return null;
     }
 }
@@ -377,11 +553,12 @@ export class ContractModel extends ContractBase {
     constructor(update_viewer: (e: SelectedEvent) => void, obj: Data);
     constructor(update_viewer?: any, obj?: Data) {
         super();
-        if (update_viewer === undefined || obj === undefined)
-            return;
+        if (update_viewer === undefined || obj === undefined) return;
         let new_obj = preprocess_data(obj);
-        let { inputs_map, utxo_models, txn_models, txid_map } =
-            process_data(update_viewer, new_obj);
+        let { inputs_map, utxo_models, txn_models, txid_map } = process_data(
+            update_viewer,
+            new_obj
+        );
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
@@ -391,7 +568,9 @@ export class ContractModel extends ContractBase {
     // TODO: Return an Array of UTXOModels
     lookup(txid: Buffer, n: number): UTXOModel | null {
         let txid_s = txid_buf_to_string(txid);
-        const txn_model: TransactionModel | undefined = this.txid_map.get_by_txid_s(txid_s);
+        const txn_model:
+            | TransactionModel
+            | undefined = this.txid_map.get_by_txid_s(txid_s);
         if (!txn_model) return null;
         return txn_model.utxo_models[n];
     }
@@ -407,12 +586,20 @@ export class ContractModel extends ContractBase {
             m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
         });*/
     }
-    reachable_at_time(max_time: number, max_height: number, start_time: number, start_height: number): Array<TransactionModel> {
+    reachable_at_time(
+        max_time: number,
+        max_height: number,
+        start_time: number,
+        start_height: number
+    ): Array<TransactionModel> {
         const bases = get_base_transactions(this.txn_models, this.txid_map);
-        return unreachable_by_time(bases, max_time, max_height, start_time, start_height, this.inputs_map);
+        return unreachable_by_time(
+            bases,
+            max_time,
+            max_height,
+            start_time,
+            start_height,
+            this.inputs_map
+        );
     }
-
 }
-
-
-
