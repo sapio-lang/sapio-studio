@@ -29,7 +29,7 @@ export class UTXODetail extends React.Component<UTXODetailProps> {
     static isMock(txid_in: TXID, idx: number) : boolean{
         const txid = txid_in;
         const hash = Bitcoin.crypto.sha256(new Buffer("mock:"+ (idx)   ));
-        return hash.toString('hex') == txid;
+        return txid_buf_to_string(hash) == txid;
     }
     static update(utxo_in: UTXOModel) {
         const s : Array<UTXOModel> =[utxo_in];
