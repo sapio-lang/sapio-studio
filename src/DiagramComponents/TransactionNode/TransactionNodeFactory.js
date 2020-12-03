@@ -4,16 +4,17 @@ import { TransactionNodeModel } from './TransactionNodeModel';
 import { TransactionNodeWidget } from './TransactionNodeWidget';
 
 export class TransactionNodeFactory extends AbstractReactFactory {
-	constructor() {
-		super('transaction-node');
-	}
+    constructor() {
+        super('transaction-node');
+    }
 
-	generateModel(event) {
-		return new TransactionNodeModel();
-	}
+    generateModel(event) {
+        return new TransactionNodeModel();
+    }
 
-	generateReactWidget(event) {
-		return <TransactionNodeWidget engine={this.engine} node={event.model} />;
-	}
+    generateReactWidget(event) {
+        return (
+            <TransactionNodeWidget engine={this.engine} node={event.model} />
+        );
+    }
 }
-

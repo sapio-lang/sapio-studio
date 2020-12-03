@@ -8,29 +8,28 @@ import Color from 'color';
  * Example of a custom model using pure javascript
  */
 export class TransactionNodeModel extends NodeModel {
-    constructor(name, purpose, color, options={}) {
+    constructor(name, purpose, color, options = {}) {
         super({
             name,
             color,
             type: 'transaction-node',
-            ...options
+            ...options,
         });
         this.color = color || 'red';
         this.purpose = purpose;
         this.portsOut = [];
         this.portsIn = [];
-        this.name= name;
-        this.confirmed=false;
+        this.name = name;
+        this.confirmed = false;
         this.is_reachable = true;
         this.reachable_cb = this.reachable_cb ?? ((b) => null);
-
     }
 
     setColor(color) {
         try {
-            Color(color)
+            Color(color);
             this.color = color;
-            this.fireEvent({color}, 'colorChanged');
+            this.fireEvent({ color }, 'colorChanged');
         } catch {
             return;
         }
@@ -41,20 +40,20 @@ export class TransactionNodeModel extends NodeModel {
     }
 
     setConfirmed(opt) {
-        this.confirmed =opt;
+        this.confirmed = opt;
         this.setSelected(true);
     }
     isConfirmed() {
         return this.confirmed;
     }
-    setReachable(b){
+    setReachable(b) {
         this.is_reachable = b;
         this.reachable_cb(b);
     }
     registerReachable(f) {
         this.reachable_cb = f;
     }
-    isReachable(){
+    isReachable() {
         return this.is_reachable;
     }
 
@@ -72,7 +71,6 @@ export class TransactionNodeModel extends NodeModel {
             this.portsOut.splice(this.portsOut.indexOf(port));
         }
     }
-
 
     addPort(port) {
         super.addPort(port);
@@ -93,7 +91,7 @@ export class TransactionNodeModel extends NodeModel {
             in: true,
             name: label,
             label: label,
-            alignment: PortModelAlignment.TOP
+            alignment: PortModelAlignment.TOP,
         });
         if (!after) {
             this.portsIn.splice(0, 0, p);
@@ -101,13 +99,13 @@ export class TransactionNodeModel extends NodeModel {
         return this.addPort(p);
     }
 
-    addOutPort(label, after){
+    addOutPort(label, after) {
         after = after || true;
         const p = new OutputPortModel({
             in: false,
             name: label,
             label: label,
-            alignment: PortModelAlignment.BOTTOM
+            alignment: PortModelAlignment.BOTTOM,
         });
         if (!after) {
             this.portsOut.splice(0, 0, p);
@@ -118,7 +116,7 @@ export class TransactionNodeModel extends NodeModel {
     serialize() {
         return {
             ...super.serialize(),
-            color: this.options.color
+            color: this.options.color,
         };
     }
 
