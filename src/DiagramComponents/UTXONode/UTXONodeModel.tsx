@@ -1,8 +1,23 @@
-import { DefaultPortModel, NodeModel, DefaultNodeModelOptions, DefaultNodeModelGenerics } from '@projectstorm/react-diagrams';
-import { PortModelAlignment, NodeModelGenerics, PortModel, LinkModel } from '@projectstorm/react-diagrams-core';
+import {
+    DefaultPortModel,
+    NodeModel,
+    DefaultNodeModelOptions,
+    DefaultNodeModelGenerics,
+} from '@projectstorm/react-diagrams';
+import {
+    PortModelAlignment,
+    NodeModelGenerics,
+    PortModel,
+    LinkModel,
+} from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
-import { SpendLinkModel } from "../SpendLink/SpendLinkModel";
-import { BasePositionModelOptions, BaseModel, BaseModelGenerics, DeserializeEvent } from '@projectstorm/react-canvas-core';
+import { SpendLinkModel } from '../SpendLink/SpendLinkModel';
+import {
+    BasePositionModelOptions,
+    BaseModel,
+    BaseModelGenerics,
+    DeserializeEvent,
+} from '@projectstorm/react-canvas-core';
 import _ from 'lodash';
 import { TransactionModel } from '../../Data/Transaction';
 
@@ -12,7 +27,7 @@ export interface UTXONodeModelOptions extends BasePositionModelOptions {
     amount: number;
     confirmed: boolean;
     reachable: boolean;
-    reachable_callback: (b:boolean) => void;
+    reachable_callback: (b: boolean) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
@@ -20,30 +35,41 @@ export interface UTXONodeModelGenerics extends NodeModelGenerics {
 /**
  * Example of a custom model using pure javascript
  */
-export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
+export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     protected portsIn: DefaultPortModel[];
     protected portsOut: SpendPortModel[];
-    constructor(options:any={}, name?: string, color?: string, amount?: number, confirmed: boolean = false) {
+    constructor(
+        options: any = {},
+        name?: string,
+        color?: string,
+        amount?: number,
+        confirmed: boolean = false
+    ) {
         color = color || 'red';
         super({
             name,
             color,
             amount,
-            confirmed : false,
+            confirmed: false,
             type: 'utxo-node',
             reachable: true,
             reachable_callback: (b) => null,
-            ...options
+            ...options,
         });
         this.portsOut = [];
         this.portsIn = [];
-
     }
     sync() {
         this.fireEvent({}, 'sync');
     }
-    spent_by(spender: TransactionModel, s_idx: number, idx: number) : SpendLinkModel {
-        return this.addOutPort("tx"+s_idx).spend_link(spender.addInPort('in' + idx));
+    spent_by(
+        spender: TransactionModel,
+        s_idx: number,
+        idx: number
+    ): SpendLinkModel {
+        return this.addOutPort('tx' + s_idx).spend_link(
+            spender.addInPort('in' + idx)
+        );
     }
     abstract getAmount(): number;
     setConfirmed(opt: boolean) {
@@ -56,19 +82,19 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
 
     setReachable(b: boolean) {
         this.options.reachable = b;
-        _(this.portsIn).forEach((port :DefaultPortModel) => {
-            for (const item  of Object.entries(port.getLinks())) {
+        _(this.portsIn).forEach((port: DefaultPortModel) => {
+            for (const item of Object.entries(port.getLinks())) {
                 if (item[1] instanceof SpendLinkModel) {
                     item[1].setReachable(b);
                 }
             }
-        })
+        });
         this.options.reachable_callback(b);
     }
-    isReachable() : boolean {
+    isReachable(): boolean {
         return this.options.reachable;
     }
-    registerReachableCallback(c: (b:boolean) => void) {
+    registerReachableCallback(c: (b: boolean) => void) {
         this.options.reachable_callback = c;
     }
 
@@ -87,7 +113,6 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
             this.portsOut.splice(this.portsOut.indexOf(port));
         }
     }
-
 
     // TODO: Fix Port type?
     addPort(port: any) {
@@ -109,7 +134,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
             in: true,
             name: label,
             label: label,
-            alignment: PortModelAlignment.TOP
+            alignment: PortModelAlignment.TOP,
         });
         if (!after) {
             this.portsIn.splice(0, 0, p);
@@ -123,7 +148,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
             in: false,
             name: label,
             label: label,
-            alignment: PortModelAlignment.BOTTOM
+            alignment: PortModelAlignment.BOTTOM,
         });
         if (!after) {
             this.portsOut.splice(0, 0, p);
@@ -131,14 +156,10 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics>  {
         return this.addPort(p);
     }
 
-
     getInPorts(): DefaultPortModel[] {
         return this.portsIn;
     }
     getOutPorts(): SpendPortModel[] {
         return this.portsOut;
     }
-
-
 }
-

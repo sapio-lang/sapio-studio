@@ -30,6 +30,7 @@
     "mathjs": "^6.2.5",
     "pathfinding": "^0.4.18",
     "paths-js": "^0.4.10",
+    "prettier": "^2.2.0",
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0",
     "react-dom": "^16.12.0",
@@ -39,11 +40,13 @@
   },
   "main": "./desktop/main.js",
   "scripts": {
-    "start-react": "export BROWSER=none REACT_EDITOR=none && react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && electron ."
+    "prettier": "prettier --write src desktop",
+    "prettier:check": "prettier --check src desktop",
+    "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && electron .",
+    "start-react": "export BROWSER=none REACT_EDITOR=none && react-scripts start",
+    "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": "react-app"
