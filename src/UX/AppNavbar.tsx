@@ -33,7 +33,7 @@ export function AppNavbar(props: any): JSX.Element {
                     aria-controls="create-contract-form"
                     aria-expanded={modalCreate}
                 >
-                    New
+                    Apps
                 </Nav.Link>
                 <Nav.Link eventKey="sim" onSelect={toggleSim}>
                     Timing Simulator
