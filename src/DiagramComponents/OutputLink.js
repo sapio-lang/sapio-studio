@@ -1,9 +1,3 @@
-import {
-    DefaultLinkFactory,
-    DefaultLinkModel,
-    DefaultPortModel,
-} from '@projectstorm/react-diagrams';
-import * as React from 'react';
 import { SpendPortModel } from './SpendLink/SpendLink';
 import { SpendLinkModel } from './SpendLink/SpendLinkModel';
 

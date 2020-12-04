@@ -166,7 +166,7 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
         let white = Color('white').toString();
         let black = Color('black').toString();
         const ports_top =
-            ports_in.length == 0 ? null : (
+            ports_in.length === 0 ? null : (
                 <PortsTop key="ports" color={black}>
                     <PortsContainer2 key="inputs">{ports_in}</PortsContainer2>
                 </PortsTop>

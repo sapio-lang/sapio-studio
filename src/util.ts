@@ -28,8 +28,8 @@ export class InputMap<T> {
         }
 
         let vals2 = vals.get(t.index);
-        if (vals2 == undefined) {
-            vals2 = new Array();
+        if (vals2 === undefined) {
+            vals2 = [];
             vals.set(t.index, vals2);
         }
         vals2.push(model);

@@ -1,20 +1,7 @@
 import {
     DefaultLinkModel,
-    LinkModel,
-    DefaultLinkModelGenerics,
     DefaultLinkModelOptions,
-    LinkModelListener,
-    LinkModelGenerics,
-    PortModel,
-    PortModelAlignment,
-    LabelModel,
-    DefaultLabelModel,
 } from '@projectstorm/react-diagrams';
-import {
-    BaseEntityEvent,
-    BaseModelOptions,
-    DeserializeEvent,
-} from '@projectstorm/react-canvas-core';
 export class SpendLinkModel extends DefaultLinkModel {
     is_reachable: boolean;
     reachable_callback: (_: boolean) => void;
