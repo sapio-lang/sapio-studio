@@ -17,7 +17,6 @@ export class TransactionModel
     broadcastable_hook: (b: boolean) => void;
     tx: Bitcoin.Transaction;
     witness_set: Array<Array<Buffer[]>>;
-
     utxo_models: Array<UTXOModel>;
     public utxo_links: Array<OutputLinkModel>;
     public input_links: Array<SpendLinkModel>;
@@ -55,7 +54,7 @@ export class TransactionModel
             );
             this.utxo_models.push(utxo);
             this.utxo_links.push(
-                this.addOutPort('out' + y).link(utxo.addInPort('create'))
+                this.addOutPort('out' + y, true).link(utxo.addInPort('create'))
             );
         }
         this.registerListener({

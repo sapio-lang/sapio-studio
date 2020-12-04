@@ -113,17 +113,6 @@ export class TransactionNodeModel extends NodeModel {
         return this.addPort(p);
     }
 
-    serialize() {
-        return {
-            ...super.serialize(),
-            color: this.options.color,
-        };
-    }
-
-    deserialize(ob, engine) {
-        super.deserialize(ob, engine);
-        this.color = ob.color;
-    }
     getInPorts() {
         return this.portsIn;
     }

@@ -61,7 +61,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         idx: number
     ): SpendLinkModel {
         return this.addOutPort('tx' + s_idx).spend_link(
-            spender.addInPort('in' + idx)
+            spender.addInPort('in' + idx, true)
         );
     }
     abstract getAmount(): number;
