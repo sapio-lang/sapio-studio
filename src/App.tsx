@@ -12,9 +12,6 @@ import createEngine, {
 import { Transaction } from 'bitcoinjs-lib';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
-import Col from 'react-bootstrap/Col';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
 import './App.css';
 import { CompilerServer } from './Compiler/ContractCompilerServer';
 import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';

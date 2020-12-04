@@ -1,22 +1,15 @@
 import {
     DefaultPortModel,
     NodeModel,
-    DefaultNodeModelOptions,
-    DefaultNodeModelGenerics,
 } from '@projectstorm/react-diagrams';
 import {
     PortModelAlignment,
     NodeModelGenerics,
-    PortModel,
-    LinkModel,
 } from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
 import { SpendLinkModel } from '../SpendLink/SpendLinkModel';
 import {
     BasePositionModelOptions,
-    BaseModel,
-    BaseModelGenerics,
-    DeserializeEvent,
 } from '@projectstorm/react-canvas-core';
 import _ from 'lodash';
 import { TransactionModel } from '../../Data/Transaction';

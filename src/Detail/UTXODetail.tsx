@@ -44,7 +44,7 @@ export class UTXODetail extends React.Component<
     static isMock(txid_in: TXID, idx: number): boolean {
         const txid = txid_in;
         const hash = Bitcoin.crypto.sha256(new Buffer('mock:' + idx));
-        return txid_buf_to_string(hash) == txid;
+        return txid_buf_to_string(hash) === txid;
     }
     static update(utxo_in: UTXOModel) {
         const s: Array<UTXOModel> = [utxo_in];
@@ -120,8 +120,8 @@ export class UTXODetail extends React.Component<
         console.log(this);
         const decomp =
             Bitcoin.script.decompile(this.props.entity.utxo.script) ??
-            new Buffer('');
-        const script = Bitcoin.script.toASM(decomp);
+            Buffer.from('');
+        const _script = Bitcoin.script.toASM(decomp);
         let address = 'UNKNOWN';
         try {
             address = Bitcoin.address.fromOutputScript(
