@@ -1,11 +1,9 @@
 import {
     AbstractReactFactory,
-    GenerateWidgetEvent,
 } from '@projectstorm/react-canvas-core';
 import * as React from 'react';
 import { UTXONodeModel } from './UTXONodeModel';
 import { UTXONodeWidget } from './UTXONodeWidget';
-import { NodeModel, DiagramEngine } from '@projectstorm/react-diagrams';
 
 export class UTXONodeFactory extends AbstractReactFactory {
     constructor() {

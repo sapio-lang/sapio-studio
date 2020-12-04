@@ -23,9 +23,6 @@ interface TileProps {
     index: number;
 }
 class AppTile extends React.Component<TileProps> {
-    constructor(props: TileProps) {
-        super(props);
-    }
     render() {
         return (
             <div className="AppTile">
@@ -101,7 +98,6 @@ export class AppSelector extends React.Component<IProps, IState> {
                 key={app.title}
             />
         ));
-        const total = 4 * 3;
         if (this.state.selected === null) {
             return (
                 <div className="AppSelectorGrid">

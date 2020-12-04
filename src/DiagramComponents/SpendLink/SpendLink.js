@@ -29,7 +29,7 @@ function update_loop() {
     const percentage = percent_idx / 100;
     const fade = 2 * Math.abs(percentage - 0.5);
     const color = Color('orange').fade(fade).toString();
-    for (const [k, node] of all_nodes) {
+    for (const [_, node] of all_nodes) {
         if (!node.circle || !node.path) {
             continue;
         }
@@ -48,7 +48,7 @@ function update_loop() {
 }
 update_loop();
 function animation_loop() {
-    for (const [k, node] of all_nodes) {
+    for (const [_, node] of all_nodes) {
         if (!node.circle || !node.path) {
             continue;
         }

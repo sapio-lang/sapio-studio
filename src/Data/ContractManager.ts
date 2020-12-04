@@ -181,7 +181,6 @@ function process_utxo_models(
 ): Array<UTXOModel> {
     const to_add: Array<UTXOModel> = [];
     for (let m_txn of txn_models) {
-        const txn = m_txn.tx;
         m_txn.utxo_models.forEach((utxo_model, output_index) => {
             const spenders: Array<TransactionModel> =
                 inputs_map.get_txid_s(m_txn.get_txid(), output_index) ?? [];
@@ -189,7 +188,6 @@ function process_utxo_models(
                 utxo_model.txn instanceof PhantomTransactionModel &&
                 spenders.length
             ) {
-                const h_find = utxo_model.txn.get_txid();
                 if (spenders[0].witness_set.length) {
                     const witstack =
                         spenders[0].witness_set[0][utxo_model.utxo.index];
@@ -197,8 +195,7 @@ function process_utxo_models(
                         const program = witstack[witstack.length - 1];
                         if (program) {
                             Bitcoin.crypto.sha256(program);
-
-                            const script = new Buffer(34);
+                            const script = Buffer.alloc(34);
                             script[0] = 0x0;
                             script[1] = 0x20;
                             program.copy(script, 2);
@@ -226,7 +223,7 @@ function process_utxo_models(
                             ] as Output).value = max_amount;
                             utxo_model.utxo.amount = max_amount;
                             console.log('MAX', max_amount, utxo_model.txn.tx);
-                            const address = Bitcoin.address.fromOutputScript(
+                            const _address = Bitcoin.address.fromOutputScript(
                                 script,
                                 Bitcoin.networks.regtest
                             );
@@ -242,7 +239,7 @@ function process_utxo_models(
                         txid_buf_to_string(elt.hash) === m_txn.get_txid()
                 );
                 if (idx === -1) {
-                    throw 'Missing Spender Error';
+                    throw new Error('Missing Spender Error');
                 }
                 const link = utxo_model.spent_by(spender, spend_idx, idx);
                 spender.input_links.push(link);
@@ -315,7 +312,7 @@ function mergeAndDeduplicateSorted<T, T2>(
     array2: T[],
     iteratee: (t: T) => T2
 ): Array<T> {
-    const mergedArray = new Array();
+    const mergedArray = [];
     let i = 0;
     let j = 0;
     while (i < array1.length && j < array2.length) {
@@ -372,7 +369,7 @@ function unreachable_by_time(
         const v1 = Math.floor(Math.random() * arrays.length);
         let v2 = Math.floor(Math.random() * arrays.length);
         // Rejection sample for v2...
-        while (v1 == v2) {
+        while (v1 === v2) {
             v2 = Math.floor(Math.random() * arrays.length);
         }
         arrays[v1] = _(
@@ -386,7 +383,7 @@ function unreachable_by_time(
             .value();
         const last = arrays.pop();
         if (last === undefined) throw Error('Invariant Broken on Array Length');
-        if (arrays.length != v2) {
+        if (arrays.length !== v2) {
             arrays[v2] = last;
         }
     }
