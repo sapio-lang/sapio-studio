@@ -107,7 +107,7 @@ export class InputDetail extends React.Component<IProps, IState> {
                                 </Form.Label>
                                 <Form.Control
                                     as="select"
-                                    ref={(r) => {
+                                    ref={(r:any) => {
                                         this.form = r;
                                     }}
                                 >
