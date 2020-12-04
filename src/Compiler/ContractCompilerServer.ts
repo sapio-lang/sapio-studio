@@ -33,10 +33,10 @@ export class CompilerServer {
             if (that.expected_next.length) {
                 let expected = that.expected_next.shift();
                 if (!expected) return;
-                if (expected[0] == action) {
+                if (expected[0] === action) {
                     callback = expected[1];
                 } else {
-                    throw (
+                    throw new Error(
                         'Expected to get a ' +
                         expected[0] +
                         ', but got a ' +
@@ -45,7 +45,7 @@ export class CompilerServer {
                 }
             } else if (ALLOWED_OPEN.has(action)) {
             } else {
-                throw "Didn't expect to get a " + action;
+                throw new Error("Didn't expect to get a " + action);
             }
 
             let handler = DISPATCHER.get(action);

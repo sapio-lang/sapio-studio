@@ -1,15 +1,11 @@
 import {
     DefaultLinkFactory,
-    DiagramModel,
-    DefaultLinkModel,
-    DiagramEngine,
 } from '@projectstorm/react-diagrams';
 import { SpendLinkSegment } from './SpendLink';
 import { SpendLinkModel } from './SpendLinkModel';
 import { SpendLinkWidget } from './SpendLinkWidget';
 import * as React from 'react';
 import {
-    AbstractReactFactory,
     GenerateModelEvent,
     GenerateWidgetEvent,
 } from '@projectstorm/react-canvas-core';

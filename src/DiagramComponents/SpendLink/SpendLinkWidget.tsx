@@ -1,15 +1,11 @@
 import * as React from 'react';
 import {
-    DiagramEngine,
     LinkWidget,
-    PointModel,
-    LinkModel,
 } from '@projectstorm/react-diagrams-core';
 import { MouseEvent } from 'react';
 import { SpendLinkModel } from './SpendLinkModel';
 import {
     DefaultLinkWidget,
-    DefaultLinkFactory,
 } from '@projectstorm/react-diagrams';
 import { SpendLinkFactory } from './SpendLinkFactory';
 
@@ -19,8 +15,6 @@ export class SpendLinkWidget extends DefaultLinkWidget {
         extraProps: any,
         id: string | number
     ): JSX.Element {
-        var props = this.props;
-
         const link: SpendLinkModel = this.props.link as SpendLinkModel;
         var Bottom = React.cloneElement(
             new SpendLinkFactory().generateLinkSegment(
@@ -34,7 +28,7 @@ export class SpendLinkWidget extends DefaultLinkWidget {
             }
         );
 
-        var Top = React.cloneElement(Bottom, {
+        var _Top = React.cloneElement(Bottom, {
             ...extraProps,
             strokeLinecap: 'round',
             onMouseLeave: () => {

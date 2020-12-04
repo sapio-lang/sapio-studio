@@ -93,7 +93,7 @@ export class TransactionDetail extends React.Component<
         let greatest_relative_height = 0;
         let locktime_enable = false;
         for (const sequence of sequences) {
-            if (sequence == 0xffffffff) continue;
+            if (sequence === 0xffffffff) continue;
             locktime_enable = true;
             const s_mask = 0xffff & sequence;
             if ((1 << 22) & sequence) {
@@ -112,7 +112,7 @@ export class TransactionDetail extends React.Component<
         greatest_relative_time *= 512;
         let relative_time_string = 'None';
         greatest_relative_time /= 60 * 60;
-        if (greatest_relative_time < 24 && greatest_relative_time != 0) {
+        if (greatest_relative_time < 24 && greatest_relative_time !== 0) {
             relative_time_string = greatest_relative_time.toString() + ' Hours';
         } else {
             greatest_relative_time /= 24;

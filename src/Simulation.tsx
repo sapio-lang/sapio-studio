@@ -198,9 +198,9 @@ export class SimulationController extends React.Component<
                 {
                     const [
                         [first_tx_time, current_time],
-                        _x,
+                        _,
                     ] = this.recompute_times();
-                    if (first_tx_time == current_time) return;
+                    if (first_tx_time === current_time) return;
 
                     let new_start = Math.min(first_tx_time, current_time);
                     // at least one day...
@@ -231,10 +231,10 @@ export class SimulationController extends React.Component<
             case 'snap-blocks':
                 {
                     const [
-                        _x,
+                        _,
                         [first_tx_block, current_block],
                     ] = this.recompute_times();
-                    if (first_tx_block == current_block) return;
+                    if (first_tx_block === current_block) return;
 
                     let new_start = Math.min(first_tx_block, current_block);
                     // at least one day...
