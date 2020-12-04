@@ -4,9 +4,9 @@ const url = require('url');
 const fs = require('fs');
 
 let mainWindow;
-const Client = require('bitcoin-core');
+let Client = require('bitcoin-core');
 
-let client;
+let client = new Client();
 function load_settings() {
     const udata = app.getPath('userData');
     const config = path.join(udata, 'config.json');
@@ -34,7 +34,7 @@ function load_settings() {
     const default_client = settings['clients'][0];
     client = new Client({
         network: default_client['network'],
-        username: default_client['rpcuser'],
+        username: default_client['username'],
         password: default_client['password'],
     });
 }
