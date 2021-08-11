@@ -30,6 +30,12 @@ import Collapse from 'react-bootstrap/Collapse';
 import './Glyphs.css';
 import { TXID } from './util';
 
+
+declare global {
+    interface Window {
+        electron: any;
+    }
+}
 class ModelManager {
     model: DiagramModel;
     constructor(model: DiagramModel) {
