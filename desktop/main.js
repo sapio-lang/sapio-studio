@@ -1,10 +1,12 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
 
 let mainWindow;
 let Client = require('bitcoin-core');
+
+const createMenu = require('./createMenu.js');
 
 let client = new Client();
 function load_settings() {
@@ -54,7 +56,12 @@ function createWindow() {
         show: false,
         backgroundColor: 'black',
         webPreferences: {
-            nodeIntegration: true,
+            preload: path.join(__dirname, 'preload.js'),
+            allowRunningInsecureContent: false,
+            contextIsolation: true,
+            enableRemoteModule: false,
+            nodeIntegration: false,
+            sandbox: true,
         },
     });
     mainWindow.location = startUrl;
@@ -65,6 +72,7 @@ function createWindow() {
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
+    createMenu(mainWindow);
 }
 
 app.on('ready', createWindow);
