@@ -11,10 +11,20 @@ import {
 } from './CreateVaultModal';
 export function AppNavbar(props: any): JSX.Element {
     const [modalView, setModalView] = useState(false);
-    const [modalCreate, setModalCreate] = useState(false);
+
     const [modalSapioCompiler, setModalaSapioCompiler] = useState(false);
+    const [modalCreate, setModalCreate] = useState(false);
+    const [modalCreateAPIS, setModalCreateAPIs] = useState({});
+    window.electron.register("create_contracts", (args: [{
+        name: string, api:
+        Object, key: string
+    }]) => {
+        setModalCreateAPIs(args);
+        setModalCreate(true);
+    });
+
     const [showSim, setSim] = useState(true);
-    const toggleSim = (args:string) => {
+    const toggleSim = (args: string) => {
         console.log('TOG', showSim, args);
         props.toggle_timing_simulator(showSim);
         setSim(!showSim);
@@ -35,7 +45,7 @@ export function AppNavbar(props: any): JSX.Element {
                 hide={() => setModalCreate(false)}
                 load_new_model={props.load_new_model}
                 compiler={props.compiler}
-                dynamic_forms={props.dynamic_forms}
+                dynamic_forms={modalCreateAPIS}
             />
             <ViewContractModal
                 show={modalView}

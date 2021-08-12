@@ -4,47 +4,43 @@ import Form, { ISubmitEvent } from '@rjsf/core';
 import { CompilerServer } from './ContractCompilerServer';
 import { emojis } from '../emojis';
 import './AppSelector.css';
+interface CreateAPI {
+    title: string,
+}
 interface Application {
-    title: string;
+    api: CreateAPI;
+    name: string;
+    key: string;
+    logo: string;
 }
-interface IProps {
-    applications: Application[];
-    compiler: CompilerServer;
-    load_new_model: any;
-    hide: () => void;
-}
-interface IState {
-    selected: number | null;
-}
+
 
 interface TileProps {
     parent: AppSelector;
-    title: string;
-    index: number;
+    app: Application
 }
 class AppTile extends React.Component<TileProps> {
     render() {
+        const logo = "data:image/png;base64," + this.props.app.logo;
         return (
             <div className="AppTile">
-            <a
-                onClick={() => {
-                    this.props.parent.select(this);
-                }}
-            >
-                <div>
-                    <span style={{ width: '100px', fontSize: '100px' }}>
-                        {emojis[this.props.index]}
-                    </span>
-                </div>
-                <div>{this.props.title}</div>
-            </a>
+                <a
+                    onClick={() => {
+                        this.props.parent.select(this.props.app.key);
+                    }}
+                >
+                    <div style={{ width: "100px", height: "100px" }}>
+                        <img alt="logo" src={logo} width="100%" height="100%" />
+                    </div>
+                    <div>{this.props.app.name}</div>
+                </a>
             </div>
         );
     }
 }
 
 interface ShowAppProps {
-    app: Application;
+    app: CreateAPI;
     compiler: CompilerServer;
     load_new_model: any;
     hide: () => void;
@@ -54,12 +50,9 @@ class ShowApp extends React.Component<ShowAppProps> {
     render() {
         return (
             <div style={{ padding: '20px' }}>
-                <Button
-                    onClick={() => this.props.deselect()}
-                    variant={'secondary'}
-                >
-                    Back
-                </Button>
+                <label>Amount To Send (Bitcoin)</label><br />
+                <input type="number"></input>
+                <hr />
                 <Form
                     schema={this.props.app}
                     onSubmit={(e: ISubmitEvent<any>) =>
@@ -69,12 +62,22 @@ class ShowApp extends React.Component<ShowAppProps> {
             </div>
         );
     }
-    handleSubmit(event: ISubmitEvent<any>, type: string) {
+    async handleSubmit(event: ISubmitEvent<any>, type: string) {
         let formData = event.formData;
         const compiler = this.props.compiler;
-        compiler.create(type, formData, this.props.load_new_model);
+        await compiler.create(type, 0, formData);
         this.props.hide();
     }
+}
+
+interface IProps {
+    applications: Map<string, Application>;
+    compiler: CompilerServer;
+    load_new_model: any;
+    hide: () => void;
+}
+interface IState {
+    selected: string | null;
 }
 export class AppSelector extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -86,16 +89,15 @@ export class AppSelector extends React.Component<IProps, IState> {
     deselect() {
         this.setState({ selected: null });
     }
-    select(a: AppTile) {
-        this.setState({ selected: a.props.index });
+    select(key: string) {
+        this.setState({ selected: key });
     }
     render() {
-        let tiles = this.props.applications.map((app, i) => (
+        console.log(this.props.applications);
+        let tiles = Array.from(this.props.applications, ([name, app], i) => (
             <AppTile
-                index={i}
+                app={app}
                 parent={this}
-                title={app.title}
-                key={app.title}
             />
         ));
         if (this.state.selected === null) {
@@ -108,13 +110,22 @@ export class AppSelector extends React.Component<IProps, IState> {
             );
         } else {
             return (
-                <ShowApp
-                    app={this.props.applications[this.state.selected]}
-                    hide={this.props.hide}
-                    compiler={this.props.compiler}
-                    load_new_model={this.props.load_new_model}
-                    deselect={this.deselect.bind(this)}
-                />
+                <div>
+
+                    <Button
+                        onClick={() => this.deselect()}
+                        variant={'secondary'}
+                    >
+                        Back
+                    </Button>
+                    <ShowApp
+                        app={this.props.applications.get(this.state.selected)!.api}
+                        hide={this.props.hide}
+                        compiler={this.props.compiler}
+                        load_new_model={this.props.load_new_model}
+                        deselect={this.deselect.bind(this)}
+                    />
+                </div>
             );
         }
     }

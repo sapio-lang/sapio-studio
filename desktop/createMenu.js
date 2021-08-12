@@ -1,4 +1,9 @@
 const { app, Menu } = require('electron');
+const ElectronPreferences = require('electron-preferences');
+const { settings } = require('./settings');
+const { dialog } = require('electron');
+const { load_contract_file_name, list_contracts } = require('./sapio');
+
 
 function createMenu(window) {
 
@@ -6,18 +11,41 @@ function createMenu(window) {
         {
             label: 'File',
             submenu: [
-                { label: 'Open Contract From Clipboard',
+                {
+                    label: 'Open Contract From Clipboard',
                     click() {
                         window.webContents.send('load_hex', true);
                     }
-            },
-                { label: 'View Contract Hex',
+                },
+                {
+                    label: 'View Contract Hex',
                     click() {
                         window.webContents.send('save_hex', true);
                     }
-            },
+                },
                 { label: 'Open Contract From File' },
-                { label: 'Load WASM Plugin' },
+                {
+                    label: 'Load WASM Plugin',
+                    click() {
+                        const plugin = dialog.showOpenDialogSync({ properties: ['openFile'], filters: [{ "extensions": ["wasm"], name: "WASM" }] });
+                        load_contract_file_name(plugin);
+                    }
+                },
+                {
+                    label: 'Create New Contract',
+                    async click() {
+                        const contracts = await list_contracts();
+                        window.webContents.send('create_contracts', contracts);
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Preferences',
+                    click() {
+                        settings.show();
+                    }
+
+                }
             ]
         },
         {
