@@ -4,7 +4,7 @@ import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 import { HasKeys, InputMap, TXID } from '../util';
-import { Viewer } from '../UX/EntityViewer';
+import { Viewer } from '../UX/Entity/EntityViewer';
 import { NodeColor, UTXOFormatData } from './ContractManager';
 import './Transaction.css';
 import { UTXOMetaData, UTXOModel } from './UTXO';

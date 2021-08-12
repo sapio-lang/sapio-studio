@@ -1,8 +1,8 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React, { ChangeEvent } from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import { TransactionModel, PhantomTransactionModel } from '../Data/Transaction';
-import { UTXOModel } from '../Data/UTXO';
+import { TransactionModel, PhantomTransactionModel } from '../../../Data/Transaction';
+import { UTXOModel } from '../../../Data/UTXO';
 import Hex from './Hex';
 import { InputDetail } from './InputDetail';
 import { TXIDDetail } from './OutpointDetail';

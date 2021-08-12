@@ -82,3 +82,10 @@ export class TXIDAndWTXIDMap<K extends HasKeys> {
         return this.map.has(t);
     }
 }
+
+export function hash_to_hex(h: Buffer) : string {
+    const b = new Buffer(32);
+    h.copy(b);
+    b.reverse();
+    return b.toString('hex');
+}

@@ -1,9 +1,10 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Hex, { hash_to_hex } from './Hex';
 import { OutpointDetail } from './OutpointDetail';
 import Form from 'react-bootstrap/Form';
+import { hash_to_hex } from '../../../util';
+import Hex from './Hex';
 interface IProps {
     txinput: Bitcoin.TxInput;
     witnesses: Buffer[][];

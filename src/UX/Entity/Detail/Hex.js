@@ -53,9 +53,3 @@ export class ASM extends BaseHex {
         this.styling = 'ASM';
     }
 }
-export function hash_to_hex(h) {
-    const b = new Buffer(32);
-    h.copy(b);
-    b.reverse();
-    return b.toString('hex');
-}
