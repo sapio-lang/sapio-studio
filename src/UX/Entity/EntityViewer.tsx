@@ -8,20 +8,20 @@ import { UTXOModel } from '../../Data/UTXO';
 import './EntityViewer.css';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { TXID } from '../../util';
-export interface Viewer {}
+export interface ViewableEntityInterface {}
 
-export class EmptyViewer implements Viewer {}
-interface EntityViewerProps {
+export class EmptyViewer implements ViewableEntityInterface {}
+interface CurrentylViewedEntityProps {
     broadcast: (a: Transaction) => Promise<any>;
     fetch_utxo: (t: TXID, n: number) => Promise<any>;
     fund_out: (a: Transaction) => Promise<Transaction>;
-    entity: Viewer;
+    entity: ViewableEntityInterface;
     hide_details: () => void;
     current_contract: ContractModel;
     load_new_contract: (x: Data) => void;
 }
 
-export class EntityViewerModal extends React.Component<EntityViewerProps> {
+export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntityProps> {
     name() {
         switch (this.props.entity.constructor) {
             case TransactionModel:
