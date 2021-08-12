@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import './AppNavbar.css';
-import { SaveHexModal } from "./SaveHexModal";
-import { LoadHexModal } from "./LoadHexModal";
-import { SapioCompilerModal } from "./SapioCompilerModal";
-import { ViewContractModal } from "./ViewContractModal";
-import { CreateContractModal } from './CreateContractModal';
+import { SaveHexModal } from "./ContractCreator/SaveHexModal";
+import { LoadHexModal } from "./ContractCreator/LoadHexModal";
+import { SapioCompilerModal } from "./ContractCreator/SapioCompilerModal";
+import { ViewContractModal } from "./ContractCreator/ViewContractModal";
+import { CreateContractModal } from './ContractCreator/CreateContractModal';
 export function AppNavbar(props: any): JSX.Element {
     const [modalView, setModalView] = useState(false);
 
