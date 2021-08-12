@@ -16,9 +16,6 @@ export class PluginForm extends React.Component<PluginFormProps> {
     render() {
         return (
             <div style={{ padding: '20px' }}>
-                <label>Amount To Send (Bitcoin)</label><br />
-                <input type="number"></input>
-                <hr />
                 <Form
                     schema={this.props.app}
                     onSubmit={(e: ISubmitEvent<any>) => this.handleSubmit(e, this.props.app.title)}
