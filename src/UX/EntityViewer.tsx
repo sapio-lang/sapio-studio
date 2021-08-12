@@ -5,7 +5,7 @@ import { TransactionDetail } from '../Detail/TransactionDetail';
 import { UTXODetail } from '../Detail/UTXODetail';
 import { TransactionModel } from '../Data/Transaction';
 import { UTXOModel } from '../Data/UTXO';
-import './SideModal.css';
+import './EntityViewer.css';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { TXID } from '../util';
 export interface Viewer {}
