@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import Modal from 'react-bootstrap/Modal';
-import { txid_buf_to_string } from '../util';
+import { txid_buf_to_string } from '../../util';
 
 export class SaveHexModal extends React.Component {
     constructor(props) {
