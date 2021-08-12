@@ -1,8 +1,8 @@
-.AppSelectorGrid {
+.PluginSelectorGrid {
     display: grid;
     grid-template-columns: 20px 1fr 20px;
 }
-.AppSelectorGrid > div {
+.PluginSelectorGrid > div {
     display: grid;
     grid-template-columns: auto auto auto;
     grid-auto-flow: row;
@@ -16,6 +16,6 @@
 .forward {
 }
 
-.AppTile {
+.PluginTile {
     padding: 20px;
 }

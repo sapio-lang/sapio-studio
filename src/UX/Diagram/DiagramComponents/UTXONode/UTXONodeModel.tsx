@@ -12,7 +12,7 @@ import {
     BasePositionModelOptions,
 } from '@projectstorm/react-canvas-core';
 import _ from 'lodash';
-import { TransactionModel } from '../../Data/Transaction';
+import { TransactionModel } from '../../../../Data/Transaction';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
     name: string;

@@ -7,11 +7,11 @@ import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import Color from 'color';
 import * as _ from 'lodash';
 import * as React from 'react';
-import { pretty_amount } from '../../util';
+import { pretty_amount } from '../../../../util';
 import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
-import { UTXOModel } from '../../Data/UTXO';
+import { UTXOModel } from '../../../../Data/UTXO';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
