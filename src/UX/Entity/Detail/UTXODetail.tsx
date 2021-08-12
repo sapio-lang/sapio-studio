@@ -7,13 +7,13 @@ import {
     pretty_amount,
     TXID,
     txid_buf_to_string,
-} from '../util';
-import { UTXOModel } from '../Data/UTXO';
+} from '../../../util';
+import { UTXOModel } from '../../../Data/UTXO';
 import './UTXODetail.css';
 import { OutpointDetail } from './OutpointDetail';
 import { NodeModel } from '@projectstorm/react-diagrams';
-import { PhantomTransactionModel, TransactionModel } from '../Data/Transaction';
-import { Data, ContractModel } from '../Data/ContractManager';
+import { PhantomTransactionModel, TransactionModel } from '../../../Data/Transaction';
+import { Data, ContractModel } from '../../../Data/ContractManager';
 
 interface UTXODetailProps {
     entity: UTXOModel;

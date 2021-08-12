@@ -2,8 +2,8 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from './Hex';
-import { UTXOModel } from '../Data/UTXO';
-import { pretty_amount } from '../util';
+import { UTXOModel } from '../../../Data/UTXO';
+import { pretty_amount } from '../../../util';
 
 interface OutputDetailProps {
     txoutput: UTXOModel;

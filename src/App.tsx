@@ -25,7 +25,7 @@ import { UTXONodeFactory } from './UX/Diagram/DiagramComponents/UTXONode/UTXONod
 import { SimulationController } from './Simulation';
 import { AppNavbar } from './UX/AppNavbar';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
-import { EmptyViewer, EntityViewerModal, Viewer } from './UX/EntityViewer';
+import { EmptyViewer, EntityViewerModal, Viewer } from './UX/Entity/EntityViewer';
 import Collapse from 'react-bootstrap/Collapse';
 import './Glyphs.css';
 import { TXID } from './util';

@@ -1,13 +1,13 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
-import { ContractModel, Data } from '../Data/ContractManager';
-import { TransactionDetail } from '../Detail/TransactionDetail';
-import { UTXODetail } from '../Detail/UTXODetail';
-import { TransactionModel } from '../Data/Transaction';
-import { UTXOModel } from '../Data/UTXO';
+import { ContractModel, Data } from '../../Data/ContractManager';
+import { TransactionDetail } from './Detail/TransactionDetail';
+import { UTXODetail } from './Detail/UTXODetail';
+import { TransactionModel } from '../../Data/Transaction';
+import { UTXOModel } from '../../Data/UTXO';
 import './EntityViewer.css';
 import ListGroup from 'react-bootstrap/ListGroup';
-import { TXID } from '../util';
+import { TXID } from '../../util';
 export interface Viewer {}
 
 export class EmptyViewer implements Viewer {}

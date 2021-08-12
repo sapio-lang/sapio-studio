@@ -1,9 +1,9 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
 import App from '../App';
-import { hash_to_hex } from '../Detail/Hex';
 import { ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
+import { hash_to_hex } from '../util';
 
 type TXID = string;
 
