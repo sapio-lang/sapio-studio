@@ -1,6 +1,6 @@
 import { Transaction } from 'bitcoinjs-lib';
 import { NodeColor } from './ContractManager';
-import { UTXONodeModel } from '../DiagramComponents/UTXONode/UTXONodeModel';
+import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
 import { Viewer } from '../UX/EntityViewer';
 import { TransactionModel } from './Transaction';
 export class UTXOMetaData {

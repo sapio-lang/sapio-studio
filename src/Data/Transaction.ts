@@ -1,8 +1,8 @@
 import { DiagramModel, LinkModel } from '@projectstorm/react-diagrams';
 import * as Bitcoin from 'bitcoinjs-lib';
-import { OutputLinkModel } from '../DiagramComponents/OutputLink';
-import { SpendLinkModel } from '../DiagramComponents/SpendLink/SpendLinkModel';
-import { TransactionNodeModel } from '../DiagramComponents/TransactionNode/TransactionNodeModel';
+import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
+import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
+import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 import { HasKeys, InputMap, TXID } from '../util';
 import { Viewer } from '../UX/EntityViewer';
 import { NodeColor, UTXOFormatData } from './ContractManager';
