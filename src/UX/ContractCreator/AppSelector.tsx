@@ -1,9 +1,8 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Form, { ISubmitEvent } from '@rjsf/core';
-import { CompilerServer } from './ContractCompilerServer';
-import { emojis } from '../emojis';
 import './AppSelector.css';
+import { CompilerServer } from '../../Compiler/ContractCompilerServer';
 interface CreateAPI {
     title: string,
 }
