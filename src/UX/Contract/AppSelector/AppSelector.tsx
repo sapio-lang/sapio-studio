@@ -1,43 +1,19 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Form, { ISubmitEvent } from '@rjsf/core';
-import { CompilerServer } from './ContractCompilerServer';
-import { emojis } from '../emojis';
 import './AppSelector.css';
+import { AppTile } from './AppTile';
+import { CompilerServer } from '../../../Compiler/ContractCompilerServer';
 interface CreateAPI {
     title: string,
 }
-interface Application {
+export interface Application {
     api: CreateAPI;
     name: string;
     key: string;
     logo: string;
 }
 
-
-interface TileProps {
-    parent: AppSelector;
-    app: Application
-}
-class AppTile extends React.Component<TileProps> {
-    render() {
-        const logo = "data:image/png;base64," + this.props.app.logo;
-        return (
-            <div className="AppTile">
-                <a
-                    onClick={() => {
-                        this.props.parent.select(this.props.app.key);
-                    }}
-                >
-                    <div style={{ width: "100px", height: "100px" }}>
-                        <img alt="logo" src={logo} width="100%" height="100%" />
-                    </div>
-                    <div>{this.props.app.name}</div>
-                </a>
-            </div>
-        );
-    }
-}
 
 interface ShowAppProps {
     app: CreateAPI;
