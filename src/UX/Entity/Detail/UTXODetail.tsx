@@ -14,10 +14,11 @@ import { OutpointDetail } from './OutpointDetail';
 import { NodeModel } from '@projectstorm/react-diagrams';
 import { PhantomTransactionModel, TransactionModel } from '../../../Data/Transaction';
 import { Data, ContractModel } from '../../../Data/ContractManager';
+import { QueriedUTXO } from '../../../Data/BitcoinNode';
 
 interface UTXODetailProps {
     entity: UTXOModel;
-    fetch_utxo: (t: TXID, n: number) => Promise<any>;
+    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
     fund_out: (a: Bitcoin.Transaction) => Promise<Bitcoin.Transaction>;
     contract: ContractModel;
     load_new_contract: (x: Data) => void;
@@ -105,10 +106,10 @@ export class UTXODetail extends React.Component<
             this.props.entity.utxo.index
         );
         console.log(data);
-        if (data[0]['confirmations'] > 0) {
-            this.props.entity.utxo.amount = 100e6 * data[0].value;
+        if (data.confirmations > 0) {
+            this.props.entity.utxo.amount = 100e6 * data.value;
             this.props.entity.utxo.script = Bitcoin.address.toOutputScript(
-                data[0]['scriptPubKey']['addresses'][0],
+                data.scriptPubKey.address,
                 Bitcoin.networks.regtest
             );
             this.props.entity.setConfirmed(true);

@@ -4,6 +4,7 @@ import App from '../App';
 import { ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
 import { hash_to_hex } from '../util';
+import * as Bitcoin from 'bitcoinjs-lib';
 
 type TXID = string;
 
@@ -113,12 +114,12 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         return Transaction.fromHex(hex);
     }
 
-    async fetch_utxo(t: TXID, n: number): Promise<any> {
-        const txout = await window.electron.bitcoin_command( [
+    async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO> {
+        const txout = await window.electron.bitcoin_command([
             { method: 'gettxout', parameters: [t, n] },
         ]);
-        console.log(txout);
-        return txout;
+        console.log(txout[0]);
+        return txout[0];
     }
     async check_txs(current_contract: ContractModel): Promise<Array<TXID>> {
         // TODO: SHould query by WTXID
@@ -140,4 +141,12 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     render() {
         return null;
     }
+}
+
+export interface QueriedUTXO {
+    bestblock: string,
+    coinbase: boolean,
+    confirmations: number,
+    scriptPubKey: { asm: string, hex: string, address: string, type: string },
+    value: number
 }
