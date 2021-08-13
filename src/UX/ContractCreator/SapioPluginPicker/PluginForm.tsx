@@ -13,7 +13,7 @@ interface PluginFormProps {
 export class PluginForm extends React.Component<PluginFormProps> {
     render() {
         return (
-            <div style={{ padding: '20px' }}>
+            <div style={{ padding: '5%' }}>
                 <Form
                     schema={this.props.app.api}
                     onSubmit={(e: ISubmitEvent<any>) => this.handleSubmit(e, this.props.app.key)}

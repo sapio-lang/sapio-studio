@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import { Menu } from './SapioPluginPicker/Menu';
+import { PluginSelector } from './SapioPluginPicker/PluginSelector';
 
 export class CreateContractModal extends React.Component {
     constructor(props) {
@@ -17,21 +17,12 @@ export class CreateContractModal extends React.Component {
                     <Modal.Title> Applications </Modal.Title>
                 </Modal.Header>
 
-                <Menu
+                <PluginSelector
                     hide={this.props.hide}
                     load_new_model={this.props.load_new_model}
-                    args={this.props.dynamic_forms}
+                    applications={this.props.dynamic_forms}
                     export
                     compiler={this.props.compiler} />
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => this.props.hide()}
-                    >
-                        {' '}
-                        Close{' '}
-                    </Button>
-                </Modal.Footer>
             </Modal>
         );
     }

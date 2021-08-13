@@ -45,13 +45,11 @@ export class PluginSelector extends React.Component<IProps, IState> {
         } else {
             return (
                 <div>
-
-                    <Button
-                        onClick={() => this.deselect()}
-                        variant={'secondary'}
-                    >
-                        Back
-                    </Button>
+                    <div style={{textAlign:"right", paddingRight:"20px"}}>
+                        <a onClick={() => this.deselect()} >
+                            <span className="glyphicon glyphicon-arrow-left"></span>
+                        </a>
+                    </div>
                     <PluginForm
                         app={this.props.applications.get(this.state.selected)!}
                         hide={this.props.hide}
