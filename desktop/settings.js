@@ -76,6 +76,7 @@ module.exports = {
                                         key: "rpcpassword",
                                         type: 'text',
                                         help: "rpc password",
+                                        inputType: "password"
                                     },
                                     {
                                         label: "rpc port",
