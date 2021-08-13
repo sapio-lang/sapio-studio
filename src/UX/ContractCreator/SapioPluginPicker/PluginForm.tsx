@@ -1,12 +1,10 @@
 import React from 'react';
 import Form, { ISubmitEvent } from '@rjsf/core';
 import { CompilerServer } from '../../../Compiler/ContractCompilerServer';
+import { Plugin } from './PluginTile';
 
-export interface PluginAPI {
-    title: string;
-}
 interface PluginFormProps {
-    app: PluginAPI;
+    app: Plugin;
     compiler: CompilerServer;
     load_new_model: any;
     hide: () => void;
@@ -17,8 +15,8 @@ export class PluginForm extends React.Component<PluginFormProps> {
         return (
             <div style={{ padding: '20px' }}>
                 <Form
-                    schema={this.props.app}
-                    onSubmit={(e: ISubmitEvent<any>) => this.handleSubmit(e, this.props.app.title)}
+                    schema={this.props.app.api}
+                    onSubmit={(e: ISubmitEvent<any>) => this.handleSubmit(e, this.props.app.key)}
                 ></Form>
             </div>
         );
@@ -26,7 +24,7 @@ export class PluginForm extends React.Component<PluginFormProps> {
     async handleSubmit(event: ISubmitEvent<any>, type: string) {
         let formData = event.formData;
         const compiler = this.props.compiler;
-        await compiler.create(type, 0, formData);
+        await compiler.create(type, JSON.stringify(formData));
         this.props.hide();
     }
 }

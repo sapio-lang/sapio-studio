@@ -16,8 +16,8 @@ export class CompilerServer {
     }
 
     // Contract Creation
-    async create(type_arg: string, amount: number, contract: any) {
-        const compiled_contract = await window.electron.create_contract(type_arg, amount, contract);
-        this.app.load_new_model(compiled_contract);
+    async create(type_arg: string, contract: any) {
+        const compiled_contract = await window.electron.create_contract(type_arg, contract);
+        this.app.load_new_model(JSON.parse(compiled_contract));
     }
 }

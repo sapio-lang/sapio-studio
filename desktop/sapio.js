@@ -61,10 +61,19 @@ module.exports = {
         console.log(`child stdout:\n${child.toString()}`);
 
     },
-    async create_contract(which, amount, args) {
+    async create_contract(which, args) {
         const binary = settings.value("sapio.binary");
-        const child = await spawn(binary, ["contract", "create", amount, "--key", which, args]);
-        console.log(`child stdout:\n${child.toString()}`);
+        try {
+            const create = await spawn(binary, ["contract", "create", "--key", which, args]);
+            const created =  create.toString();
+            const bind = await spawn(binary, ["contract", "bind", created]);
+            const bound = bind.toString();
+            const for_tux = await spawn(binary, ["contract", "for_tux", bound]);
+            return for_tux.toString();
+        } catch (e) {
+            console.log(which, args);
+        }
+
 
     }
 

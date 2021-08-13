@@ -1,10 +1,12 @@
 import React from 'react';
 import { PluginSelector } from './PluginSelector';
-import { PluginAPI } from './PluginForm';
 
 interface TileProps {
     parent: PluginSelector;
     app: Plugin;
+}
+export interface PluginAPI {
+    title: string;
 }
 export interface Plugin {
     api: PluginAPI;
