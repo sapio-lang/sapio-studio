@@ -1,17 +1,19 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
 const { settings } = require("./settings");
-const { list_contracts, create_contract } = require("./sapio");
+const { list_contracts, } = require("./sapio");
 
 let mainWindow;
 let Client = require('bitcoin-core');
 
 const createMenu = require('./createMenu.js');
+const register_handlers = require('./handlers.js');
 const ElectronPreferences = require('electron-preferences');
 
 let client = new Client();
+exports.client = client;
 function load_settings() {
     const udata = app.getPath('userData');
     const config = path.join(udata, 'config.json');
@@ -76,6 +78,7 @@ function createWindow() {
         mainWindow = null;
     });
     createMenu(mainWindow);
+    register_handlers(client);
 
 }
 
@@ -91,15 +94,4 @@ app.on('activate', function () {
     if (mainWindow === null) {
         createWindow();
     }
-});
-
-ipcMain.handle('bitcoin-command', async (event, arg) => {
-    let result = await client.command(arg);
-    return result;
-});
-
-
-ipcMain.handle('create_contract', async (event, [which, args]) => {
-    let result = await create_contract(which, args);
-    return result;
 });
