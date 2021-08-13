@@ -121,6 +121,10 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         console.log(txout[0]);
         return txout[0];
     }
+    async check_balance(): Promise<number> {
+        let results = await window.electron.bitcoin_command([{method: "getbalance"}]);
+        return results[0];
+    }
     async check_txs(current_contract: ContractModel): Promise<Array<TXID>> {
         // TODO: SHould query by WTXID
         const txids = current_contract.txn_models

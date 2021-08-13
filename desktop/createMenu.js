@@ -80,6 +80,12 @@ function createMenu(window) {
             label: 'Bitcoin Node',
             submenu: [
                 { label: 'Connect' },
+                {
+                    label: 'Toggle Node Bar',
+                    async click() {
+                        window.webContents.send('bitcoin-node-bar', 'show')
+                    }
+                },
             ]
         },
         {

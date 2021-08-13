@@ -11,7 +11,7 @@ async function create_contract(which, args) {
 
 }
 
-const callbacks = ["simulate", "load_hex", "save_hex", "create_contracts"];
+const callbacks = ["simulate", "load_hex", "save_hex", "create_contracts", "bitcoin-node-bar"];
 function register(msg, action) {
     if (callbacks.includes(msg)) {
         const listener = (event, args) => {

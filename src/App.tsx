@@ -29,6 +29,7 @@ import { EmptyViewer, CurrentlyViewedEntity, ViewableEntityInterface } from './U
 import Collapse from 'react-bootstrap/Collapse';
 import './Glyphs.css';
 import { TXID } from './util';
+import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
 
 
 declare global {
@@ -86,6 +87,7 @@ interface AppState {
     modal_view: boolean;
     model_number: number;
     timing_simulator_enabled: boolean;
+    bitcoin_node_bar: boolean;
 }
 export class App extends React.Component<any, AppState> {
     engine: DiagramEngine;
@@ -107,6 +109,7 @@ export class App extends React.Component<any, AppState> {
             modal_view: false,
             model_number: -1,
             timing_simulator_enabled: false,
+            bitcoin_node_bar: false,
         };
         // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();
@@ -139,6 +142,11 @@ export class App extends React.Component<any, AppState> {
         this.bitcoin_node_manager = new BitcoinNodeManager({
             app: this,
             current_contract: this.state.current_contract,
+        });
+        window.electron.register("bitcoin-node-bar", (msg: string) => {
+            if (msg === "show") {
+                this.setState({ bitcoin_node_bar: !this.state.bitcoin_node_bar });
+            }
         });
 
         /* Socket Functionality */
@@ -209,8 +217,8 @@ export class App extends React.Component<any, AppState> {
                     current_contract={this.state.current_contract}
                     app={this}
                     ref={(bnm) =>
-                        (this.bitcoin_node_manager =
-                            bnm || this.bitcoin_node_manager)
+                    (this.bitcoin_node_manager =
+                        bnm || this.bitcoin_node_manager)
                     }
                 />
                 <div className="area">
@@ -249,6 +257,13 @@ export class App extends React.Component<any, AppState> {
                         </div>
                         <div>{entity}</div>
                     </div>
+
+                    <Collapse in={this.state.bitcoin_node_bar}>
+                        <div>
+
+                            <BitcoinStatusBar api={this.bitcoin_node_manager}></BitcoinStatusBar>
+                        </div>
+                    </Collapse>
                 </div>
             </div>
         );
