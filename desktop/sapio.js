@@ -63,15 +63,32 @@ module.exports = {
     },
     async create_contract(which, args) {
         const binary = settings.value("sapio.binary");
+        let created, bound, for_tux;
         try {
             const create = await spawn(binary, ["contract", "create", "--key", which, args]);
-            const created =  create.toString();
-            const bind = await spawn(binary, ["contract", "bind", created]);
-            const bound = bind.toString();
-            const for_tux = await spawn(binary, ["contract", "for_tux", bound]);
-            return for_tux.toString();
+            created = create.toString();
         } catch (e) {
-            console.log(which, args);
+            console.debug("Failed to Create", which, args);
+            return null;
+        }
+        try {
+            const bind = await spawn(binary, ["contract", "bind", created]);
+            bound = bind.toString();
+        } catch (e) {
+            console.debug(created);
+            console.log("Failed to bind", e.toString());
+            return null;
+        }
+        try {
+            const for_tux = await spawn(binary, ["contract", "for_tux", bound]);
+            for_tuxed = for_tux.toString();
+            console.debug(for_tuxed);
+            return for_tuxed;
+
+        } catch (e) {
+            console.debug(bound);
+            console.log("Failed to convert for tux", e.toString());
+            return null;
         }
 
 
