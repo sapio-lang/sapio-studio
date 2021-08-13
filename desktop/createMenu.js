@@ -2,7 +2,7 @@ const { app, Menu } = require('electron');
 const ElectronPreferences = require('electron-preferences');
 const { settings } = require('./settings');
 const { dialog } = require('electron');
-const { load_contract_file_name, list_contracts } = require('./sapio');
+const { load_contract_file_name, list_contracts, create_contract } = require('./sapio');
 
 
 function createMenu(window) {

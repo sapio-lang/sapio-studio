@@ -53,7 +53,7 @@ export class PluginSelector extends React.Component<IProps, IState> {
                         Back
                     </Button>
                     <PluginForm
-                        app={this.props.applications.get(this.state.selected)!.api}
+                        app={this.props.applications.get(this.state.selected)!}
                         hide={this.props.hide}
                         compiler={this.props.compiler}
                         load_new_model={this.props.load_new_model}

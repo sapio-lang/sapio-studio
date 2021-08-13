@@ -99,7 +99,7 @@ ipcMain.handle('bitcoin-command', async (event, arg) => {
 });
 
 
-ipcMain.handle('create_contract', async (event, [which, amount, args]) => {
-    let result = await create_contract(which, amount, args);
+ipcMain.handle('create_contract', async (event, [which, args]) => {
+    let result = await create_contract(which, args);
     return result;
 });

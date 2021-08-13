@@ -6,8 +6,8 @@ async function bitcoin_command(command) {
     return ipcRenderer.invoke('bitcoin-command', command);
 }
 
-async function create_contract(which, amount, args) {
-    return ipcRenderer.invoke('create_contract', [which, amount, args])
+async function create_contract(which, args) {
+    return ipcRenderer.invoke('create_contract', [which, args])
 
 }
 
