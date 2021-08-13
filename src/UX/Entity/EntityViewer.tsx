@@ -9,9 +9,9 @@ import './EntityViewer.css';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { TXID } from '../../util';
 import { QueriedUTXO } from '../../Data/BitcoinNode';
-export interface ViewableEntityInterface {}
+export interface ViewableEntityInterface { }
 
-export class EmptyViewer implements ViewableEntityInterface {}
+export class EmptyViewer implements ViewableEntityInterface { }
 interface CurrentylViewedEntityProps {
     broadcast: (a: Transaction) => Promise<any>;
     fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
