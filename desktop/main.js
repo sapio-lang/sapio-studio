@@ -15,34 +15,14 @@ const ElectronPreferences = require('electron-preferences');
 let client = new Client();
 exports.client = client;
 function load_settings() {
-    const udata = app.getPath('userData');
-    const config = path.join(udata, 'config.json');
-    if (!fs.existsSync(udata)) {
-        let dir = fs.mkdirSync(udata);
-    }
+    const network = settings.value("bitcoin-config.network");
+    const username = settings.value("bitcoin-config.rpcuser");
+    const password = settings.value("bitcoin-config.rpcpassword");
+    const port = settings.value("bitcoin-config.rpcport");
+    const host = settings.value("bitcoin-config.rpchost");
 
-    if (!fs.existsSync(config)) {
-        let f = fs.openSync(config, 'wx+');
-        let settings = JSON.stringify({
-            clients: [
-                {
-                    nickname: 'default',
-                    network: 'regtest',
-                    username: 'btcusr',
-                    password:
-                        '261299cf4f162e6d8e870760ee88b29537617c6aadc45f5ffd249b2309ca47fd',
-                },
-            ],
-        });
-        fs.writeSync(f, settings);
-    }
-    let data = fs.readFileSync(config);
-    const settings = JSON.parse(data);
-    const default_client = settings['clients'][0];
     client = new Client({
-        network: default_client['network'],
-        username: default_client['username'],
-        password: default_client['password'],
+        network, username, password, port, host
     });
 }
 

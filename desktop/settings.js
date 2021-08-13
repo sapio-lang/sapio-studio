@@ -56,6 +56,57 @@ module.exports = {
                         ]
                     }
                 },
+                {
+                    id: 'bitcoin-config',
+                    label: 'Bitcoin Node',
+                    icon: 'notes',
+                    form: {
+                        groups: [
+                            {
+                                label: 'Node Setup',
+                                fields: [
+                                    {
+                                        label: "rpc user",
+                                        key: "rpcuser",
+                                        type: 'text',
+                                        help: "rpc user name",
+                                    },
+                                    {
+                                        label: "rpc password",
+                                        key: "rpcpassword",
+                                        type: 'text',
+                                        help: "rpc password",
+                                    },
+                                    {
+                                        label: "rpc port",
+                                        key: "rpcport",
+                                        type: 'text',
+                                        help: "rpc port",
+                                        inputType: 'number',
+                                    },
+                                    {
+                                        label: "rpc host",
+                                        key: "rpchost",
+                                        type: 'text',
+                                        help: "rpc host",
+                                    },
+                                    {
+                                        'label': "Network",
+                                        'key': 'network',
+                                        'type': 'radio',
+                                        'options': [
+                                            {'label': 'Main', 'value': 'mainnet'},
+                                            {'label': 'Regtest', 'value': 'regtest'},
+                                            {'label': 'Testnet', 'value': 'testnet'},
+                                            {'label': 'Signet', 'value': 'signet'},
+                                        ],
+                                        'help': 'Which network to use?'
+                                    }
+                                ],
+                            },
+                        ],
+                    },
+                },
             ],
             /**
              * These parameters on the preference window settings can be overwrinten
