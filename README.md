@@ -1,17 +1,22 @@
-Welcome to tux (transaction ux), a project for visualizing and exploring bitcoin smart contract
-trees.
+Welcome to Sapio Studio, a project for visualizing and exploring bitcoin smart
+contract trees built with [Sapio](https://learn.sapio-lang.org).
 
 ## Getting Started
 
-run `yarn start-react` and then run `yarn start-electron`.
+```
+yarn install
+yarn start-react
+# in a new tab
+yarn start-electron
+```
 
 
-## Connecting With a Contract Server
+## Connecting With Sapio & Bitcoin
 
-If you have access to Sapio (or another compatible compiler server), you may connect it via
-websocket to tux and it will populate the new contracts and load an example.
+Open the application and configure your preferences for your Bitcoin Node and
+Sapio Client.
 
-If you do not, there are some demos included in the directory examples/data/.
+You will need to load your own contract modules before you can do much.
 
 ## This is ALPHA SOFTWARE
 
