@@ -1,11 +1,13 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
 import App from '../App';
-import { hash_to_hex } from '../Detail/Hex';
 import { ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
-const { ipcRenderer } = window.require('electron');
+import { hash_to_hex } from '../util';
+import * as Bitcoin from 'bitcoinjs-lib';
+
 type TXID = string;
+
 
 export function call(method: string, args: any) {
     return fetch(method, {
@@ -21,7 +23,7 @@ interface IProps {
     app: App;
     current_contract: ContractModel;
 }
-interface IState {}
+interface IState { }
 export function update_broadcastable(
     current_contract: ContractModel,
     confirmed_txs: Set<TXID>
@@ -97,12 +99,12 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     }
 
     async broadcast(tx: Transaction) {
-        await ipcRenderer.invoke('bitcoin-command', [
+        await window.electron.bitcoin_command([
             { method: 'getrawtransaction', parameters: [tx.toHex()] },
         ]);
     }
     async fund_out(tx: Transaction): Promise<Transaction> {
-        const result = await ipcRenderer.invoke('bitcoin-command', [
+        const result = await window.electron.bitcoin_command([
             { method: 'fundrawtransaction', parameters: [tx.toHex()] },
         ]);
         if (result[0] && result[0].name === 'RpcError') {
@@ -112,12 +114,19 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         return Transaction.fromHex(hex);
     }
 
-    async fetch_utxo(t: TXID, n: number): Promise<any> {
-        const txout = await ipcRenderer.invoke('bitcoin-command', [
+    async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO> {
+        const txout = await window.electron.bitcoin_command([
             { method: 'gettxout', parameters: [t, n] },
         ]);
-        console.log(txout);
-        return txout;
+        console.log(txout[0]);
+        return txout[0];
+    }
+    async check_balance(): Promise<number> {
+        let results = await window.electron.bitcoin_command([{method: "getbalance"}]);
+        return results[0];
+    }
+    async blockchaininfo(): Promise<any> {
+        return (await window.electron.bitcoin_command([{method: "getblockchaininfo"}]))[0];
     }
     async check_txs(current_contract: ContractModel): Promise<Array<TXID>> {
         // TODO: SHould query by WTXID
@@ -130,7 +139,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
                 };
             });
         if (txids.length > 0) {
-            let results = await ipcRenderer.invoke('bitcoin-command', txids);
+            let results = await window.electron.bitcoin_command(txids);
             console.log('RESULTS', results);
         }
         return [];
@@ -139,4 +148,12 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     render() {
         return null;
     }
+}
+
+export interface QueriedUTXO {
+    bestblock: string,
+    coinbase: boolean,
+    confirmations: number,
+    scriptPubKey: { asm: string, hex: string, address: string, type: string },
+    value: number
 }

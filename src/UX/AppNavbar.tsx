@@ -2,85 +2,48 @@ import React, { useState } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import './AppNavbar.css';
-import {
-    SaveHexModal,
-    LoadHexModal,
-    CreateContractModal,
-    SapioCompilerModal,
-    ViewContractModal,
-} from './CreateVaultModal';
+import { SaveHexModal } from "./ContractCreator/SaveHexModal";
+import { LoadHexModal } from "./ContractCreator/LoadHexModal";
+import { SapioCompilerModal } from "./ContractCreator/SapioCompilerModal";
+import { ViewContractModal } from "./ContractCreator/ViewContractModal";
+import { CreateContractModal } from './ContractCreator/CreateContractModal';
 export function AppNavbar(props: any): JSX.Element {
     const [modalView, setModalView] = useState(false);
-    const [modalCreate, setModalCreate] = useState(false);
+
     const [modalSapioCompiler, setModalaSapioCompiler] = useState(false);
-    const [modalLoadHex, setModalaLoadHex] = useState(false);
-    const [modalSaveHex, setModalSaveHex] = useState(false);
+    const [modalCreate, setModalCreate] = useState(false);
+    const [modalCreateAPIS, setModalCreateAPIs] = useState({});
+    window.electron.register("create_contracts", (args: [{
+        name: string, api:
+        Object, key: string
+    }]) => {
+        setModalCreateAPIs(args);
+        setModalCreate(true);
+    });
+
     const [showSim, setSim] = useState(true);
-    const toggleSim = () => {
-        console.log('TOG', showSim);
+    const toggleSim = (args: string) => {
+        console.log('TOG', showSim, args);
         props.toggle_timing_simulator(showSim);
         setSim(!showSim);
     };
+    window.electron.register("simulate", toggleSim);
+
+    const [modalLoadHex, setModalLoadHex] = useState(false);
+    window.electron.register("load_hex", setModalLoadHex);
+
+    const [modalSaveHex, setModalSaveHex] = useState(false);
+    window.electron.register("save_hex", setModalSaveHex);
 
     return (
-        <Navbar variant="dark">
-            <Navbar.Brand> tux. </Navbar.Brand>
+        <div>
 
-            <Nav className="justify-content-end w-100">
-                <Nav.Link
-                    eventKey="create"
-                    onSelect={() => setModalCreate(true)}
-                    aria-controls="create-contract-form"
-                    aria-expanded={modalCreate}
-                >
-                    Apps
-                </Nav.Link>
-                <Nav.Link eventKey="sim" onSelect={toggleSim}>
-                    Timing Simulator
-                </Nav.Link>
-
-                <Nav.Link
-                    eventKey="view"
-                    onSelect={() => setModalView(true)}
-                    aria-controls="view-contract-form"
-                    aria-expanded={modalView}
-                >
-                    View
-                </Nav.Link>
-
-                <Nav.Link
-                    eventKey="sapio-compiler"
-                    onSelect={() => setModalaSapioCompiler(true)}
-                    aria-controls="sapio-compiler-form"
-                    aria-expanded={modalSapioCompiler}
-                >
-                    Sapio
-                </Nav.Link>
-
-                <Nav.Link
-                    eventKey="load-hex"
-                    onSelect={() => setModalaLoadHex(true)}
-                    aria-controls="load-hex-form"
-                    aria-expanded={modalLoadHex}
-                >
-                    Load
-                </Nav.Link>
-
-                <Nav.Link
-                    eventKey="save-hex"
-                    onSelect={() => setModalSaveHex(true)}
-                    aria-controls="save-hex-form"
-                    aria-expanded={modalSaveHex}
-                >
-                    Save
-                </Nav.Link>
-            </Nav>
             <CreateContractModal
                 show={modalCreate}
                 hide={() => setModalCreate(false)}
                 load_new_model={props.load_new_model}
                 compiler={props.compiler}
-                dynamic_forms={props.dynamic_forms}
+                dynamic_forms={modalCreateAPIS}
             />
             <ViewContractModal
                 show={modalView}
@@ -96,7 +59,7 @@ export function AppNavbar(props: any): JSX.Element {
 
             <LoadHexModal
                 show={modalLoadHex}
-                hide={() => setModalaLoadHex(false)}
+                hide={() => setModalLoadHex(false)}
                 load_new_model={props.load_new_model}
             />
 
@@ -105,6 +68,6 @@ export function AppNavbar(props: any): JSX.Element {
                 hide={() => setModalSaveHex(false)}
                 contract={props.contract}
             />
-        </Navbar>
+        </div>
     );
 }

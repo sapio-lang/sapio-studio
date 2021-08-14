@@ -1,27 +1,29 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
-import { ContractModel, Data } from '../Data/ContractManager';
-import { TransactionDetail } from '../Detail/TransactionDetail';
-import { UTXODetail } from '../Detail/UTXODetail';
-import { TransactionModel } from '../Data/Transaction';
-import { UTXOModel } from '../Data/UTXO';
-import './SideModal.css';
+import { ContractModel, Data } from '../../Data/ContractManager';
+import { TransactionDetail } from './Detail/TransactionDetail';
+import { UTXODetail } from './Detail/UTXODetail';
+import { TransactionModel } from '../../Data/Transaction';
+import { UTXOModel } from '../../Data/UTXO';
+import './EntityViewer.css';
 import ListGroup from 'react-bootstrap/ListGroup';
-import { TXID } from '../util';
-export interface Viewer {}
+import { TXID } from '../../util';
+import { QueriedUTXO } from '../../Data/BitcoinNode';
+import Button from 'react-bootstrap/esm/Button';
+export interface ViewableEntityInterface { }
 
-export class EmptyViewer implements Viewer {}
-interface EntityViewerProps {
+export class EmptyViewer implements ViewableEntityInterface { }
+interface CurrentylViewedEntityProps {
     broadcast: (a: Transaction) => Promise<any>;
-    fetch_utxo: (t: TXID, n: number) => Promise<any>;
+    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
     fund_out: (a: Transaction) => Promise<Transaction>;
-    entity: Viewer;
+    entity: ViewableEntityInterface;
     hide_details: () => void;
     current_contract: ContractModel;
     load_new_contract: (x: Data) => void;
 }
 
-export class EntityViewerModal extends React.Component<EntityViewerProps> {
+export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntityProps> {
     name() {
         switch (this.props.entity.constructor) {
             case TransactionModel:
@@ -62,18 +64,17 @@ export class EntityViewerModal extends React.Component<EntityViewerProps> {
 
     render() {
         return (
+            <>
+                <Button
+                    onClick={() => this.props.hide_details()}
+                    variant="link"
+                >
+                    <span className="glyphicon glyphicon-remove" style={{ color: "red" }}></span>
+                </Button>
             <div className="EntityViewer">
                 {this.guts()}
-                <ListGroup>
-                    <ListGroup.Item
-                        action
-                        onClick={() => this.props.hide_details()}
-                        variant="danger"
-                    >
-                        close
-                    </ListGroup.Item>
-                </ListGroup>
             </div>
+            </>
         );
     }
 }

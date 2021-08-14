@@ -1,21 +1,27 @@
-.COutPoint {
-}
-.COutPoint > * {
-    padding: 0.5em;
-}
-.Spend {
-}
-.Spend > * {
+.COutPoint {}
+
+.COutPoint>* {
     padding: 0.5em;
 }
 
-.Spend > * > .truncate {
+.Spend {
+    display: grid;
+    grid-template-columns: 16em 1fr;
+}
+
+.Spend>* {
+    padding: 0.5em;
+}
+
+.Spend>.truncate {
     width: 16em;
 }
 
 .UTXODetail {
+    padding: 10px;
 }
-.UTXODetail > h1,
+
+.UTXODetail>h1,
 h3,
 h4,
 h5 {
@@ -26,13 +32,14 @@ h5 {
     justify-content: center;
     align-items: center;
 }
-.TXIDDetail > * {
+
+.TXIDDetail>* {
     padding: 0;
     width: 100%;
     border: 1px transparent none;
 }
 
-.TXIDDetail > * > code {
+.TXIDDetail>*>code {
     width: 16em;
     max-width: 90%;
 }
