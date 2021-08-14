@@ -1,8 +1,7 @@
 const spawn = require('await-spawn');
 
 const { ipcMain, Menu } = require("electron");
-const ElectronPreferences = require("electron-preferences");
-const { settings } = require("./settings");
+const { settings } = require("./settings.ts");
 
 
 const memo_apis = new Map();

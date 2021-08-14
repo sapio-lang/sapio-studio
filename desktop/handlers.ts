@@ -1,5 +1,5 @@
 const { ipcMain } = require('electron');
-const { sapio } = require("./sapio");
+const { sapio } = require("./sapio.ts");
 
 module.exports = function(client) {
 

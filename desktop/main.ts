@@ -2,13 +2,13 @@ const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
-const { settings } = require("./settings");
+const { settings } = require("./settings.ts");
 
 let mainWindow;
 let Client = require('bitcoin-core');
 
-const { createMenu } = require('./createMenu.js');
-const register_handlers = require('./handlers.js');
+const { createMenu } = require('./createMenu.ts');
+const register_handlers = require('./handlers.ts');
 const ElectronPreferences = require('electron-preferences');
 
 let client = new Client();
@@ -45,7 +45,7 @@ function createWindow() {
         show: false,
         backgroundColor: 'black',
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, 'preload.ts'),
             allowRunningInsecureContent: false,
             contextIsolation: true,
             enableRemoteModule: false,
