@@ -1,6 +1,6 @@
 const spawn = require('await-spawn');
 
-const { ipcMain } = require("electron");
+const { ipcMain, Menu } = require("electron");
 const ElectronPreferences = require("electron-preferences");
 const { settings } = require("./settings");
 
@@ -8,7 +8,11 @@ const { settings } = require("./settings");
 const memo_apis = new Map();
 const memo_logos = new Map();
 
-module.exports = {
+class SapioCompiler {
+    contract_cache = null;
+    constructor() {
+        this.contract_cache = null;
+    }
     async list_contracts() {
         const binary = settings.value("sapio.binary");
         const results = new Map();
@@ -54,16 +58,18 @@ module.exports = {
             });
         }
         return results;
-    },
+    }
     async load_contract_file_name(file) {
         const binary = settings.value("sapio.binary");
         const child = await spawn(binary, ["contract", "load", "--file", file]);
         console.log(`child stdout:\n${child.toString()}`);
 
-    },
+    }
     async create_contract(which, args) {
+        this.contract_cache = [which, args];
+        update_menu("file-contract-recreate", true)
         const binary = settings.value("sapio.binary");
-        let created, bound, for_tux;
+        let created, bound;
         try {
             const create = await spawn(binary, ["contract", "create", "--key", which, args]);
             created = create.toString();
@@ -81,7 +87,7 @@ module.exports = {
         }
         try {
             const for_tux = await spawn(binary, ["contract", "for_tux", bound]);
-            for_tuxed = for_tux.toString();
+            const for_tuxed = for_tux.toString();
             console.debug(for_tuxed);
             return for_tuxed;
 
@@ -95,3 +101,9 @@ module.exports = {
     }
 
 }
+
+function update_menu(id, enabled) {
+    const menu = Menu.getApplicationMenu();
+    menu.getMenuItemById(id).enabled = enabled;
+}
+module.exports = { sapio: new SapioCompiler() }

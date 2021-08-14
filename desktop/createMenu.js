@@ -2,16 +2,14 @@ const { app, Menu } = require('electron');
 const ElectronPreferences = require('electron-preferences');
 const { settings } = require('./settings');
 const { dialog } = require('electron');
-const { load_contract_file_name, list_contracts, create_contract } = require('./sapio');
+const { sapio } = require('./sapio');
 
 
 function createMenu(window) {
 
-    const template = [
-        {
+    const template = [{
             label: 'File',
-            submenu: [
-                {
+            submenu: [{
                     label: 'Open Contract From Clipboard',
                     click() {
                         window.webContents.send('load_hex', true);
@@ -34,9 +32,17 @@ function createMenu(window) {
                 {
                     label: 'Create New Contract',
                     async click() {
-                        const contracts = await list_contracts();
+                        const contracts = await sapio.list_contracts();
                         window.webContents.send('create_contracts', contracts);
                     }
+                },
+                {
+                    label: 'Recreate Last Contract',
+                    id: "file-contract-recreate",
+                    async click() {
+                        window.webContents.send('create_contract_from_cache', sapio.contract_cache);
+                    },
+                    enabled: false,
                 },
                 { type: 'separator' },
                 {
@@ -90,14 +96,12 @@ function createMenu(window) {
         },
         {
             label: "Simulate",
-            submenu: [
-                {
-                    label: "Timing",
-                    click() {
-                        window.webContents.send('simulate', 'timing');
-                    }
+            submenu: [{
+                label: "Timing",
+                click() {
+                    window.webContents.send('simulate', 'timing');
                 }
-            ]
+            }]
 
         },
         {
@@ -109,12 +113,10 @@ function createMenu(window) {
         },
         {
             role: 'help',
-            submenu: [
-                {
-                    label: 'Learn More',
-                    click() { require('electron').shell.openExternal('https://electronjs.org'); }
-                }
-            ]
+            submenu: [{
+                label: 'Learn More',
+                click() { require('electron').shell.openExternal('https://electronjs.org'); }
+            }]
         }
     ];
 
@@ -135,16 +137,13 @@ function createMenu(window) {
         });
 
         // Edit menu
-        template[2].submenu.push(
-            { type: 'separator' },
-            {
-                label: 'Speech',
-                submenu: [
-                    { role: 'startspeaking' },
-                    { role: 'stopspeaking' }
-                ]
-            }
-        );
+        template[2].submenu.push({ type: 'separator' }, {
+            label: 'Speech',
+            submenu: [
+                { role: 'startspeaking' },
+                { role: 'stopspeaking' }
+            ]
+        });
 
         // Window menu
         template[6].submenu = [
@@ -160,4 +159,6 @@ function createMenu(window) {
     Menu.setApplicationMenu(menu);
 }
 
-module.exports = createMenu;
+module.exports = {
+    createMenu
+};
