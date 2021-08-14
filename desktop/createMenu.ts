@@ -1,8 +1,8 @@
 const { app, Menu } = require('electron');
 const ElectronPreferences = require('electron-preferences');
-const { settings } = require('./settings');
+const { settings } = require('./settings.ts');
 const { dialog } = require('electron');
-const { sapio } = require('./sapio');
+const { sapio } = require('./sapio.ts');
 
 
 function createMenu(window) {
