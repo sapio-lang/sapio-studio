@@ -1,0 +1,24 @@
+.TransactionDetail {
+    padding: 10px;
+}
+
+.serialized-tx {
+    display: grid;
+    grid-template-columns: 1fr 16em;
+}
+
+.purpose {
+    display: grid;
+    grid-template-columns: 1fr 16em;
+}
+
+.color {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.properties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+}

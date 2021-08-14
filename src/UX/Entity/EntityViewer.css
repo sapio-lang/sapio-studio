@@ -3,21 +3,26 @@ From:
 https://codepen.io/devuri/pen/aaqZqZ
 License: MIT
 */
+
+
 /* MODAL FADE LEFT RIGHT BOTTOM */
+
 .modal.fade:not(.in).left .modal-dialog {
     -webkit-transform: translate3d(-25%, 0, 0);
     transform: translate3d(-25%, 0, 0);
 }
+
 .modal.fade:not(.in).right .modal-dialog {
     -webkit-transform: translate3d(25%, 0, 0);
     transform: translate3d(25%, 0, 0);
 }
+
 .modal.fade:not(.in).bottom .modal-dialog {
     -webkit-transform: translate3d(0, 25%, 0);
     transform: translate3d(0, 25%, 0);
 }
 
-.modal-right > .modal-dialog {
+.modal-right>.modal-dialog {
     position: absolute;
     right: 0;
     top: 0;
@@ -25,7 +30,9 @@ License: MIT
     width: 33%;
     margin-top: 60px;
     min-height: calc(100vh - 60px);
+    max-height: 100%;
 }
+
 .modal.left .modal-dialog {
     position: absolute;
     top: 40px;
@@ -38,19 +45,24 @@ License: MIT
 }
 
 .modal.left .modal-content,
-.modal-right > * > .modal-content {
+.modal-right>*>.modal-content {
     min-height: calc(100vh - 60px);
     border: 0;
 }
+
 .modal-bright-backdrop {
     /* So it doesn't oclude the view, nor using inspect element */
     background-color: transparent;
     z-index: -1;
 }
+
 .EntityViewer {
     background-color: transparent;
+    height: 90vh;
+    overflow: scroll;
+    width: 20em
 }
+
 .modal {
-    font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono',
-        'Bitstream Vera Sans Mono', Courier, monospace;
+    font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
 }
