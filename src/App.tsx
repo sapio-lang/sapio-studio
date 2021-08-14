@@ -109,7 +109,7 @@ export class App extends React.Component<any, AppState> {
             modal_view: false,
             model_number: -1,
             timing_simulator_enabled: false,
-            bitcoin_node_bar: false,
+            bitcoin_node_bar: true,
         };
         // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();

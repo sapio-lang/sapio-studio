@@ -1,4 +1,5 @@
 import { Transaction } from 'bitcoinjs-lib';
+import * as Bitcoin from 'bitcoinjs-lib';
 
 interface Key {
     index: number;
@@ -88,4 +89,41 @@ export function hash_to_hex(h: Buffer) : string {
     h.copy(b);
     b.reverse();
     return b.toString('hex');
+}
+
+export function sequence_convert(sequence: number) : {relative_time:number, relative_height:number} {
+        const ret = {relative_time: 0, relative_height: 0};
+        if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) return ret;
+        if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE-1) return ret;
+        const s_mask = 0xffff & sequence;
+        if ((1 << 22) & sequence) {
+            ret.relative_time = s_mask;
+        } else {
+            ret.relative_height = s_mask;
+        }
+        return ret;
+}
+export function time_to_pretty_string(time: number) : string {
+    time *= 512;
+    let relative_time_string = 'None';
+    time /= 60 * 60;
+    let suffix = "?";
+    if (time < 24 && time !== 0) {
+        suffix = " Hours";
+    } else {
+        time /= 24;
+        if (time < 14) {
+            relative_time_string =
+                suffix = " Days";
+        } else {
+            time /= 7;
+            if (time < 10) {
+                suffix = " Weeks";
+            } else {
+                time /= 30;
+                suffix = " Months";
+            }
+        }
+    }
+    return (Math.trunc(time*10)/10).toString() + suffix;
 }

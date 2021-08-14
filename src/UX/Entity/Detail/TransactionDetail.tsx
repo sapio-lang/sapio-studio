@@ -1,5 +1,6 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React, { ChangeEvent } from 'react';
+import * as Bitcoin from 'bitcoinjs-lib';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { TransactionModel, PhantomTransactionModel } from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
@@ -8,6 +9,8 @@ import { InputDetail } from './InputDetail';
 import { TXIDDetail } from './OutpointDetail';
 import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
+import "./TransactionDetail.css";
+import { sequence_convert, time_to_pretty_string } from '../../../util';
 interface TransactionDetailProps {
     entity: TransactionModel;
     broadcast: (a: Transaction) => Promise<any>;
@@ -15,6 +18,7 @@ interface TransactionDetailProps {
 }
 interface IState {
     broadcastable: boolean;
+    color: string;
 }
 export class TransactionDetail extends React.Component<
     TransactionDetailProps,
@@ -25,7 +29,7 @@ export class TransactionDetail extends React.Component<
         this.props.entity.set_broadcastable_hook((b) =>
             this.setState({ broadcastable: b })
         );
-        this.state = { broadcastable: false };
+        this.state = { broadcastable: false, color: this.props.entity.color };
     }
     static getDerivedStateFromProps(
         props: TransactionDetailProps,
@@ -42,6 +46,7 @@ export class TransactionDetail extends React.Component<
         if (!(x instanceof PhantomTransactionModel)) x.setSelected(true);
     }
     onchange_color(e: ChangeEvent<HTMLInputElement>) {
+        this.setState({ color: e.target.value })
         this.props.entity.setColor(e.target.value);
     }
     onchange_purpose(e: ChangeEvent<HTMLInputElement>) {
@@ -49,92 +54,41 @@ export class TransactionDetail extends React.Component<
     }
     render() {
         const broadcast = !this.state.broadcastable ? null : (
-            <ListGroup variant="flush">
-                <ListGroup.Item
-                    action
-                    variant="dark"
-                    onClick={() => this.props.broadcast(this.props.entity.tx)}
-                >
-                    Broadcast
-                </ListGroup.Item>
-            </ListGroup>
+            <ListGroup.Item
+                action
+                variant="dark"
+                onClick={() => this.props.broadcast(this.props.entity.tx)}
+            >
+                Broadcast
+            </ListGroup.Item>
         );
         const outs = this.props.entity.utxo_models.map((o, i) => (
-            <ListGroup.Item key={i} variant="dark">
-                <OutputDetail
-                    txoutput={o}
-                    goto={() => this.goto(this.props.entity.utxo_models[i])}
-                />
-            </ListGroup.Item>
+            <OutputDetail
+                txoutput={o}
+                goto={() => this.goto(this.props.entity.utxo_models[i])}
+            />
         ));
         const ins = this.props.entity.tx.ins.map((o, i) => {
             const witnesses: Buffer[][] = this.props.entity.witness_set.map(
                 (w) => w[i]
             );
-            console.log(witnesses);
             return (
-                <ListGroup.Item key="input-{i}" variant="dark">
-                    <InputDetail
-                        txinput={o}
-                        goto={() =>
-                            this.goto(
-                                this.props.find_tx_model(o.hash, o.index) ??
-                                    this.props.entity
-                            )
-                        }
-                        witnesses={witnesses}
-                    />
-                </ListGroup.Item>
+                <InputDetail
+                    txinput={o}
+                    goto={() =>
+                        this.goto(
+                            this.props.find_tx_model(o.hash, o.index) ??
+                            this.props.entity
+                        )
+                    }
+                    witnesses={witnesses}
+                />
             );
         });
 
-        const sequences = this.props.entity.tx.ins.map((inp) => inp.sequence);
-        let greatest_relative_time = 0;
-        let greatest_relative_height = 0;
-        let locktime_enable = false;
-        for (const sequence of sequences) {
-            if (sequence === 0xffffffff) continue;
-            locktime_enable = true;
-            const s_mask = 0xffff & sequence;
-            if ((1 << 22) & sequence) {
-                greatest_relative_time = Math.max(
-                    greatest_relative_time,
-                    s_mask
-                );
-            } else {
-                greatest_relative_time = Math.max(
-                    greatest_relative_height,
-                    s_mask
-                );
-            }
-        }
+        const { greatest_relative_height, greatest_relative_time, locktime_enable, relative_time_jsx, relative_height_jsx }
+            = compute_relative_timelocks(this.props.entity.tx);
 
-        greatest_relative_time *= 512;
-        let relative_time_string = 'None';
-        greatest_relative_time /= 60 * 60;
-        if (greatest_relative_time < 24 && greatest_relative_time !== 0) {
-            relative_time_string = greatest_relative_time.toString() + ' Hours';
-        } else {
-            greatest_relative_time /= 24;
-            if (greatest_relative_time < 14) {
-                relative_time_string =
-                    greatest_relative_time.toString() + ' Days';
-            } else {
-                greatest_relative_time /= 7;
-                if (greatest_relative_time < 10) {
-                    relative_time_string =
-                        greatest_relative_time.toString() + ' Weeks';
-                } else {
-                    greatest_relative_time /= 30;
-                    relative_time_string =
-                        greatest_relative_time.toString() + ' Weeks';
-                }
-            }
-        }
-        const relative_blocks_string =
-            greatest_relative_height === 0
-                ? 'None'
-                : greatest_relative_height + ' Blocks';
 
         const locktime = this.props.entity.tx.locktime;
         const as_date = new Date(1970, 0, 1);
@@ -143,8 +97,8 @@ export class TransactionDetail extends React.Component<
             !locktime_enable || locktime === 0
                 ? 'None'
                 : locktime < 500_000_000
-                ? 'Block #' + locktime.toString()
-                : as_date.toUTCString() + ' MTP';
+                    ? 'Block #' + locktime.toString()
+                    : as_date.toUTCString() + ' MTP';
         // note missing horizontal
         const inner_debounce_color = _.debounce(
             this.onchange_color.bind(this),
@@ -162,73 +116,74 @@ export class TransactionDetail extends React.Component<
             e.persist();
             inner_debounce_purpose(e);
         };
+        const absolute_lock_jsx = !locktime_enable || locktime === 0? null:
+                    (<><span>Absolute Lock Time:</span><span> {lt} </span></>);
         return (
-            <>
+            <div className="TransactionDetail">
                 {broadcast}
-                <hr />
-
                 <TXIDDetail txid={this.props.entity.get_txid()} />
-                <ListGroup variant="flush">
-                    <ListGroup.Item variant="dark">
-                        <h6>
-                            Purpose:{' '}
-                            <input
-                                defaultValue={this.props.entity.purpose}
-                                onChange={debounce_purpose}
-                            />
-                        </h6>
-                    </ListGroup.Item>
+                <div className="serialized-tx">
+                    <span> Tx Hex </span>
+                    <Hex
+                        value={this.props.entity.tx.toHex()}
+                        readOnly
+                        className="txhex"
+                    />
+                </div>
+                <div className="purpose">
 
-                    <ListGroup.Item variant="dark">
-                        <h6>
-                            Color:{' '}
-                            <input
-                                defaultValue={this.props.entity.color}
-                                onChange={debounce_color}
-                            />{' '}
-                        </h6>
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <h6>Absolute Lock Time: {lt} </h6>
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <h6>Relative Lock Time: {relative_time_string} </h6>
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <h6>Relative Lock Time: {relative_blocks_string} </h6>
-                    </ListGroup.Item>
-                </ListGroup>
-                <ListGroup variant="flush">
-                    <ListGroup.Item variant="dark">
-                        <h4> Inputs</h4>
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <ListGroup variant="flush">{ins}</ListGroup>
-                    </ListGroup.Item>
-                </ListGroup>
-                <ListGroup variant="flush">
-                    <ListGroup.Item variant="dark">
-                        <h4>Outputs</h4>
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <ListGroup variant="flush">{outs}</ListGroup>
-                    </ListGroup.Item>
-                </ListGroup>
-                <ListGroup>
-                    <ListGroup.Item variant="dark">
-                        <h4> Tx Hex </h4>
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <Hex
-                            value={this.props.entity.tx.toHex()}
-                            readOnly
-                            className="txhex"
-                        >
-                            {' '}
-                        </Hex>
-                    </ListGroup.Item>
-                </ListGroup>
-            </>
+                    <span>Purpose:</span>
+                    <input
+                        defaultValue={this.props.entity.purpose}
+                        onChange={debounce_purpose}
+                    />
+                </div>
+                <div className="color">
+                    <span>Color:</span>
+                    <div>
+                        <input
+                            defaultValue={this.props.entity.color}
+                            value={this.state.color}
+                            type="color"
+                            onChange={debounce_color}
+                        />
+                        <span> {this.state.color}</span>
+                    </div>
+                </div>
+                <div className="properties">
+                    {absolute_lock_jsx}
+                    {relative_height_jsx}
+                    {relative_time_jsx}
+                </div>
+                <h4> Inputs</h4>
+                <div className="inputs">
+                    {ins}
+                </div>
+                <h4>Outputs</h4>
+                <div className="outputs">
+
+                    {outs}
+                </div>
+            </div>
         );
     }
+}
+
+// TODO: Make this check the input's context
+function compute_relative_timelocks(tx: Transaction) {
+    const sequences = tx.ins.map((inp) => inp.sequence);
+    let greatest_relative_time = 0;
+    let greatest_relative_height = 0;
+    let locktime_enable = false;
+    for (const sequence of sequences) {
+        if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) continue;
+        locktime_enable = true;
+        let { relative_time, relative_height } = sequence_convert(sequence);
+        greatest_relative_time = Math.max(relative_time, greatest_relative_time);
+        greatest_relative_height = Math.max(relative_height, greatest_relative_height);
+    }
+    const relative_time_string = time_to_pretty_string(greatest_relative_time);
+    const relative_time_jsx = greatest_relative_time === 0 ? null : (<><span>Relative Lock Time: </span><span>{relative_time_string} </span></>);
+    const relative_height_jsx = greatest_relative_height === 0 ? null : (<><span>Relative Height: </span><span>{greatest_relative_height} Blocks</span></>);
+    return { greatest_relative_height, greatest_relative_time, locktime_enable, relative_time_jsx, relative_height_jsx };
 }

@@ -1,6 +1,8 @@
 import React from 'react';
+import Button from 'react-bootstrap/esm/Button';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from './Hex';
+import "./OutpointDetail.css";
 export class OutpointDetail extends React.Component<{
     txid: string;
     n: number;
@@ -8,36 +10,29 @@ export class OutpointDetail extends React.Component<{
 }> {
     render() {
         return (
-            <ListGroup variant="flush" className="OutpointDetail">
-                <ListGroup.Item variant="dark">
-                    <h4> Outpoint </h4>
-                </ListGroup.Item>
-                <ListGroup.Item variant="dark">
-                    <ListGroup horizontal={'lg'} className="COutPoint">
-                        <ListGroup.Item variant="dark">
-                            Hash:Index
-                        </ListGroup.Item>
-                        <ListGroup.Item variant="dark">
-                            <Hex
-                                className="txhex"
-                                readOnly
-                                value={
-                                    this.props.txid.toString() +
-                                    ':' +
-                                    this.props.n
-                                }
-                            />
-                        </ListGroup.Item>
-                        <ListGroup.Item
-                            action
-                            variant="success"
-                            onClick={this.props.onClick}
-                        >
-                            Go
-                        </ListGroup.Item>
-                    </ListGroup>
-                </ListGroup.Item>
-            </ListGroup>
+            <div>
+                <span>Outpoint:</span>
+                <div className="OutpointDetail">
+                    <Hex
+                        className="txhex"
+                        readOnly
+                        value={
+                            this.props.txid.toString() +
+                            ':' +
+                            this.props.n
+                        }
+                    />
+
+                    <Button
+                        variant="link"
+                        onClick={() => this.props.onClick()}
+                    >
+                        <span className="glyphicon glyphicon-chevron-right" style={{ color: "green" }}
+                            title="Go to the transaction that created this."
+                        ></span>
+                    </Button>
+                </div>
+            </div>
         );
     }
 }
@@ -47,19 +42,16 @@ export class TXIDDetail extends React.Component<{
 }> {
     render() {
         return (
-            <ListGroup variant="flush">
-                <ListGroup.Item variant="dark">
-                    <h4>
-                        {' '}
-                        TXID{' '}
-                        <Hex
-                            className="txhex"
-                            readOnly
-                            value={this.props.txid}
-                        />{' '}
-                    </h4>
-                </ListGroup.Item>
-            </ListGroup>
+            <div className="TXIDDetail">
+
+                <span>txid:</span>
+                <Hex
+                    className="txhex"
+                    readOnly
+                    value={this.props.txid}
+                />
+
+            </div>
         );
     }
 }

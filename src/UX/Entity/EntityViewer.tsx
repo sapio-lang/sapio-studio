@@ -9,6 +9,7 @@ import './EntityViewer.css';
 import ListGroup from 'react-bootstrap/ListGroup';
 import { TXID } from '../../util';
 import { QueriedUTXO } from '../../Data/BitcoinNode';
+import Button from 'react-bootstrap/esm/Button';
 export interface ViewableEntityInterface { }
 
 export class EmptyViewer implements ViewableEntityInterface { }
@@ -63,18 +64,17 @@ export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntity
 
     render() {
         return (
+            <>
+                <Button
+                    onClick={() => this.props.hide_details()}
+                    variant="link"
+                >
+                    <span className="glyphicon glyphicon-remove" style={{ color: "red" }}></span>
+                </Button>
             <div className="EntityViewer">
                 {this.guts()}
-                <ListGroup>
-                    <ListGroup.Item
-                        action
-                        onClick={() => this.props.hide_details()}
-                        variant="danger"
-                    >
-                        close
-                    </ListGroup.Item>
-                </ListGroup>
             </div>
+            </>
         );
     }
 }

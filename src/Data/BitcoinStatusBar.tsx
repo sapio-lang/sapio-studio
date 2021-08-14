@@ -1,5 +1,6 @@
 import React from 'react';
 import { BitcoinNodeManager } from './BitcoinNode';
+import './BitcoinStatusBar.css';
 interface BitcoinStatusBarProps {
     api: BitcoinNodeManager;
 }
@@ -35,10 +36,16 @@ export class BitcoinStatusBar extends React.Component<BitcoinStatusBarProps, Bit
         const headers = this.state.blockchaininfo.headers;
         const blocks = this.state.blockchaininfo.headers;
         return (
-            <div>
-                chain: {network},
-                balance: {this.state.balance} BTC,
-                processed: {blocks}/{headers}
+            <div className="BitcoinStatusBar">
+                <div>
+                    chain: {network}
+                </div>
+                <div>
+                    balance: {this.state.balance} BTC
+                </div>
+                <div>
+                    processed: {blocks}/{headers}
+                </div>
             </div>
         );
     }

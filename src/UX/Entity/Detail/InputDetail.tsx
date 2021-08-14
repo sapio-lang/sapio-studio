@@ -1,9 +1,9 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import ListGroup from 'react-bootstrap/ListGroup';
+import "./InputDetail.css";
 import { OutpointDetail } from './OutpointDetail';
 import Form from 'react-bootstrap/Form';
-import { hash_to_hex } from '../../../util';
+import { hash_to_hex, sequence_convert, time_to_pretty_string } from '../../../util';
 import Hex from './Hex';
 interface IProps {
     txinput: Bitcoin.TxInput;
@@ -35,91 +35,88 @@ export class InputDetail extends React.Component<IProps, IState> {
             this.state.witness_selection === undefined
                 ? null
                 : this.props.witnesses[this.state.witness_selection].map(
-                      (elt, i) => (
-                          <ListGroup.Item key={i} variant="dark">
-                              <Hex
-                                  readOnly
-                                  className="txhex"
-                                  value={maybeDecode(
-                                      true ||
-                                          i ===
-                                              this.props.witnesses[
-                                                  this.state
-                                                      .witness_selection ?? 0
-                                              ].length -
-                                                  1,
-                                      elt
-                                  )}
-                              />
-                          </ListGroup.Item>
-                      )
-                  );
+                    (elt, i) => (
+                        <Hex
+                            key={i}
+                            readOnly
+                            className="txhex"
+                            value={maybeDecode(
+                                true ||
+                                i ===
+                                this.props.witnesses[
+                                    this.state
+                                        .witness_selection ?? 0
+                                ].length -
+                                1,
+                                elt
+                            )}
+                        />
+                    )
+                );
         const scriptValue = Bitcoin.script.toASM(
             Bitcoin.script.decompile(this.props.txinput.script) ??
-                new Buffer('')
+            Buffer.from('Error Decompiling')
         );
-        const sequence =
-            this.props.txinput.sequence ===
-            Bitcoin.Transaction.DEFAULT_SEQUENCE ? null : (
-                <h6>Sequence: {this.props.txinput.sequence} </h6>
-            );
+        const seq = this.props.txinput.sequence
+        const { relative_time, relative_height } = sequence_convert(seq);
+        const sequence = relative_time === 0 ? (relative_height === 0 ? null :
+            (<div className="InputDetailSequence"><span>Relative Height: </span>{relative_height}</div>)) :
+            (<div className="InputDetailSequence"><span>Relative Time: </span>{time_to_pretty_string(relative_time)}</div>);
+        
+
         const witness = this.props.witnesses.map((w, i) => (
             <option key={i} value={i}>
-                {' '}
-                {i}{' '}
+                {i}
             </option>
         ));
+        const scriptSig = this.props.txinput.script.length === 0 ? null :
+            (
+                <div className="InputDetailScriptSig">
+                    <p>ScriptSig:</p>
+                    <Hex
+                        readOnly
+                        className="txhex"
+                        value={scriptValue}
+                    ></Hex>
+                </div>
+            );
         // missing horizontal
         return (
             <div>
-                <ListGroup variant="flush">
-                    <ListGroup.Item variant="dark">
-                        <OutpointDetail
-                            txid={hash_to_hex(this.props.txinput.hash)}
-                            n={this.props.txinput.index}
-                            onClick={this.props.goto}
-                        />
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">{sequence}</ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <h6>Script:</h6>
-                        <Hex
-                            readOnly
-                            className="txhex"
-                            value={scriptValue}
-                        ></Hex>
-                    </ListGroup.Item>
-                    <ListGroup.Item variant="dark">
-                        <Form
-                            onChange={() => {
-                                console.log(this.form);
-                                this.setState({
-                                    witness_selection:
-                                        this.form.value || undefined,
-                                });
+                <OutpointDetail
+                    txid={hash_to_hex(this.props.txinput.hash)}
+                    n={this.props.txinput.index}
+                    onClick={() => this.props.goto()}
+                />
+                {sequence}
+                {scriptSig}
+                <Form
+                    onChange={() => {
+                        console.log(this.form.value);
+                        this.setState({
+                            witness_selection:
+                                this.form.value || undefined,
+                        });
+                    }}
+                >
+                    <Form.Group>
+                        <Form.Label>
+                            <div>
+                                <span> Witness: </span> {this.state.witness_selection}
+                            </div>
+                        </Form.Label>
+                        <Form.Control
+                            as="select"
+                            ref={(r: any) => {
+                                this.form = r;
                             }}
                         >
-                            <Form.Group>
-                                <Form.Label>
-                                    <h6>
-                                        {' '}
-                                        Witness {this.state.witness_selection}
-                                    </h6>
-                                </Form.Label>
-                                <Form.Control
-                                    as="select"
-                                    ref={(r:any) => {
-                                        this.form = r;
-                                    }}
-                                >
-                                    <option value={undefined}></option>
-                                    {witness}
-                                </Form.Control>
-                            </Form.Group>
-                        </Form>
-                        <ListGroup>{witness_display}</ListGroup>
-                    </ListGroup.Item>
-                </ListGroup>
+                            <option value={undefined}></option>
+                            {witness}
+                        </Form.Control>
+                    </Form.Group>
+                </Form>
+                {witness_display}
             </div>
         );
     }
