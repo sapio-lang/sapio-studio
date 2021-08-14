@@ -4,6 +4,8 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from './Hex';
 import { UTXOModel } from '../../../Data/UTXO';
 import { pretty_amount } from '../../../util';
+import Button from 'react-bootstrap/esm/Button';
+import "./OutputDetail.css";
 
 interface OutputDetailProps {
     txoutput: UTXOModel;
@@ -16,20 +18,18 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
             new Buffer('');
         const script = Bitcoin.script.toASM(decomp);
         return (
-            <>
-                <ListGroup variant="flush">
-                    <h6> {pretty_amount(this.props.txoutput.utxo.amount)} </h6>
-                    <Hex readOnly className="txhex" value={script} />
-                    <ListGroup.Item
-                        action
-                        variant="success"
-                        onClick={this.props.goto}
-                    >
-                        {' '}
-                        Go{' '}
-                    </ListGroup.Item>
-                </ListGroup>
-            </>
+            <div className="OutputDetail">
+                <span> {pretty_amount(this.props.txoutput.utxo.amount)} </span>
+                <Hex readOnly className="txhex" value={script} />
+                <Button
+                    variant="link"
+                    onClick={() => this.props.goto()}
+                >
+                    <span className="glyphicon glyphicon-chevron-right" style={{ color: "green" }}
+                        title="Go to the transaction that created this."
+                    ></span>
+                </Button>
+            </div>
         );
     }
 }

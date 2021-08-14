@@ -15,6 +15,7 @@ import { NodeModel } from '@projectstorm/react-diagrams';
 import { PhantomTransactionModel, TransactionModel } from '../../../Data/Transaction';
 import { Data, ContractModel } from '../../../Data/ContractManager';
 import { QueriedUTXO } from '../../../Data/BitcoinNode';
+import Button from 'react-bootstrap/esm/Button';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -129,132 +130,72 @@ export class UTXODetail extends React.Component<
                 this.props.entity.utxo.script,
                 Bitcoin.networks.regtest
             );
-        } catch {}
-        if (this.props.entity.txn instanceof PhantomTransactionModel) {
-            const is_mock = UTXODetail.isMock(
-                this.props.entity.txn.get_txid(),
-                this.props.entity.utxo.index
-            );
-            const creator = !is_mock ? null : (
-                <ListGroup.Item
-                    action
-                    variant="success"
-                    onClick={() => this.create()}
+        } catch { }
+        const spends = this.props.entity.utxo.spends.map((elt, i) => (
+            <div
+                key={get_wtxid_backwards(elt.tx)}
+                className="Spend"
+            >
+                <Hex value={elt.get_txid()} />
+                <Button
+                    variant="link"
+                    onClick={() => this.goto(elt)}
                 >
-                    Create
-                </ListGroup.Item>
-            );
-            const check_exists = is_mock ? null : (
-                <ListGroup.Item
-                    action
-                    variant="secondary"
-                    onClick={() => this.query()}
-                >
-                    Query
-                </ListGroup.Item>
-            );
+                    <span className="glyphicon glyphicon-chevron-right" style={{ color: "green" }}
 
-            const spends = this.props.entity.utxo.spends.map((elt, i) => (
-                <ListGroup.Item
-                    key={get_wtxid_backwards(elt.tx)}
-                    variant="dark"
-                >
-                    <ListGroup horizontal className="Spend">
-                        <ListGroup.Item variant="dark">
-                            <Hex value={elt.get_txid()} />
-                        </ListGroup.Item>
-                        <ListGroup.Item
-                            action
-                            variant="success"
-                            onClick={() => this.goto(elt)}
-                        >
-                            {' '}
-                            Go
-                        </ListGroup.Item>
-                    </ListGroup>
-                </ListGroup.Item>
-            ));
-            const flash = !this.state.flash ? null : (
-                <ListGroup>
-                    <ListGroup.Item variant="danger">
-                        {this.state.flash}
-                    </ListGroup.Item>
-                </ListGroup>
-            );
-            return (
-                <div className="UTXODetail">
-                    <h1>External UTXO</h1>
-                    {flash}
-                    <ListGroup>
-                        {creator}
-                        {check_exists}
-                    </ListGroup>
+                        title="Go To The Spending Transaction"
+                    ></span>
+                </Button>
+            </div>
+        ));
+        const is_mock = UTXODetail.isMock(
+            this.props.entity.txn.get_txid(),
+            this.props.entity.utxo.index
+        );
+        const creator = !is_mock ? null : (
+            <Button
+                variant="link"
+                onClick={() => this.create()}
+            >
+                <span className="glyphicon glyphicon-cloud-plus" style={{ color: "green" }}
+                    title="Create Output"
+                ></span>
+            </Button>
+        );
+        const check_exists = is_mock ? null : (
+            <Button
+                variant="link"
+                onClick={() => this.query()}
+            >
+                <span className="glyphicon glyphicon-cloud-download" style={{ color: "purple" }}
+                    title="Query Node for this Output"
+                ></span>
+            </Button>
+        );
+        const title = (this.props.entity.txn instanceof PhantomTransactionModel) ? "External UTXO" :
+            pretty_amount(this.props.entity.utxo.amount);
 
-                    <OutpointDetail
-                        txid={this.props.entity.txn.get_txid()}
-                        n={this.props.entity.utxo.index}
-                        onClick={() => this.goto(this.props.entity.txn)}
-                    />
-                    {address}
-                    <ListGroup>
-                        <ListGroup.Item variant="dark">
-                            <h4>Spends</h4>
-                        </ListGroup.Item>
-                        <ListGroup.Item variant="dark">
-                            <ListGroup variant="flush">{spends}</ListGroup>
-                        </ListGroup.Item>
-                    </ListGroup>
+        return (
+            <div className="UTXODetail">
+                {this.state.flash}
+                <div>
+                    {creator}
+                    {check_exists}
                 </div>
-            );
-        } else {
-            const spends = this.props.entity.utxo.spends.map((elt, i) => (
-                <ListGroup.Item
-                    key={get_wtxid_backwards(elt.tx)}
-                    variant="dark"
-                >
-                    <ListGroup horizontal className="Spend">
-                        <ListGroup.Item variant="dark">
-                            <Hex value={elt.get_txid()} />
-                        </ListGroup.Item>
-                        <ListGroup.Item
-                            action
-                            variant="success"
-                            onClick={() => this.goto(elt)}
-                        >
-                            {' '}
-                            Go
-                        </ListGroup.Item>
-                    </ListGroup>
-                </ListGroup.Item>
-            ));
-            return (
-                <div className="UTXODetail">
-                    <h1>{pretty_amount(this.props.entity.utxo.amount)}</h1>
-                    <hr></hr>
-                    <OutpointDetail
-                        txid={this.props.entity.txn.get_txid()}
-                        n={this.props.entity.utxo.index}
-                        onClick={() => this.goto(this.props.entity.txn)}
-                    />
+                <p>{title}</p>
 
-                    <ListGroup>
-                        <ListGroup.Item variant="dark">
-                            <h4> Address </h4>
-                        </ListGroup.Item>
-                        <ListGroup.Item variant="dark">
-                            <ASM className="txhex" readOnly value={address} />
-                        </ListGroup.Item>
-                    </ListGroup>
-                    <ListGroup>
-                        <ListGroup.Item variant="dark">
-                            <h4>Spends</h4>
-                        </ListGroup.Item>
-                        <ListGroup.Item variant="dark">
-                            <ListGroup variant="flush">{spends}</ListGroup>
-                        </ListGroup.Item>
-                    </ListGroup>
+                <OutpointDetail
+                    txid={this.props.entity.txn.get_txid()}
+                    n={this.props.entity.utxo.index}
+                    onClick={() => this.goto(this.props.entity.txn)}
+                />
+                <div>
+                    Address: <ASM className="txhex" readOnly value={address} />
                 </div>
-            );
-        }
+                <div>
+                    Spent By: {spends}
+                </div>
+            </div>
+        );
     }
 }
