@@ -3,17 +3,17 @@ const path = require('path');
 const url = require('url');
 const fs = require('fs');
 const { settings } = require("./settings");
-const { list_contracts, } = require("./sapio");
 
 let mainWindow;
 let Client = require('bitcoin-core');
 
-const createMenu = require('./createMenu.js');
+const { createMenu } = require('./createMenu.js');
 const register_handlers = require('./handlers.js');
 const ElectronPreferences = require('electron-preferences');
 
 let client = new Client();
 exports.client = client;
+
 function load_settings() {
     const network = settings.value("bitcoin-config.network");
     const username = settings.value("bitcoin-config.rpcuser");
@@ -22,7 +22,11 @@ function load_settings() {
     const host = settings.value("bitcoin-config.rpchost");
 
     client = new Client({
-        network, username, password, port, host
+        network,
+        username,
+        password,
+        port,
+        host
     });
 }
 
@@ -54,7 +58,7 @@ function createWindow() {
         mainWindow.show();
     });
     mainWindow.loadURL(startUrl);
-    mainWindow.on('closed', function () {
+    mainWindow.on('closed', function() {
         mainWindow = null;
     });
     createMenu(mainWindow);
@@ -64,13 +68,13 @@ function createWindow() {
 
 app.on('ready', createWindow);
 
-app.on('window-all-closed', function () {
+app.on('window-all-closed', function() {
     if (process.platform !== 'darwin') {
         app.quit();
     }
 });
 
-app.on('activate', function () {
+app.on('activate', function() {
     if (mainWindow === null) {
         createWindow();
     }

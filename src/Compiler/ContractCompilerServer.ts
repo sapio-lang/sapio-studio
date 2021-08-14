@@ -13,6 +13,10 @@ export class CompilerServer {
         this.app = app;
         this.expected_next = [['menu', null]];
         this.menu_content = [];
+        window.electron.register("create_contract_from_cache", async ([which, args] : [string, string]) =>
+        {
+            await this.create(which, args);
+        })
     }
 
     // Contract Creation

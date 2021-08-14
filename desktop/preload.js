@@ -11,7 +11,8 @@ async function create_contract(which, args) {
 
 }
 
-const callbacks = ["simulate", "load_hex", "save_hex", "create_contracts", "bitcoin-node-bar"];
+const callbacks = ["simulate", "load_hex", "save_hex", "create_contracts", "bitcoin-node-bar", "create_contract_from_cache"];
+
 function register(msg, action) {
     if (callbacks.includes(msg)) {
         const listener = (event, args) => {
@@ -21,7 +22,7 @@ function register(msg, action) {
         return () => ipcRenderer.removeListener(msg, listener);
     }
     throw "Unregistered Callback";
-    
+
 }
 contextBridge.exposeInMainWorld('electron', {
     bitcoin_command,
