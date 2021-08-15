@@ -4,12 +4,29 @@
     }
 }
 
-.PortsContainer {
+.PortsContainerTop {
     flex-direction: row;
     display: flex;
     justify-content: center;
     width: 100%;
 }
-.PortsContainer > * {
+
+.PortsContainerTop>* {
     flex: 0 1 20%;
+}
+
+.PortsContainerBottom {
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.PortsContainerBottom>* {
+    flex: 0 1 20%;
+}
+
+.TransactionNode {
+    display: grid;
+    grid-template-columns: 1fr auto;
 }

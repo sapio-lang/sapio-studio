@@ -126,7 +126,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         const p = new DefaultPortModel({
             in: true,
             name: label,
-            label: label,
+            label: "",
             alignment: PortModelAlignment.TOP,
         });
         if (!after) {
