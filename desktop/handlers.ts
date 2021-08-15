@@ -1,7 +1,7 @@
-const { ipcMain } = require('electron');
-const { sapio } = require("./sapio.ts");
-
-module.exports = function(client) {
+import { ipcMain } from "electron";
+import {sapio} from "./sapio";
+import Client from 'bitcoin-core';
+export default function(client: typeof Client) {
 
     ipcMain.handle('bitcoin-command', async(event, arg) => {
         let result = await client.command(arg);
