@@ -11,6 +11,7 @@ import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
 import "./TransactionDetail.css";
 import { sequence_convert, time_to_pretty_string } from '../../../util';
+import Color from 'color';
 interface TransactionDetailProps {
     entity: TransactionModel;
     broadcast: (a: Transaction) => Promise<any>;
@@ -18,7 +19,7 @@ interface TransactionDetailProps {
 }
 interface IState {
     broadcastable: boolean;
-    color: string;
+    color: Color;
 }
 export class TransactionDetail extends React.Component<
     TransactionDetailProps,
@@ -29,13 +30,14 @@ export class TransactionDetail extends React.Component<
         this.props.entity.set_broadcastable_hook((b) =>
             this.setState({ broadcastable: b })
         );
-        this.state = { broadcastable: false, color: this.props.entity.color };
+        this.state = { broadcastable: false, color:  Color("red")};
     }
     static getDerivedStateFromProps(
         props: TransactionDetailProps,
         state: IState
     ) {
         state.broadcastable = props.entity.is_broadcastable();
+        state.color = Color(props.entity.color);
         return state;
     }
 
@@ -46,8 +48,9 @@ export class TransactionDetail extends React.Component<
         if (!(x instanceof PhantomTransactionModel)) x.setSelected(true);
     }
     onchange_color(e: ChangeEvent<HTMLInputElement>) {
-        this.setState({ color: e.target.value })
-        this.props.entity.setColor(e.target.value);
+        let color = new Color(e.target.value);
+        this.props.entity.setColor(color.hex());
+        this.setState({ color });
     }
     onchange_purpose(e: ChangeEvent<HTMLInputElement>) {
         this.props.entity.setPurpose(e.target.value);
@@ -142,12 +145,11 @@ export class TransactionDetail extends React.Component<
                     <span>Color:</span>
                     <div>
                         <input
-                            defaultValue={this.props.entity.color}
-                            value={this.state.color}
+                            defaultValue={this.state.color.hex()}
                             type="color"
                             onChange={debounce_color}
                         />
-                        <span> {this.state.color}</span>
+                        <span> {this.state.color.hex()}</span>
                     </div>
                 </div>
                 <div className="properties">
