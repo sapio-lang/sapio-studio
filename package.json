@@ -53,7 +53,7 @@
         "eject": "react-scripts eject",
         "prettier": "prettier --write src desktop",
         "prettier:check": "prettier --check src desktop",
-        "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && yarn build-tsc && electron ./dist/desktop/main.js",
+        "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && yarn build-tsc && electron .",
         "start-react": "export BROWSER=none REACT_EDITOR=none && react-scripts start",
         "test": "react-scripts test"
     },
