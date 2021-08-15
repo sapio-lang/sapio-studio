@@ -116,6 +116,7 @@ export class SpendLinkSegment extends React.Component {
             <>
                 <path
                     fill="none"
+                    strokeLinecap="square"
                     ref={(ref) => {
                         this.path = ref;
                     }}

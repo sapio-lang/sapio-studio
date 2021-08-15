@@ -12,7 +12,6 @@ import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { UTXOModel } from '../../../../Data/UTXO';
-import { transform } from 'lodash';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
@@ -22,21 +21,21 @@ import { transform } from 'lodash';
 // padding-bottom:150%;
 const UTXONode = styled.div<{ selected: boolean; confirmed: boolean }>`
     color: white;
-    overflow: visible;
+    overflow: hidden;
     font-size: 11px;
+    border-radius:25%;
     box-shadow: ${(p) =>
         p.selected ? '4px 1px 10px rgba(0,192,255,0.5)' : 'none'};
     &.unreachable:after {
         content: '';
-        z-index: 2;
         position: absolute;
         top: 0;
         left: 0;
         height: 100%;
         width: 100%;
         background: rgba(0, 0, 0, 0.7);
-        box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.9);
-        border-radius: 22px 3.5px;
+        box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.9);
+        border-radius: 25%;
         background-clip: border-box;
     }
 `;
@@ -77,9 +76,14 @@ const PortsBottom = styled.div<{ color: string }>`
 interface PortsContainer2Props {
     children: React.ReactNode[];
 }
-class PortsContainer2 extends React.Component<PortsContainer2Props> {
+class PortsContainerUTXOTop extends React.Component<PortsContainer2Props> {
     render() {
-        return <div className="PortsContainer2">{this.props.children}</div>;
+        return <div className="PortsContainerUTXOTop">{this.props.children}</div>;
+    }
+}
+class PortsContainerUTXOBottom extends React.Component<PortsContainer2Props> {
+    render() {
+        return <div className="PortsContainerUTXOBottom">{this.props.children}</div>;
     }
 }
 
@@ -161,14 +165,14 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
         let black = Color('black').toString();
         const ports_top =
             ports_in.length === 0 ? null : (
-                <PortsTop key="ports" color={black}>
-                    <PortsContainer2 key="inputs">{ports_in}</PortsContainer2>
+                <PortsTop key="ports" color={"transparent"}>
+                    <PortsContainerUTXOTop key="inputs">{ports_in}</PortsContainerUTXOTop>
                 </PortsTop>
             );
         const ports_bottom =
             ports_out.length === 0 ? null : (
                 <PortsBottom color={white}>
-                    <PortsContainer2 key="outputs">{ports_out}</PortsContainer2>
+                    <PortsContainerUTXOBottom key="outputs">{ports_out}</PortsContainerUTXOBottom>
                 </PortsBottom>
             );
 
@@ -190,35 +194,27 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
             : 'unreachable';
         return (
             <div>
-                <UTXONode
-                    ref={(node) => (this.node = node)}
-                    data-default-utxonode-name={this.props.node.getOptions().name}
-                    key={this.id}
-                    selected={this.props.node.isSelected()}
-                    confirmed={this.props.node.isConfirmed()}
-                    className={reachable_cl}
-                >
-                    <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "auto 1fr auto"
+                {ports_top}
+                <div style={{position:"relative"}}>
 
-                    }}>
-
-
-                        {ports_top}
-                        <div>
-
-                            <Title color={color}>
-                                <TitleName>{this.props.node.getOptions().name}</TitleName>
-                            </Title>
-                            {is_conf}
-                            <Title color={color}>
-                                <TitleName>{pretty_amount(this.state.amount)}</TitleName>
-                            </Title>
-                        </div>
+                    <UTXONode
+                        ref={(node) => (this.node = node)}
+                        data-default-utxonode-name={this.props.node.getOptions().name}
+                        key={this.id}
+                        selected={this.props.node.isSelected()}
+                        confirmed={this.props.node.isConfirmed()}
+                        className={reachable_cl}
+                    >
+                        <Title color={color}>
+                            <TitleName>{this.props.node.getOptions().name}</TitleName>
+                        </Title>
+                        {is_conf}
+                        <Title color={color}>
+                            <TitleName>{pretty_amount(this.state.amount)}</TitleName>
+                        </Title>
                         {ports_bottom}
-                    </div>
-                </UTXONode>
+                    </UTXONode>
+                </div>
             </div >
         );
     }
