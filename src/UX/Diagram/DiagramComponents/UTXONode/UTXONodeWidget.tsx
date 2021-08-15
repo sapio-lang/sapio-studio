@@ -12,6 +12,7 @@ import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { UTXOModel } from '../../../../Data/UTXO';
+import { transform } from 'lodash';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
@@ -25,7 +26,6 @@ const UTXONode = styled.div<{ selected: boolean; confirmed: boolean }>`
     font-size: 11px;
     box-shadow: ${(p) =>
         p.selected ? '4px 1px 10px rgba(0,192,255,0.5)' : 'none'};
-    border-radius: 25px 5px;
     &.unreachable:after {
         content: '';
         z-index: 2;
@@ -63,21 +63,15 @@ const TitleName = styled.div`
 
 const PortsTop = styled.div<{ color: string }>`
     display: flex;
-    border-radius: 25px 5px 0px 0px;
     background-color: ${(p) => p.color};
     color: white;
-    border-top: 5px solid black;
-    border-left: 5px solid black;
 `;
 
 const PortsBottom = styled.div<{ color: string }>`
     display: flex;
-    border-radius: 0 0 25px 5px;
     background-color: ${(p) => p.color};
     color: black;
 
-    border-bottom: 5px solid white;
-    border-right: 5px solid white;
 `;
 
 interface PortsContainer2Props {
@@ -195,24 +189,37 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
             ? 'reachable'
             : 'unreachable';
         return (
-            <UTXONode
-                ref={(node) => (this.node = node)}
-                data-default-utxonode-name={this.props.node.getOptions().name}
-                key={this.id}
-                selected={this.props.node.isSelected()}
-                confirmed={this.props.node.isConfirmed()}
-                className={reachable_cl}
-            >
-                {ports_top}
-                <Title color={color}>
-                    <TitleName>{this.props.node.getOptions().name}</TitleName>
-                </Title>
-                {is_conf}
-                <Title color={color}>
-                    <TitleName>{pretty_amount(this.state.amount)}</TitleName>
-                </Title>
-                {ports_bottom}
-            </UTXONode>
+            <div>
+                <UTXONode
+                    ref={(node) => (this.node = node)}
+                    data-default-utxonode-name={this.props.node.getOptions().name}
+                    key={this.id}
+                    selected={this.props.node.isSelected()}
+                    confirmed={this.props.node.isConfirmed()}
+                    className={reachable_cl}
+                >
+                    <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "auto 1fr auto"
+
+                    }}>
+
+
+                        {ports_top}
+                        <div>
+
+                            <Title color={color}>
+                                <TitleName>{this.props.node.getOptions().name}</TitleName>
+                            </Title>
+                            {is_conf}
+                            <Title color={color}>
+                                <TitleName>{pretty_amount(this.state.amount)}</TitleName>
+                            </Title>
+                        </div>
+                        {ports_bottom}
+                    </div>
+                </UTXONode>
+            </div >
         );
     }
 }
