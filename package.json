@@ -17,8 +17,12 @@
         "@testing-library/react": "^9.3.2",
         "@testing-library/user-event": "^7.1.2",
         "@types/color": "^3.0.1",
+        "@types/jest": "^27.0.1",
         "@types/lodash": "^4.14.150",
+        "@types/node": "^16.6.1",
+        "@types/react": "^17.0.18",
         "@types/react-bootstrap": "^1.0.0",
+        "@types/react-dom": "^17.0.9",
         "await-spawn": "^4.0.2",
         "bitcoin-core": "^3.0.0",
         "bitcoinjs-lib": "^5.1.6",
@@ -39,15 +43,17 @@
         "react-dom": "^16.12.0",
         "react-scripts": "^4.0.1",
         "resize-observer-polyfill": "^1.5.1",
-        "typescript": "^3.7.4"
+        "typescript": "^4.3.5"
     },
-    "main": "./desktop/main.js",
+    "main": "./dist/desktop/main.js",
     "scripts": {
+        "build-tsc": "yarn tsc",
+        "watch": "yarn tsc -w",
         "build": "react-scripts build",
         "eject": "react-scripts eject",
         "prettier": "prettier --write src desktop",
         "prettier:check": "prettier --check src desktop",
-        "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && electron .",
+        "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && yarn build-tsc && electron .",
         "start-react": "export BROWSER=none REACT_EDITOR=none && react-scripts start",
         "test": "react-scripts test"
     },

@@ -1,11 +1,10 @@
-const { app, Menu } = require('electron');
-const ElectronPreferences = require('electron-preferences');
-const { settings } = require('./settings');
-const { dialog } = require('electron');
-const { sapio } = require('./sapio');
+import { app, BrowserWindow, Menu, shell } from 'electron';
+import { settings } from './settings';
+import { dialog } from 'electron';
+import { sapio } from './sapio';
 
 
-function createMenu(window) {
+export function createMenu(window: BrowserWindow) {
 
     const template = [{
             label: 'File',
@@ -26,7 +25,7 @@ function createMenu(window) {
                     label: 'Load WASM Plugin',
                     click() {
                         const plugin = dialog.showOpenDialogSync({ properties: ['openFile'], filters: [{ "extensions": ["wasm"], name: "WASM" }] });
-                        load_contract_file_name(plugin);
+                        sapio.load_contract_file_name(plugin![0]);
                     }
                 },
                 {
@@ -40,7 +39,7 @@ function createMenu(window) {
                     label: 'Recreate Last Contract',
                     id: "file-contract-recreate",
                     async click() {
-                        window.webContents.send('create_contract_from_cache', sapio.contract_cache);
+                        sapio.recreate_contract(window)
                     },
                     enabled: false,
                 },
@@ -115,7 +114,7 @@ function createMenu(window) {
             role: 'help',
             submenu: [{
                 label: 'Learn More',
-                click() { require('electron').shell.openExternal('https://electronjs.org'); }
+                click() { shell.openExternal('https://electronjs.org'); }
             }]
         }
     ];
@@ -126,7 +125,7 @@ function createMenu(window) {
             submenu: [
                 { role: 'about' },
                 { type: 'separator' },
-                { role: 'services', submenu: [] },
+                { role: 'services' },
                 { type: 'separator' },
                 { role: 'hide' },
                 { role: 'hideothers' },
@@ -137,6 +136,7 @@ function createMenu(window) {
         });
 
         // Edit menu
+        /*
         template[2].submenu.push({ type: 'separator' }, {
             label: 'Speech',
             submenu: [
@@ -144,6 +144,7 @@ function createMenu(window) {
                 { role: 'stopspeaking' }
             ]
         });
+        */
 
         // Window menu
         template[6].submenu = [
@@ -155,10 +156,7 @@ function createMenu(window) {
         ];
     }
 
-    const menu = Menu.buildFromTemplate(template);
+    const menu = Menu.buildFromTemplate(template as any);
     Menu.setApplicationMenu(menu);
 }
 
-module.exports = {
-    createMenu
-};
