@@ -1,18 +1,15 @@
-const { app, BrowserWindow, Menu } = require('electron');
-const path = require('path');
-const url = require('url');
-const fs = require('fs');
-const { settings } = require("./settings");
+import { app, BrowserWindow, Menu } from 'electron';
+import path from 'path';
+import url from 'url';
+import { settings } from "./settings";
 
-let mainWindow;
-let Client = require('bitcoin-core');
+import Client from 'bitcoin-core';
 
-const { createMenu } = require('./createMenu.js');
-const register_handlers = require('./handlers.js');
-const ElectronPreferences = require('electron-preferences');
+import { createMenu } from './createMenu';
+import register_handlers from './handlers';
 
-let client = new Client();
-exports.client = client;
+export let client = null;
+let mainWindow: BrowserWindow | null = null;
 
 function load_settings() {
     const network = settings.value("bitcoin-config.network");
@@ -53,9 +50,8 @@ function createWindow() {
             sandbox: true,
         },
     });
-    mainWindow.location = startUrl;
     mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
+        mainWindow&& mainWindow.show();
     });
     mainWindow.loadURL(startUrl);
     mainWindow.on('closed', function() {

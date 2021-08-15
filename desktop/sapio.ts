@@ -1,45 +1,44 @@
-const spawn = require('await-spawn');
+import spawn from 'await-spawn';
 
-const { ipcMain, Menu } = require("electron");
-const ElectronPreferences = require("electron-preferences");
-const { settings } = require("./settings");
+import { BrowserWindow, ipcMain, Menu } from "electron";
+import { settings } from "./settings";
 
 
 const memo_apis = new Map();
 const memo_logos = new Map();
 
 class SapioCompiler {
-    contract_cache = null;
+    #contract_cache: [string, string]| null;
     constructor() {
-        this.contract_cache = null;
+        this.#contract_cache = null;
     }
-    async list_contracts() {
+    async list_contracts(): Promise<Map<string, { name: string; key: string; api: string; logo: string; }>> {
         const binary = settings.value("sapio.binary");
         const results = new Map();
         const contracts = (await spawn(binary, ["contract", "list"])).toString();
-        let lines = contracts.trim().split(/\r?\n/).map((line) =>
+        let lines = contracts.trim().split(/\r?\n/).map((line:string) =>
             line.split(' -- ')
         );
 
-        let apis = await Promise.all(lines.map(([name, key]) => {
+        let apis = await Promise.all(lines.map(([name, key]: [string, string]) => {
             if (memo_apis.has(key)) {
                 return memo_apis.get(key);
             } else {
                 return spawn(binary, ["contract", "api", "--key", key])
-                    .then((v) => JSON.parse(v.toString()))
-                    .then((api) => {
+                    .then((v: any) => JSON.parse(v.toString()))
+                    .then((api: any) => {
                         memo_apis.set(key, api);
                         return api;
                     })
             }
         }));
-        let logos = await Promise.all(lines.map(([name, key]) => {
+        let logos = await Promise.all(lines.map(([name, key]:[string, string]) => {
             if (memo_logos.has(key)) {
                 return memo_logos.get(key);
             } else {
                 return spawn(binary, ["contract", "logo", "--key", key])
-                    .then((logo) => logo.toString().trim())
-                    .then((logo) => {
+                    .then((logo: any) => logo.toString().trim())
+                    .then((logo: string) => {
                         memo_logos.set(key, logo);
                         return logo;
                     });
@@ -59,14 +58,18 @@ class SapioCompiler {
         }
         return results;
     }
-    async load_contract_file_name(file) {
+    async load_contract_file_name(file:string) {
         const binary = settings.value("sapio.binary");
         const child = await spawn(binary, ["contract", "load", "--file", file]);
         console.log(`child stdout:\n${child.toString()}`);
 
     }
-    async create_contract(which, args) {
-        this.contract_cache = [which, args];
+
+    async recreate_contract(window: BrowserWindow) {
+        window.webContents.send('create_contract_from_cache', this.#contract_cache);
+    }
+    async create_contract(which: string, args: string) {
+        this.#contract_cache = [which, args];
         update_menu("file-contract-recreate", true)
         const binary = settings.value("sapio.binary");
         let created, bound;
@@ -102,8 +105,9 @@ class SapioCompiler {
 
 }
 
-function update_menu(id, enabled) {
-    const menu = Menu.getApplicationMenu();
-    menu.getMenuItemById(id).enabled = enabled;
+function update_menu(id: string, enabled: boolean) {
+    const menu = Menu.getApplicationMenu()!;
+    const item = menu.getMenuItemById(id);
+    if (item) item.enabled = enabled;
 }
-module.exports = { sapio: new SapioCompiler() }
+export const sapio = new SapioCompiler();
