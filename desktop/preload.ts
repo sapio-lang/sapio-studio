@@ -1,21 +1,26 @@
-const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron');
-const { contextBridge } = require('electron')
+import { ipcRenderer, contextBridge } from 'electron';
+import { IpcRendererEvent } from 'electron/main';
 
 
-async function bitcoin_command(command) {
+async function bitcoin_command(command: { method: string, parameters: any[] }[]) {
     return ipcRenderer.invoke('bitcoin-command', command);
 }
 
-async function create_contract(which, args) {
+async function create_contract(which: string, args: string) {
     return ipcRenderer.invoke('create_contract', [which, args])
 
 }
 
-const callbacks = ["simulate", "load_hex", "save_hex", "create_contracts", "bitcoin-node-bar", "create_contract_from_cache"];
+const callbacks = {
+    "simulate": 0, "load_hex": 0, "save_hex": 0,
+    "create_contracts": 0, "bitcoin-node-bar": 0, "create_contract_from_cache": 0
+};
 
-function register(msg, action) {
-    if (callbacks.includes(msg)) {
-        const listener = (event, args) => {
+type Callback = keyof typeof callbacks;
+
+function register(msg: Callback, action: (args:any) => void): () => void {
+    if (callbacks.hasOwnProperty(msg)) {
+        const listener = (event:IpcRendererEvent, args:any) => {
             action(args)
         };
         ipcRenderer.on(msg, listener);

@@ -12,16 +12,17 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react",
-    "noFallthroughCasesInSwitch": true
+    "jsx": "react-jsx",
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./dist",
+    "incremental": true
   },
   "include": [
-    "src"
+    "src", "desktop"
   ]
 }
