@@ -1,28 +1,34 @@
 {
+  "include": [
+    "src",
+    "desktop"
+  ],
+  "exclude": [
+    "buiild",
+    "public",
+    "dist"
+  ],
   "compilerOptions": {
-    "target": "es5",
+    "incremental": true,
+    "target": "ESNEXT",
+    "module": "esnext",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "downlevelIteration": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
-    "noFallthroughCasesInSwitch": true,
-    "outDir": "./dist",
-    "incremental": true
-  },
-  "include": [
-    "src", "desktop"
-  ]
+    "noEmit": true
+  }
 }
