@@ -11,12 +11,14 @@
     width: 100%;
 }
 
-.PortsContainerTop>* {
-    flex: 0 1 20%;
+.PortsContainerTop>div>:nth-child(2) {
+    display: none;
 }
 
+.PortsContainerTop {}
+
 .PortsContainerBottom {
-    flex-direction: column;
+    flex-direction: row;
     display: flex;
     justify-content: center;
     width: 100%;
@@ -29,4 +31,12 @@
 .TransactionNode {
     display: grid;
     grid-template-columns: 1fr auto;
+}
+
+.port {
+    background-color: transparent !important;
+}
+
+.port>* {
+    background-color: transparent !important;
 }

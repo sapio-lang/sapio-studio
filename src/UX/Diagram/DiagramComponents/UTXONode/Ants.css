@@ -4,13 +4,22 @@
     }
 }
 
-.PortsContainer2 {
-    flex-direction: column;
+.PortsContainerUTXOTop {
+    flex-direction: row;
     display: flex;
     justify-content: center;
     width: 100%;
 }
 
-.PortsContainer2>* {
+.PortsContainerUTXOTop {}
+
+.PortsContainerUTXOBottom {
+    flex-direction: row;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.PortsContainerUTXOBottom>* {
     flex: 0 1 20%;
 }

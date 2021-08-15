@@ -154,21 +154,22 @@ export class TransactionNodeWidget extends React.Component<
             </div>
         );
         return (
-            <Node
-                data-default-node-name={this.props.node.name}
-                selected={this.props.node.isSelected()}
-                confirmed={this.props.node.isConfirmed()}
-                background={this.props.node.color}
-                className={
-                    (this.state.is_reachable ? 'reachable' : 'unreachable') + " TransactionNode"
-                }
-            >
+            <>
+                <PortsTop color={"transparent"} style={{ justifyContent:"center" }}>
+                    <PortsContainerTop>
+                        {_.map(this.props.node.getInPorts(), this.generatePort)}
+                    </PortsContainerTop >
+                </PortsTop>
+                <Node
+                    data-default-node-name={this.props.node.name}
+                    selected={this.props.node.isSelected()}
+                    confirmed={this.props.node.isConfirmed()}
+                    background={this.props.node.color}
+                    className={
+                        (this.state.is_reachable ? 'reachable' : 'unreachable') + " TransactionNode"
+                    }
+                >
                     <div>
-                        <PortsTop color={white}>
-                            <PortsContainerTop>
-                                {_.map(this.props.node.getInPorts(), this.generatePort)}
-                            </PortsContainerTop >
-                        </PortsTop>
                         <Title color={color}>
                             <TitleName>Transaction</TitleName>
                             <TitleName>{this.props.node.name}</TitleName>
@@ -177,16 +178,17 @@ export class TransactionNodeWidget extends React.Component<
                         <Title color={color}>
                             <TitleName>{this.state.purpose}</TitleName>
                         </Title>
+                        <PortsBottom color={black}>
+                            <PortsContainerBottom>
+                                {_.map(
+                                    this.props.node.getOutPorts(),
+                                    this.generatePort
+                                )}
+                            </PortsContainerBottom>
+                        </PortsBottom>
                     </div>
-                    <PortsBottom color={black}>
-                        <PortsContainerBottom>
-                            {_.map(
-                                this.props.node.getOutPorts(),
-                                this.generatePort
-                            )}
-                        </PortsContainerBottom>
-                    </PortsBottom>
-            </Node>
+                </Node>
+            </>
         );
     }
 }
