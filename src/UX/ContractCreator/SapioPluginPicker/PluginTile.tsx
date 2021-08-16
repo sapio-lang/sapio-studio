@@ -1,15 +1,13 @@
 import React from 'react';
 import { PluginSelector } from './PluginSelector';
+import { JSONSchema7 } from 'json-schema';
 
 interface TileProps {
     parent: PluginSelector;
     app: Plugin;
 }
-export interface PluginAPI {
-    title: string;
-}
 export interface Plugin {
-    api: PluginAPI;
+    api: JSONSchema7;
     name: string;
     key: string;
     logo: string;
