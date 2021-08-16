@@ -18,9 +18,9 @@ const callbacks = {
 
 type Callback = keyof typeof callbacks;
 
-function register(msg: Callback, action: (args:any) => void): () => void {
+function register(msg: Callback, action: (args: any) => void): () => void {
     if (callbacks.hasOwnProperty(msg)) {
-        const listener = (event:IpcRendererEvent, args:any) => {
+        const listener = (event: IpcRendererEvent, args: any) => {
             action(args)
         };
         ipcRenderer.on(msg, listener);
@@ -29,8 +29,16 @@ function register(msg: Callback, action: (args:any) => void): () => void {
     throw "Unregistered Callback";
 
 }
+function get_preferences_sync() {
+    return ipcRenderer.sendSync('getPreferences');
+}
+function preferences_listener(listener: (e: any, preferences: any) => void) {
+    ipcRenderer.on('preferencesUpdated', listener);
+}
 contextBridge.exposeInMainWorld('electron', {
     bitcoin_command,
     register,
     create_contract,
+    get_preferences_sync,
+    preferences_listener,
 })
