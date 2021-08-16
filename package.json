@@ -47,13 +47,13 @@
     },
     "main": "./dist/desktop/main.js",
     "scripts": {
-        "build-tsc": "yarn tsc",
+        "build-electron": "yarn tsc -p ./tsconfig.node.json",
         "watch": "yarn tsc -w",
         "build": "react-scripts build",
         "eject": "react-scripts eject",
         "prettier": "prettier --write src desktop",
         "prettier:check": "prettier --check src desktop",
-        "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && yarn build-tsc && electron .",
+        "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && yarn build-electron && electron .",
         "start-react": "export BROWSER=none REACT_EDITOR=none && react-scripts start",
         "test": "react-scripts test"
     },
