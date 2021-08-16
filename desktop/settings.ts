@@ -17,6 +17,10 @@ export const settings = new ElectronPreferences({
         sapio: {
             binary: path.resolve(os.homedir(), 'sapio/target/debug/sapio-cli'),
         },
+        display: {
+            'sats-bound': 9_999_999,
+            'animate-flow': 1,
+        }
     },
     /**
      * The preferences window is divided into sections. Each section has a label, an icon, and one or
@@ -65,8 +69,22 @@ export const settings = new ElectronPreferences({
                                 label:
                                     'Satoshis / Bitcoin Threshold in Sats (§)',
                                 key: 'sats-bound',
-                                type: 'number',
+                                type: 'text',
+                                inputType: 'number',
                                 help: 'The level at which to show sats or btc',
+                            },
+                        ],
+                    },
+                    {
+                        label: 'Animation',
+                        fields: [
+                            {
+                                label: 'Coin Flow Animation Speed in Seconds (0 to disable)',
+                                key: 'animate-flow',
+                                'type': 'slider',
+                                'min': 0,
+                                'max': 5,
+                                help: 'To use the visualizer or not',
                             },
                         ],
                     },
