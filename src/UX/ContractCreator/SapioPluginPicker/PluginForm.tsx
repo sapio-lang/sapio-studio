@@ -1,7 +1,7 @@
 import React from 'react';
 import Form, { ISubmitEvent } from '@rjsf/core';
 import { CompilerServer } from '../../../Compiler/ContractCompilerServer';
-import { Plugin } from './PluginTile';
+import { logo_image, Plugin } from './PluginTile';
 
 interface PluginFormProps {
     app: Plugin;
@@ -14,6 +14,7 @@ export class PluginForm extends React.Component<PluginFormProps> {
     render() {
         return (
             <div style={{ padding: '5%' }}>
+                {logo_image(this.props.app)}
                 <Form
                     schema={this.props.app.api}
                     onSubmit={(e: ISubmitEvent<any>) => this.handleSubmit(e, this.props.app.key)}
