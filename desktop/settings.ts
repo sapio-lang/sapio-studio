@@ -55,6 +55,26 @@ export const settings = new ElectronPreferences({
             }
         },
         {
+            id: 'display',
+            label: 'Display Settings',
+            icon: 'eye-19',
+            form: {
+                groups: [
+                    {
+                        label: 'Units',
+                        fields: [
+                            {
+                                label: "Satoshis / Bitcoin Threshold in Sats (§)",
+                                key: "sats-bound",
+                                type: 'number',
+                                help: "The level at which to show sats or btc",
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+        {
             id: 'bitcoin-config',
             label: 'Bitcoin Node',
             icon: 'notes',
