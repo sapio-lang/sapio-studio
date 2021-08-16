@@ -35,11 +35,6 @@ import './Glyphs.css';
 import { TXID } from './util';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
 
-declare global {
-    interface Window {
-        electron: any;
-    }
-}
 class ModelManager {
     model: DiagramModel;
     constructor(model: DiagramModel) {

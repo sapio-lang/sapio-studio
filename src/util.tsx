@@ -2,6 +2,11 @@ import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 
+declare global {
+    interface Window {
+        electron: any;
+    }
+}
 interface Key {
     index: number;
     hash: Buffer;
