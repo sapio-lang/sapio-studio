@@ -32,7 +32,6 @@
         "dagre": "^0.8.5",
         "electron-preferences": "^2.4.1",
         "esm": "^3.2.25",
-        "http-proxy-middleware": "^1.0.3",
         "lodash": "^4.17.15",
         "mathjs": "^7.5.1",
         "pathfinding": "^0.4.18",
