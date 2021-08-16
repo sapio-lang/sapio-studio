@@ -12,9 +12,22 @@ export interface Plugin {
     key: string;
     logo: string;
 }
+export function logo_image(app: Plugin) {
+    const logo = "data:image/png;base64," + app.logo;
+    return (
+        <div style={{
+            width: "100%",
+            height: "auto",
+            justifyContent: "center",
+            position: "relative",
+            display: "flex"
+        }}>
+            <img alt="logo" src={logo} width="100px" height="100px" />
+        </div>
+    );
+}
 export class PluginTile extends React.Component<TileProps> {
     render() {
-        const logo = "data:image/png;base64," + this.props.app.logo;
         return (
             <div className="PluginTile">
                 <a
@@ -22,9 +35,7 @@ export class PluginTile extends React.Component<TileProps> {
                         this.props.parent.select(this.props.app.key);
                     }}
                 >
-                    <div style={{ width: "100px", height: "100px" }}>
-                        <img alt="logo" src={logo} width="100%" height="100%" />
-                    </div>
+                    {logo_image(this.props.app)}
                     <div>{this.props.app.name}</div>
                 </a>
             </div>
