@@ -41,7 +41,7 @@
         "react": "^16.12.0",
         "react-bootstrap": "^1.0.0",
         "react-dom": "^16.12.0",
-        "react-scripts": "^4.0.1",
+        "react-scripts": "^4.0.3",
         "resize-observer-polyfill": "^1.5.1",
         "typescript": "^4.3.5"
     },
