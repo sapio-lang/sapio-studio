@@ -19,7 +19,7 @@ export const settings = new ElectronPreferences({
         },
         display: {
             'sats-bound': 9_999_999,
-            'animate-flow': 1,
+            'animate-flow': 500,
         }
     },
     /**
@@ -79,11 +79,11 @@ export const settings = new ElectronPreferences({
                         label: 'Animation',
                         fields: [
                             {
-                                label: 'Coin Flow Animation Speed in Seconds (0 to disable)',
+                                label: 'Coin Flow Animation Speed in milliseconds (0 to disable)',
                                 key: 'animate-flow',
                                 'type': 'slider',
                                 'min': 0,
-                                'max': 5,
+                                'max': 5000,
                                 help: 'To use the visualizer or not',
                             },
                         ],
@@ -173,8 +173,4 @@ export const settings = new ElectronPreferences({
             ],
         },
     ]),
-    /**
-     * If you want to apply your own CSS. The path should be relative to your appPath.
-     */
-    css: 'custom-style.css',
 });
