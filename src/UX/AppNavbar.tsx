@@ -19,15 +19,6 @@ export function AppNavbar(props: any): JSX.Element {
             name: string, api:
             JSONSchema7, key: string
         }>) => {
-            for (let [_, { api }] of args) {
-                /* TODO: Hack! Filters out specific workaround for TraitWrapper type */
-                Object.entries(api.definitions!).forEach(([key, js_value]) => {
-                    if (!key.startsWith("TraitWrapper_for_")) return;
-                    let value = js_value as { anyOf: any[] | undefined, allOf: undefined | any[] };
-                    value.allOf = value.anyOf ? [value.anyOf[0]] : [];
-                    delete value.anyOf;
-                });
-            }
             setModalCreateAPIs(args);
             setModalCreate(true);
         });
