@@ -1,49 +1,57 @@
 import spawn from 'await-spawn';
 
-import { BrowserWindow, ipcMain, Menu } from "electron";
-import { settings } from "./settings";
-
+import { BrowserWindow, ipcMain, Menu } from 'electron';
+import { settings } from './settings';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
 
 class SapioCompiler {
-    #contract_cache: [string, string]| null;
+    #contract_cache: [string, string] | null;
     constructor() {
         this.#contract_cache = null;
     }
-    async list_contracts(): Promise<Map<string, { name: string; key: string; api: string; logo: string; }>> {
-        const binary = settings.value("sapio.binary");
+    async list_contracts(): Promise<
+        Map<string, { name: string; key: string; api: string; logo: string }>
+    > {
+        const binary = settings.value('sapio.binary');
         const results = new Map();
-        const contracts = (await spawn(binary, ["contract", "list"])).toString();
-        let lines = contracts.trim().split(/\r?\n/).map((line:string) =>
-            line.split(' -- ')
-        );
+        const contracts = (
+            await spawn(binary, ['contract', 'list'])
+        ).toString();
+        let lines = contracts
+            .trim()
+            .split(/\r?\n/)
+            .map((line: string) => line.split(' -- '));
 
-        let apis = await Promise.all(lines.map(([name, key]: [string, string]) => {
-            if (memo_apis.has(key)) {
-                return memo_apis.get(key);
-            } else {
-                return spawn(binary, ["contract", "api", "--key", key])
-                    .then((v: any) => JSON.parse(v.toString()))
-                    .then((api: any) => {
-                        memo_apis.set(key, api);
-                        return api;
-                    })
-            }
-        }));
-        let logos = await Promise.all(lines.map(([name, key]:[string, string]) => {
-            if (memo_logos.has(key)) {
-                return memo_logos.get(key);
-            } else {
-                return spawn(binary, ["contract", "logo", "--key", key])
-                    .then((logo: any) => logo.toString().trim())
-                    .then((logo: string) => {
-                        memo_logos.set(key, logo);
-                        return logo;
-                    });
-            }
-        }));
+        let apis = await Promise.all(
+            lines.map(([name, key]: [string, string]) => {
+                if (memo_apis.has(key)) {
+                    return memo_apis.get(key);
+                } else {
+                    return spawn(binary, ['contract', 'api', '--key', key])
+                        .then((v: any) => JSON.parse(v.toString()))
+                        .then((api: any) => {
+                            memo_apis.set(key, api);
+                            return api;
+                        });
+                }
+            })
+        );
+        let logos = await Promise.all(
+            lines.map(([name, key]: [string, string]) => {
+                if (memo_logos.has(key)) {
+                    return memo_logos.get(key);
+                } else {
+                    return spawn(binary, ['contract', 'logo', '--key', key])
+                        .then((logo: any) => logo.toString().trim())
+                        .then((logo: string) => {
+                            memo_logos.set(key, logo);
+                            return logo;
+                        });
+                }
+            })
+        );
 
         for (var i = 0; i < lines.length; ++i) {
             const [name, key] = lines[i];
@@ -53,56 +61,60 @@ class SapioCompiler {
                 name,
                 key,
                 api,
-                logo
+                logo,
             });
         }
         return results;
     }
-    async load_contract_file_name(file:string) {
-        const binary = settings.value("sapio.binary");
-        const child = await spawn(binary, ["contract", "load", "--file", file]);
+    async load_contract_file_name(file: string) {
+        const binary = settings.value('sapio.binary');
+        const child = await spawn(binary, ['contract', 'load', '--file', file]);
         console.log(`child stdout:\n${child.toString()}`);
-
     }
 
     async recreate_contract(window: BrowserWindow) {
-        window.webContents.send('create_contract_from_cache', this.#contract_cache);
+        window.webContents.send(
+            'create_contract_from_cache',
+            this.#contract_cache
+        );
     }
     async create_contract(which: string, args: string) {
         this.#contract_cache = [which, args];
-        update_menu("file-contract-recreate", true)
-        const binary = settings.value("sapio.binary");
+        update_menu('file-contract-recreate', true);
+        const binary = settings.value('sapio.binary');
         let created, bound;
         try {
-            const create = await spawn(binary, ["contract", "create", "--key", which, args]);
+            const create = await spawn(binary, [
+                'contract',
+                'create',
+                '--key',
+                which,
+                args,
+            ]);
             created = create.toString();
         } catch (e) {
-            console.debug("Failed to Create", which, args);
+            console.debug('Failed to Create', which, args);
             return null;
         }
         try {
-            const bind = await spawn(binary, ["contract", "bind", created]);
+            const bind = await spawn(binary, ['contract', 'bind', created]);
             bound = bind.toString();
-        } catch (e) {
+        } catch (e: any) {
             console.debug(created);
-            console.log("Failed to bind", e.toString());
+            console.log('Failed to bind', e.toString());
             return null;
         }
         try {
-            const for_tux = await spawn(binary, ["contract", "for_tux", bound]);
+            const for_tux = await spawn(binary, ['contract', 'for_tux', bound]);
             const for_tuxed = for_tux.toString();
             console.debug(for_tuxed);
             return for_tuxed;
-
-        } catch (e) {
+        } catch (e: any) {
             console.debug(bound);
-            console.log("Failed to convert for tux", e.toString());
+            console.log('Failed to convert for tux', e.toString());
             return null;
         }
-
-
     }
-
 }
 
 function update_menu(id: string, enabled: boolean) {

@@ -82,7 +82,9 @@ class PortsContainerTop extends React.Component<PortsContainerProps> {
 }
 class PortsContainerBottom extends React.Component<PortsContainerProps> {
     render() {
-        return <div className="PortsContainerBottom">{this.props.children}</div>;
+        return (
+            <div className="PortsContainerBottom">{this.props.children}</div>
+        );
     }
 }
 
@@ -155,10 +157,13 @@ export class TransactionNodeWidget extends React.Component<
         );
         return (
             <>
-                <PortsTop color={"transparent"} style={{ justifyContent:"center" }}>
+                <PortsTop
+                    color={'transparent'}
+                    style={{ justifyContent: 'center' }}
+                >
                     <PortsContainerTop>
                         {_.map(this.props.node.getInPorts(), this.generatePort)}
-                    </PortsContainerTop >
+                    </PortsContainerTop>
                 </PortsTop>
                 <Node
                     data-default-node-name={this.props.node.name}
@@ -166,7 +171,9 @@ export class TransactionNodeWidget extends React.Component<
                     confirmed={this.props.node.isConfirmed()}
                     background={this.props.node.color}
                     className={
-                        (this.state.is_reachable ? 'reachable' : 'unreachable') + " TransactionNode"
+                        (this.state.is_reachable
+                            ? 'reachable'
+                            : 'unreachable') + ' TransactionNode'
                     }
                 >
                     <div>

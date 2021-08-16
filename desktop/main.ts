@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu } from 'electron';
 import path from 'path';
 import url from 'url';
-import { settings } from "./settings";
+import { settings } from './settings';
 
 import Client from 'bitcoin-core';
 
@@ -12,18 +12,18 @@ export let client = null;
 let mainWindow: BrowserWindow | null = null;
 
 function load_settings() {
-    const network = settings.value("bitcoin-config.network");
-    const username = settings.value("bitcoin-config.rpcuser");
-    const password = settings.value("bitcoin-config.rpcpassword");
-    const port = settings.value("bitcoin-config.rpcport");
-    const host = settings.value("bitcoin-config.rpchost");
+    const network = settings.value('bitcoin-config.network');
+    const username = settings.value('bitcoin-config.rpcuser');
+    const password = settings.value('bitcoin-config.rpcpassword');
+    const port = settings.value('bitcoin-config.rpcport');
+    const host = settings.value('bitcoin-config.rpchost');
 
     client = new Client({
         network,
         username,
         password,
         port,
-        host
+        host,
     });
 }
 
@@ -51,26 +51,25 @@ function createWindow() {
         },
     });
     mainWindow.once('ready-to-show', () => {
-        mainWindow&& mainWindow.show();
+        mainWindow && mainWindow.show();
     });
     mainWindow.loadURL(startUrl);
-    mainWindow.on('closed', function() {
+    mainWindow.on('closed', function () {
         mainWindow = null;
     });
     createMenu(mainWindow);
     register_handlers(client);
-
 }
 
 app.on('ready', createWindow);
 
-app.on('window-all-closed', function() {
+app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') {
         app.quit();
     }
 });
 
-app.on('activate', function() {
+app.on('activate', function () {
     if (mainWindow === null) {
         createWindow();
     }

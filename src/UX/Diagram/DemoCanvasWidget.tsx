@@ -61,7 +61,7 @@ export class DemoCanvasWidget extends React.Component<
         this.engine = new DagreEngine({
             graph: {
                 rankdir: 'TB',
-                align: "DL",
+                align: 'DL',
                 ranker: 'tight-tree',
                 marginx: 25,
                 marginy: 25,

@@ -10,9 +10,9 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import { TXID } from '../../util';
 import { QueriedUTXO } from '../../Data/BitcoinNode';
 import Button from 'react-bootstrap/esm/Button';
-export interface ViewableEntityInterface { }
+export interface ViewableEntityInterface {}
 
-export class EmptyViewer implements ViewableEntityInterface { }
+export class EmptyViewer implements ViewableEntityInterface {}
 interface CurrentylViewedEntityProps {
     broadcast: (a: Transaction) => Promise<any>;
     fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
@@ -69,11 +69,12 @@ export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntity
                     onClick={() => this.props.hide_details()}
                     variant="link"
                 >
-                    <span className="glyphicon glyphicon-remove" style={{ color: "red" }}></span>
+                    <span
+                        className="glyphicon glyphicon-remove"
+                        style={{ color: 'red' }}
+                    ></span>
                 </Button>
-            <div className="EntityViewer">
-                {this.guts()}
-            </div>
+                <div className="EntityViewer">{this.guts()}</div>
             </>
         );
     }

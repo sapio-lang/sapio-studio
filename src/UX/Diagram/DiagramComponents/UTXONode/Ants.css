@@ -11,7 +11,8 @@
     width: 100%;
 }
 
-.PortsContainerUTXOTop {}
+.PortsContainerUTXOTop {
+}
 
 .PortsContainerUTXOBottom {
     flex-direction: row;
@@ -20,6 +21,6 @@
     width: 100%;
 }
 
-.PortsContainerUTXOBottom>* {
+.PortsContainerUTXOBottom > * {
     flex: 0 1 20%;
 }

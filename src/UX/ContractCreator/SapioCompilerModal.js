@@ -29,7 +29,8 @@ export class SapioCompilerModal extends React.Component {
                         name="ws"
                         type="text"
                         placeholder="url"
-                        defaultValue={this.props.compiler.location} />
+                        defaultValue={this.props.compiler.location}
+                    />
                     <Button type="submit">Set</Button>
                 </Form>
                 <Modal.Footer>

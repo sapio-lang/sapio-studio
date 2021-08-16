@@ -22,7 +22,9 @@ export class UTXOMetaData {
         this.spends = [];
     }
 }
-export class UTXOModel extends UTXONodeModel implements ViewableEntityInterface {
+export class UTXOModel
+    extends UTXONodeModel
+    implements ViewableEntityInterface {
     txn: TransactionModel;
     utxo: UTXOMetaData;
     constructor(
