@@ -17,7 +17,9 @@ export class PluginForm extends React.Component<PluginFormProps> {
                 {logo_image(this.props.app)}
                 <Form
                     schema={this.props.app.api}
-                    onSubmit={(e: ISubmitEvent<any>) => this.handleSubmit(e, this.props.app.key)}
+                    onSubmit={(e: ISubmitEvent<any>) =>
+                        this.handleSubmit(e, this.props.app.key)
+                    }
                 ></Form>
             </div>
         );

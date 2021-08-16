@@ -13,15 +13,20 @@ export class CompilerServer {
         this.app = app;
         this.expected_next = [['menu', null]];
         this.menu_content = [];
-        window.electron.register("create_contract_from_cache", async ([which, args] : [string, string]) =>
-        {
-            await this.create(which, args);
-        })
+        window.electron.register(
+            'create_contract_from_cache',
+            async ([which, args]: [string, string]) => {
+                await this.create(which, args);
+            }
+        );
     }
 
     // Contract Creation
     async create(type_arg: string, contract: any) {
-        const compiled_contract = await window.electron.create_contract(type_arg, contract);
+        const compiled_contract = await window.electron.create_contract(
+            type_arg,
+            contract
+        );
         this.app.load_new_model(JSON.parse(compiled_contract));
     }
 }

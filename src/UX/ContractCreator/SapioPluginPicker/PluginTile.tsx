@@ -13,15 +13,17 @@ export interface Plugin {
     logo: string;
 }
 export function logo_image(app: Plugin) {
-    const logo = "data:image/png;base64," + app.logo;
+    const logo = 'data:image/png;base64,' + app.logo;
     return (
-        <div style={{
-            width: "100%",
-            height: "auto",
-            justifyContent: "center",
-            position: "relative",
-            display: "flex"
-        }}>
+        <div
+            style={{
+                width: '100%',
+                height: 'auto',
+                justifyContent: 'center',
+                position: 'relative',
+                display: 'flex',
+            }}
+        >
             <img alt="logo" src={logo} width="100px" height="100px" />
         </div>
     );

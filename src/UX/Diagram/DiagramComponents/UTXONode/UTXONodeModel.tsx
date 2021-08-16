@@ -1,16 +1,11 @@
-import {
-    DefaultPortModel,
-    NodeModel,
-} from '@projectstorm/react-diagrams';
+import { DefaultPortModel, NodeModel } from '@projectstorm/react-diagrams';
 import {
     PortModelAlignment,
     NodeModelGenerics,
 } from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
 import { SpendLinkModel } from '../SpendLink/SpendLinkModel';
-import {
-    BasePositionModelOptions,
-} from '@projectstorm/react-canvas-core';
+import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import _ from 'lodash';
 import { TransactionModel } from '../../../../Data/Transaction';
 
@@ -126,7 +121,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         const p = new DefaultPortModel({
             in: true,
             name: label,
-            label: "",
+            label: '',
             alignment: PortModelAlignment.TOP,
         });
         if (!after) {

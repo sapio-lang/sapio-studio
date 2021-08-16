@@ -2,14 +2,17 @@ import { Transaction } from 'bitcoinjs-lib';
 import React, { ChangeEvent } from 'react';
 import * as Bitcoin from 'bitcoinjs-lib';
 import ListGroup from 'react-bootstrap/ListGroup';
-import { TransactionModel, PhantomTransactionModel } from '../../../Data/Transaction';
+import {
+    TransactionModel,
+    PhantomTransactionModel,
+} from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
 import Hex from './Hex';
 import { InputDetail } from './InputDetail';
 import { TXIDDetail } from './OutpointDetail';
 import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
-import "./TransactionDetail.css";
+import './TransactionDetail.css';
 import { sequence_convert, time_to_pretty_string } from '../../../util';
 import Color from 'color';
 interface TransactionDetailProps {
@@ -30,7 +33,7 @@ export class TransactionDetail extends React.Component<
         this.props.entity.set_broadcastable_hook((b) =>
             this.setState({ broadcastable: b })
         );
-        this.state = { broadcastable: false, color:  Color("red")};
+        this.state = { broadcastable: false, color: Color('red') };
     }
     static getDerivedStateFromProps(
         props: TransactionDetailProps,
@@ -81,7 +84,7 @@ export class TransactionDetail extends React.Component<
                     goto={() =>
                         this.goto(
                             this.props.find_tx_model(o.hash, o.index) ??
-                            this.props.entity
+                                this.props.entity
                         )
                     }
                     witnesses={witnesses}
@@ -89,9 +92,13 @@ export class TransactionDetail extends React.Component<
             );
         });
 
-        const { greatest_relative_height, greatest_relative_time, locktime_enable, relative_time_jsx, relative_height_jsx }
-            = compute_relative_timelocks(this.props.entity.tx);
-
+        const {
+            greatest_relative_height,
+            greatest_relative_time,
+            locktime_enable,
+            relative_time_jsx,
+            relative_height_jsx,
+        } = compute_relative_timelocks(this.props.entity.tx);
 
         const locktime = this.props.entity.tx.locktime;
         const as_date = new Date(1970, 0, 1);
@@ -100,8 +107,8 @@ export class TransactionDetail extends React.Component<
             !locktime_enable || locktime === 0
                 ? 'None'
                 : locktime < 500_000_000
-                    ? 'Block #' + locktime.toString()
-                    : as_date.toUTCString() + ' MTP';
+                ? 'Block #' + locktime.toString()
+                : as_date.toUTCString() + ' MTP';
         // note missing horizontal
         const inner_debounce_color = _.debounce(
             this.onchange_color.bind(this),
@@ -119,8 +126,13 @@ export class TransactionDetail extends React.Component<
             e.persist();
             inner_debounce_purpose(e);
         };
-        const absolute_lock_jsx = !locktime_enable || locktime === 0? null:
-                    (<><span>Absolute Lock Time:</span><span> {lt} </span></>);
+        const absolute_lock_jsx =
+            !locktime_enable || locktime === 0 ? null : (
+                <>
+                    <span>Absolute Lock Time:</span>
+                    <span> {lt} </span>
+                </>
+            );
         return (
             <div className="TransactionDetail">
                 {broadcast}
@@ -134,7 +146,6 @@ export class TransactionDetail extends React.Component<
                     />
                 </div>
                 <div className="purpose">
-
                     <span>Purpose:</span>
                     <input
                         defaultValue={this.props.entity.purpose}
@@ -158,14 +169,9 @@ export class TransactionDetail extends React.Component<
                     {relative_time_jsx}
                 </div>
                 <h4> Inputs</h4>
-                <div className="inputs">
-                    {ins}
-                </div>
+                <div className="inputs">{ins}</div>
                 <h4>Outputs</h4>
-                <div className="outputs">
-
-                    {outs}
-                </div>
+                <div className="outputs">{outs}</div>
             </div>
         );
     }
@@ -181,11 +187,35 @@ function compute_relative_timelocks(tx: Transaction) {
         if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) continue;
         locktime_enable = true;
         let { relative_time, relative_height } = sequence_convert(sequence);
-        greatest_relative_time = Math.max(relative_time, greatest_relative_time);
-        greatest_relative_height = Math.max(relative_height, greatest_relative_height);
+        greatest_relative_time = Math.max(
+            relative_time,
+            greatest_relative_time
+        );
+        greatest_relative_height = Math.max(
+            relative_height,
+            greatest_relative_height
+        );
     }
     const relative_time_string = time_to_pretty_string(greatest_relative_time);
-    const relative_time_jsx = greatest_relative_time === 0 ? null : (<><span>Relative Lock Time: </span><span>{relative_time_string} </span></>);
-    const relative_height_jsx = greatest_relative_height === 0 ? null : (<><span>Relative Height: </span><span>{greatest_relative_height} Blocks</span></>);
-    return { greatest_relative_height, greatest_relative_time, locktime_enable, relative_time_jsx, relative_height_jsx };
+    const relative_time_jsx =
+        greatest_relative_time === 0 ? null : (
+            <>
+                <span>Relative Lock Time: </span>
+                <span>{relative_time_string} </span>
+            </>
+        );
+    const relative_height_jsx =
+        greatest_relative_height === 0 ? null : (
+            <>
+                <span>Relative Height: </span>
+                <span>{greatest_relative_height} Blocks</span>
+            </>
+        );
+    return {
+        greatest_relative_height,
+        greatest_relative_time,
+        locktime_enable,
+        relative_time_jsx,
+        relative_height_jsx,
+    };
 }

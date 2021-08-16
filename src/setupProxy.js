@@ -1,5 +1,5 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
-export default function(app) {
+export default function (app) {
     app.use(
         createProxyMiddleware('/backend', {
             target: 'http://localhost:5000',
@@ -15,4 +15,4 @@ export default function(app) {
             pathRewrite: { '^/socket': '/' },
         })
     );
-};
+}

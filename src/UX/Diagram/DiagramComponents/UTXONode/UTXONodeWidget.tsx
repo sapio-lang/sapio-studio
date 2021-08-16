@@ -23,7 +23,7 @@ const UTXONode = styled.div<{ selected: boolean; confirmed: boolean }>`
     color: white;
     overflow: hidden;
     font-size: 11px;
-    border-radius:25%;
+    border-radius: 25%;
     box-shadow: ${(p) =>
         p.selected ? '4px 1px 10px rgba(0,192,255,0.5)' : 'none'};
     &.unreachable:after {
@@ -70,7 +70,6 @@ const PortsBottom = styled.div<{ color: string }>`
     display: flex;
     background-color: ${(p) => p.color};
     color: black;
-
 `;
 
 interface PortsContainer2Props {
@@ -78,12 +77,18 @@ interface PortsContainer2Props {
 }
 class PortsContainerUTXOTop extends React.Component<PortsContainer2Props> {
     render() {
-        return <div className="PortsContainerUTXOTop">{this.props.children}</div>;
+        return (
+            <div className="PortsContainerUTXOTop">{this.props.children}</div>
+        );
     }
 }
 class PortsContainerUTXOBottom extends React.Component<PortsContainer2Props> {
     render() {
-        return <div className="PortsContainerUTXOBottom">{this.props.children}</div>;
+        return (
+            <div className="PortsContainerUTXOBottom">
+                {this.props.children}
+            </div>
+        );
     }
 }
 
@@ -165,14 +170,18 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
         let black = Color('black').toString();
         const ports_top =
             ports_in.length === 0 ? null : (
-                <PortsTop key="ports" color={"transparent"}>
-                    <PortsContainerUTXOTop key="inputs">{ports_in}</PortsContainerUTXOTop>
+                <PortsTop key="ports" color={'transparent'}>
+                    <PortsContainerUTXOTop key="inputs">
+                        {ports_in}
+                    </PortsContainerUTXOTop>
                 </PortsTop>
             );
         const ports_bottom =
             ports_out.length === 0 ? null : (
                 <PortsBottom color={white}>
-                    <PortsContainerUTXOBottom key="outputs">{ports_out}</PortsContainerUTXOBottom>
+                    <PortsContainerUTXOBottom key="outputs">
+                        {ports_out}
+                    </PortsContainerUTXOBottom>
                 </PortsBottom>
             );
 
@@ -195,27 +204,32 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
         return (
             <div>
                 {ports_top}
-                <div style={{position:"relative"}}>
-
+                <div style={{ position: 'relative' }}>
                     <UTXONode
                         ref={(node) => (this.node = node)}
-                        data-default-utxonode-name={this.props.node.getOptions().name}
+                        data-default-utxonode-name={
+                            this.props.node.getOptions().name
+                        }
                         key={this.id}
                         selected={this.props.node.isSelected()}
                         confirmed={this.props.node.isConfirmed()}
                         className={reachable_cl}
                     >
                         <Title color={color}>
-                            <TitleName>{this.props.node.getOptions().name}</TitleName>
+                            <TitleName>
+                                {this.props.node.getOptions().name}
+                            </TitleName>
                         </Title>
                         {is_conf}
                         <Title color={color}>
-                            <TitleName>{pretty_amount(this.state.amount)}</TitleName>
+                            <TitleName>
+                                {pretty_amount(this.state.amount)}
+                            </TitleName>
                         </Title>
                         {ports_bottom}
                     </UTXONode>
                 </div>
-            </div >
+            </div>
         );
     }
 }

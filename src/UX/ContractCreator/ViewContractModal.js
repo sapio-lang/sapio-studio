@@ -19,7 +19,8 @@ export class ViewContractModal extends React.Component {
                     <FormControl
                         as="select"
                         placeholder="Existing Contract"
-                        className=" mr-sm-2" />
+                        className=" mr-sm-2"
+                    />
                     <Button type="submit">View</Button>
                 </Form>
                 <Modal.Footer>
