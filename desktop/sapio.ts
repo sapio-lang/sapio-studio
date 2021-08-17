@@ -1,8 +1,9 @@
 import spawn from 'await-spawn';
 import { ChildProcessWithoutNullStreams, spawn as spawnSync } from 'child_process';
 
-import { BrowserWindow, ipcMain, Menu } from 'electron';
-import { settings } from './settings';
+import { BrowserWindow, dialog, ipcMain, Menu } from 'electron';
+import { sys } from 'typescript';
+import { sapio_config_file, settings } from './settings';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
@@ -12,13 +13,37 @@ class SapioCompiler {
     constructor() {
         this.#contract_cache = null;
     }
+    static async command(args:string[]) : Promise<any> {
+        const binary = settings.value('sapio.binary');
+        const source = settings.value('sapio.configsource');
+        console.log(source);
+        let new_args : string[]= [];
+        switch(source) {
+            case "default":
+                new_args = args;
+                break;
+            case "file":
+                const config = settings.value('sapio.configfile');
+                new_args = ["--config", config, ...args];
+                break;
+            case "here":
+                console.log(sapio_config_file);
+                new_args = ["--config", sapio_config_file, ...args];
+                break;
+            default:
+                dialog.showErrorBox("Improper Source", "");
+                sys.exit(1)
+        }
+        console.debug("Callling", binary, new_args);
+        return spawn(binary, new_args);
+
+    }
     async list_contracts(): Promise<
         Map<string, { name: string; key: string; api: string; logo: string }>
     > {
-        const binary = settings.value('sapio.binary');
         const results = new Map();
         const contracts = (
-            await spawn(binary, ['contract', 'list'])
+            await SapioCompiler.command(['contract', 'list'])
         ).toString();
         let lines = contracts
             .trim()
@@ -30,7 +55,7 @@ class SapioCompiler {
                 if (memo_apis.has(key)) {
                     return memo_apis.get(key);
                 } else {
-                    return spawn(binary, ['contract', 'api', '--key', key])
+                    return SapioCompiler.command(['contract', 'api', '--key', key])
                         .then((v: any) => JSON.parse(v.toString()))
                         .then((api: any) => {
                             memo_apis.set(key, api);
@@ -44,7 +69,7 @@ class SapioCompiler {
                 if (memo_logos.has(key)) {
                     return memo_logos.get(key);
                 } else {
-                    return spawn(binary, ['contract', 'logo', '--key', key])
+                    return SapioCompiler.command(['contract', 'logo', '--key', key])
                         .then((logo: any) => logo.toString().trim())
                         .then((logo: string) => {
                             memo_logos.set(key, logo);
@@ -68,8 +93,7 @@ class SapioCompiler {
         return results;
     }
     async load_contract_file_name(file: string) {
-        const binary = settings.value('sapio.binary');
-        const child = await spawn(binary, ['contract', 'load', '--file', file]);
+        const child = await SapioCompiler.command(['contract', 'load', '--file', file]);
         console.log(`child stdout:\n${child.toString()}`);
     }
 
@@ -82,10 +106,9 @@ class SapioCompiler {
     async create_contract(which: string, args: string) {
         this.#contract_cache = [which, args];
         update_menu('file-contract-recreate', true);
-        const binary = settings.value('sapio.binary');
         let created, bound;
         try {
-            const create = await spawn(binary, [
+            const create = await SapioCompiler.command([
                 'contract',
                 'create',
                 '--key',
@@ -98,7 +121,7 @@ class SapioCompiler {
             return null;
         }
         try {
-            const bind = await spawn(binary, ['contract', 'bind', created]);
+            const bind = await SapioCompiler.command(['contract', 'bind', created]);
             bound = bind.toString();
         } catch (e: any) {
             console.debug(created);
@@ -106,7 +129,7 @@ class SapioCompiler {
             return null;
         }
         try {
-            const for_tux = await spawn(binary, ['contract', 'for_tux', bound]);
+            const for_tux = await SapioCompiler.command(['contract', 'for_tux', bound]);
             const for_tuxed = for_tux.toString();
             console.debug(for_tuxed);
             return for_tuxed;
@@ -128,7 +151,7 @@ export const sapio = new SapioCompiler();
 
 export function start_sapio_oracle() : ChildProcessWithoutNullStreams|null {
     const enabled = settings.value("sapio.oracle-local-enabled");
-    if (enabled.includes("oracle-launch_on_startup")) {
+    if (enabled) {
         const binary = settings.value('sapio.binary');
         const seed = settings.value('sapio.oracle-seed-file');
         const iface = settings.value('sapio.oracle-netinterface');
