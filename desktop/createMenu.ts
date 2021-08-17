@@ -1,9 +1,10 @@
-import { app, BrowserWindow, Menu, shell } from 'electron';
+import { app, BrowserWindow, clipboard, Menu, shell } from 'electron';
 import { settings } from './settings';
 import { dialog } from 'electron';
 import { sapio } from './sapio';
+import Client from 'bitcoin-core';
 
-export function createMenu(window: BrowserWindow) {
+export function createMenu(window: BrowserWindow, client:typeof Client) {
     const template = [
         {
             label: 'File',
@@ -86,11 +87,17 @@ export function createMenu(window: BrowserWindow) {
         {
             label: 'Bitcoin Node',
             submenu: [
-                { label: 'Connect' },
                 {
                     label: 'Toggle Node Bar',
                     async click() {
                         window.webContents.send('bitcoin-node-bar', 'show');
+                    },
+                },
+                {
+                    label: 'Create New Address to Clipboard',
+                    async click() {
+                        let result = await client.command("getnewaddress");
+                        clipboard.writeText(result)
                     },
                 },
             ],
