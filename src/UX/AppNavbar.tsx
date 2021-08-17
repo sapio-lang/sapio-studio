@@ -1,24 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import './AppNavbar.css';
-import { SaveHexModal } from "./ContractCreator/SaveHexModal";
-import { LoadHexModal } from "./ContractCreator/LoadHexModal";
-import { SapioCompilerModal } from "./ContractCreator/SapioCompilerModal";
-import { ViewContractModal } from "./ContractCreator/ViewContractModal";
+import { SaveHexModal } from './ContractCreator/SaveHexModal';
+import { LoadHexModal } from './ContractCreator/LoadHexModal';
+import { SapioCompilerModal } from './ContractCreator/SapioCompilerModal';
+import { ViewContractModal } from './ContractCreator/ViewContractModal';
 import { CreateContractModal } from './ContractCreator/CreateContractModal';
+import { JSONSchema7 } from 'json-schema';
 export function AppNavbar(props: any): JSX.Element {
     const [modalView, setModalView] = useState(false);
 
     const [modalSapioCompiler, setModalaSapioCompiler] = useState(false);
     const [modalCreate, setModalCreate] = useState(false);
     const [modalCreateAPIS, setModalCreateAPIs] = useState({});
-    window.electron.register("create_contracts", (args: [{
-        name: string, api:
-        Object, key: string
-    }]) => {
-        setModalCreateAPIs(args);
-        setModalCreate(true);
+    useEffect(() => {
+        return window.electron.register(
+            'create_contracts',
+            (
+                args: Map<
+                    string,
+                    {
+                        name: string;
+                        api: JSONSchema7;
+                        key: string;
+                    }
+                >
+            ) => {
+                setModalCreateAPIs(args);
+                setModalCreate(true);
+            }
+        );
     });
 
     const [showSim, setSim] = useState(true);
@@ -27,17 +39,16 @@ export function AppNavbar(props: any): JSX.Element {
         props.toggle_timing_simulator(showSim);
         setSim(!showSim);
     };
-    window.electron.register("simulate", toggleSim);
+    useEffect(() => window.electron.register('simulate', toggleSim));
 
     const [modalLoadHex, setModalLoadHex] = useState(false);
-    window.electron.register("load_hex", setModalLoadHex);
+    useEffect(() => window.electron.register('load_hex', setModalLoadHex));
 
     const [modalSaveHex, setModalSaveHex] = useState(false);
-    window.electron.register("save_hex", setModalSaveHex);
+    useEffect(() => window.electron.register('save_hex', setModalSaveHex));
 
     return (
         <div>
-
             <CreateContractModal
                 show={modalCreate}
                 hide={() => setModalCreate(false)}

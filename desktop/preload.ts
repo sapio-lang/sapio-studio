@@ -1,36 +1,47 @@
 import { ipcRenderer, contextBridge } from 'electron';
 import { IpcRendererEvent } from 'electron/main';
 
-
-async function bitcoin_command(command: { method: string, parameters: any[] }[]) {
+async function bitcoin_command(
+    command: { method: string; parameters: any[] }[]
+) {
     return ipcRenderer.invoke('bitcoin-command', command);
 }
 
 async function create_contract(which: string, args: string) {
-    return ipcRenderer.invoke('create_contract', [which, args])
-
+    return ipcRenderer.invoke('create_contract', [which, args]);
 }
 
 const callbacks = {
-    "simulate": 0, "load_hex": 0, "save_hex": 0,
-    "create_contracts": 0, "bitcoin-node-bar": 0, "create_contract_from_cache": 0
+    simulate: 0,
+    load_hex: 0,
+    save_hex: 0,
+    create_contracts: 0,
+    'bitcoin-node-bar': 0,
+    create_contract_from_cache: 0,
 };
 
 type Callback = keyof typeof callbacks;
 
-function register(msg: Callback, action: (args:any) => void): () => void {
+function register(msg: Callback, action: (args: any) => void): () => void {
     if (callbacks.hasOwnProperty(msg)) {
-        const listener = (event:IpcRendererEvent, args:any) => {
-            action(args)
+        const listener = (event: IpcRendererEvent, args: any) => {
+            action(args);
         };
         ipcRenderer.on(msg, listener);
         return () => ipcRenderer.removeListener(msg, listener);
     }
-    throw "Unregistered Callback";
-
+    throw 'Unregistered Callback';
+}
+function get_preferences_sync() {
+    return ipcRenderer.sendSync('getPreferences');
+}
+function preferences_listener(listener: (e: any, preferences: any) => void) {
+    ipcRenderer.on('preferencesUpdated', listener);
 }
 contextBridge.exposeInMainWorld('electron', {
     bitcoin_command,
     register,
     create_contract,
-})
+    get_preferences_sync,
+    preferences_listener,
+});

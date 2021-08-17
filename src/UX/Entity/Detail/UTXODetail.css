@@ -1,6 +1,7 @@
-.COutPoint {}
+.COutPoint {
+}
 
-.COutPoint>* {
+.COutPoint > * {
     padding: 0.5em;
 }
 
@@ -9,11 +10,11 @@
     grid-template-columns: 16em 1fr;
 }
 
-.Spend>* {
+.Spend > * {
     padding: 0.5em;
 }
 
-.Spend>.truncate {
+.Spend > .truncate {
     width: 16em;
 }
 
@@ -21,7 +22,7 @@
     padding: 10px;
 }
 
-.UTXODetail>h1,
+.UTXODetail > h1,
 h3,
 h4,
 h5 {
@@ -33,13 +34,13 @@ h5 {
     align-items: center;
 }
 
-.TXIDDetail>* {
+.TXIDDetail > * {
     padding: 0;
     width: 100%;
     border: 1px transparent none;
 }
 
-.TXIDDetail>*>code {
+.TXIDDetail > * > code {
     width: 16em;
     max-width: 90%;
 }

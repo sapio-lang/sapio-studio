@@ -44,7 +44,7 @@ export class TransactionModel
                 label: name,
             };
             // TODO: Get rid of assertion
-            const out: Bitcoin.TxOutput = (tx.outs[y]) as Bitcoin.TxOutput;
+            const out: Bitcoin.TxOutput = tx.outs[y] as Bitcoin.TxOutput;
             let utxo = new UTXOModel(
                 new UTXOMetaData(out.script, out.value, tx, y),
                 update,
@@ -99,7 +99,9 @@ export class TransactionModel
             );
         }
         this.utxo_models.map((x) => model.removeNode(x));
-        this.input_links.map((x) => model.removeLink((x as unknown) as LinkModel));
+        this.input_links.map((x) =>
+            model.removeLink((x as unknown) as LinkModel)
+        );
     }
     is_broadcastable() {
         return this.broadcastable;
