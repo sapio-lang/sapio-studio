@@ -22,6 +22,7 @@ export const settings = new ElectronPreferences({
             'oracle-remote-enabled': false,
             'oracle-remote-oracles-list': [],
             'oracle-remote-threshold': [],
+            plugin_map: {},
             configsource: "default"
         },
         display: {
@@ -68,6 +69,17 @@ export const settings = new ElectronPreferences({
                                 help: "If specified, to use the default file or one selected here.",
                                 dontAddToRecent: true,
                             },
+                            {
+                                label: 'Custom Plugin Mapping',
+                                key: 'plugin_map',
+                                type: 'list',
+                                size: 10,
+                                style: {
+                                    width: '75%'
+                                },
+                                help: 'Format is: api_name api_hash',
+                                orderable: true
+                            }
                         ],
                     },
                     {
@@ -281,6 +293,30 @@ export const custom_sapio_config = () => {
         }
         return [opts[1].trim(), opts[0].trim()];
     });
+    let plugin_map: Record<string, string> = {};
+    settings.value("sapio.plugin_map").forEach((line: string) => {
+        let opts = line.trim().split(" ");
+        if (opts.length != 2) {
+            dialog.showErrorBox("Setting Error:", "Improperly Formatted Setting for Sapio Plugin Map" + line);
+            error = true;
+            return;
+        }
+        let name = opts[0].trim();
+        let hash = opts[1].trim();
+        if (hash.length != 64) {
+            dialog.showErrorBox("Setting Error:", "Incorrect length key " + hash);
+            error = true;
+            return;
+
+        }
+        if (plugin_map.hasOwnProperty(name)) {
+            dialog.showErrorBox("Setting Error:", "Duplicate key " + name);
+            error = true;
+            return;
+        }
+        plugin_map[name] = hash;
+    });
+    console.log(plugin_map);
     if (error) return;
     const data = JSON.stringify({
         "main": null,
@@ -300,10 +336,12 @@ export const custom_sapio_config = () => {
                 "enabled": oracle_enabled,
                 "emulators": oracle_list,
                 "threshold": threshold
-            }
+            },
+            "plugin_map": plugin_map
         }
     });
     if (memo_data !== data) {
+        memo_data = data;
         console.info("Writing Sapio Setting to ", sapio_config_file, data);
         writeFileSync(sapio_config_file, data);
     }
