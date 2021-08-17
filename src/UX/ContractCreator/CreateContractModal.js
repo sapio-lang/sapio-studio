@@ -9,8 +9,7 @@ export class CreateContractModal extends React.Component {
         this.form = {};
     }
     render() {
-        if (!this.props.dynamic_forms)
-            return null;
+        if (!this.props.dynamic_forms) return null;
         return (
             <Modal show={this.props.show} onHide={this.props.hide} size="lg">
                 <Modal.Header closeButton>
@@ -22,7 +21,8 @@ export class CreateContractModal extends React.Component {
                     load_new_model={this.props.load_new_model}
                     applications={this.props.dynamic_forms}
                     export
-                    compiler={this.props.compiler} />
+                    compiler={this.props.compiler}
+                />
             </Modal>
         );
     }

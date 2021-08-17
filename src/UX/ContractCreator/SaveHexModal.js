@@ -14,9 +14,10 @@ export class SaveHexModal extends React.Component {
         let non_phantoms = this.props.contract.txn_models.filter((item) => {
             return (
                 -1 !==
-                item.tx.ins.findIndex((inp) => this.props.contract.txid_map.has_by_txid(
-                    txid_buf_to_string(inp.hash)
-                )
+                item.tx.ins.findIndex((inp) =>
+                    this.props.contract.txid_map.has_by_txid(
+                        txid_buf_to_string(inp.hash)
+                    )
                 )
             );
         });
@@ -30,7 +31,8 @@ export class SaveHexModal extends React.Component {
                     <FormControl
                         name="data"
                         as="textarea"
-                        defaultValue={JSON.stringify(data)} />
+                        defaultValue={JSON.stringify(data)}
+                    />
                 </Form>
                 <Modal.Footer>
                     <Button

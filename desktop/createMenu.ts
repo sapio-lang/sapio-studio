@@ -1,45 +1,49 @@
-import { app, BrowserWindow, Menu, shell } from 'electron';
+import { app, BrowserWindow, clipboard, Menu, shell } from 'electron';
 import { settings } from './settings';
 import { dialog } from 'electron';
 import { sapio } from './sapio';
+import Client from 'bitcoin-core';
 
-
-export function createMenu(window: BrowserWindow) {
-
-    const template = [{
+export function createMenu(window: BrowserWindow, client:typeof Client) {
+    const template = [
+        {
             label: 'File',
-            submenu: [{
+            submenu: [
+                {
                     label: 'Open Contract From Clipboard',
                     click() {
                         window.webContents.send('load_hex', true);
-                    }
+                    },
                 },
                 {
                     label: 'View Contract Hex',
                     click() {
                         window.webContents.send('save_hex', true);
-                    }
+                    },
                 },
                 { label: 'Open Contract From File' },
                 {
                     label: 'Load WASM Plugin',
                     click() {
-                        const plugin = dialog.showOpenDialogSync({ properties: ['openFile'], filters: [{ "extensions": ["wasm"], name: "WASM" }] });
+                        const plugin = dialog.showOpenDialogSync({
+                            properties: ['openFile'],
+                            filters: [{ extensions: ['wasm'], name: 'WASM' }],
+                        });
                         sapio.load_contract_file_name(plugin![0]);
-                    }
+                    },
                 },
                 {
                     label: 'Create New Contract',
                     async click() {
                         const contracts = await sapio.list_contracts();
                         window.webContents.send('create_contracts', contracts);
-                    }
+                    },
                 },
                 {
                     label: 'Recreate Last Contract',
-                    id: "file-contract-recreate",
+                    id: 'file-contract-recreate',
                     async click() {
-                        sapio.recreate_contract(window)
+                        sapio.recreate_contract(window);
                     },
                     enabled: false,
                 },
@@ -48,10 +52,9 @@ export function createMenu(window: BrowserWindow) {
                     label: 'Preferences',
                     click() {
                         settings.show();
-                    }
-
-                }
-            ]
+                    },
+                },
+            ],
         },
         {
             label: 'Edit',
@@ -64,8 +67,8 @@ export function createMenu(window: BrowserWindow) {
                 { role: 'paste' },
                 { role: 'pasteandmatchstyle' },
                 { role: 'delete' },
-                { role: 'selectall' }
-            ]
+                { role: 'selectall' },
+            ],
         },
         {
             label: 'View',
@@ -78,45 +81,53 @@ export function createMenu(window: BrowserWindow) {
                 { role: 'zoomin' },
                 { role: 'zoomout' },
                 { type: 'separator' },
-                { role: 'togglefullscreen' }
-            ]
+                { role: 'togglefullscreen' },
+            ],
         },
         {
             label: 'Bitcoin Node',
             submenu: [
-                { label: 'Connect' },
                 {
                     label: 'Toggle Node Bar',
                     async click() {
-                        window.webContents.send('bitcoin-node-bar', 'show')
-                    }
+                        window.webContents.send('bitcoin-node-bar', 'show');
+                    },
                 },
-            ]
+                {
+                    label: 'Create New Address to Clipboard',
+                    async click() {
+                        let result = await client.command("getnewaddress");
+                        clipboard.writeText(result)
+                    },
+                },
+            ],
         },
         {
-            label: "Simulate",
-            submenu: [{
-                label: "Timing",
-                click() {
-                    window.webContents.send('simulate', 'timing');
-                }
-            }]
-
+            label: 'Simulate',
+            submenu: [
+                {
+                    label: 'Timing',
+                    click() {
+                        window.webContents.send('simulate', 'timing');
+                    },
+                },
+            ],
         },
         {
             role: 'window',
-            submenu: [
-                { role: 'minimize' },
-                { role: 'close' }
-            ]
+            submenu: [{ role: 'minimize' }, { role: 'close' }],
         },
         {
             role: 'help',
-            submenu: [{
-                label: 'Learn More',
-                click() { shell.openExternal('https://electronjs.org'); }
-            }]
-        }
+            submenu: [
+                {
+                    label: 'Learn More',
+                    click() {
+                        shell.openExternal('https://electronjs.org');
+                    },
+                },
+            ],
+        },
     ];
 
     if (process.platform === 'darwin') {
@@ -131,8 +142,8 @@ export function createMenu(window: BrowserWindow) {
                 { role: 'hideothers' },
                 { role: 'unhide' },
                 { type: 'separator' },
-                { role: 'quit' }
-            ]
+                { role: 'quit' },
+            ],
         });
 
         // Edit menu
@@ -152,11 +163,10 @@ export function createMenu(window: BrowserWindow) {
             { role: 'minimize' },
             { role: 'zoom' },
             { type: 'separator' },
-            { role: 'front' }
+            { role: 'front' },
         ];
     }
 
     const menu = Menu.buildFromTemplate(template as any);
     Menu.setApplicationMenu(menu);
 }
-

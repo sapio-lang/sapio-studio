@@ -29,24 +29,21 @@ export class PluginSelector extends React.Component<IProps, IState> {
     render() {
         console.log(this.props.applications);
         let tiles = Array.from(this.props.applications, ([name, app], i) => (
-            <PluginTile
-                app={app}
-                parent={this}
-            />
+            <PluginTile app={app} parent={this} />
         ));
         if (this.state.selected === null) {
             return (
                 <div className="PluginSelectorGrid">
                     <div className="back"></div>
-                    <div className={"middle"}>{tiles}</div>
+                    <div className={'middle'}>{tiles}</div>
                     <div className="forward"></div>
                 </div>
             );
         } else {
             return (
                 <div>
-                    <div style={{textAlign:"right", paddingRight:"20px"}}>
-                        <a onClick={() => this.deselect()} >
+                    <div style={{ textAlign: 'right', paddingRight: '20px' }}>
+                        <a onClick={() => this.deselect()}>
                             <span className="glyphicon glyphicon-arrow-left"></span>
                         </a>
                     </div>

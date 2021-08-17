@@ -1,9 +1,13 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import "./InputDetail.css";
+import './InputDetail.css';
 import { OutpointDetail } from './OutpointDetail';
 import Form from 'react-bootstrap/Form';
-import { hash_to_hex, sequence_convert, time_to_pretty_string } from '../../../util';
+import {
+    hash_to_hex,
+    sequence_convert,
+    time_to_pretty_string,
+} from '../../../util';
 import Hex from './Hex';
 interface IProps {
     txinput: Bitcoin.TxInput;
@@ -34,50 +38,55 @@ export class InputDetail extends React.Component<IProps, IState> {
         const witness_display =
             this.state.witness_selection === undefined
                 ? null
-                : this.props.witnesses[this.state.witness_selection].map(
-                    (elt, i) => (
-                        <Hex
-                            key={i}
-                            readOnly
-                            className="txhex"
-                            value={maybeDecode(
-                                true ||
-                                i ===
-                                this.props.witnesses[
-                                    this.state
-                                        .witness_selection ?? 0
-                                ].length -
-                                1,
-                                elt
-                            )}
-                        />
-                    )
-                );
+                : this.props.witnesses[
+                      this.state.witness_selection
+                  ].map((elt, i) => (
+                      <Hex
+                          key={i}
+                          readOnly
+                          className="txhex"
+                          value={maybeDecode(
+                              true ||
+                                  i ===
+                                      this.props.witnesses[
+                                          this.state.witness_selection ?? 0
+                                      ].length -
+                                          1,
+                              elt
+                          )}
+                      />
+                  ));
         const scriptValue = Bitcoin.script.toASM(
             Bitcoin.script.decompile(this.props.txinput.script) ??
-            Buffer.from('Error Decompiling')
+                Buffer.from('Error Decompiling')
         );
-        const seq = this.props.txinput.sequence
+        const seq = this.props.txinput.sequence;
         const { relative_time, relative_height } = sequence_convert(seq);
-        const sequence = relative_time === 0 ? (relative_height === 0 ? null :
-            (<div className="InputDetailSequence"><span>Relative Height: </span>{relative_height}</div>)) :
-            (<div className="InputDetailSequence"><span>Relative Time: </span>{time_to_pretty_string(relative_time)}</div>);
-        
+        const sequence =
+            relative_time === 0 ? (
+                relative_height === 0 ? null : (
+                    <div className="InputDetailSequence">
+                        <span>Relative Height: </span>
+                        {relative_height}
+                    </div>
+                )
+            ) : (
+                <div className="InputDetailSequence">
+                    <span>Relative Time: </span>
+                    {time_to_pretty_string(relative_time)}
+                </div>
+            );
 
         const witness = this.props.witnesses.map((w, i) => (
             <option key={i} value={i}>
                 {i}
             </option>
         ));
-        const scriptSig = this.props.txinput.script.length === 0 ? null :
-            (
+        const scriptSig =
+            this.props.txinput.script.length === 0 ? null : (
                 <div className="InputDetailScriptSig">
                     <p>ScriptSig:</p>
-                    <Hex
-                        readOnly
-                        className="txhex"
-                        value={scriptValue}
-                    ></Hex>
+                    <Hex readOnly className="txhex" value={scriptValue}></Hex>
                 </div>
             );
         // missing horizontal
@@ -94,15 +103,15 @@ export class InputDetail extends React.Component<IProps, IState> {
                     onChange={() => {
                         console.log(this.form.value);
                         this.setState({
-                            witness_selection:
-                                this.form.value || undefined,
+                            witness_selection: this.form.value || undefined,
                         });
                     }}
                 >
                     <Form.Group>
                         <Form.Label>
                             <div>
-                                <span> Witness: </span> {this.state.witness_selection}
+                                <span> Witness: </span>{' '}
+                                {this.state.witness_selection}
                             </div>
                         </Form.Label>
                         <Form.Control
