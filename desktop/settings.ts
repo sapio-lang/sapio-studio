@@ -1,9 +1,11 @@
-import electron from 'electron';
+import electron, { dialog } from 'electron';
 const app = electron.app;
 import path from 'path';
 import os from 'os';
 import ElectronPreferences from 'electron-preferences';
 import { Menu } from 'electron';
+import { open, writeFileSync } from 'fs';
+
 
 export const settings = new ElectronPreferences({
     /**
@@ -16,7 +18,11 @@ export const settings = new ElectronPreferences({
     defaults: {
         sapio: {
             binary: path.resolve(os.homedir(), 'sapio/target/debug/sapio-cli'),
-            'oracle-local-enabled':[]
+            'oracle-local-enabled': false,
+            'oracle-remote-enabled': false,
+            'oracle-remote-oracles-list': [],
+            'oracle-remote-threshold': [],
+            configsource: "default"
         },
         display: {
             'sats-bound': 9_999_999,
@@ -35,48 +41,98 @@ export const settings = new ElectronPreferences({
             form: {
                 groups: [
                     {
-                        label: 'sapio-cli',
+                        label: 'Configure and select sapio-cli',
                         fields: [
                             {
-                                label: 'sapio-cli binary',
+                                label: 'Binary for sapio-cli',
                                 key: 'binary',
                                 type: 'file',
-                                help: 'the sapio-cli binary to use',
+                                help: "The sapio-cli binary to use. Release build highly recommended for performance",
                                 dontAddToRecent: true,
                             },
                             {
-                                label: 'Override Configuration File?',
+                                label: 'Preferences From',
+                                help: "Where should sapio-cli read preferences from",
+                                key: 'configsource',
+                                type: 'radio',
+                                options: [
+                                    { label: "Default", value: "default" },
+                                    { label: "Specific File", value: "file" },
+                                    { label: "Configured Here", value: "here" }
+                                ]
+                            },
+                            {
+                                label: 'Override Default Configuration File?',
                                 key: 'configfile',
                                 type: 'file',
-                                help:
-                                    'if specified, to use the default file or not',
+                                help: "If specified, to use the default file or one selected here.",
                                 dontAddToRecent: true,
                             },
                         ],
                     },
                     {
-                        label: 'oracle-server',
+                        label: 'Local Oracle Server:',
+                        help: "When set up, will enable a local oracle server",
                         fields: [
                             {
-                                label: "create local emulator",
+                                label: "Local Emulator Enable?",
+                                help: 'Run a local oracle on startup when checked.',
                                 key: "oracle-local-enabled",
-                                type:'checkbox',
-                                'options': [
-									{ 'label': 'Launch on Startup', 'value': 'oracle-launch_on_startup' },
+                                type: 'radio',
+                                options: [
+                                    { label: 'Launch on Startup', value: true },
+                                    { label: 'Do Not Launch', value: false },
                                 ]
                             },
                             {
-                                label: 'seed file',
+                                label: 'Seed File',
+                                help: 'The file containing the seed for this oracle. If you do not have one, try ' +
+                                    "`head -n 4096 /dev/urandom | shasum -a 256 > SAPIO_ORACLE_SEED`",
                                 key: 'oracle-seed-file',
                                 type: 'file',
-                                help: 'the file containing the seed for this oracle',
                                 dontAddToRecent: true,
                             },
                             {
-                                label: 'network interface',
+                                label: 'Network Interface',
+                                help: "What interface to bind (e.g. 0.0.0.0:8080)",
                                 key: 'oracle-netinterface',
                                 type: 'text',
-                                help: 'if set, wheather to run a local oracle',
+                            },
+                        ]
+                    },
+                    {
+                        label: 'Remote Oracle Servers:',
+                        help: "Servers to contact for remote sapio emulation",
+                        fields: [
+                            {
+                                label: "Sapio Remote Emulators Enabled",
+                                key: "oracle-remote-enabled",
+                                type: 'radio',
+                                options: [
+                                    { label: 'Use CTV Emulation', value: true },
+                                    { label: 'No CTV Emulation', value: false },
+                                ],
+                                help: "Should compilation target OP_CHECKTEMPLATEVERIFY or Oracle Emultation"
+
+                            },
+                            {
+                                label: "Emulator Trust Threshold",
+                                key: "oracle-remote-threshold",
+                                type: 'text',
+                                inputType: "number",
+                                min: 0,
+                                max: 255,
+                            },
+                            {
+                                'label': 'Oracles to Use',
+                                'key': 'oracle-remote-oracles-list',
+                                'type': 'list',
+                                'size': 10,
+                                'style': {
+                                    'width': '75%'
+                                },
+                                'help': 'Format is:   host:port pubkey',
+                                'orderable': true
                             },
                         ],
                     },
@@ -201,4 +257,58 @@ export const settings = new ElectronPreferences({
             ],
         },
     ]),
+});
+
+// Use blocking to ensure sync
+export const sapio_config_file = path.join(app.getPath("temp"), "custom_sapio_config.json");
+let memo_data = "";
+export const custom_sapio_config = () => {
+    let network = settings.value('bitcoin-config.network');
+    if (network === "mainnet") network = "main";
+    const username = settings.value('bitcoin-config.rpcuser');
+    const password = settings.value('bitcoin-config.rpcpassword');
+    const port = settings.value('bitcoin-config.rpcport');
+    const host = settings.value('bitcoin-config.rpchost');
+    const oracle_enabled = settings.value("sapio.oracle-remote-enabled");
+    const threshold = parseInt(settings.value("sapio.oracle-remote-threshold"));
+    let error = false;
+    const oracle_list = settings.value("sapio.oracle-remote-oracles-list").map((line: string) => {
+        let opts = line.trim().split(" ");
+        if (opts.length != 2) {
+            dialog.showErrorBox("Setting Error:", "Improperly Formatted Setting for Sapio Oracle List " + line);
+            error = true;
+            return;
+        }
+        return [opts[1].trim(), opts[0].trim()];
+    });
+    if (error) return;
+    const data = JSON.stringify({
+        "main": null,
+        "testnet": null,
+        "signet": null,
+        "regtest": null,
+        // overwrites earlier keys...
+        [network]: {
+            "active": true,
+            "api_node": {
+                "url": "http://" + host + ":" + port,
+                "auth": {
+                    "UserPass": [username, password],
+                }
+            },
+            "emulator_nodes": {
+                "enabled": oracle_enabled,
+                "emulators": oracle_list,
+                "threshold": threshold
+            }
+        }
+    });
+    if (memo_data !== data) {
+        console.info("Writing Sapio Setting to ", sapio_config_file, data);
+        writeFileSync(sapio_config_file, data);
+    }
+
+};
+settings.on('save', (_: any) => {
+    custom_sapio_config();
 });

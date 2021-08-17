@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu } from 'electron';
 import path from 'path';
 import url from 'url';
-import { settings } from './settings';
+import { custom_sapio_config, settings } from './settings';
 
 import Client from 'bitcoin-core';
 
@@ -62,6 +62,7 @@ function createWindow() {
     });
     createMenu(mainWindow, client);
     register_handlers(client);
+    custom_sapio_config();
     let emulator = start_sapio_oracle();
     if (emulator) {
         let quit = "";
