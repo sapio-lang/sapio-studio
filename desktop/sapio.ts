@@ -1,4 +1,5 @@
 import spawn from 'await-spawn';
+import { ChildProcessWithoutNullStreams, spawn as spawnSync } from 'child_process';
 
 import { BrowserWindow, ipcMain, Menu } from 'electron';
 import { settings } from './settings';
@@ -123,3 +124,16 @@ function update_menu(id: string, enabled: boolean) {
     if (item) item.enabled = enabled;
 }
 export const sapio = new SapioCompiler();
+
+
+export function start_sapio_oracle() : ChildProcessWithoutNullStreams|null {
+    const enabled = settings.value("sapio.oracle-local-enabled");
+    if (enabled.includes("oracle-launch_on_startup")) {
+        const binary = settings.value('sapio.binary');
+        const seed = settings.value('sapio.oracle-seed-file');
+        const iface = settings.value('sapio.oracle-netinterface');
+        return spawnSync(binary, ['emulator', 'server', seed, iface]);
+    }
+    return null;
+
+}

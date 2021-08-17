@@ -16,6 +16,7 @@ export const settings = new ElectronPreferences({
     defaults: {
         sapio: {
             binary: path.resolve(os.homedir(), 'sapio/target/debug/sapio-cli'),
+            'oracle-local-enabled':[]
         },
         display: {
             'sats-bound': 9_999_999,
@@ -53,6 +54,33 @@ export const settings = new ElectronPreferences({
                             },
                         ],
                     },
+                    {
+                        label: 'oracle-server',
+                        fields: [
+                            {
+                                label: "create local emulator",
+                                key: "oracle-local-enabled",
+                                type:'checkbox',
+                                'options': [
+									{ 'label': 'Launch on Startup', 'value': 'oracle-launch_on_startup' },
+                                ]
+                            },
+                            {
+                                label: 'seed file',
+                                key: 'oracle-seed-file',
+                                type: 'file',
+                                help: 'the file containing the seed for this oracle',
+                                dontAddToRecent: true,
+                            },
+                            {
+                                label: 'network interface',
+                                key: 'oracle-netinterface',
+                                type: 'text',
+                                help: 'if set, wheather to run a local oracle',
+                            },
+                        ],
+                    },
+
                 ],
             },
         },

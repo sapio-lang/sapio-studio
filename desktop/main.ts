@@ -7,6 +7,9 @@ import Client from 'bitcoin-core';
 
 import { createMenu } from './createMenu';
 import register_handlers from './handlers';
+import { start_sapio_oracle } from './sapio';
+import { ChildProcessWithoutNullStreams } from 'child_process';
+import { sys } from 'typescript';
 
 export let client = null;
 let mainWindow: BrowserWindow | null = null;
@@ -57,8 +60,26 @@ function createWindow() {
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
-    createMenu(mainWindow);
+    createMenu(mainWindow, client);
     register_handlers(client);
+    let emulator = start_sapio_oracle();
+    if (emulator) {
+        let quit = "";
+        emulator.stderr.on("data", (data) => {
+            quit += `${data}`;
+        }
+        );
+        emulator.on("exit", (code)=>{
+            if (quit !== "") {
+                console.error("Emulator Oracle Error", quit);
+                sys.exit();
+            }
+        })
+        emulator.stdout.on("data", (data) => {
+            console.log(`stdout: ${data}`);
+        }
+        );
+    }
 }
 
 app.on('ready', createWindow);
