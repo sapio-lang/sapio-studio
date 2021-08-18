@@ -55,9 +55,11 @@ let INTERNAL_MAX_SATS_DISPLAY: number = DEFAULT_MAX_SATS_DISPLAY;
 
 (() => {
     const preferences = window.electron.get_preferences_sync();
-    INTERNAL_MAX_SATS_DISPLAY = preferences.display["sats-bound"] ?? DEFAULT_MAX_SATS_DISPLAY;
+    INTERNAL_MAX_SATS_DISPLAY =
+        preferences.display['sats-bound'] ?? DEFAULT_MAX_SATS_DISPLAY;
     window.electron.preferences_listener((_: any, p: any) => {
-        INTERNAL_MAX_SATS_DISPLAY = p.display["sats-bound"] ?? DEFAULT_MAX_SATS_DISPLAY;
+        INTERNAL_MAX_SATS_DISPLAY =
+            p.display['sats-bound'] ?? DEFAULT_MAX_SATS_DISPLAY;
     });
 })();
 
