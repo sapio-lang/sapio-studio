@@ -28,11 +28,14 @@ let frames_per_second = 60;
 let increment = 100 / frames_per_second / seconds;
 (() => {
     const preferences = window.electron.get_preferences_sync();
-    seconds = (preferences.display["animate-flow"] || DEFAULT_SECONDS_ANIMATION) / 1000.0;
+    seconds =
+        (preferences.display['animate-flow'] || DEFAULT_SECONDS_ANIMATION) /
+        1000.0;
     frames_per_second = 60;
     increment = 100 / frames_per_second / seconds;
     window.electron.preferences_listener((_, p) => {
-        seconds = (p.display["animate-flow"] || DEFAULT_SECONDS_ANIMATION) / 1000.0;
+        seconds =
+            (p.display['animate-flow'] || DEFAULT_SECONDS_ANIMATION) / 1000.0;
         frames_per_second = 60;
         increment = 100 / frames_per_second / seconds;
     });
@@ -50,8 +53,7 @@ function update_loop() {
             }
         }
         requestAnimationFrame(animation_loop);
-        setTimeout(update_loop, 3 * 1000 / frames_per_second);
-
+        setTimeout(update_loop, (3 * 1000) / frames_per_second);
     } else {
         const percentage = percent_idx / 100;
         const fade = 2 * Math.abs(percentage - 0.5);
@@ -113,7 +115,7 @@ export class SpendLinkSegment extends React.Component {
         this.y = 0;
         this.stroke = this.props.model.getOptions().color;
         this.color = 'none';
-        this.white = "white";
+        this.white = 'white';
         this.key = unique_key++;
         all_nodes.set(this.key, this);
         this.set_color = true;
@@ -148,34 +150,37 @@ export class SpendLinkSegment extends React.Component {
     }
 
     render() {
-        return (< >
-            <path fill="none"
-                strokeLinecap="square"
-                ref={
-                    (ref) => {
+        return (
+            <>
+                <path
+                    fill="none"
+                    strokeLinecap="square"
+                    ref={(ref) => {
                         this.path = ref;
-                    }
-                }
-                stroke={this.props.model.getOptions().color}
-                strokeWidth={this.props.model.getOptions().width}
-                d={this.props.path}
-            /> < circle ref={
-                (ref) => {
-                    this.circle = ref;
-                }
-            }
-                r={7.5}
-            >hi</circle>
-            <text textAnchor="middle" ref={(ref) => {
-                this.text = ref
-            }}
-            fontSize="12px"
-            alignmentBaseline="middle"
-            >₿
-            </text>
-
-        </>
-
+                    }}
+                    stroke={this.props.model.getOptions().color}
+                    strokeWidth={this.props.model.getOptions().width}
+                    d={this.props.path}
+                />{' '}
+                <circle
+                    ref={(ref) => {
+                        this.circle = ref;
+                    }}
+                    r={7.5}
+                >
+                    hi
+                </circle>
+                <text
+                    textAnchor="middle"
+                    ref={(ref) => {
+                        this.text = ref;
+                    }}
+                    fontSize="12px"
+                    alignmentBaseline="middle"
+                >
+                    ₿
+                </text>
+            </>
         );
     }
 }

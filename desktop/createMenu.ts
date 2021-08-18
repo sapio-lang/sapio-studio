@@ -4,7 +4,7 @@ import { dialog } from 'electron';
 import { sapio } from './sapio';
 import Client from 'bitcoin-core';
 
-export function createMenu(window: BrowserWindow, client:typeof Client) {
+export function createMenu(window: BrowserWindow, client: typeof Client) {
     const template = [
         {
             label: 'File',
@@ -96,8 +96,8 @@ export function createMenu(window: BrowserWindow, client:typeof Client) {
                 {
                     label: 'Create New Address to Clipboard',
                     async click() {
-                        let result = await client.command("getnewaddress");
-                        clipboard.writeText(result)
+                        let result = await client.command('getnewaddress');
+                        clipboard.writeText(result);
                     },
                 },
             ],
