@@ -84,6 +84,7 @@ export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntity
         document.addEventListener("mouseup", this.mmu);
     }
     onMouseUp(e: MouseEvent) {
+        e.preventDefault();
         if (this.mmm)
             document.removeEventListener("mousemove", this.mmm);
         if (this.mmu)
@@ -93,6 +94,7 @@ export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntity
 
     }
     onMouseMove(e: MouseEvent) {
+        e.preventDefault();
         const width = (window.innerWidth - e.clientX).toString() + "px";
         this.setState({ width });
     }

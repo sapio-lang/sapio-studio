@@ -59,18 +59,18 @@ License: MIT
 .EntityViewer {
     background-color: transparent;
     overflow-y: scroll;
+    max-width: 50vw;
+    min-width: 5vw;
 }
 
 .EntityViewerFrame {
     display: grid;
     grid-template-columns: 3px max-content;
     min-width: 3px;
-    max-width: 50%;
     position: absolute;
     right: 0px;
     background-color: rgba(100, 100, 100, 0.3);
     background-blend-mode: screen;
-    box-shadow: rgba(100, 100, 100, 0.5);
     border-bottom: 1px solid grey;
     max-height: 50vh;
     overflow-y: scroll;
