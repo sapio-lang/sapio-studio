@@ -7,6 +7,7 @@ import { App } from './App';
 import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
 import _ from 'lodash';
+import "./Simulation.css";
 type Field =
     | 'current_time'
     | 'first_tx_time'
@@ -267,7 +268,7 @@ export class SimulationController extends React.Component<
     render() {
         const changeHandler = this.changeHandler.bind(this);
         return (
-            <Form onSubmit={(e: React.FormEvent) => e.preventDefault()}>
+            <Form onSubmit={(e: React.FormEvent) => e.preventDefault()} className="Simulation">
                 <Form.Group as={Row}>
                     <Col sm={1}>
                         <h3>Block</h3>
