@@ -4,6 +4,7 @@ https://codepen.io/devuri/pen/aaqZqZ
 License: MIT
 */
 
+
 /* MODAL FADE LEFT RIGHT BOTTOM */
 
 .modal.fade:not(.in).left .modal-dialog {
@@ -21,7 +22,7 @@ License: MIT
     transform: translate3d(0, 25%, 0);
 }
 
-.modal-right > .modal-dialog {
+.modal-right>.modal-dialog {
     position: absolute;
     right: 0;
     top: 0;
@@ -44,7 +45,7 @@ License: MIT
 }
 
 .modal.left .modal-content,
-.modal-right > * > .modal-content {
+.modal-right>*>.modal-content {
     min-height: calc(100vh - 60px);
     border: 0;
 }
@@ -57,12 +58,36 @@ License: MIT
 
 .EntityViewer {
     background-color: transparent;
-    height: 90vh;
-    overflow: scroll;
-    width: 20em;
+    overflow-y: scroll;
+}
+
+.EntityViewerFrame {
+    display: grid;
+    grid-template-columns: 3px max-content;
+    min-width: 3px;
+    max-width: 50%;
+    position: absolute;
+    right: 0px;
+    background-color: rgba(100, 100, 100, 0.3);
+    background-blend-mode: screen;
+    box-shadow: rgba(100, 100, 100, 0.5);
+    border-bottom: 1px solid grey;
+    max-height: 50vh;
+    overflow-y: scroll;
+}
+
+.EntityViewerResize {
+    border-left: 1px solid grey;
+    border-right: 1px solid grey;
+}
+
+.EntityViewerResize:hover {
+    background-color: green;
+    border-left: 3px solid green;
+    border-right: 3px solid green;
+    cursor: ew-resize;
 }
 
 .modal {
-    font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono',
-        'Bitstream Vera Sans Mono', Courier, monospace;
+    font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
 }
