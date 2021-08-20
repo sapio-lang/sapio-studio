@@ -25,6 +25,7 @@ export class TransactionNodeModel extends NodeModel {
         this.is_reachable = true;
         // TODO: Autoformatter unhappy with nullish ??, fix later.
         this.reachable_cb = this.reachable_cb || ((b) => null);
+        this.confirmed_cb = this.confirmed_cb || ((b) => null);
     }
 
     setColor(color) {
@@ -38,6 +39,10 @@ export class TransactionNodeModel extends NodeModel {
 
     setConfirmed(opt) {
         this.confirmed = opt;
+        this.confirmed_cb(opt);
+    }
+    registerConfirmed(f) {
+        this.confirmed_cb = f;
     }
     isConfirmed() {
         return this.confirmed;
