@@ -100,15 +100,15 @@ function process_txn_models(
     assert.equal(txns.length, psbts.length);
     _.chain(txns)
         .map((tx, x) => {
-            return {tx:tx, x:x, psbt:psbts[x]};
+            return { tx: tx, x: x, psbt: psbts[x] };
         })
-        .groupBy(({ tx } : {tx : Bitcoin.Transaction}) => tx.getId())
-        .forEach((txn_group: {tx: Bitcoin.Transaction, psbt: Bitcoin.Psbt, x: number}[], _key:string) => {
+        .groupBy(({ tx }: { tx: Bitcoin.Transaction }) => tx.getId())
+        .forEach((txn_group: { tx: Bitcoin.Transaction, psbt: Bitcoin.Psbt, x: number }[], _key: string) => {
             let label = '';
             let color = new NodeColor('');
             let utxo_label: Array<UTXOFormatData | null> = [];
-            let all_witnesses: SigningDataStore = {witnesses: [], psbts: []};
-            for (let { tx, x, psbt} of txn_group) {
+            let all_witnesses: SigningDataStore = { witnesses: [], psbts: [] };
+            for (let { tx, x, psbt } of txn_group) {
                 utxo_label = utxo_labels[x];
                 color = txn_colors[x];
                 label = txn_labels[x];
@@ -175,7 +175,7 @@ function process_txn_models(
         const txn_model = new PhantomTransactionModel(
             txid,
             mock_txn,
-            {witnesses:[], psbts:[]},
+            { witnesses: [], psbts: [] },
             update,
             'Missing',
             color,
@@ -586,16 +586,15 @@ export class ContractModel extends ContractBase {
         return txn_model.utxo_models[n];
     }
     process_finality(is_final: Array<string>, model: any) {
-        return null;
         // TODO: Reimplement in terms of WTXID
-        /*is_final.forEach((txid) => {
-            const key = this.txid_map.get(txid);
-            if (key === undefined){ return; }
-            const m = this.txn_models[key];
-            m.setConfirmed(true);
-            m.utxo_models.forEach((m) => m.setConfirmed(true));
-            m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
-        });*/
+        is_final.forEach((txid) => {
+            const m: TransactionModel | undefined = this.txid_map.get_by_txid_s(txid);
+            if (m) {
+                m.setConfirmed(true);
+                m.utxo_models.forEach((m) => m.setConfirmed(true));
+                m.consume_inputs(this.inputs_map, model);
+            }
+        });
     }
     reachable_at_time(
         max_time: number,
