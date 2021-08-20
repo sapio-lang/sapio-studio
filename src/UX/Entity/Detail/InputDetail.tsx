@@ -12,6 +12,7 @@ import Hex from './Hex';
 interface IProps {
     txinput: Bitcoin.TxInput;
     witnesses: Buffer[][];
+    psbts: Bitcoin.Psbt[];
     goto: () => void;
 }
 interface IState {
@@ -39,26 +40,32 @@ export class InputDetail extends React.Component<IProps, IState> {
             this.state.witness_selection === undefined
                 ? null
                 : this.props.witnesses[
-                      this.state.witness_selection
-                  ].map((elt, i) => (
-                      <Hex
-                          key={i}
-                          readOnly
-                          className="txhex"
-                          value={maybeDecode(
-                              true ||
-                                  i ===
-                                      this.props.witnesses[
-                                          this.state.witness_selection ?? 0
-                                      ].length -
-                                          1,
-                              elt
-                          )}
-                      />
-                  ));
+                    this.state.witness_selection
+                ].map((elt, i) => (
+                    <Hex
+                        key={i}
+                        readOnly
+                        className="txhex"
+                        value={maybeDecode(
+                            true ||
+                            i ===
+                            this.props.witnesses[
+                                this.state.witness_selection ?? 0
+                            ].length -
+                            1,
+                            elt
+                        )}
+                    />
+                ));
+        const psbts_display =
+            this.state.witness_selection === undefined
+                ? null
+                : (<Hex readOnly className="txhex" value={this.props.psbts[
+                    this.state.witness_selection
+                ].toBase64()} ></Hex>);
         const scriptValue = Bitcoin.script.toASM(
             Bitcoin.script.decompile(this.props.txinput.script) ??
-                Buffer.from('Error Decompiling')
+            Buffer.from('Error Decompiling')
         );
         const seq = this.props.txinput.sequence;
         const { relative_time, relative_height } = sequence_convert(seq);
@@ -77,7 +84,7 @@ export class InputDetail extends React.Component<IProps, IState> {
                 </div>
             );
 
-        const witness = this.props.witnesses.map((w, i) => (
+        const witness_options = this.props.witnesses.map((w, i) => (
             <option key={i} value={i}>
                 {i}
             </option>
@@ -110,7 +117,7 @@ export class InputDetail extends React.Component<IProps, IState> {
                     <Form.Group>
                         <Form.Label>
                             <div>
-                                <span> Witness: </span>{' '}
+                                <div> Witness: </div>
                                 {this.state.witness_selection}
                             </div>
                         </Form.Label>
@@ -121,11 +128,15 @@ export class InputDetail extends React.Component<IProps, IState> {
                             }}
                         >
                             <option value={undefined}></option>
-                            {witness}
+                            {witness_options}
                         </Form.Control>
                     </Form.Group>
                 </Form>
                 {witness_display}
+                <div>
+                    <div> PSBT: </div>
+                    {psbts_display}
+                </div>
             </div>
         );
     }
