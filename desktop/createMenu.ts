@@ -115,6 +115,16 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                         clipboard.writeText(result);
                     },
                 },
+                {
+                    label: 'Attempt Generating 10 Blocks',
+                    async click() {
+                        let result = await client.command('getnewaddress');
+                        await client.command([{
+                            method: 'generatetoaddress',
+                            parameters: [10, result]
+                        }]);
+                    },
+                },
             ],
         },
         {
