@@ -18,6 +18,8 @@ interface IProps {
 interface IState {
     open: boolean;
     witness_selection: number | undefined;
+    psbt: Bitcoin.Psbt | undefined;
+    flash: null | any;
 }
 function maybeDecode(to_asm: boolean, elt: Buffer): string {
     if (to_asm) {
@@ -32,12 +34,34 @@ export class InputDetail extends React.Component<IProps, IState> {
     form: any;
     constructor(props: IProps) {
         super(props);
-        this.state = { open: false, witness_selection: undefined };
+        this.state = { open: false, witness_selection: undefined, psbt: undefined, flash: null };
         this.form = null;
     }
     async save_psbt(psbt: string) {
         // no await
         window.electron.save_psbt(psbt);
+    }
+    async sign_psbt(psbt: string) {
+        const command =
+            [{ method: 'walletprocesspsbt', parameters: [psbt] }];
+        const signed = (await window.electron.bitcoin_command(command))[0];
+        const as_psbt = Bitcoin.Psbt.fromBase64(signed.psbt);
+        if (signed.complete) {
+            this.setState({
+                flash: (<h3 style={{ color: "green" }}>
+                    Fully Signed!
+                </h3>)
+            })
+        } else {
+            this.setState({
+                flash: <h3 style={{ color: "red" }}>
+                    Partially Signed!
+                </h3>
+            })
+
+        }
+        setTimeout(() => this.setState({ flash: <div></div> }), 2000);
+        return as_psbt;
     }
     render() {
         const witness_display =
@@ -62,16 +86,24 @@ export class InputDetail extends React.Component<IProps, IState> {
                     />
                 ));
         const psbts_display =
-            this.state.witness_selection === undefined
+            this.state.psbt === undefined
                 ? <><div></div><div></div></>
-                : (<><Hex readOnly className="txhex" value={this.props.psbts[
-                    this.state.witness_selection
-                ].toBase64()} ></Hex>
-                    <div>
+                : (<><Hex readOnly className="txhex" value={this.state.psbt.toBase64()} ></Hex>
+                    <div title="Save PSBT to Disk">
                         <i className="glyphicon glyphicon-floppy-save SavePSBT" onClick={
-                            (() => this.save_psbt(this.props.psbts[
-                                this.state.witness_selection ?? 0
-                            ].toBase64())).bind(this)
+                            (() => this.save_psbt(this.state.psbt!.toBase64())).bind(this)
+                        }></i>
+                    </div>
+                    <div title="Sign PSBT Using Node Wallet">
+                        <i className="glyphicon glyphicon-pencil SignPSBT" onClick={
+                            (async () => {
+                                const psbt = await this.sign_psbt(this.props.psbts[
+                                    this.state.witness_selection ?? 0
+                                ].toBase64());
+                                // TODO: Confirm this saves to model?
+                                this.state.psbt?.combine(psbt);
+                                this.setState({ psbt: this.state.psbt });
+                            }).bind(this)
                         }></i>
                     </div>
                 </>);
@@ -124,6 +156,11 @@ export class InputDetail extends React.Component<IProps, IState> {
                         this.setState({
                             witness_selection: this.form.value || undefined,
                         });
+                        if (this.form.value) {
+                            this.setState({
+                                psbt: this.props.psbts[this.form.value],
+                            })
+                        }
                     }}
                 >
                     <Form.Group>
@@ -142,8 +179,9 @@ export class InputDetail extends React.Component<IProps, IState> {
                     </Form.Group>
                 </Form>
                 {witness_display}
+                {this.state.flash}
                 <div className="InputDetailPSBT">
-                    <div> PSBT: </div>
+                    <div> PSBT:  </div>
                     {psbts_display}
                 </div>
             </div>
