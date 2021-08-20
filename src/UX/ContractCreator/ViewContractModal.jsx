@@ -28,8 +28,7 @@ export class ViewContractModal extends React.Component {
                         variant="secondary"
                         onClick={() => this.props.hide()}
                     >
-                        {' '}
-                        Close{' '}
+                        Close
                     </Button>
                 </Modal.Footer>
             </Modal>

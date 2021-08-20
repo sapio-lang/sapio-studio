@@ -3,6 +3,7 @@ import { settings } from './settings';
 import { dialog } from 'electron';
 import { sapio } from './sapio';
 import Client from 'bitcoin-core';
+import { readFileSync } from 'fs';
 
 export function createMenu(window: BrowserWindow, client: typeof Client) {
     const template = [
@@ -16,12 +17,26 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                     },
                 },
                 {
-                    label: 'View Contract Hex',
+                    label: 'Save Contract',
                     click() {
                         window.webContents.send('save_hex', true);
                     },
                 },
-                { label: 'Open Contract From File' },
+                {
+                    label: 'Open Contract From File',
+
+                    click() {
+                        const file = dialog.showOpenDialogSync(window, {
+                            properties: ['openFile'],
+                            filters: [{ extensions: ['json'], name: 'Sapio Contract Object' }],
+                        });
+                        if (file && file.length) {
+                            const data = readFileSync(file[0], { encoding: 'utf-8' });
+                            window.webContents.send("load_contract", data);
+
+                        }
+                    },
+                },
                 {
                     label: 'Load WASM Plugin',
                     click() {

@@ -149,6 +149,11 @@ export class App extends React.Component<any, AppState> {
             }
         });
 
+        // TODO: This should go somewhere else :(
+        window.electron.register("load_contract", ((data: string) => {
+            this.load_new_model(JSON.parse(data));
+        }).bind(this));
+
         /* Socket Functionality */
         this.cm = new CompilerServer(null, this);
 
@@ -211,14 +216,20 @@ export class App extends React.Component<any, AppState> {
                 load_new_contract={(x: Data) => this.load_new_model(x)}
             />
         );
+        const simulator = !this.state.timing_simulator_enabled ? null : (
+            <SimulationController
+                contract={this.state.current_contract}
+                app={this}
+            />
+        );
         return (
             <div className="App">
                 <BitcoinNodeManager
                     current_contract={this.state.current_contract}
                     app={this}
                     ref={(bnm) =>
-                        (this.bitcoin_node_manager =
-                            bnm || this.bitcoin_node_manager)
+                    (this.bitcoin_node_manager =
+                        bnm || this.bitcoin_node_manager)
                     }
                 />
                 <div className="area">
@@ -233,14 +244,6 @@ export class App extends React.Component<any, AppState> {
                             }
                         />
 
-                        <Collapse in={this.state.timing_simulator_enabled}>
-                            <div>
-                                <SimulationController
-                                    contract={this.state.current_contract}
-                                    app={this}
-                                />
-                            </div>
-                        </Collapse>
                     </div>
                     <div className="area-inner">
                         <div className="main-container">
@@ -256,6 +259,7 @@ export class App extends React.Component<any, AppState> {
                             </DemoCanvasWidget>
                         </div>
                         <div>{entity}</div>
+                        {simulator}
                     </div>
 
                     <Collapse in={this.state.bitcoin_node_bar}>
