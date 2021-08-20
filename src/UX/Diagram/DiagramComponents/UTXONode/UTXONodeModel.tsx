@@ -16,6 +16,7 @@ export interface UTXONodeModelOptions extends BasePositionModelOptions {
     confirmed: boolean;
     reachable: boolean;
     reachable_callback: (b: boolean) => void;
+    confirmed_callback: (b: boolean) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
@@ -42,6 +43,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
             type: 'utxo-node',
             reachable: true,
             reachable_callback: (b) => null,
+            confirmed_callback: (b:boolean) => null,
             ...options,
         });
         this.portsOut = [];
@@ -62,9 +64,13 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     abstract getAmount(): number;
     setConfirmed(opt: boolean) {
         this.options.confirmed = opt;
+        this.options.confirmed_callback(opt);
     }
     isConfirmed(): boolean {
         return this.options.confirmed;
+    }
+    registerConfirmedCallback(f: (b:boolean)=>void) {
+        this.options.confirmed_callback = f;
     }
 
     setReachable(b: boolean) {

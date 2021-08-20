@@ -98,6 +98,7 @@ export interface DefaultNodeProps {
 }
 interface IState {
     is_reachable: boolean;
+    is_confirmed: boolean;
     color: string;
     purpose: string;
 }
@@ -113,10 +114,14 @@ export class TransactionNodeWidget extends React.Component<
     constructor(props: any) {
         super(props);
         this.state = {
+            is_confirmed: this.props.node.isConfirmed(),
             is_reachable: this.props.node.is_reachable,
             color: this.props.node.color,
             purpose: this.props.node.purpose,
         };
+        this.props.node.registerConfirmed((b: boolean) =>
+            this.setState({ is_confirmed: b })
+        );
         this.props.node.registerReachable((b: boolean) => {
             return this.setState({ is_reachable: b });
         });
@@ -144,7 +149,7 @@ export class TransactionNodeWidget extends React.Component<
         let white = Color('white').toString();
         let black = Color('black').toString();
         let yellow = Color('yellow').fade(0.2).toString();
-        const is_conf = this.props.node.isConfirmed() ? null : (
+        const is_conf = this.state.is_confirmed ? null : (
             <div
                 style={{
                     background: yellow,
@@ -168,7 +173,7 @@ export class TransactionNodeWidget extends React.Component<
                 <Node
                     data-default-node-name={this.props.node.name}
                     selected={this.props.node.isSelected()}
-                    confirmed={this.props.node.isConfirmed()}
+                    confirmed={this.state.is_confirmed}
                     background={this.props.node.color}
                     className={
                         (this.state.is_reachable
