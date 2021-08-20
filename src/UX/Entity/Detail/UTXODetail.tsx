@@ -22,7 +22,7 @@ import Button from 'react-bootstrap/esm/Button';
 
 interface UTXODetailProps {
     entity: UTXOModel;
-    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
+    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO|null>;
     fund_out: (a: Bitcoin.Transaction) => Promise<Bitcoin.Transaction>;
     contract: ContractModel;
     load_new_contract: (x: Data) => void;
@@ -109,7 +109,7 @@ export class UTXODetail extends React.Component<
             this.props.entity.txn.get_txid(),
             this.props.entity.utxo.index
         );
-        console.log(data);
+        if (!data) return;
         if (data.confirmations > 0) {
             this.props.entity.utxo.amount = 100e6 * data.value;
             this.props.entity.utxo.script = Bitcoin.address.toOutputScript(

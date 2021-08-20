@@ -18,7 +18,6 @@ import Color from 'color';
 import { SigningDataStore } from '../../../Data/ContractManager';
 interface TransactionDetailProps {
     entity: TransactionModel;
-    broadcast: (a: Transaction) => Promise<any>;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
 }
 interface IState {
@@ -60,15 +59,6 @@ export class TransactionDetail extends React.Component<
         this.props.entity.setPurpose(e.target.value);
     }
     render() {
-        const broadcast = !this.state.broadcastable ? null : (
-            <ListGroup.Item
-                action
-                variant="dark"
-                onClick={() => this.props.broadcast(this.props.entity.tx)}
-            >
-                Broadcast
-            </ListGroup.Item>
-        );
         const outs = this.props.entity.utxo_models.map((o, i) => (
             <OutputDetail
                 txoutput={o}
@@ -138,7 +128,6 @@ export class TransactionDetail extends React.Component<
             );
         return (
             <div className="TransactionDetail">
-                {broadcast}
                 <TXIDDetail txid={this.props.entity.get_txid()} />
                 <div className="serialized-tx">
                     <span> Tx Hex </span>

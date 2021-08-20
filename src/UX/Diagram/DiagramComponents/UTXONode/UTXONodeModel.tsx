@@ -62,7 +62,6 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     abstract getAmount(): number;
     setConfirmed(opt: boolean) {
         this.options.confirmed = opt;
-        this.setSelected(true);
     }
     isConfirmed(): boolean {
         return this.options.confirmed;

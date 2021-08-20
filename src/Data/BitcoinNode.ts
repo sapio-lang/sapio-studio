@@ -22,7 +22,7 @@ interface IProps {
     app: App;
     current_contract: ContractModel;
 }
-interface IState {}
+interface IState { }
 export function update_broadcastable(
     current_contract: ContractModel,
     confirmed_txs: Set<TXID>
@@ -78,10 +78,10 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
                 1000
             );
         }
-        const is_tx_confirmed = await this.check_txs(contract);
+        const is_tx_confirmed = await this.get_confirmed_transactions(contract);
         let confirmed_txs: Set<TXID> = new Set();
+        is_tx_confirmed.forEach((txid: TXID) => confirmed_txs.add(txid));
         if (is_tx_confirmed.length > 0) {
-            is_tx_confirmed.forEach((txid: TXID) => confirmed_txs.add(txid));
             update_broadcastable(contract, confirmed_txs);
             this.props.current_contract.process_finality(
                 is_tx_confirmed,
@@ -92,16 +92,11 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         if (this.mounted) {
             this.next_periodic_check = setTimeout(
                 this.periodic_check.bind(this),
-                5000 * 60
+                5000 * 1
             );
         }
     }
 
-    async broadcast(tx: Transaction) {
-        await window.electron.bitcoin_command([
-            { method: 'getrawtransaction', parameters: [tx.toHex()] },
-        ]);
-    }
     async fund_out(tx: Transaction): Promise<Transaction> {
         const result = await window.electron.bitcoin_command([
             { method: 'fundrawtransaction', parameters: [tx.toHex()] },
@@ -113,12 +108,21 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         return Transaction.fromHex(hex);
     }
 
-    async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO> {
-        const txout = await window.electron.bitcoin_command([
-            { method: 'gettxout', parameters: [t, n] },
-        ]);
-        console.log(txout[0]);
-        return txout[0];
+    async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO|null> {
+        console.log(t,n);
+        const txout = (await window.electron.bitcoin_command([
+            { method: 'getrawtransaction', parameters: [t, true] },
+        ]))[0];
+        console.log("TXOUT", txout);
+        if (!txout) {
+            return null;
+        }
+        return {
+            blockhash: txout.blockhash,
+            confirmations: txout.confirmations,
+            scriptPubKey: txout.vout[n].scriptPubKey,
+            value: txout.vout[n].value
+        }
     }
     async check_balance(): Promise<number> {
         let results = await window.electron.bitcoin_command([
@@ -133,19 +137,23 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             ])
         )[0];
     }
-    async check_txs(current_contract: ContractModel): Promise<Array<TXID>> {
+    // get info about transactions
+    async get_confirmed_transactions(current_contract: ContractModel): Promise<Array<TXID>> {
         // TODO: SHould query by WTXID
         const txids = current_contract.txn_models
             .filter((tm) => tm.is_broadcastable())
             .map((tm) => {
                 return {
                     method: 'getrawtransaction',
-                    parameters: [tm.get_txid()],
+                    parameters: [tm.get_txid(), true],
                 };
             });
         if (txids.length > 0) {
             let results = await window.electron.bitcoin_command(txids);
-            console.log('RESULTS', results);
+            // TODO: Configure Threshold
+            results = results.filter((txdata: any) => txdata.confirmations ?? 0 > 1)
+                .map((txdata: any) => txdata.txid);
+            return results;
         }
         return [];
     }
@@ -156,8 +164,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
 }
 
 export interface QueriedUTXO {
-    bestblock: string;
-    coinbase: boolean;
+    blockhash: string;
     confirmations: number;
     scriptPubKey: { asm: string; hex: string; address: string; type: string };
     value: number;

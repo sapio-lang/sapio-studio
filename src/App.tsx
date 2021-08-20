@@ -202,9 +202,6 @@ export class App extends React.Component<any, AppState> {
         const entity = !this.state.details ? null : (
             <CurrentlyViewedEntity
                 entity={this.state.entity}
-                broadcast={(x: Transaction) =>
-                    this.bitcoin_node_manager.broadcast(x)
-                }
                 fund_out={(x: Transaction) =>
                     this.bitcoin_node_manager.fund_out(x)
                 }
