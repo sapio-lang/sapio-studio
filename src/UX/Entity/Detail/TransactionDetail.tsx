@@ -77,18 +77,20 @@ export class TransactionDetail extends React.Component<
         ));
         const ins = this.props.entity.tx.ins.map((o, i) => {
             const witnesses: Buffer[][] = this.props.entity.witness_set.witnesses.map(
-                (w ) => w[i]
+                (w) => w[i]
             );
+            const psbts: Bitcoin.Psbt[] = this.props.entity.witness_set.psbts;
             return (
                 <InputDetail
                     txinput={o}
                     goto={() =>
                         this.goto(
                             this.props.find_tx_model(o.hash, o.index) ??
-                                this.props.entity
+                            this.props.entity
                         )
                     }
                     witnesses={witnesses}
+                    psbts={psbts}
                 />
             );
         });
@@ -108,8 +110,8 @@ export class TransactionDetail extends React.Component<
             !locktime_enable || locktime === 0
                 ? 'None'
                 : locktime < 500_000_000
-                ? 'Block #' + locktime.toString()
-                : as_date.toUTCString() + ' MTP';
+                    ? 'Block #' + locktime.toString()
+                    : as_date.toUTCString() + ' MTP';
         // note missing horizontal
         const inner_debounce_color = _.debounce(
             this.onchange_color.bind(this),
