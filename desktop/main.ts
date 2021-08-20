@@ -61,7 +61,7 @@ function createWindow() {
         mainWindow = null;
     });
     createMenu(mainWindow, client);
-    register_handlers(client);
+    register_handlers(mainWindow, client);
     custom_sapio_config();
     let emulator = start_sapio_oracle();
     if (emulator) {

@@ -15,6 +15,7 @@ import _ from 'lodash';
 import './TransactionDetail.css';
 import { sequence_convert, time_to_pretty_string } from '../../../util';
 import Color from 'color';
+import { SigningDataStore } from '../../../Data/ContractManager';
 interface TransactionDetailProps {
     entity: TransactionModel;
     broadcast: (a: Transaction) => Promise<any>;
@@ -75,19 +76,21 @@ export class TransactionDetail extends React.Component<
             />
         ));
         const ins = this.props.entity.tx.ins.map((o, i) => {
-            const witnesses: Buffer[][] = this.props.entity.witness_set.map(
+            const witnesses: Buffer[][] = this.props.entity.witness_set.witnesses.map(
                 (w) => w[i]
             );
+            const psbts: Bitcoin.Psbt[] = this.props.entity.witness_set.psbts;
             return (
                 <InputDetail
                     txinput={o}
                     goto={() =>
                         this.goto(
                             this.props.find_tx_model(o.hash, o.index) ??
-                                this.props.entity
+                            this.props.entity
                         )
                     }
                     witnesses={witnesses}
+                    psbts={psbts}
                 />
             );
         });
@@ -107,8 +110,8 @@ export class TransactionDetail extends React.Component<
             !locktime_enable || locktime === 0
                 ? 'None'
                 : locktime < 500_000_000
-                ? 'Block #' + locktime.toString()
-                : as_date.toUTCString() + ' MTP';
+                    ? 'Block #' + locktime.toString()
+                    : as_date.toUTCString() + ' MTP';
         // note missing horizontal
         const inner_debounce_color = _.debounce(
             this.onchange_color.bind(this),
@@ -168,8 +171,10 @@ export class TransactionDetail extends React.Component<
                     {relative_height_jsx}
                     {relative_time_jsx}
                 </div>
+                <hr></hr>
                 <h4> Inputs</h4>
                 <div className="inputs">{ins}</div>
+                <hr></hr>
                 <h4>Outputs</h4>
                 <div className="outputs">{outs}</div>
             </div>
