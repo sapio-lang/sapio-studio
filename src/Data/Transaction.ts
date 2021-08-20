@@ -5,7 +5,7 @@ import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendL
 import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 import { HasKeys, InputMap, TXID } from '../util';
 import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
-import { NodeColor, UTXOFormatData } from './ContractManager';
+import { NodeColor, UTXOFormatData, SigningDataStore } from './ContractManager';
 import './Transaction.css';
 import { UTXOMetaData, UTXOModel } from './UTXO';
 import { TransactionData } from './ContractManager';
@@ -16,13 +16,13 @@ export class TransactionModel
     broadcastable: boolean;
     broadcastable_hook: (b: boolean) => void;
     tx: Bitcoin.Transaction;
-    witness_set: Array<Array<Buffer[]>>;
+    witness_set: SigningDataStore;
     utxo_models: Array<UTXOModel>;
     public utxo_links: Array<OutputLinkModel>;
     public input_links: Array<SpendLinkModel>;
     constructor(
         tx: Bitcoin.Transaction,
-        all_witnesses: Buffer[][][],
+        all_witnesses: SigningDataStore,
         update: any,
         name: string,
         color: NodeColor,
@@ -64,6 +64,7 @@ export class TransactionModel
 
     get_json(): TransactionData {
         return {
+            psbt: this.witness_set.psbts[0].toBase64(),
             hex: this.tx.toHex(),
             label: this.name,
             color: this.color,
@@ -152,7 +153,7 @@ export class PhantomTransactionModel extends TransactionModel {
     constructor(
         override_txid: TXID,
         tx: Bitcoin.Transaction,
-        all_witnesses: Buffer[][][],
+        all_witnesses: SigningDataStore,
         update: any,
         name: string,
         color: NodeColor,

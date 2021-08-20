@@ -153,6 +153,7 @@ class SapioCompiler {
             const for_tux = await SapioCompiler.command([
                 'contract',
                 'for_tux',
+                '--psbt',
                 bound,
             ]);
             const for_tuxed = for_tux.toString();
