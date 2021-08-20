@@ -1,13 +1,20 @@
-.InputDetail {
-}
+.InputDetail {}
 
 .InputDetailSequence {
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
 
-.InputDetailOutpoint {
+.InputDetailOutpoint {}
+
+.InputDetailScriptSig {}
+
+.InputDetailPSBT {
+    display: grid;
+    grid-template-columns: max-content 1fr 1em;
+    grid-column-gap: 1em;
 }
 
-.InputDetailScriptSig {
+.SavePSBT {
+    color: red;
 }
