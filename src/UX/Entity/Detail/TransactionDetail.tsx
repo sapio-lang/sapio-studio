@@ -15,6 +15,7 @@ import _ from 'lodash';
 import './TransactionDetail.css';
 import { sequence_convert, time_to_pretty_string } from '../../../util';
 import Color from 'color';
+import { SigningDataStore } from '../../../Data/ContractManager';
 interface TransactionDetailProps {
     entity: TransactionModel;
     broadcast: (a: Transaction) => Promise<any>;
@@ -75,8 +76,8 @@ export class TransactionDetail extends React.Component<
             />
         ));
         const ins = this.props.entity.tx.ins.map((o, i) => {
-            const witnesses: Buffer[][] = this.props.entity.witness_set.map(
-                (w) => w[i]
+            const witnesses: Buffer[][] = this.props.entity.witness_set.witnesses.map(
+                (w ) => w[i]
             );
             return (
                 <InputDetail
