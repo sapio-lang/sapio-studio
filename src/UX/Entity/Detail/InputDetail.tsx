@@ -41,26 +41,41 @@ export class InputDetail extends React.Component<IProps, IState> {
         // no await
         window.electron.save_psbt(psbt);
     }
+    flash(msg: string|JSX.Element, color: string, onclick?: () => void) {
+        const click = onclick ?? (() => null);
+        this.setState({
+            flash: (<h3 style={{ color: color }} onClick={click}>
+                {msg}
+            </h3>)
+        });
+        setTimeout(() => this.setState({ flash: <div></div> }), 2000);
+
+    }
+    async combine_psbt(psbt: Bitcoin.Psbt) {
+        let psbt_in = Bitcoin.Psbt.fromBase64(await window.electron.fetch_psbt());
+        try {
+            psbt.combine(psbt_in);
+            this.flash("PSBT Combined", "green");
+        } catch (e: any) {
+            this.flash((<div>
+                PSBT Error <span className="glyphicon glyphicon-question-sign"></span>
+            </div>), "red", () =>
+                alert(e.toString())
+            );
+
+        }
+    }
     async sign_psbt(psbt: string) {
         const command =
             [{ method: 'walletprocesspsbt', parameters: [psbt] }];
         const signed = (await window.electron.bitcoin_command(command))[0];
         const as_psbt = Bitcoin.Psbt.fromBase64(signed.psbt);
         if (signed.complete) {
-            this.setState({
-                flash: (<h3 style={{ color: "green" }}>
-                    Fully Signed!
-                </h3>)
-            })
+            this.flash("Fully Signed", "green");
         } else {
-            this.setState({
-                flash: <h3 style={{ color: "red" }}>
-                    Partially Signed!
-                </h3>
-            })
+            this.flash("Partial Signed", "red");
 
         }
-        setTimeout(() => this.setState({ flash: <div></div> }), 2000);
         return as_psbt;
     }
     render() {
@@ -102,6 +117,15 @@ export class InputDetail extends React.Component<IProps, IState> {
                                 ].toBase64());
                                 // TODO: Confirm this saves to model?
                                 this.state.psbt?.combine(psbt);
+                                this.setState({ psbt: this.state.psbt });
+                            }).bind(this)
+                        }></i>
+                    </div>
+                    <div title="Combine PSBT from File">
+                        <i className="glyphicon glyphicon-compressed CombinePSBT" onClick={
+                            (async () => {
+                                // TODO: Confirm this saves to model?
+                                const psbt = await this.combine_psbt(this.state.psbt!);
                                 this.setState({ psbt: this.state.psbt });
                             }).bind(this)
                         }></i>

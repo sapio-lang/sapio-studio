@@ -13,6 +13,9 @@ async function create_contract(which: string, args: string) {
 async function save_psbt(psbt: string) {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
+async function fetch_psbt() {
+    return ipcRenderer.invoke('fetch_psbt');
+}
 async function save_contract(contract: string) {
     return ipcRenderer.invoke('save_contract', contract);
 }
@@ -53,4 +56,5 @@ contextBridge.exposeInMainWorld('electron', {
     preferences_listener,
     save_psbt,
     save_contract,
+    fetch_psbt,
 });
