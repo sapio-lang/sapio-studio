@@ -171,8 +171,10 @@ export class TransactionDetail extends React.Component<
                     {relative_height_jsx}
                     {relative_time_jsx}
                 </div>
+                <hr></hr>
                 <h4> Inputs</h4>
                 <div className="inputs">{ins}</div>
+                <hr></hr>
                 <h4>Outputs</h4>
                 <div className="outputs">{outs}</div>
             </div>
