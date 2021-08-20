@@ -557,13 +557,18 @@ export class ContractBase {
         console.log('called empty');
         return null;
     }
+    should_update() {
+        return false;
+    }
 }
 
 export class ContractModel extends ContractBase {
+    checkable: boolean = false;
     constructor();
     constructor(update_viewer: (e: SelectedEvent) => void, obj: Data);
     constructor(update_viewer?: any, obj?: Data) {
         super();
+        this.checkable = true;
         if (update_viewer === undefined || obj === undefined) return;
         let new_obj = preprocess_data(obj);
         let { inputs_map, utxo_models, txn_models, txid_map } = process_data(
@@ -575,6 +580,9 @@ export class ContractModel extends ContractBase {
         this.txn_models = txn_models;
         this.txid_map = txid_map;
         console.log(this);
+    }
+    should_update() {
+        return this.checkable;
     }
     // TODO: Return an Array of UTXOModels
     lookup(txid: Buffer, n: number): UTXOModel | null {

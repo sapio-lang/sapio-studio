@@ -27,6 +27,7 @@ export const settings = new ElectronPreferences({
         display: {
             'sats-bound': 9_999_999,
             'animate-flow': 500,
+            'poll-node-freq': 60,
         },
     },
     /**
@@ -186,6 +187,20 @@ export const settings = new ElectronPreferences({
                                 min: 0,
                                 max: 5000,
                                 help: 'To use the visualizer or not',
+                            },
+                        ],
+                    },
+                    {
+                        label: 'Bitcoin Polling',
+                        fields: [
+                            {
+                                label:
+                                    'How often to poll our node for new transactions',
+                                key: 'poll-node-freq',
+                                type: 'slider',
+                                min: 5,
+                                max: 60*5,
+                                help: 'Enter a value in seconds',
                             },
                         ],
                     },
