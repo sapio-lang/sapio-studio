@@ -35,6 +35,10 @@ export class InputDetail extends React.Component<IProps, IState> {
         this.state = { open: false, witness_selection: undefined };
         this.form = null;
     }
+    async save_psbt(psbt: string) {
+        // no await
+        window.electron.save_psbt(psbt);
+    }
     render() {
         const witness_display =
             this.state.witness_selection === undefined
@@ -59,10 +63,18 @@ export class InputDetail extends React.Component<IProps, IState> {
                 ));
         const psbts_display =
             this.state.witness_selection === undefined
-                ? null
-                : (<Hex readOnly className="txhex" value={this.props.psbts[
+                ? <><div></div><div></div></>
+                : (<><Hex readOnly className="txhex" value={this.props.psbts[
                     this.state.witness_selection
-                ].toBase64()} ></Hex>);
+                ].toBase64()} ></Hex>
+                    <div>
+                        <i className="glyphicon glyphicon-floppy-save SavePSBT" onClick={
+                            (() => this.save_psbt(this.props.psbts[
+                                this.state.witness_selection ?? 0
+                            ].toBase64())).bind(this)
+                        }></i>
+                    </div>
+                </>);
         const scriptValue = Bitcoin.script.toASM(
             Bitcoin.script.decompile(this.props.txinput.script) ??
             Buffer.from('Error Decompiling')
@@ -116,10 +128,7 @@ export class InputDetail extends React.Component<IProps, IState> {
                 >
                     <Form.Group>
                         <Form.Label>
-                            <div>
-                                <div> Witness: </div>
-                                {this.state.witness_selection}
-                            </div>
+                            <div> Witness:{' '} {this.state.witness_selection}</div>
                         </Form.Label>
                         <Form.Control
                             as="select"
@@ -133,7 +142,7 @@ export class InputDetail extends React.Component<IProps, IState> {
                     </Form.Group>
                 </Form>
                 {witness_display}
-                <div>
+                <div className="InputDetailPSBT">
                     <div> PSBT: </div>
                     {psbts_display}
                 </div>
