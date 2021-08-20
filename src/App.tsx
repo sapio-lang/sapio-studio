@@ -149,6 +149,11 @@ export class App extends React.Component<any, AppState> {
             }
         });
 
+        // TODO: This should go somewhere else :(
+        window.electron.register("load_contract", ((data: string) => {
+            this.load_new_model(JSON.parse(data));
+        }).bind(this));
+
         /* Socket Functionality */
         this.cm = new CompilerServer(null, this);
 

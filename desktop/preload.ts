@@ -10,8 +10,11 @@ async function bitcoin_command(
 async function create_contract(which: string, args: string) {
     return ipcRenderer.invoke('create_contract', [which, args]);
 }
-async function save_psbt(psbt:string) {
+async function save_psbt(psbt: string) {
     return ipcRenderer.invoke('save_psbt', psbt);
+}
+async function save_contract(contract: string) {
+    return ipcRenderer.invoke('save_contract', contract);
 }
 
 const callbacks = {
@@ -19,6 +22,7 @@ const callbacks = {
     load_hex: 0,
     save_hex: 0,
     create_contracts: 0,
+    load_contract:0,
     'bitcoin-node-bar': 0,
     create_contract_from_cache: 0,
 };
@@ -47,5 +51,6 @@ contextBridge.exposeInMainWorld('electron', {
     create_contract,
     get_preferences_sync,
     preferences_listener,
-    save_psbt
+    save_psbt,
+    save_contract,
 });

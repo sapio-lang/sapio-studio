@@ -19,4 +19,12 @@ export default function (window: BrowserWindow, client: typeof Client) {
             await writeFile(path.filePath, psbt);
         }
     })
+    ipcMain.handle("save_contract", async (event, psbt) => {
+        let path = await dialog.showSaveDialog(window, {
+            filters: [{ extensions: ['json'], name: 'Sapio Contract Object' }],
+        });
+        if (path.filePath) {
+            await writeFile(path.filePath, psbt);
+        }
+    })
 }
