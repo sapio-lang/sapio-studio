@@ -1,10 +1,11 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
 import App from '../App';
-import { ContractModel } from './ContractManager';
+import { ContractBase, ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
 import { hash_to_hex } from '../util';
 import * as Bitcoin from 'bitcoinjs-lib';
+import { clamp } from 'lodash';
 
 type TXID = string;
 
@@ -63,7 +64,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     }
     componentDidMount() {
         this.mounted = true;
-        setTimeout(this.periodic_check.bind(this), 1000);
+        this.next_periodic_check = setTimeout(this.periodic_check.bind(this), 1000);
     }
     componentWillUnmount() {
         this.mounted = false;
@@ -72,11 +73,14 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     }
     async periodic_check() {
         const contract = this.props.current_contract;
-        if (!contract) {
+        console.info("PERIODIC CONTRACT CHECK");
+        if (!contract.should_update()) {
+            // poll here faster
             this.next_periodic_check = setTimeout(
                 this.periodic_check.bind(this),
                 1000
             );
+            return;
         }
         const is_tx_confirmed = await this.get_confirmed_transactions(contract);
         let confirmed_txs: Set<TXID> = new Set();
@@ -90,9 +94,14 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             this.props.app.forceUpdate();
         }
         if (this.mounted) {
+            let prefs = window.electron.get_preferences_sync();
+            console.log(prefs);
+            const period = clamp(prefs.display['poll-node-freq'] ?? 0, 5, 60 * 5);
+
+            console.info("NEXT PERIODIC CONTRACT CHECK ", period, " SECONDS");
             this.next_periodic_check = setTimeout(
                 this.periodic_check.bind(this),
-                5000 * 1
+                1000 * period
             );
         }
     }
@@ -108,8 +117,8 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         return Transaction.fromHex(hex);
     }
 
-    async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO|null> {
-        console.log(t,n);
+    async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO | null> {
+        console.log(t, n);
         const txout = (await window.electron.bitcoin_command([
             { method: 'getrawtransaction', parameters: [t, true] },
         ]))[0];

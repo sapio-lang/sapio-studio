@@ -109,6 +109,7 @@ export class App extends React.Component<any, AppState> {
             timing_simulator_enabled: false,
             bitcoin_node_bar: true,
         };
+        this.state.current_contract.checkable = false;
         // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();
         this.engine
