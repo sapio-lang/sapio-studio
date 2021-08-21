@@ -41,7 +41,7 @@ export class InputDetail extends React.Component<IProps, IState> {
         // no await
         window.electron.save_psbt(psbt);
     }
-    flash(msg: string|JSX.Element, color: string, onclick?: () => void) {
+    flash(msg: string | JSX.Element, color: string, onclick?: () => void) {
         const click = onclick ?? (() => null);
         this.setState({
             flash: (<h3 style={{ color: color }} onClick={click}>
@@ -78,6 +78,34 @@ export class InputDetail extends React.Component<IProps, IState> {
         }
         return as_psbt;
     }
+    async finalize_psbt(psbt: string) {
+        const command =
+            [{ method: 'finalizepsbt', parameters: [psbt] }];
+        const result = (await window.electron.bitcoin_command(command))[0];
+        if (!result.complete || !result.hex) {
+            this.flash("PSBT Not Complete", "red");
+            return;
+        }
+        try {
+            const hex_tx = Bitcoin.Transaction.fromHex(result.hex)
+            const send =
+                [{ method: 'sendrawtransaction', parameters: [result.hex]}];
+
+            const sent = (await window.electron.bitcoin_command(send))[0];
+            if (sent !== hex_tx.getId()) {
+                this.flash("TXN Not Relayed", "red");
+            } else {
+                this.flash("Transaction Relayed!", "green");
+            }
+        } catch (e: any) {
+            this.flash((<div>
+                PSBT Error <span className="glyphicon glyphicon-question-sign"></span>
+            </div>), "red", () =>
+                alert(e.toString()));
+        }
+
+
+    }
     render() {
         const witness_display =
             this.state.witness_selection === undefined
@@ -103,33 +131,44 @@ export class InputDetail extends React.Component<IProps, IState> {
         const psbts_display =
             this.state.psbt === undefined
                 ? <><div></div><div></div></>
-                : (<><Hex readOnly className="txhex" value={this.state.psbt.toBase64()} ></Hex>
-                    <div title="Save PSBT to Disk">
-                        <i className="glyphicon glyphicon-floppy-save SavePSBT" onClick={
-                            (() => this.save_psbt(this.state.psbt!.toBase64())).bind(this)
-                        }></i>
+                : (<>
+                    <div className="PSBTActions">
+
+                        <div title="Save PSBT to Disk">
+                            <i className="glyphicon glyphicon-floppy-save SavePSBT" onClick={
+                                (() => this.save_psbt(this.state.psbt!.toBase64())).bind(this)
+                            }></i>
+                        </div>
+                        <div title="Sign PSBT Using Node Wallet">
+                            <i className="glyphicon glyphicon-pencil SignPSBT" onClick={
+                                (async () => {
+                                    const psbt = await this.sign_psbt(this.props.psbts[
+                                        this.state.witness_selection ?? 0
+                                    ].toBase64());
+                                    // TODO: Confirm this saves to model?
+                                    this.state.psbt?.combine(psbt);
+                                    this.setState({ psbt: this.state.psbt });
+                                }).bind(this)
+                            }></i>
+                        </div>
+                        <div title="Combine PSBT from File">
+                            <i className="glyphicon glyphicon-compressed CombinePSBT" onClick={
+                                (async () => {
+                                    // TODO: Confirm this saves to model?
+                                    const psbt = await this.combine_psbt(this.state.psbt!);
+                                    this.setState({ psbt: this.state.psbt });
+                                }).bind(this)
+                            }></i>
+                        </div>
+                        <div title="Attempt Finalizing and Broadcast">
+                            <i className="glyphicon glyphicon-send BroadcastPSBT" onClick={async () => {
+                                await this.finalize_psbt(this.state.psbt!.toBase64());
+                            }}>
+
+                            </i>
+                        </div>
                     </div>
-                    <div title="Sign PSBT Using Node Wallet">
-                        <i className="glyphicon glyphicon-pencil SignPSBT" onClick={
-                            (async () => {
-                                const psbt = await this.sign_psbt(this.props.psbts[
-                                    this.state.witness_selection ?? 0
-                                ].toBase64());
-                                // TODO: Confirm this saves to model?
-                                this.state.psbt?.combine(psbt);
-                                this.setState({ psbt: this.state.psbt });
-                            }).bind(this)
-                        }></i>
-                    </div>
-                    <div title="Combine PSBT from File">
-                        <i className="glyphicon glyphicon-compressed CombinePSBT" onClick={
-                            (async () => {
-                                // TODO: Confirm this saves to model?
-                                const psbt = await this.combine_psbt(this.state.psbt!);
-                                this.setState({ psbt: this.state.psbt });
-                            }).bind(this)
-                        }></i>
-                    </div>
+                    <Hex readOnly className="txhex" value={this.state.psbt.toBase64()} ></Hex>
                 </>);
         const scriptValue = Bitcoin.script.toASM(
             Bitcoin.script.decompile(this.props.txinput.script) ??

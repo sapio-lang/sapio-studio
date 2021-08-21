@@ -109,6 +109,7 @@ export class App extends React.Component<any, AppState> {
             timing_simulator_enabled: false,
             bitcoin_node_bar: true,
         };
+        this.state.current_contract.checkable = false;
         // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();
         this.engine
@@ -202,9 +203,6 @@ export class App extends React.Component<any, AppState> {
         const entity = !this.state.details ? null : (
             <CurrentlyViewedEntity
                 entity={this.state.entity}
-                broadcast={(x: Transaction) =>
-                    this.bitcoin_node_manager.broadcast(x)
-                }
                 fund_out={(x: Transaction) =>
                     this.bitcoin_node_manager.fund_out(x)
                 }

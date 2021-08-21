@@ -103,6 +103,7 @@ interface DefaultNodeProps {
 
 interface IState {
     is_reachable: boolean;
+    is_confirmed: boolean;
     amount: number;
 }
 /**
@@ -123,12 +124,17 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
             if (this.node === null) return;
         };
         this.state = {
+            is_confirmed: this.props.node.isConfirmed(),
             is_reachable: this.props.node.isReachable(),
             amount: this.props.node.getAmount(),
         };
         this.props.node.registerReachableCallback((b: boolean) =>
             this.setState({ is_reachable: b })
         );
+        this.props.node.registerConfirmedCallback((b:boolean)=>
+        {
+            this.setState({is_confirmed:b})
+        })
         this.props.node.registerListener({
             sync: (e: BaseEvent) => {
                 console.log(this.props.node);
@@ -186,7 +192,7 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
             );
 
         let yellow = Color('yellow').fade(0.2).toString();
-        const is_conf = this.props.node.isConfirmed() ? null : (
+        const is_conf = this.state.is_confirmed ? null : (
             <div
                 style={{
                     background: yellow,
@@ -212,7 +218,7 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
                         }
                         key={this.id}
                         selected={this.props.node.isSelected()}
-                        confirmed={this.props.node.isConfirmed()}
+                        confirmed={this.state.is_confirmed}
                         className={reachable_cl}
                     >
                         <Title color={color}>

@@ -15,8 +15,7 @@ export interface ViewableEntityInterface { }
 
 export class EmptyViewer implements ViewableEntityInterface { }
 interface CurrentylViewedEntityProps {
-    broadcast: (a: Transaction) => Promise<any>;
-    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
+    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO|null>;
     fund_out: (a: Transaction) => Promise<Transaction>;
     entity: ViewableEntityInterface;
     hide_details: () => void;
@@ -54,7 +53,6 @@ export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntity
             case TransactionModel:
                 return (
                     <TransactionDetail
-                        broadcast={this.props.broadcast}
                         entity={this.props.entity as TransactionModel}
                         find_tx_model={(a: Buffer, b: number) =>
                             this.props.current_contract.lookup(a, b)

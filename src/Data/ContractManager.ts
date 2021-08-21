@@ -100,15 +100,15 @@ function process_txn_models(
     assert.equal(txns.length, psbts.length);
     _.chain(txns)
         .map((tx, x) => {
-            return {tx:tx, x:x, psbt:psbts[x]};
+            return { tx: tx, x: x, psbt: psbts[x] };
         })
-        .groupBy(({ tx } : {tx : Bitcoin.Transaction}) => tx.getId())
-        .forEach((txn_group: {tx: Bitcoin.Transaction, psbt: Bitcoin.Psbt, x: number}[], _key:string) => {
+        .groupBy(({ tx }: { tx: Bitcoin.Transaction }) => tx.getId())
+        .forEach((txn_group: { tx: Bitcoin.Transaction, psbt: Bitcoin.Psbt, x: number }[], _key: string) => {
             let label = '';
             let color = new NodeColor('');
             let utxo_label: Array<UTXOFormatData | null> = [];
-            let all_witnesses: SigningDataStore = {witnesses: [], psbts: []};
-            for (let { tx, x, psbt} of txn_group) {
+            let all_witnesses: SigningDataStore = { witnesses: [], psbts: [] };
+            for (let { tx, x, psbt } of txn_group) {
                 utxo_label = utxo_labels[x];
                 color = txn_colors[x];
                 label = txn_labels[x];
@@ -175,7 +175,7 @@ function process_txn_models(
         const txn_model = new PhantomTransactionModel(
             txid,
             mock_txn,
-            {witnesses:[], psbts:[]},
+            { witnesses: [], psbts: [] },
             update,
             'Missing',
             color,
@@ -557,13 +557,18 @@ export class ContractBase {
         console.log('called empty');
         return null;
     }
+    should_update() {
+        return false;
+    }
 }
 
 export class ContractModel extends ContractBase {
+    checkable: boolean = false;
     constructor();
     constructor(update_viewer: (e: SelectedEvent) => void, obj: Data);
     constructor(update_viewer?: any, obj?: Data) {
         super();
+        this.checkable = true;
         if (update_viewer === undefined || obj === undefined) return;
         let new_obj = preprocess_data(obj);
         let { inputs_map, utxo_models, txn_models, txid_map } = process_data(
@@ -576,6 +581,9 @@ export class ContractModel extends ContractBase {
         this.txid_map = txid_map;
         console.log(this);
     }
+    should_update() {
+        return this.checkable;
+    }
     // TODO: Return an Array of UTXOModels
     lookup(txid: Buffer, n: number): UTXOModel | null {
         let txid_s = txid_buf_to_string(txid);
@@ -586,16 +594,15 @@ export class ContractModel extends ContractBase {
         return txn_model.utxo_models[n];
     }
     process_finality(is_final: Array<string>, model: any) {
-        return null;
         // TODO: Reimplement in terms of WTXID
-        /*is_final.forEach((txid) => {
-            const key = this.txid_map.get(txid);
-            if (key === undefined){ return; }
-            const m = this.txn_models[key];
-            m.setConfirmed(true);
-            m.utxo_models.forEach((m) => m.setConfirmed(true));
-            m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
-        });*/
+        is_final.forEach((txid) => {
+            const m: TransactionModel | undefined = this.txid_map.get_by_txid_s(txid);
+            if (m) {
+                m.setConfirmed(true);
+                m.utxo_models.forEach((m) => m.setConfirmed(true));
+                m.consume_inputs(this.inputs_map, model);
+            }
+        });
     }
     reachable_at_time(
         max_time: number,
