@@ -91,7 +91,6 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
                 is_tx_confirmed,
                 this.props.app.model
             );
-            this.props.app.forceUpdate();
         }
         if (this.mounted) {
             let prefs = window.electron.get_preferences_sync();
