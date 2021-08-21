@@ -89,11 +89,14 @@ export class InputDetail extends React.Component<IProps, IState> {
         try {
             const hex_tx = Bitcoin.Transaction.fromHex(result.hex)
             const send =
-                [{ method: 'sendrawtransaction', parameters: [result.hex]}];
+                [{ method: 'sendrawtransaction', parameters: [result.hex] }];
 
             const sent = (await window.electron.bitcoin_command(send))[0];
             if (sent !== hex_tx.getId()) {
-                this.flash("TXN Not Relayed", "red");
+                this.flash((<div>
+                    Relay Error <span className="glyphicon glyphicon-question-sign"></span>
+                </div>), "red", () =>
+                    alert(sent.message.toString()));
             } else {
                 this.flash("Transaction Relayed!", "green");
             }
@@ -142,9 +145,7 @@ export class InputDetail extends React.Component<IProps, IState> {
                         <div title="Sign PSBT Using Node Wallet">
                             <i className="glyphicon glyphicon-pencil SignPSBT" onClick={
                                 (async () => {
-                                    const psbt = await this.sign_psbt(this.props.psbts[
-                                        this.state.witness_selection ?? 0
-                                    ].toBase64());
+                                    const psbt = await this.sign_psbt(this.state.psbt!.toBase64());
                                     // TODO: Confirm this saves to model?
                                     this.state.psbt?.combine(psbt);
                                     this.setState({ psbt: this.state.psbt });
