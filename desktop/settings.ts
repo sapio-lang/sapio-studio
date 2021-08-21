@@ -21,7 +21,7 @@ export const settings = new ElectronPreferences({
             'oracle-remote-enabled': false,
             'oracle-remote-oracles-list': [],
             'oracle-remote-threshold': [],
-            plugin_map: {},
+            plugin_map: [],
             configsource: 'default',
         },
         display: {
