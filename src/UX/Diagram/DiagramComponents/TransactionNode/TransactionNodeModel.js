@@ -25,6 +25,7 @@ export class TransactionNodeModel extends NodeModel {
         this.is_reachable = true;
         // TODO: Autoformatter unhappy with nullish ??, fix later.
         this.reachable_cb = this.reachable_cb || ((b) => null);
+        this.confirmed_cb = this.confirmed_cb || ((b) => null);
     }
 
     setColor(color) {
@@ -38,7 +39,10 @@ export class TransactionNodeModel extends NodeModel {
 
     setConfirmed(opt) {
         this.confirmed = opt;
-        this.setSelected(true);
+        this.confirmed_cb(opt);
+    }
+    registerConfirmed(f) {
+        this.confirmed_cb = f;
     }
     isConfirmed() {
         return this.confirmed;
@@ -84,8 +88,7 @@ export class TransactionNodeModel extends NodeModel {
     }
     addInPort(label, after) {
         after = after || true;
-        const p = new SpendPortModel({
-            in: true,
+        const p = new SpendPortModel({ in: true,
             name: label,
             label: label,
             alignment: PortModelAlignment.TOP,
@@ -98,8 +101,7 @@ export class TransactionNodeModel extends NodeModel {
 
     addOutPort(label, after) {
         after = after || true;
-        const p = new OutputPortModel({
-            in: false,
+        const p = new OutputPortModel({ in: false,
             name: label,
             label: label,
             alignment: PortModelAlignment.BOTTOM,
