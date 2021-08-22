@@ -20,7 +20,7 @@ export const settings = new ElectronPreferences({
             'oracle-local-enabled': false,
             'oracle-remote-enabled': false,
             'oracle-remote-oracles-list': [],
-            'oracle-remote-threshold': [],
+            'oracle-remote-threshold': 0,
             plugin_map: [],
             configsource: 'default',
         },
@@ -305,7 +305,7 @@ export const custom_sapio_config = () => {
     const port = settings.value('bitcoin-config.rpcport');
     const host = settings.value('bitcoin-config.rpchost');
     const oracle_enabled = settings.value('sapio.oracle-remote-enabled');
-    const threshold = parseInt(settings.value('sapio.oracle-remote-threshold'));
+    const threshold: number = parseInt(settings.value('sapio.oracle-remote-threshold')??"0");
     let error = false;
     const oracle_list = settings
         .value('sapio.oracle-remote-oracles-list')
@@ -368,7 +368,7 @@ export const custom_sapio_config = () => {
             emulator_nodes: {
                 enabled: oracle_enabled,
                 emulators: oracle_list,
-                threshold: threshold,
+                threshold: threshold??0,
             },
             plugin_map: plugin_map,
         },
