@@ -4,41 +4,31 @@ import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import Modal from 'react-bootstrap/Modal';
 
-export class SapioCompilerModal extends React.Component {
+export class ViewContractModal extends React.Component {
     constructor(props) {
         super(props);
         this.form = {};
-    }
-    handleSubmit(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        const form = event.currentTarget;
-        this.props.compiler.location = form.elements.ws.value;
-        // triggers reconnect
-        this.props.compiler.socket.close();
-        this.props.hide();
     }
     render() {
         return (
             <Modal show={this.props.show} onHide={this.props.hide}>
                 <Modal.Header closeButton>
-                    <Modal.Title> Set Contract Generator URL </Modal.Title>
+                    <Modal.Title> View Existing Contract </Modal.Title>
                 </Modal.Header>
-                <Form onSubmit={(e) => this.handleSubmit(e)}>
+                <Form>
                     <FormControl
-                        name="ws"
-                        type="text"
-                        placeholder="url"
-                        defaultValue={this.props.compiler.location} />
-                    <Button type="submit">Set</Button>
+                        as="select"
+                        placeholder="Existing Contract"
+                        className=" mr-sm-2"
+                    />
+                    <Button type="submit">View</Button>
                 </Form>
                 <Modal.Footer>
                     <Button
                         variant="secondary"
                         onClick={() => this.props.hide()}
                     >
-                        {' '}
-                        Close{' '}
+                        Close
                     </Button>
                 </Modal.Footer>
             </Modal>

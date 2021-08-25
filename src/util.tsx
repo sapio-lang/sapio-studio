@@ -1,6 +1,12 @@
 import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
+import React from 'react';
 
+declare global {
+    interface Window {
+        electron: any;
+    }
+}
 interface Key {
     index: number;
     hash: Buffer;
@@ -44,11 +50,35 @@ export class InputMap<T> {
     }
 }
 
+export const DEFAULT_MAX_SATS_DISPLAY: number = 9999999;
+let INTERNAL_MAX_SATS_DISPLAY: number = DEFAULT_MAX_SATS_DISPLAY;
+
+(() => {
+    const preferences = window.electron.get_preferences_sync();
+    INTERNAL_MAX_SATS_DISPLAY =
+        preferences.display['sats-bound'] ?? DEFAULT_MAX_SATS_DISPLAY;
+    window.electron.preferences_listener((_: any, p: any) => {
+        INTERNAL_MAX_SATS_DISPLAY =
+            p.display['sats-bound'] ?? DEFAULT_MAX_SATS_DISPLAY;
+    });
+})();
+
 export function pretty_amount(amount: number) {
-    if (amount > 1000) {
-        return amount / 100_000_000 + ' BTC';
+    if (amount > INTERNAL_MAX_SATS_DISPLAY) {
+        amount /= 100_000_000;
+        return (
+            <span title={amount.toString() + ' bitcoin'}>
+                {amount}
+                <span style={{ fontSize: 'larger', color: '#f2a900' }}>₿</span>
+            </span>
+        );
     } else {
-        return amount + ' Sats';
+        return (
+            <span title={amount.toString() + ' satoshis'}>
+                {amount}
+                <span style={{ fontSize: 'larger', color: '#f2a900' }}>§</span>
+            </span>
+        );
     }
 }
 
@@ -84,46 +114,47 @@ export class TXIDAndWTXIDMap<K extends HasKeys> {
     }
 }
 
-export function hash_to_hex(h: Buffer) : string {
+export function hash_to_hex(h: Buffer): string {
     const b = new Buffer(32);
     h.copy(b);
     b.reverse();
     return b.toString('hex');
 }
 
-export function sequence_convert(sequence: number) : {relative_time:number, relative_height:number} {
-        const ret = {relative_time: 0, relative_height: 0};
-        if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) return ret;
-        if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE-1) return ret;
-        const s_mask = 0xffff & sequence;
-        if ((1 << 22) & sequence) {
-            ret.relative_time = s_mask;
-        } else {
-            ret.relative_height = s_mask;
-        }
-        return ret;
+export function sequence_convert(
+    sequence: number
+): { relative_time: number; relative_height: number } {
+    const ret = { relative_time: 0, relative_height: 0 };
+    if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) return ret;
+    if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE - 1) return ret;
+    const s_mask = 0xffff & sequence;
+    if ((1 << 22) & sequence) {
+        ret.relative_time = s_mask;
+    } else {
+        ret.relative_height = s_mask;
+    }
+    return ret;
 }
-export function time_to_pretty_string(time: number) : string {
+export function time_to_pretty_string(time: number): string {
     time *= 512;
     let relative_time_string = 'None';
     time /= 60 * 60;
-    let suffix = "?";
+    let suffix = '?';
     if (time < 24 && time !== 0) {
-        suffix = " Hours";
+        suffix = ' Hours';
     } else {
         time /= 24;
         if (time < 14) {
-            relative_time_string =
-                suffix = " Days";
+            relative_time_string = suffix = ' Days';
         } else {
             time /= 7;
             if (time < 10) {
-                suffix = " Weeks";
+                suffix = ' Weeks';
             } else {
                 time /= 30;
-                suffix = " Months";
+                suffix = ' Months';
             }
         }
     }
-    return (Math.trunc(time*10)/10).toString() + suffix;
+    return (Math.trunc(time * 10) / 10).toString() + suffix;
 }

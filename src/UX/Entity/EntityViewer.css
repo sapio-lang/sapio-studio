@@ -58,9 +58,34 @@ License: MIT
 
 .EntityViewer {
     background-color: transparent;
-    height: 90vh;
-    overflow: scroll;
-    width: 20em
+    overflow-y: scroll;
+    max-width: 50vw;
+    min-width: 5vw;
+}
+
+.EntityViewerFrame {
+    display: grid;
+    grid-template-columns: 3px max-content;
+    min-width: 3px;
+    position: absolute;
+    right: 0px;
+    background-color: rgba(100, 100, 100, 0.3);
+    background-blend-mode: screen;
+    border-bottom: 1px solid grey;
+    max-height: 50vh;
+    overflow-y: scroll;
+}
+
+.EntityViewerResize {
+    border-left: 1px solid grey;
+    border-right: 1px solid grey;
+}
+
+.EntityViewerResize:hover {
+    background-color: green;
+    border-left: 3px solid green;
+    border-right: 3px solid green;
+    cursor: ew-resize;
 }
 
 .modal {

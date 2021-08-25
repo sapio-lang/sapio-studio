@@ -25,18 +25,16 @@ import { UTXONodeFactory } from './UX/Diagram/DiagramComponents/UTXONode/UTXONod
 import { SimulationController } from './Simulation';
 import { AppNavbar } from './UX/AppNavbar';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
-import { EmptyViewer, CurrentlyViewedEntity, ViewableEntityInterface } from './UX/Entity/EntityViewer';
+import {
+    EmptyViewer,
+    CurrentlyViewedEntity,
+    ViewableEntityInterface,
+} from './UX/Entity/EntityViewer';
 import Collapse from 'react-bootstrap/Collapse';
 import './Glyphs.css';
 import { TXID } from './util';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
 
-
-declare global {
-    interface Window {
-        electron: any;
-    }
-}
 class ModelManager {
     model: DiagramModel;
     constructor(model: DiagramModel) {
@@ -111,6 +109,7 @@ export class App extends React.Component<any, AppState> {
             timing_simulator_enabled: false,
             bitcoin_node_bar: true,
         };
+        this.state.current_contract.checkable = false;
         // engine is the processor for graphs, we need to load all our custom factories here
         this.engine = createEngine();
         this.engine
@@ -143,11 +142,18 @@ export class App extends React.Component<any, AppState> {
             app: this,
             current_contract: this.state.current_contract,
         });
-        window.electron.register("bitcoin-node-bar", (msg: string) => {
-            if (msg === "show") {
-                this.setState({ bitcoin_node_bar: !this.state.bitcoin_node_bar });
+        window.electron.register('bitcoin-node-bar', (msg: string) => {
+            if (msg === 'show') {
+                this.setState({
+                    bitcoin_node_bar: !this.state.bitcoin_node_bar,
+                });
             }
         });
+
+        // TODO: This should go somewhere else :(
+        window.electron.register("load_contract", ((data: string) => {
+            this.load_new_model(JSON.parse(data));
+        }).bind(this));
 
         /* Socket Functionality */
         this.cm = new CompilerServer(null, this);
@@ -197,9 +203,6 @@ export class App extends React.Component<any, AppState> {
         const entity = !this.state.details ? null : (
             <CurrentlyViewedEntity
                 entity={this.state.entity}
-                broadcast={(x: Transaction) =>
-                    this.bitcoin_node_manager.broadcast(x)
-                }
                 fund_out={(x: Transaction) =>
                     this.bitcoin_node_manager.fund_out(x)
                 }
@@ -209,6 +212,12 @@ export class App extends React.Component<any, AppState> {
                 hide_details={() => this.hide_details()}
                 current_contract={this.state.current_contract}
                 load_new_contract={(x: Data) => this.load_new_model(x)}
+            />
+        );
+        const simulator = !this.state.timing_simulator_enabled ? null : (
+            <SimulationController
+                contract={this.state.current_contract}
+                app={this}
             />
         );
         return (
@@ -233,14 +242,6 @@ export class App extends React.Component<any, AppState> {
                             }
                         />
 
-                        <Collapse in={this.state.timing_simulator_enabled}>
-                            <div>
-                                <SimulationController
-                                    contract={this.state.current_contract}
-                                    app={this}
-                                />
-                            </div>
-                        </Collapse>
                     </div>
                     <div className="area-inner">
                         <div className="main-container">
@@ -256,12 +257,14 @@ export class App extends React.Component<any, AppState> {
                             </DemoCanvasWidget>
                         </div>
                         <div>{entity}</div>
+                        {simulator}
                     </div>
 
                     <Collapse in={this.state.bitcoin_node_bar}>
                         <div>
-
-                            <BitcoinStatusBar api={this.bitcoin_node_manager}></BitcoinStatusBar>
+                            <BitcoinStatusBar
+                                api={this.bitcoin_node_manager}
+                            ></BitcoinStatusBar>
                         </div>
                     </Collapse>
                 </div>

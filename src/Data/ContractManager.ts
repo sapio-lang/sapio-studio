@@ -1,5 +1,6 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import { Output } from 'bitcoinjs-lib/types/transaction';
+import * as assert from 'assert';
 import _, { Collection } from 'lodash';
 import { SelectedEvent } from '../App';
 import { InputMap, TXID, TXIDAndWTXIDMap, txid_buf_to_string } from '../util';
@@ -13,7 +14,7 @@ export class NodeColor {
     get() {
         return this.c;
     }
-    fade() {}
+    fade() { }
     clone() {
         return new NodeColor(this.c);
     }
@@ -24,6 +25,7 @@ export interface UTXOFormatData {
 }
 export interface TransactionData {
     hex: string;
+    psbt: string;
     color?: string;
     label?: string;
     utxo_metadata?: Array<UTXOFormatData | null>;
@@ -34,6 +36,7 @@ export interface Data {
 }
 
 interface PreProcessedData {
+    psbts: Array<Bitcoin.Psbt>;
     txns: Array<Bitcoin.Transaction>;
     txn_colors: Array<NodeColor>;
     txn_labels: Array<string>;
@@ -48,6 +51,7 @@ interface ProcessedData {
 
 function preprocess_data(data: Data): PreProcessedData {
     let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
+    let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt))
     let txn_labels = data.program.map((k) => k.label ?? 'unlabeled');
     let txn_colors = data.program.map(
         (k) => new NodeColor(k.color ?? 'orange')
@@ -57,9 +61,10 @@ function preprocess_data(data: Data): PreProcessedData {
     );
 
     return {
-        txns: txns,
-        txn_colors: txn_colors,
-        txn_labels: txn_labels,
+        psbts,
+        txns,
+        txn_colors,
+        txn_labels,
         utxo_labels,
     };
 }
@@ -78,7 +83,12 @@ function process_inputs_map(
     return inputs_map;
 }
 
+export type SigningDataStore = {
+    witnesses: Buffer[][][],
+    psbts: Bitcoin.Psbt[]
+}
 function process_txn_models(
+    psbts: Array<Bitcoin.Psbt>,
     txns: Array<Bitcoin.Transaction>,
     update: (s: SelectedEvent) => void,
     txn_labels: Array<string>,
@@ -87,17 +97,18 @@ function process_txn_models(
 ): [TXIDAndWTXIDMap<TransactionModel>, Array<TransactionModel>] {
     let txid_map: TXIDAndWTXIDMap<TransactionModel> = new TXIDAndWTXIDMap();
     let txn_models: Array<TransactionModel> = [];
+    assert.equal(txns.length, psbts.length);
     _.chain(txns)
-        .map((t, idx) => {
-            return { tx: t, x: idx };
+        .map((tx, x) => {
+            return { tx: tx, x: x, psbt: psbts[x] };
         })
-        .groupBy(({ tx }) => tx.getId())
-        .forEach((values, key) => {
+        .groupBy(({ tx }: { tx: Bitcoin.Transaction }) => tx.getId())
+        .forEach((txn_group: { tx: Bitcoin.Transaction, psbt: Bitcoin.Psbt, x: number }[], _key: string) => {
             let label = '';
             let color = new NodeColor('');
             let utxo_label: Array<UTXOFormatData | null> = [];
-            let all_witnesses: Buffer[][][] = [];
-            for (let { tx, x } of values) {
+            let all_witnesses: SigningDataStore = { witnesses: [], psbts: [] };
+            for (let { tx, x, psbt } of txn_group) {
                 utxo_label = utxo_labels[x];
                 color = txn_colors[x];
                 label = txn_labels[x];
@@ -105,9 +116,11 @@ function process_txn_models(
                 for (let input of tx.ins) {
                     witnesses.push(input.witness);
                 }
-                all_witnesses.push(witnesses);
+
+                all_witnesses.witnesses.push(witnesses);
+                all_witnesses.psbts.push(psbt);
             }
-            let base_txn: Bitcoin.Transaction = values[0].tx.clone();
+            let base_txn: Bitcoin.Transaction = txn_group[0].tx.clone();
             // Clear out witness Data
             for (let input of base_txn.ins) {
                 input.witness = [];
@@ -162,7 +175,7 @@ function process_txn_models(
         const txn_model = new PhantomTransactionModel(
             txid,
             mock_txn,
-            [],
+            { witnesses: [], psbts: [] },
             update,
             'Missing',
             color,
@@ -188,9 +201,9 @@ function process_utxo_models(
                 utxo_model.txn instanceof PhantomTransactionModel &&
                 spenders.length
             ) {
-                if (spenders[0].witness_set.length) {
+                if (spenders[0].witness_set.witnesses.length) {
                     const witstack =
-                        spenders[0].witness_set[0][utxo_model.utxo.index];
+                        spenders[0].witness_set.witnesses[0][utxo_model.utxo.index];
                     if (witstack) {
                         const program = witstack[witstack.length - 1];
                         if (program) {
@@ -254,8 +267,9 @@ function process_data(
     update: (e: SelectedEvent) => void,
     obj: PreProcessedData
 ): ProcessedData {
-    let { txns, txn_colors, txn_labels, utxo_labels } = obj;
+    let { psbts, txns, txn_colors, txn_labels, utxo_labels } = obj;
     let [txid_map, txn_models] = process_txn_models(
+        psbts,
         txns,
         update,
         txn_labels,
@@ -543,13 +557,18 @@ export class ContractBase {
         console.log('called empty');
         return null;
     }
+    should_update() {
+        return false;
+    }
 }
 
 export class ContractModel extends ContractBase {
+    checkable: boolean = false;
     constructor();
     constructor(update_viewer: (e: SelectedEvent) => void, obj: Data);
     constructor(update_viewer?: any, obj?: Data) {
         super();
+        this.checkable = true;
         if (update_viewer === undefined || obj === undefined) return;
         let new_obj = preprocess_data(obj);
         let { inputs_map, utxo_models, txn_models, txid_map } = process_data(
@@ -562,6 +581,9 @@ export class ContractModel extends ContractBase {
         this.txid_map = txid_map;
         console.log(this);
     }
+    should_update() {
+        return this.checkable;
+    }
     // TODO: Return an Array of UTXOModels
     lookup(txid: Buffer, n: number): UTXOModel | null {
         let txid_s = txid_buf_to_string(txid);
@@ -572,16 +594,15 @@ export class ContractModel extends ContractBase {
         return txn_model.utxo_models[n];
     }
     process_finality(is_final: Array<string>, model: any) {
-        return null;
         // TODO: Reimplement in terms of WTXID
-        /*is_final.forEach((txid) => {
-            const key = this.txid_map.get(txid);
-            if (key === undefined){ return; }
-            const m = this.txn_models[key];
-            m.setConfirmed(true);
-            m.utxo_models.forEach((m) => m.setConfirmed(true));
-            m.consume_inputs(this.txn_models, this.inputs_map, this.txns, model);
-        });*/
+        is_final.forEach((txid) => {
+            const m: TransactionModel | undefined = this.txid_map.get_by_txid_s(txid);
+            if (m) {
+                m.setConfirmed(true);
+                m.utxo_models.forEach((m) => m.setConfirmed(true));
+                m.consume_inputs(this.inputs_map, model);
+            }
+        });
     }
     reachable_at_time(
         max_time: number,

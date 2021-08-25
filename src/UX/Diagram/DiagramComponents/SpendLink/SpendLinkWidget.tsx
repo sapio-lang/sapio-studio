@@ -1,12 +1,8 @@
 import * as React from 'react';
-import {
-    LinkWidget,
-} from '@projectstorm/react-diagrams-core';
+import { LinkWidget } from '@projectstorm/react-diagrams-core';
 import { MouseEvent } from 'react';
 import { SpendLinkModel } from './SpendLinkModel';
-import {
-    DefaultLinkWidget,
-} from '@projectstorm/react-diagrams';
+import { DefaultLinkWidget } from '@projectstorm/react-diagrams';
 import { SpendLinkFactory } from './SpendLinkFactory';
 
 export class SpendLinkWidget extends DefaultLinkWidget {
