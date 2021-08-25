@@ -52,7 +52,6 @@ export function AppNavbar(props: any): JSX.Element {
             <CreateContractModal
                 show={modalCreate}
                 hide={() => setModalCreate(false)}
-                load_new_model={props.load_new_model}
                 compiler={props.compiler}
                 dynamic_forms={modalCreateAPIS}
             />
@@ -71,7 +70,6 @@ export function AppNavbar(props: any): JSX.Element {
             <LoadHexModal
                 show={modalLoadHex}
                 hide={() => setModalLoadHex(false)}
-                load_new_model={props.load_new_model}
             />
 
             <SaveHexModal
