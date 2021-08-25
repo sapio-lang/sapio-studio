@@ -1,11 +1,11 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
-import App from '../App';
 import { ContractBase, ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
 import { hash_to_hex } from '../util';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { clamp } from 'lodash';
+import { DiagramModel } from '@projectstorm/react-diagrams-core';
 
 type TXID = string;
 
@@ -20,7 +20,7 @@ export function call(method: string, args: any) {
     }).then((res) => res.json());
 }
 interface IProps {
-    app: App;
+    model: DiagramModel;
     current_contract: ContractModel;
 }
 interface IState {}
@@ -92,7 +92,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             update_broadcastable(contract, confirmed_txs);
             this.props.current_contract.process_finality(
                 is_tx_confirmed,
-                this.props.app.model
+                this.props.model
             );
         }
         if (this.mounted) {
@@ -129,7 +129,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
                 { method: 'getrawtransaction', parameters: [t, true] },
             ])
         )[0];
-        if (!txout || txout.name === "RpcError") {
+        if (!txout || txout.name === 'RpcError') {
             return null;
         }
         return {

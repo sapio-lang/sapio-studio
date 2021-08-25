@@ -3,11 +3,11 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { ContractModel } from './Data/ContractManager';
 import Form from 'react-bootstrap/Form';
-import { App } from './App';
 import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
 import _ from 'lodash';
 import './Simulation.css';
+import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 type Field =
     | 'current_time'
     | 'first_tx_time'
@@ -22,7 +22,7 @@ type SimAction = 'clear' | 'snap-time' | 'snap-blocks';
 export class SimulationController extends React.Component<
     {
         contract: ContractModel;
-        app: App;
+        engine: DiagramEngine;
     },
     {
         date: Date;
@@ -192,7 +192,7 @@ export class SimulationController extends React.Component<
             m.setReachable(false);
         });
         setTimeout(() => {
-            this.props.app.engine.repaintCanvas();
+            this.props.engine.repaintCanvas();
         }, 0);
     }
     handleSubmit(e: SimAction) {

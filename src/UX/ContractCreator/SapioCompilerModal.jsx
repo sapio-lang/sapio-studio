@@ -13,7 +13,6 @@ export class SapioCompilerModal extends React.Component {
         event.preventDefault();
         event.stopPropagation();
         const form = event.currentTarget;
-        this.props.compiler.location = form.elements.ws.value;
         // triggers reconnect
         this.props.compiler.socket.close();
         this.props.hide();
@@ -25,12 +24,7 @@ export class SapioCompilerModal extends React.Component {
                     <Modal.Title> Set Contract Generator URL </Modal.Title>
                 </Modal.Header>
                 <Form onSubmit={(e) => this.handleSubmit(e)}>
-                    <FormControl
-                        name="ws"
-                        type="text"
-                        placeholder="url"
-                        defaultValue={this.props.compiler.location}
-                    />
+                    <FormControl name="ws" type="text" placeholder="url" />
                     <Button type="submit">Set</Button>
                 </Form>
                 <Modal.Footer>

@@ -5,6 +5,7 @@ import { update_utxomodel } from './Detail/UTXODetail';
 import { UTXOModel } from '../../Data/UTXO';
 import { ContractModel, Data } from '../../Data/ContractManager';
 import { AppDispatch, RootState } from '../../Store/store';
+import { load_new_model } from '../../AppSlice';
 
 type StateType = {
     utxos: Record<string, QueriedUTXO>;
@@ -42,7 +43,7 @@ export const entitySlice = createSlice({
 });
 
 export type Outpoint = { hash: string; nIn: number };
-interface OutpointStringDifferentiator extends String { }
+interface OutpointStringDifferentiator extends String {}
 export type OutpointString = OutpointStringDifferentiator & string;
 
 export const ValidateOutpointString = (out: string): out is OutpointString => {
@@ -73,8 +74,7 @@ export const fetch_utxo = (args: Outpoint) => async (
 export const create = (
     tx: Bitcoin.Transaction,
     entity: UTXOModel,
-    contract: ContractModel,
-    load_new_contract: (x: Data) => void
+    contract: ContractModel
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
     await BitcoinNodeManager.fund_out(tx)
         .then((funded) => {
@@ -83,7 +83,7 @@ export const create = (
             const data = {
                 program: contract.txn_models.map((t) => t.get_json()),
             };
-            load_new_contract(data);
+            dispatch(load_new_model(data));
         })
         .catch((error) => {
             dispatch(__flash(error.message));
@@ -101,11 +101,12 @@ export const selectUTXO = (
         const id_s = to_id(id);
         console.debug(state);
         if (state.entityReducer.utxos.hasOwnProperty(id_s)) {
-            return state.entityReducer.utxos[id_s]
+            return state.entityReducer.utxos[id_s];
         }
         return null;
     };
-}
-export const selectUTXOFlash = (state: RootState): String | null => state.entityReducer.flash;
+};
+export const selectUTXOFlash = (state: RootState): String | null =>
+    state.entityReducer.flash;
 
 export default entitySlice.reducer;
