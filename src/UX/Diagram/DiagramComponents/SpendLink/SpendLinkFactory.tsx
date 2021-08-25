@@ -1,6 +1,4 @@
-import {
-    DefaultLinkFactory,
-} from '@projectstorm/react-diagrams';
+import { DefaultLinkFactory } from '@projectstorm/react-diagrams';
 import { SpendLinkSegment } from './SpendLink';
 import { SpendLinkModel } from './SpendLinkModel';
 import { SpendLinkWidget } from './SpendLinkWidget';

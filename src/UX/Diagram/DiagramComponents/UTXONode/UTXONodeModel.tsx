@@ -1,16 +1,11 @@
-import {
-    DefaultPortModel,
-    NodeModel,
-} from '@projectstorm/react-diagrams';
+import { DefaultPortModel, NodeModel } from '@projectstorm/react-diagrams';
 import {
     PortModelAlignment,
     NodeModelGenerics,
 } from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
 import { SpendLinkModel } from '../SpendLink/SpendLinkModel';
-import {
-    BasePositionModelOptions,
-} from '@projectstorm/react-canvas-core';
+import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import _ from 'lodash';
 import { TransactionModel } from '../../../../Data/Transaction';
 
@@ -21,6 +16,7 @@ export interface UTXONodeModelOptions extends BasePositionModelOptions {
     confirmed: boolean;
     reachable: boolean;
     reachable_callback: (b: boolean) => void;
+    confirmed_callback: (b: boolean) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
@@ -47,6 +43,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
             type: 'utxo-node',
             reachable: true,
             reachable_callback: (b) => null,
+            confirmed_callback: (b:boolean) => null,
             ...options,
         });
         this.portsOut = [];
@@ -67,10 +64,13 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     abstract getAmount(): number;
     setConfirmed(opt: boolean) {
         this.options.confirmed = opt;
-        this.setSelected(true);
+        this.options.confirmed_callback(opt);
     }
     isConfirmed(): boolean {
         return this.options.confirmed;
+    }
+    registerConfirmedCallback(f: (b:boolean)=>void) {
+        this.options.confirmed_callback = f;
     }
 
     setReachable(b: boolean) {
@@ -126,7 +126,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         const p = new DefaultPortModel({
             in: true,
             name: label,
-            label: label,
+            label: '',
             alignment: PortModelAlignment.TOP,
         });
         if (!after) {

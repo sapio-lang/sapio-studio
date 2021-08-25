@@ -7,6 +7,7 @@ import { App } from './App';
 import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
 import _ from 'lodash';
+import "./Simulation.css";
 type Field =
     | 'current_time'
     | 'first_tx_time'
@@ -58,10 +59,16 @@ export class SimulationController extends React.Component<
         this.max_time.setDate(this.max_time.getDate() + 365);
         this.current_block = 0.5;
         this.first_tx_block = 0;
-        this.min_blocks = Math.round(
-            (new Date().getFullYear() - 2008) * 144 * 365 - (144 * 365) / 2
-        );
-        this.max_blocks = this.min_blocks + 144 * 365;
+        const prefs = window.electron.get_preferences_sync();
+        if (prefs['bitcoin-config'].network === "regtest") {
+            this.min_blocks = 0;
+            this.max_blocks = 1000;
+        } else {
+            this.min_blocks = Math.round(
+                (new Date().getFullYear() - 2008) * 144 * 365 - (144 * 365) / 2
+            );
+            this.max_blocks = this.min_blocks + 144 * 365;
+        }
         this.timeout = setTimeout(() => null, 0);
         this.state = {
             date: new Date(),
@@ -116,13 +123,12 @@ export class SimulationController extends React.Component<
                 break;
             case 'current_block':
                 this.current_block = input.valueAsNumber;
+
                 this.setState({ current_block_pct: this.current_block });
-                this.current_block /= 100;
                 break;
             case 'first_tx_block':
                 this.first_tx_block = input.valueAsNumber;
                 this.setState({ first_tx_block_pct: this.first_tx_block });
-                this.first_tx_block /= 100;
                 break;
             case 'max_blocks':
                 this.max_blocks = input.valueAsNumber;
@@ -244,7 +250,7 @@ export class SimulationController extends React.Component<
                         new_start + 144
                     );
                     let delta = Math.abs(current_block - first_tx_block);
-                    new_start -= delta;
+                    new_start = Math.max(new_start - delta, 0);
                     new_end += delta;
 
                     this.current_block =
@@ -267,7 +273,7 @@ export class SimulationController extends React.Component<
     render() {
         const changeHandler = this.changeHandler.bind(this);
         return (
-            <Form onSubmit={(e: React.FormEvent) => e.preventDefault()}>
+            <Form onSubmit={(e: React.FormEvent) => e.preventDefault()} className="Simulation">
                 <Form.Group as={Row}>
                     <Col sm={1}>
                         <h3>Block</h3>

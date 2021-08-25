@@ -3,6 +3,7 @@ import { PortModelAlignment } from '@projectstorm/react-diagrams-core';
 import { OutputPortModel } from '../OutputLink';
 import { SpendPortModel } from '../SpendLink/SpendLink';
 import Color from 'color';
+import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
 /**
  * Example of a custom model using pure javascript
@@ -22,17 +23,14 @@ export class TransactionNodeModel extends NodeModel {
         this.name = name;
         this.confirmed = false;
         this.is_reachable = true;
-        this.reachable_cb = this.reachable_cb ?? ((b) => null);
+        // TODO: Autoformatter unhappy with nullish ??, fix later.
+        this.reachable_cb = this.reachable_cb || ((b) => null);
+        this.confirmed_cb = this.confirmed_cb || ((b) => null);
     }
 
     setColor(color) {
-        try {
-            Color(color);
-            this.color = color;
-            this.fireEvent({ color }, 'colorChanged');
-        } catch {
-            return;
-        }
+        this.color = color;
+        this.fireEvent({ color: this.color }, 'colorChanged');
     }
     setPurpose(purpose) {
         this.purpose = purpose;
@@ -41,7 +39,10 @@ export class TransactionNodeModel extends NodeModel {
 
     setConfirmed(opt) {
         this.confirmed = opt;
-        this.setSelected(true);
+        this.confirmed_cb(opt);
+    }
+    registerConfirmed(f) {
+        this.confirmed_cb = f;
     }
     isConfirmed() {
         return this.confirmed;
@@ -87,8 +88,7 @@ export class TransactionNodeModel extends NodeModel {
     }
     addInPort(label, after) {
         after = after || true;
-        const p = new SpendPortModel({
-            in: true,
+        const p = new SpendPortModel({ in: true,
             name: label,
             label: label,
             alignment: PortModelAlignment.TOP,
@@ -101,8 +101,7 @@ export class TransactionNodeModel extends NodeModel {
 
     addOutPort(label, after) {
         after = after || true;
-        const p = new OutputPortModel({
-            in: false,
+        const p = new OutputPortModel({ in: false,
             name: label,
             label: label,
             alignment: PortModelAlignment.BOTTOM,

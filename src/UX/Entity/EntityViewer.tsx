@@ -10,12 +10,12 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import { TXID } from '../../util';
 import { QueriedUTXO } from '../../Data/BitcoinNode';
 import Button from 'react-bootstrap/esm/Button';
+import { MouseEventHandler } from 'react-transition-group/node_modules/@types/react';
 export interface ViewableEntityInterface { }
 
 export class EmptyViewer implements ViewableEntityInterface { }
 interface CurrentylViewedEntityProps {
-    broadcast: (a: Transaction) => Promise<any>;
-    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
+    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO|null>;
     fund_out: (a: Transaction) => Promise<Transaction>;
     entity: ViewableEntityInterface;
     hide_details: () => void;
@@ -23,7 +23,20 @@ interface CurrentylViewedEntityProps {
     load_new_contract: (x: Data) => void;
 }
 
-export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntityProps> {
+interface EntityViewerState {
+    width: string;
+}
+
+export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntityProps, EntityViewerState> {
+    listener: any | null;
+    constructor(props: CurrentylViewedEntityProps) {
+        super(props);
+        this.listener = null;
+        this.state = {
+            width:
+                "20em"
+        }
+    }
     name() {
         switch (this.props.entity.constructor) {
             case TransactionModel:
@@ -40,7 +53,6 @@ export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntity
             case TransactionModel:
                 return (
                     <TransactionDetail
-                        broadcast={this.props.broadcast}
                         entity={this.props.entity as TransactionModel}
                         find_tx_model={(a: Buffer, b: number) =>
                             this.props.current_contract.lookup(a, b)
@@ -61,20 +73,55 @@ export class CurrentlyViewedEntity extends React.Component<CurrentylViewedEntity
                 return null;
         }
     }
+    mmu: undefined | ((ev:MouseEvent) => void);
+    mmm: undefined | ((ev:MouseEvent) => void);
+    onMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+        this.mmm = this.onMouseMove.bind(this);
+        this.mmu = this.onMouseUp.bind(this);
+        document.addEventListener("mousemove", this.mmm);
+        document.addEventListener("mouseup", this.mmu);
+    }
+    onMouseUp(e: MouseEvent) {
+        e.preventDefault();
+        if (this.mmm)
+            document.removeEventListener("mousemove", this.mmm);
+        if (this.mmu)
+            document.removeEventListener("mouseup", this.mmu);
+        this.mmm = undefined;
+        this.mmu = undefined;
 
+    }
+    onMouseMove(e: MouseEvent) {
+        e.preventDefault();
+        const width = (window.innerWidth - e.clientX).toString() + "px";
+        this.setState({ width });
+    }
     render() {
         return (
-            <>
-                <Button
-                    onClick={() => this.props.hide_details()}
-                    variant="link"
+            <div className="EntityViewerFrame"
+            >
+                <div className="EntityViewerResize"
+                    onMouseDown={this.onMouseDown.bind(this)}
                 >
-                    <span className="glyphicon glyphicon-remove" style={{ color: "red" }}></span>
-                </Button>
-            <div className="EntityViewer">
-                {this.guts()}
+                </div>
+                <div>
+                    <Button
+                        onClick={() => this.props.hide_details()}
+                        variant="link"
+                    >
+                        <span
+                            className="glyphicon glyphicon-remove"
+                            style={{ color: 'red' }}
+                        ></span>
+                    </Button>
+                    <div className="EntityViewer"
+                        style={{
+
+                            width: this.state.width
+                        }}
+                    >{this.guts()}</div>
+                </div>
             </div>
-            </>
         );
     }
 }

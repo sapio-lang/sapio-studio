@@ -12,14 +12,17 @@ import { UTXOModel } from '../../../Data/UTXO';
 import './UTXODetail.css';
 import { OutpointDetail } from './OutpointDetail';
 import { NodeModel } from '@projectstorm/react-diagrams';
-import { PhantomTransactionModel, TransactionModel } from '../../../Data/Transaction';
+import {
+    PhantomTransactionModel,
+    TransactionModel,
+} from '../../../Data/Transaction';
 import { Data, ContractModel } from '../../../Data/ContractManager';
 import { QueriedUTXO } from '../../../Data/BitcoinNode';
 import Button from 'react-bootstrap/esm/Button';
 
 interface UTXODetailProps {
     entity: UTXOModel;
-    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO>;
+    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO|null>;
     fund_out: (a: Bitcoin.Transaction) => Promise<Bitcoin.Transaction>;
     contract: ContractModel;
     load_new_contract: (x: Data) => void;
@@ -106,7 +109,7 @@ export class UTXODetail extends React.Component<
             this.props.entity.txn.get_txid(),
             this.props.entity.utxo.index
         );
-        console.log(data);
+        if (!data) return;
         if (data.confirmations > 0) {
             this.props.entity.utxo.amount = 100e6 * data.value;
             this.props.entity.utxo.script = Bitcoin.address.toOutputScript(
@@ -130,19 +133,14 @@ export class UTXODetail extends React.Component<
                 this.props.entity.utxo.script,
                 Bitcoin.networks.regtest
             );
-        } catch { }
+        } catch {}
         const spends = this.props.entity.utxo.spends.map((elt, i) => (
-            <div
-                key={get_wtxid_backwards(elt.tx)}
-                className="Spend"
-            >
+            <div key={get_wtxid_backwards(elt.tx)} className="Spend">
                 <Hex value={elt.get_txid()} />
-                <Button
-                    variant="link"
-                    onClick={() => this.goto(elt)}
-                >
-                    <span className="glyphicon glyphicon-chevron-right" style={{ color: "green" }}
-
+                <Button variant="link" onClick={() => this.goto(elt)}>
+                    <span
+                        className="glyphicon glyphicon-chevron-right"
+                        style={{ color: 'green' }}
                         title="Go To The Spending Transaction"
                     ></span>
                 </Button>
@@ -153,27 +151,27 @@ export class UTXODetail extends React.Component<
             this.props.entity.utxo.index
         );
         const creator = !is_mock ? null : (
-            <Button
-                variant="link"
-                onClick={() => this.create()}
-            >
-                <span className="glyphicon glyphicon-cloud-plus" style={{ color: "green" }}
+            <Button variant="link" onClick={() => this.create()}>
+                <span
+                    className="glyphicon glyphicon-cloud-plus"
+                    style={{ color: 'green' }}
                     title="Create Output"
                 ></span>
             </Button>
         );
         const check_exists = is_mock ? null : (
-            <Button
-                variant="link"
-                onClick={() => this.query()}
-            >
-                <span className="glyphicon glyphicon-cloud-download" style={{ color: "purple" }}
+            <Button variant="link" onClick={() => this.query()}>
+                <span
+                    className="glyphicon glyphicon-cloud-download"
+                    style={{ color: 'purple' }}
                     title="Query Node for this Output"
                 ></span>
             </Button>
         );
-        const title = (this.props.entity.txn instanceof PhantomTransactionModel) ? "External UTXO" :
-            pretty_amount(this.props.entity.utxo.amount);
+        const title =
+            this.props.entity.txn instanceof PhantomTransactionModel
+                ? 'External UTXO'
+                : pretty_amount(this.props.entity.utxo.amount);
 
         return (
             <div className="UTXODetail">
@@ -192,9 +190,7 @@ export class UTXODetail extends React.Component<
                 <div>
                     Address: <ASM className="txhex" readOnly value={address} />
                 </div>
-                <div>
-                    Spent By: {spends}
-                </div>
+                <div>Spent By: {spends}</div>
             </div>
         );
     }

@@ -23,7 +23,6 @@ export const Node = styled.div<{
     font-size: 11px;
     box-shadow: ${(p) =>
         p.selected ? '4px 1px 10px rgba(0,192,255,0.5)' : 'none'};
-    border-radius: 5px 20px;
 
     &.unreachable:after {
         content: '';
@@ -63,13 +62,11 @@ export const TitleName = styled.div`
 export const PortsTop = styled.div<{ color: string }>`
     display: flex;
     background-color: ${(p) => p.color};
-    border-radius: 5px 25px 0px 0px;
     color: black;
 `;
 
 export const PortsBottom = styled.div<{ color: string }>`
     display: flex;
-    border-radius: 0 0 5px 25px;
     background-color: ${(p) => p.color};
     color: white;
 `;
@@ -78,9 +75,16 @@ export const PortsBottom = styled.div<{ color: string }>`
 interface PortsContainerProps {
     children: React.ReactNode[];
 }
-class PortsContainer extends React.Component<PortsContainerProps> {
+class PortsContainerTop extends React.Component<PortsContainerProps> {
     render() {
-        return <div className="PortsContainer2">{this.props.children}</div>;
+        return <div className="PortsContainerTop">{this.props.children}</div>;
+    }
+}
+class PortsContainerBottom extends React.Component<PortsContainerProps> {
+    render() {
+        return (
+            <div className="PortsContainerBottom">{this.props.children}</div>
+        );
     }
 }
 
@@ -94,6 +98,7 @@ export interface DefaultNodeProps {
 }
 interface IState {
     is_reachable: boolean;
+    is_confirmed: boolean;
     color: string;
     purpose: string;
 }
@@ -109,10 +114,14 @@ export class TransactionNodeWidget extends React.Component<
     constructor(props: any) {
         super(props);
         this.state = {
+            is_confirmed: this.props.node.isConfirmed(),
             is_reachable: this.props.node.is_reachable,
             color: this.props.node.color,
             purpose: this.props.node.purpose,
         };
+        this.props.node.registerConfirmed((b: boolean) =>
+            this.setState({ is_confirmed: b })
+        );
         this.props.node.registerReachable((b: boolean) => {
             return this.setState({ is_reachable: b });
         });
@@ -140,7 +149,7 @@ export class TransactionNodeWidget extends React.Component<
         let white = Color('white').toString();
         let black = Color('black').toString();
         let yellow = Color('yellow').fade(0.2).toString();
-        const is_conf = this.props.node.isConfirmed() ? null : (
+        const is_conf = this.state.is_confirmed ? null : (
             <div
                 style={{
                     background: yellow,
@@ -152,37 +161,46 @@ export class TransactionNodeWidget extends React.Component<
             </div>
         );
         return (
-            <Node
-                data-default-node-name={this.props.node.name}
-                selected={this.props.node.isSelected()}
-                confirmed={this.props.node.isConfirmed()}
-                background={this.props.node.color}
-                className={
-                    this.state.is_reachable ? 'reachable' : 'unreachable'
-                }
-            >
-                <PortsTop color={white}>
-                    <PortsContainer>
+            <>
+                <PortsTop
+                    color={'transparent'}
+                    style={{ justifyContent: 'center' }}
+                >
+                    <PortsContainerTop>
                         {_.map(this.props.node.getInPorts(), this.generatePort)}
-                    </PortsContainer>
+                    </PortsContainerTop>
                 </PortsTop>
-                <Title color={color}>
-                    <TitleName>Transaction</TitleName>
-                    <TitleName>{this.props.node.name}</TitleName>
-                </Title>
-                {is_conf}
-                <Title color={color}>
-                    <TitleName>{this.state.purpose}</TitleName>
-                </Title>
-                <PortsBottom color={black}>
-                    <PortsContainer>
-                        {_.map(
-                            this.props.node.getOutPorts(),
-                            this.generatePort
-                        )}
-                    </PortsContainer>
-                </PortsBottom>
-            </Node>
+                <Node
+                    data-default-node-name={this.props.node.name}
+                    selected={this.props.node.isSelected()}
+                    confirmed={this.state.is_confirmed}
+                    background={this.props.node.color}
+                    className={
+                        (this.state.is_reachable
+                            ? 'reachable'
+                            : 'unreachable') + ' TransactionNode'
+                    }
+                >
+                    <div>
+                        <Title color={color}>
+                            <TitleName>Transaction</TitleName>
+                            <TitleName>{this.props.node.name}</TitleName>
+                        </Title>
+                        {is_conf}
+                        <Title color={color}>
+                            <TitleName>{this.state.purpose}</TitleName>
+                        </Title>
+                        <PortsBottom color={black}>
+                            <PortsContainerBottom>
+                                {_.map(
+                                    this.props.node.getOutPorts(),
+                                    this.generatePort
+                                )}
+                            </PortsContainerBottom>
+                        </PortsBottom>
+                    </div>
+                </Node>
+            </>
         );
     }
 }
