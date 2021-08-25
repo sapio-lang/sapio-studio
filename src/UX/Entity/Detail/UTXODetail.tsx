@@ -28,7 +28,6 @@ import React from 'react';
 interface UTXODetailProps {
     entity: UTXOModel;
     contract: ContractModel;
-    load_new_contract: (x: Data) => void;
 }
 
 function goto(x: NodeModel) {
@@ -122,8 +121,7 @@ export function UTXODetail(props: UTXODetailProps) {
                         create(
                             props.entity.txn.tx,
                             props.entity,
-                            props.contract,
-                            props.load_new_contract
+                            props.contract
                         )
                     )
                 }

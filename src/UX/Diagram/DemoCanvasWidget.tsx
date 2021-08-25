@@ -6,14 +6,6 @@ import {
 } from '@projectstorm/react-diagrams';
 import * as React from 'react';
 
-export interface DemoCanvasWidgetProps {
-    model: DiagramModel;
-    engine: DiagramEngine;
-    color?: string;
-    background?: string;
-    model_number: number;
-}
-
 const Container = styled.div<{ color: string; background: string }>`
     height: 100%;
     background-color: ${(p) => p.background} !important;
@@ -50,48 +42,32 @@ const Container = styled.div<{ color: string; background: string }>`
         );
 `;
 
-export class DemoCanvasWidget extends React.Component<
-    DemoCanvasWidgetProps,
-    any
-> {
-    engine: DagreEngine;
-    model_number: number;
-    constructor(props: any) {
-        super(props);
-        this.engine = new DagreEngine({
-            graph: {
-                rankdir: 'TB',
-                align: 'DL',
-                ranker: 'tight-tree',
-                marginx: 25,
-                marginy: 25,
-            },
-            includeLinks: false,
-        });
-        this.model_number = -1;
-    }
-    redistribute() {
-        this.engine.redistribute(this.props.model);
-        this.props.engine.repaintCanvas();
-    }
-    render() {
-        return (
-            <Container
-                background={this.props.background || 'rgb(60,60,60)'}
-                color={this.props.color || 'rgba(255,255,255, 0.05)'}
-            >
-                {this.props.children}
-            </Container>
-        );
-    }
-    componentDidUpdate() {
-        if (this.props.model_number > this.model_number) {
-            this.model_number = this.props.model_number;
-            console.log('check');
-            setTimeout(() => {
-                this.redistribute();
-                this.props.engine.zoomToFit();
-            }, 0);
-        }
-    }
+export interface DemoCanvasWidgetProps {
+    model: DiagramModel;
+    engine: DiagramEngine;
+    color?: string;
+    background?: string;
+    children: React.ReactNode;
+}
+
+export function DemoCanvasWidget(props: DemoCanvasWidgetProps) {
+    const engine = new DagreEngine({
+        graph: {
+            rankdir: 'TB',
+            align: 'DL',
+            ranker: 'tight-tree',
+            marginx: 25,
+            marginy: 25,
+        },
+        includeLinks: false,
+    });
+    engine.redistribute(props.model);
+    return (
+        <Container
+            background={props.background || 'rgb(60,60,60)'}
+            color={props.color || 'rgba(255,255,255, 0.05)'}
+        >
+            {props.children}
+        </Container>
+    );
 }

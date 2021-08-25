@@ -1,9 +1,10 @@
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import thunk from 'redux-thunk';
 import entityReducer from '../UX/Entity/EntitySlice';
+import appReducer from '../AppSlice';
 
 export const store = configureStore({
-    reducer: { entityReducer },
+    reducer: { entityReducer, appReducer },
     middleware: [thunk],
 });
 

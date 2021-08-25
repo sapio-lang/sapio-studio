@@ -14,7 +14,6 @@ interface CurrentylViewedEntityProps {
     entity: ViewableEntityInterface;
     hide_details: () => void;
     current_contract: ContractModel;
-    load_new_contract: (x: Data) => void;
 }
 
 interface EntityViewerState {
@@ -60,7 +59,6 @@ export class CurrentlyViewedEntity extends React.Component<
                     <UTXODetail
                         entity={this.props.entity as UTXOModel}
                         contract={this.props.current_contract}
-                        load_new_contract={this.props.load_new_contract}
                     />
                 );
             default:
