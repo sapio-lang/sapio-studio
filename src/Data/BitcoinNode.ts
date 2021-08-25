@@ -112,7 +112,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         }
     }
 
-    async fund_out(tx: Transaction): Promise<Transaction> {
+    static async fund_out(tx: Transaction): Promise<Transaction> {
         const result = await window.electron.bitcoin_command([
             { method: 'fundrawtransaction', parameters: [tx.toHex()] },
         ]);
@@ -123,15 +123,13 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         return Transaction.fromHex(hex);
     }
 
-    async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO | null> {
-        console.log(t, n);
+    static async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO | null> {
         const txout = (
             await window.electron.bitcoin_command([
                 { method: 'getrawtransaction', parameters: [t, true] },
             ])
         )[0];
-        console.log('TXOUT', txout);
-        if (!txout) {
+        if (!txout || txout.name === "RpcError") {
             return null;
         }
         return {

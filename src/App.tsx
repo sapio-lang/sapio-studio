@@ -206,12 +206,6 @@ export class App extends React.Component<any, AppState> {
         const entity = !this.state.details ? null : (
             <CurrentlyViewedEntity
                 entity={this.state.entity}
-                fund_out={(x: Transaction) =>
-                    this.bitcoin_node_manager.fund_out(x)
-                }
-                fetch_utxo={(t: TXID, n: number) =>
-                    this.bitcoin_node_manager.fetch_utxo(t, n)
-                }
                 hide_details={() => this.hide_details()}
                 current_contract={this.state.current_contract}
                 load_new_contract={(x: Data) => this.load_new_model(x)}

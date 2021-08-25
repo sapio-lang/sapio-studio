@@ -1,4 +1,3 @@
-import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
 import { ContractModel, Data } from '../../Data/ContractManager';
 import { TransactionDetail } from './Detail/TransactionDetail';
@@ -6,17 +5,12 @@ import { UTXODetail } from './Detail/UTXODetail';
 import { TransactionModel } from '../../Data/Transaction';
 import { UTXOModel } from '../../Data/UTXO';
 import './EntityViewer.css';
-import ListGroup from 'react-bootstrap/ListGroup';
-import { TXID } from '../../util';
-import { QueriedUTXO } from '../../Data/BitcoinNode';
 import Button from 'react-bootstrap/esm/Button';
-import { MouseEventHandler } from 'react-transition-group/node_modules/@types/react';
 export interface ViewableEntityInterface {}
 
 export class EmptyViewer implements ViewableEntityInterface {}
+
 interface CurrentylViewedEntityProps {
-    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO | null>;
-    fund_out: (a: Transaction) => Promise<Transaction>;
     entity: ViewableEntityInterface;
     hide_details: () => void;
     current_contract: ContractModel;
@@ -50,7 +44,7 @@ export class CurrentlyViewedEntity extends React.Component<
         }
     }
 
-    guts() {
+    guts(): null | React.ReactElement {
         switch (this.props.entity.constructor) {
             case TransactionModel:
                 return (
@@ -65,8 +59,6 @@ export class CurrentlyViewedEntity extends React.Component<
                 return (
                     <UTXODetail
                         entity={this.props.entity as UTXOModel}
-                        fund_out={this.props.fund_out}
-                        fetch_utxo={this.props.fetch_utxo}
                         contract={this.props.current_contract}
                         load_new_contract={this.props.load_new_contract}
                     />
