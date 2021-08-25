@@ -1,9 +1,9 @@
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import thunk from 'redux-thunk';
+import entityReducer from '../UX/Entity/EntitySlice';
 
 export const store = configureStore({
-    reducer: {},
+    reducer: { entityReducer },
     middleware: [thunk],
 });
 
