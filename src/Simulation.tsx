@@ -349,7 +349,9 @@ export class SimulationController extends React.Component<
                         <Form.Control
                             value={this.state.min_time.toLocaleDateString(
                                 'en-CA',
-                                { timeZone: 'UTC' }
+                                {
+                                    timeZone: 'UTC',
+                                }
                             )}
                             type="date"
                             onChange={(e: FormEvent) =>
@@ -362,7 +364,9 @@ export class SimulationController extends React.Component<
                             First Tx{' '}
                             {this.state.first_tx_time.toLocaleString(
                                 undefined,
-                                { timeZone: 'UTC' }
+                                {
+                                    timeZone: 'UTC',
+                                }
                             )}
                         </Form.Label>
                         <Form.Control
@@ -392,7 +396,9 @@ export class SimulationController extends React.Component<
                         <Form.Control
                             value={this.state.max_time.toLocaleDateString(
                                 'en-CA',
-                                { timeZone: 'UTC' }
+                                {
+                                    timeZone: 'UTC',
+                                }
                             )}
                             type="date"
                             onChange={(e: FormEvent) =>
