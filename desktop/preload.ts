@@ -25,7 +25,7 @@ const callbacks = {
     load_hex: 0,
     save_hex: 0,
     create_contracts: 0,
-    load_contract:0,
+    load_contract: 0,
     'bitcoin-node-bar': 0,
     create_contract_from_cache: 0,
 };

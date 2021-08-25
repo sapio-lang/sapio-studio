@@ -88,7 +88,8 @@ export class TransactionNodeModel extends NodeModel {
     }
     addInPort(label, after) {
         after = after || true;
-        const p = new SpendPortModel({ in: true,
+        const p = new SpendPortModel({
+            in: true,
             name: label,
             label: label,
             alignment: PortModelAlignment.TOP,
@@ -101,7 +102,8 @@ export class TransactionNodeModel extends NodeModel {
 
     addOutPort(label, after) {
         after = after || true;
-        const p = new OutputPortModel({ in: false,
+        const p = new OutputPortModel({
+            in: false,
             name: label,
             label: label,
             alignment: PortModelAlignment.BOTTOM,

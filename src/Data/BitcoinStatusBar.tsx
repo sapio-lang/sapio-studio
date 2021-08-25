@@ -29,9 +29,12 @@ export class BitcoinStatusBar extends React.Component<
             blockchaininfo: await this.props.api.blockchaininfo(),
         });
         if (this.mounted) {
-            let prefs = window.electron.get_preferences_sync().display['poll-node-freq']??0;
-            prefs = clamp(prefs, 5, 5*60);
-            setTimeout(this.periodic_update_stats.bind(this),  prefs* 1000);
+            let prefs =
+                window.electron.get_preferences_sync().display[
+                    'poll-node-freq'
+                ] ?? 0;
+            prefs = clamp(prefs, 5, 5 * 60);
+            setTimeout(this.periodic_update_stats.bind(this), prefs * 1000);
         }
     }
     componentWillUnmount() {

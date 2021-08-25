@@ -33,21 +33,22 @@ export class SaveHexModal extends React.Component<IProps, IState> {
             );
         });
         return {
-            data: JSON.stringify({
-                program: non_phantoms.map((t) =>
-                    t.get_json())
-            }, undefined, 4)
+            data: JSON.stringify(
+                {
+                    program: non_phantoms.map((t) => t.get_json()),
+                },
+                undefined,
+                4
+            ),
         };
     }
     handleSubmit: FormEventHandler = (event) => {
         event.preventDefault();
         window.electron.save_contract(this.state.data);
-    }
+    };
     render() {
         return (
-            <Modal show={this.props.show} onHide={this.props.hide}
-                size="xl"
-            >
+            <Modal show={this.props.show} onHide={this.props.hide} size="xl">
                 <Modal.Header closeButton>
                     <Modal.Title>Contract JSON </Modal.Title>
                 </Modal.Header>
@@ -58,7 +59,7 @@ export class SaveHexModal extends React.Component<IProps, IState> {
                         type="text"
                         readOnly
                         defaultValue={this.state.data}
-                        style={{ minHeight: "50vh" }}
+                        style={{ minHeight: '50vh' }}
                     />
                     <Button variant="primary" type="submit">
                         Save

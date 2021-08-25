@@ -76,7 +76,7 @@ export class TransactionDetail extends React.Component<
                     goto={() =>
                         this.goto(
                             this.props.find_tx_model(o.hash, o.index) ??
-                            this.props.entity
+                                this.props.entity
                         )
                     }
                     witnesses={witnesses}
@@ -100,8 +100,8 @@ export class TransactionDetail extends React.Component<
             !locktime_enable || locktime === 0
                 ? 'None'
                 : locktime < 500_000_000
-                    ? 'Block #' + locktime.toString()
-                    : as_date.toUTCString() + ' MTP';
+                ? 'Block #' + locktime.toString()
+                : as_date.toUTCString() + ' MTP';
         // note missing horizontal
         const inner_debounce_color = _.debounce(
             this.onchange_color.bind(this),

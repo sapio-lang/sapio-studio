@@ -28,12 +28,18 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                     click() {
                         const file = dialog.showOpenDialogSync(window, {
                             properties: ['openFile'],
-                            filters: [{ extensions: ['json'], name: 'Sapio Contract Object' }],
+                            filters: [
+                                {
+                                    extensions: ['json'],
+                                    name: 'Sapio Contract Object',
+                                },
+                            ],
                         });
                         if (file && file.length) {
-                            const data = readFileSync(file[0], { encoding: 'utf-8' });
-                            window.webContents.send("load_contract", data);
-
+                            const data = readFileSync(file[0], {
+                                encoding: 'utf-8',
+                            });
+                            window.webContents.send('load_contract', data);
                         }
                     },
                 },
@@ -119,10 +125,12 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                     label: 'Attempt Generating 10 Blocks',
                     async click() {
                         let result = await client.command('getnewaddress');
-                        await client.command([{
-                            method: 'generatetoaddress',
-                            parameters: [10, result]
-                        }]);
+                        await client.command([
+                            {
+                                method: 'generatetoaddress',
+                                parameters: [10, result],
+                            },
+                        ]);
                     },
                 },
             ],
