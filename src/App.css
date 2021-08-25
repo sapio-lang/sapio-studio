@@ -1,5 +1,6 @@
 .App {
-    font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
+    font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono',
+        'Bitstream Vera Sans Mono', Courier, monospace;
 }
 
 .App {
@@ -59,13 +60,13 @@
     height: 50%;
 }
 
-.App>.area {
+.App > .area {
     display: grid;
     grid-template-rows: max-content 1fr;
     height: 100%;
 }
 
-.App>.area>.area-inner {
+.App > .area > .area-inner {
     display: grid;
     grid-template-columns: 1fr max-content;
     height: 100%;
@@ -76,7 +77,7 @@
     display: grid;
 }
 
-.main-container>.row {
+.main-container > .row {
     height: 100%;
     width: 100%;
 }

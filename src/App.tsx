@@ -151,9 +151,12 @@ export class App extends React.Component<any, AppState> {
         });
 
         // TODO: This should go somewhere else :(
-        window.electron.register("load_contract", ((data: string) => {
-            this.load_new_model(JSON.parse(data));
-        }).bind(this));
+        window.electron.register(
+            'load_contract',
+            ((data: string) => {
+                this.load_new_model(JSON.parse(data));
+            }).bind(this)
+        );
 
         /* Socket Functionality */
         this.cm = new CompilerServer(null, this);
@@ -226,8 +229,8 @@ export class App extends React.Component<any, AppState> {
                     current_contract={this.state.current_contract}
                     app={this}
                     ref={(bnm) =>
-                    (this.bitcoin_node_manager =
-                        bnm || this.bitcoin_node_manager)
+                        (this.bitcoin_node_manager =
+                            bnm || this.bitcoin_node_manager)
                     }
                 />
                 <div className="area">
@@ -241,7 +244,6 @@ export class App extends React.Component<any, AppState> {
                                 this.setState({ timing_simulator_enabled: b })
                             }
                         />
-
                     </div>
                     <div className="area-inner">
                         <div className="main-container">

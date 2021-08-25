@@ -23,7 +23,7 @@ interface IProps {
     app: App;
     current_contract: ContractModel;
 }
-interface IState { }
+interface IState {}
 export function update_broadcastable(
     current_contract: ContractModel,
     confirmed_txs: Set<TXID>
@@ -64,7 +64,10 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     }
     componentDidMount() {
         this.mounted = true;
-        this.next_periodic_check = setTimeout(this.periodic_check.bind(this), 1000);
+        this.next_periodic_check = setTimeout(
+            this.periodic_check.bind(this),
+            1000
+        );
     }
     componentWillUnmount() {
         this.mounted = false;
@@ -73,7 +76,7 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     }
     async periodic_check() {
         const contract = this.props.current_contract;
-        console.info("PERIODIC CONTRACT CHECK");
+        console.info('PERIODIC CONTRACT CHECK');
         if (!contract.should_update()) {
             // poll here faster
             this.next_periodic_check = setTimeout(
@@ -95,9 +98,13 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         if (this.mounted) {
             let prefs = window.electron.get_preferences_sync();
             console.log(prefs);
-            const period = clamp(prefs.display['poll-node-freq'] ?? 0, 5, 60 * 5);
+            const period = clamp(
+                prefs.display['poll-node-freq'] ?? 0,
+                5,
+                60 * 5
+            );
 
-            console.info("NEXT PERIODIC CONTRACT CHECK ", period, " SECONDS");
+            console.info('NEXT PERIODIC CONTRACT CHECK ', period, ' SECONDS');
             this.next_periodic_check = setTimeout(
                 this.periodic_check.bind(this),
                 1000 * period
@@ -118,10 +125,12 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
 
     async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO | null> {
         console.log(t, n);
-        const txout = (await window.electron.bitcoin_command([
-            { method: 'getrawtransaction', parameters: [t, true] },
-        ]))[0];
-        console.log("TXOUT", txout);
+        const txout = (
+            await window.electron.bitcoin_command([
+                { method: 'getrawtransaction', parameters: [t, true] },
+            ])
+        )[0];
+        console.log('TXOUT', txout);
         if (!txout) {
             return null;
         }
@@ -129,8 +138,8 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             blockhash: txout.blockhash,
             confirmations: txout.confirmations,
             scriptPubKey: txout.vout[n].scriptPubKey,
-            value: txout.vout[n].value
-        }
+            value: txout.vout[n].value,
+        };
     }
     async check_balance(): Promise<number> {
         let results = await window.electron.bitcoin_command([
@@ -146,7 +155,9 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         )[0];
     }
     // get info about transactions
-    async get_confirmed_transactions(current_contract: ContractModel): Promise<Array<TXID>> {
+    async get_confirmed_transactions(
+        current_contract: ContractModel
+    ): Promise<Array<TXID>> {
         // TODO: SHould query by WTXID
         const txids = current_contract.txn_models
             .filter((tm) => tm.is_broadcastable())
@@ -159,7 +170,8 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
         if (txids.length > 0) {
             let results = await window.electron.bitcoin_command(txids);
             // TODO: Configure Threshold
-            results = results.filter((txdata: any) => txdata.confirmations ?? 0 > 1)
+            results = results
+                .filter((txdata: any) => txdata.confirmations ?? 0 > 1)
                 .map((txdata: any) => txdata.txid);
             return results;
         }

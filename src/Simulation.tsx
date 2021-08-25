@@ -7,7 +7,7 @@ import { App } from './App';
 import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
 import _ from 'lodash';
-import "./Simulation.css";
+import './Simulation.css';
 type Field =
     | 'current_time'
     | 'first_tx_time'
@@ -60,7 +60,7 @@ export class SimulationController extends React.Component<
         this.current_block = 0.5;
         this.first_tx_block = 0;
         const prefs = window.electron.get_preferences_sync();
-        if (prefs['bitcoin-config'].network === "regtest") {
+        if (prefs['bitcoin-config'].network === 'regtest') {
             this.min_blocks = 0;
             this.max_blocks = 1000;
         } else {
@@ -273,7 +273,10 @@ export class SimulationController extends React.Component<
     render() {
         const changeHandler = this.changeHandler.bind(this);
         return (
-            <Form onSubmit={(e: React.FormEvent) => e.preventDefault()} className="Simulation">
+            <Form
+                onSubmit={(e: React.FormEvent) => e.preventDefault()}
+                className="Simulation"
+            >
                 <Form.Group as={Row}>
                     <Col sm={1}>
                         <h3>Block</h3>

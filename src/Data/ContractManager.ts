@@ -14,7 +14,7 @@ export class NodeColor {
     get() {
         return this.c;
     }
-    fade() { }
+    fade() {}
     clone() {
         return new NodeColor(this.c);
     }
@@ -51,7 +51,7 @@ interface ProcessedData {
 
 function preprocess_data(data: Data): PreProcessedData {
     let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
-    let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt))
+    let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt));
     let txn_labels = data.program.map((k) => k.label ?? 'unlabeled');
     let txn_colors = data.program.map(
         (k) => new NodeColor(k.color ?? 'orange')
@@ -84,9 +84,9 @@ function process_inputs_map(
 }
 
 export type SigningDataStore = {
-    witnesses: Buffer[][][],
-    psbts: Bitcoin.Psbt[]
-}
+    witnesses: Buffer[][][];
+    psbts: Bitcoin.Psbt[];
+};
 function process_txn_models(
     psbts: Array<Bitcoin.Psbt>,
     txns: Array<Bitcoin.Transaction>,
@@ -103,39 +103,51 @@ function process_txn_models(
             return { tx: tx, x: x, psbt: psbts[x] };
         })
         .groupBy(({ tx }: { tx: Bitcoin.Transaction }) => tx.getId())
-        .forEach((txn_group: { tx: Bitcoin.Transaction, psbt: Bitcoin.Psbt, x: number }[], _key: string) => {
-            let label = '';
-            let color = new NodeColor('');
-            let utxo_label: Array<UTXOFormatData | null> = [];
-            let all_witnesses: SigningDataStore = { witnesses: [], psbts: [] };
-            for (let { tx, x, psbt } of txn_group) {
-                utxo_label = utxo_labels[x];
-                color = txn_colors[x];
-                label = txn_labels[x];
-                let witnesses: Buffer[][] = [];
-                for (let input of tx.ins) {
-                    witnesses.push(input.witness);
-                }
+        .forEach(
+            (
+                txn_group: {
+                    tx: Bitcoin.Transaction;
+                    psbt: Bitcoin.Psbt;
+                    x: number;
+                }[],
+                _key: string
+            ) => {
+                let label = '';
+                let color = new NodeColor('');
+                let utxo_label: Array<UTXOFormatData | null> = [];
+                let all_witnesses: SigningDataStore = {
+                    witnesses: [],
+                    psbts: [],
+                };
+                for (let { tx, x, psbt } of txn_group) {
+                    utxo_label = utxo_labels[x];
+                    color = txn_colors[x];
+                    label = txn_labels[x];
+                    let witnesses: Buffer[][] = [];
+                    for (let input of tx.ins) {
+                        witnesses.push(input.witness);
+                    }
 
-                all_witnesses.witnesses.push(witnesses);
-                all_witnesses.psbts.push(psbt);
+                    all_witnesses.witnesses.push(witnesses);
+                    all_witnesses.psbts.push(psbt);
+                }
+                let base_txn: Bitcoin.Transaction = txn_group[0].tx.clone();
+                // Clear out witness Data
+                for (let input of base_txn.ins) {
+                    input.witness = [];
+                }
+                const txn_model = new TransactionModel(
+                    base_txn,
+                    all_witnesses,
+                    update,
+                    label,
+                    color,
+                    utxo_label
+                );
+                txid_map.add(txn_model);
+                txn_models.push(txn_model);
             }
-            let base_txn: Bitcoin.Transaction = txn_group[0].tx.clone();
-            // Clear out witness Data
-            for (let input of base_txn.ins) {
-                input.witness = [];
-            }
-            const txn_model = new TransactionModel(
-                base_txn,
-                all_witnesses,
-                update,
-                label,
-                color,
-                utxo_label
-            );
-            txid_map.add(txn_model);
-            txn_models.push(txn_model);
-        })
+        )
         .value();
     let to_create: Map<TXID, Array<Bitcoin.TxInput>> = new Map();
     for (const txn_model of txn_models) {
@@ -203,7 +215,9 @@ function process_utxo_models(
             ) {
                 if (spenders[0].witness_set.witnesses.length) {
                     const witstack =
-                        spenders[0].witness_set.witnesses[0][utxo_model.utxo.index];
+                        spenders[0].witness_set.witnesses[0][
+                            utxo_model.utxo.index
+                        ];
                     if (witstack) {
                         const program = witstack[witstack.length - 1];
                         if (program) {
@@ -596,7 +610,9 @@ export class ContractModel extends ContractBase {
     process_finality(is_final: Array<string>, model: any) {
         // TODO: Reimplement in terms of WTXID
         is_final.forEach((txid) => {
-            const m: TransactionModel | undefined = this.txid_map.get_by_txid_s(txid);
+            const m: TransactionModel | undefined = this.txid_map.get_by_txid_s(
+                txid
+            );
             if (m) {
                 m.setConfirmed(true);
                 m.utxo_models.forEach((m) => m.setConfirmed(true));

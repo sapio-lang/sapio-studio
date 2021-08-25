@@ -199,7 +199,7 @@ export const settings = new ElectronPreferences({
                                 key: 'poll-node-freq',
                                 type: 'slider',
                                 min: 5,
-                                max: 60*5,
+                                max: 60 * 5,
                                 help: 'Enter a value in seconds',
                             },
                         ],
@@ -305,7 +305,9 @@ export const custom_sapio_config = () => {
     const port = settings.value('bitcoin-config.rpcport');
     const host = settings.value('bitcoin-config.rpchost');
     const oracle_enabled = settings.value('sapio.oracle-remote-enabled');
-    const threshold: number = parseInt(settings.value('sapio.oracle-remote-threshold')??"0");
+    const threshold: number = parseInt(
+        settings.value('sapio.oracle-remote-threshold') ?? '0'
+    );
     let error = false;
     const oracle_list = settings
         .value('sapio.oracle-remote-oracles-list')
@@ -368,7 +370,7 @@ export const custom_sapio_config = () => {
             emulator_nodes: {
                 enabled: oracle_enabled,
                 emulators: oracle_list,
-                threshold: threshold??0,
+                threshold: threshold ?? 0,
             },
             plugin_map: plugin_map,
         },

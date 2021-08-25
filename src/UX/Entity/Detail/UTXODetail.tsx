@@ -22,7 +22,7 @@ import Button from 'react-bootstrap/esm/Button';
 
 interface UTXODetailProps {
     entity: UTXOModel;
-    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO|null>;
+    fetch_utxo: (t: TXID, n: number) => Promise<QueriedUTXO | null>;
     fund_out: (a: Bitcoin.Transaction) => Promise<Bitcoin.Transaction>;
     contract: ContractModel;
     load_new_contract: (x: Data) => void;
