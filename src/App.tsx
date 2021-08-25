@@ -111,7 +111,11 @@ function App() {
     engine.setModel(model);
     // TODO: multi-component safe memo?
     let memo: [ContractModel, number] | null = null;
-    const load_new_contract = (data: Data|null, counter: number, update: (s: SelectedEvent) => void) => {
+    const load_new_contract = (
+        data: Data | null,
+        counter: number,
+        update: (s: SelectedEvent) => void
+    ) => {
         if (memo && data) {
             if (memo[1] === counter) {
                 return memo[0];
@@ -123,7 +127,7 @@ function App() {
         memo = [new_contract, counter];
         model_manager.load(new_contract);
         return new_contract;
-    }
+    };
     return (
         <AppInner
             bitcoin_node_bar={bitcoin_node_bar}
@@ -135,11 +139,15 @@ function App() {
     );
 }
 function AppInner(props: {
-    bitcoin_node_bar: boolean,
-    engine: DiagramEngine,
-    model: DiagramModel,
-    model_manager: ModelManager,
-    load_new_contract: (data: Data|null, counter: number, update: (s: SelectedEvent) => void) => ContractModel,
+    bitcoin_node_bar: boolean;
+    engine: DiagramEngine;
+    model: DiagramModel;
+    model_manager: ModelManager;
+    load_new_contract: (
+        data: Data | null,
+        counter: number,
+        update: (s: SelectedEvent) => void
+    ) => ContractModel;
 }) {
     let { engine, model, model_manager, load_new_contract } = props;
     const dispatch = useDispatch();

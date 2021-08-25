@@ -33,10 +33,7 @@ export function LoadHexModal(props) {
                 <Button type="submit">Load</Button>
             </Form>
             <Modal.Footer>
-                <Button
-                    variant="secondary"
-                    onClick={() => props.hide()}
-                >
+                <Button variant="secondary" onClick={() => props.hide()}>
                     {' '}
                     Close{' '}
                 </Button>
