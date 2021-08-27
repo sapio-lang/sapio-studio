@@ -22,17 +22,18 @@ import {
     selectUTXOFlash,
     Outpoint,
     selectUTXO,
+    select_entity,
+    deselect_entity,
 } from '../EntitySlice';
 import React from 'react';
+import { Dispatch } from 'redux';
+import { create_contract_of_type } from '../../../AppSlice';
 
 interface UTXODetailProps {
     entity: UTXOModel;
     contract: ContractModel;
 }
 
-function goto(x: NodeModel) {
-    if (!(x instanceof PhantomTransactionModel)) x.setSelected(true);
-}
 function is_mock(args: Outpoint): boolean {
     const hash = Bitcoin.crypto.sha256(new Buffer('mock:' + args.nIn));
     return txid_buf_to_string(hash) === args.hash;
@@ -103,7 +104,10 @@ export function UTXODetail(props: UTXODetailProps) {
     const spends = props.entity.utxo.spends.map((elt, i) => (
         <div key={get_wtxid_backwards(elt.tx)} className="Spend">
             <Hex value={elt.get_txid()} />
-            <Button variant="link" onClick={() => goto(elt)}>
+            <Button
+                variant="link"
+                onClick={() => dispatch(select_entity(elt.get_txid()))}
+            >
                 <span
                     className="glyphicon glyphicon-chevron-right"
                     style={{ color: 'green' }}
@@ -163,7 +167,7 @@ export function UTXODetail(props: UTXODetailProps) {
             <OutpointDetail
                 txid={txid}
                 n={idx}
-                onClick={() => goto(props.entity.txn)}
+                onClick={() => dispatch(select_entity(txid))}
             />
             <div>
                 Address: <ASM className="txhex" readOnly value={address} />

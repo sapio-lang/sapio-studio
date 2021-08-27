@@ -3,7 +3,13 @@ import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
 import _, { Collection } from 'lodash';
 import { SelectedEvent } from '../App';
-import { InputMap, TXID, TXIDAndWTXIDMap, txid_buf_to_string } from '../util';
+import {
+    hash_to_hex,
+    InputMap,
+    TXID,
+    TXIDAndWTXIDMap,
+    txid_buf_to_string,
+} from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
 export class NodeColor {
@@ -555,7 +561,7 @@ function all_descendants(
 export class ContractBase {
     utxo_models: Array<UTXOModel>;
     txn_models: Array<TransactionModel>;
-    protected inputs_map: InputMap<TransactionModel>;
+    inputs_map: InputMap<TransactionModel>;
     txid_map: TXIDAndWTXIDMap<TransactionModel>;
     constructor() {
         this.utxo_models = [];
@@ -565,11 +571,12 @@ export class ContractBase {
     }
     process_finality(is_final: Array<string>, model: any) {
         console.log('called empty');
+        throw 'Called Empty';
     }
 
-    lookup(txid: Buffer, n: number): UTXOModel | null {
+    lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
         console.log('called empty');
-        return null;
+        throw 'Called Empty';
     }
     should_update() {
         return false;
@@ -599,7 +606,7 @@ export class ContractModel extends ContractBase {
         return this.checkable;
     }
     // TODO: Return an Array of UTXOModels
-    lookup(txid: Buffer, n: number): UTXOModel | null {
+    lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
         let txid_s = txid_buf_to_string(txid);
         const txn_model:
             | TransactionModel

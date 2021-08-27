@@ -6,112 +6,99 @@ import { TransactionModel } from '../../Data/Transaction';
 import { UTXOModel } from '../../Data/UTXO';
 import './EntityViewer.css';
 import Button from 'react-bootstrap/esm/Button';
+import { OutpointInterface, TXID } from '../../util';
+import { useDispatch, useSelector } from 'react-redux';
+import { deselect_entity, selectEntityToView } from './EntitySlice';
 export interface ViewableEntityInterface {}
 
 export class EmptyViewer implements ViewableEntityInterface {}
 
 interface CurrentylViewedEntityProps {
-    entity: ViewableEntityInterface;
-    hide_details: () => void;
     current_contract: ContractModel;
 }
 
-interface EntityViewerState {
-    width: string;
-}
-
-export class CurrentlyViewedEntity extends React.Component<
-    CurrentylViewedEntityProps,
-    EntityViewerState
-> {
-    listener: any | null;
-    constructor(props: CurrentylViewedEntityProps) {
-        super(props);
-        this.listener = null;
-        this.state = {
-            width: '20em',
-        };
-    }
-    name() {
-        switch (this.props.entity.constructor) {
-            case TransactionModel:
-                return 'Transaction';
-            case UTXOModel:
-                return 'Coin';
-            default:
-                return null;
-        }
-    }
-
-    guts(): null | React.ReactElement {
-        switch (this.props.entity.constructor) {
-            case TransactionModel:
-                return (
-                    <TransactionDetail
-                        entity={this.props.entity as TransactionModel}
-                        find_tx_model={(a: Buffer, b: number) =>
-                            this.props.current_contract.lookup(a, b)
-                        }
-                    />
-                );
-            case UTXOModel:
-                return (
-                    <UTXODetail
-                        entity={this.props.entity as UTXOModel}
-                        contract={this.props.current_contract}
-                    />
-                );
-            default:
-                return null;
-        }
-    }
-    mmu: undefined | ((ev: MouseEvent) => void);
-    mmm: undefined | ((ev: MouseEvent) => void);
-    onMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
-        this.mmm = this.onMouseMove.bind(this);
-        this.mmu = this.onMouseUp.bind(this);
-        document.addEventListener('mousemove', this.mmm);
-        document.addEventListener('mouseup', this.mmu);
-    };
-    onMouseUp(e: MouseEvent) {
+export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
+    const [width, setWidth] = React.useState('20em');
+    const onMouseUp = (e: MouseEvent) => {
         e.preventDefault();
-        if (this.mmm) document.removeEventListener('mousemove', this.mmm);
-        if (this.mmu) document.removeEventListener('mouseup', this.mmu);
-        this.mmm = undefined;
-        this.mmu = undefined;
-    }
-    onMouseMove(e: MouseEvent) {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    };
+    const onMouseMove = (e: MouseEvent) => {
         e.preventDefault();
         const width = (window.innerWidth - e.clientX).toString() + 'px';
-        this.setState({ width });
+        setWidth(width);
+    };
+    const onMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+        e.preventDefault();
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const entity_id: TXID | OutpointInterface | null = useSelector(
+        selectEntityToView
+    );
+    let entity: ViewableEntityInterface = new EmptyViewer();
+    if (entity_id) {
+        if (typeof entity_id === 'string') {
+            entity =
+                props.current_contract.txid_map.get_by_txid_s(
+                    entity_id as string
+                ) ?? entity;
+        } else {
+            entity =
+                props.current_contract.lookup_utxo_model(
+                    (entity_id as OutpointInterface).hash,
+                    (entity_id as OutpointInterface).index
+                ) ?? entity;
+        }
     }
-    render() {
-        return (
-            <div className="EntityViewerFrame">
+
+    let guts = null;
+    switch (entity.constructor) {
+        case TransactionModel:
+            guts = (
+                <TransactionDetail
+                    entity={entity as TransactionModel}
+                    find_tx_model={(a: Buffer, b: number) =>
+                        props.current_contract.lookup_utxo_model(a, b)
+                    }
+                />
+            );
+            break;
+        case UTXOModel:
+            guts = (
+                <UTXODetail
+                    entity={entity as UTXOModel}
+                    contract={props.current_contract}
+                />
+            );
+
+            break;
+    }
+    const dispatch = useDispatch();
+    return (
+        <div className="EntityViewerFrame">
+            <div className="EntityViewerResize" onMouseDown={onMouseDown}></div>
+            <div>
+                <Button
+                    onClick={() => dispatch(deselect_entity())}
+                    variant="link"
+                >
+                    <span
+                        className="glyphicon glyphicon-remove"
+                        style={{ color: 'red' }}
+                    ></span>
+                </Button>
                 <div
-                    className="EntityViewerResize"
-                    onMouseDown={this.onMouseDown.bind(this)}
-                ></div>
-                <div>
-                    <Button
-                        onClick={() => this.props.hide_details()}
-                        variant="link"
-                    >
-                        <span
-                            className="glyphicon glyphicon-remove"
-                            style={{ color: 'red' }}
-                        ></span>
-                    </Button>
-                    <div
-                        className="EntityViewer"
-                        style={{
-                            width: this.state.width,
-                        }}
-                    >
-                        {this.guts()}
-                    </div>
+                    className="EntityViewer"
+                    style={{
+                        width: width,
+                    }}
+                >
+                    {guts}
                 </div>
             </div>
-        );
-    }
+        </div>
+    );
 }
