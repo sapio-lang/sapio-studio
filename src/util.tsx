@@ -1,13 +1,14 @@
 import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
+import { Outpoint } from './UX/Entity/EntitySlice';
 
 declare global {
     interface Window {
         electron: any;
     }
 }
-interface Key {
+export interface OutpointInterface {
     index: number;
     hash: Buffer;
 }
@@ -26,7 +27,7 @@ export class InputMap<T> {
     constructor() {
         this.map = new Map();
     }
-    add(t: Key, model: T) {
+    add(t: OutpointInterface, model: T) {
         const key1 = txid_buf_to_string(t.hash);
         let vals = this.map.get(key1);
         if (vals === undefined) {
@@ -41,7 +42,7 @@ export class InputMap<T> {
         }
         vals2.push(model);
     }
-    get(t: Key): Array<T> | undefined {
+    get(t: OutpointInterface): Array<T> | undefined {
         return this.map.get(txid_buf_to_string(t.hash))?.get(t.index);
     }
 

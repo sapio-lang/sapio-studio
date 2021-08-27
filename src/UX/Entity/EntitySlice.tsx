@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { BitcoinNodeManager, QueriedUTXO } from '../../Data/BitcoinNode';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { update_utxomodel } from './Detail/UTXODetail';
@@ -6,15 +6,20 @@ import { UTXOModel } from '../../Data/UTXO';
 import { ContractModel, Data } from '../../Data/ContractManager';
 import { AppDispatch, RootState } from '../../Store/store';
 import { load_new_model } from '../../AppSlice';
+import { OutpointInterface, TXID } from '../../util';
+import { TransactionModel } from '../../Data/Transaction';
 
+type EntityType = 'UTXO' | 'TXN';
 type StateType = {
     utxos: Record<string, QueriedUTXO>;
     flash: String | null;
+    selected: TXID | OutpointInterface | null;
 };
 function default_state(): StateType {
     return {
         utxos: {},
         flash: null,
+        selected: null,
     };
 }
 
@@ -24,6 +29,15 @@ export const entitySlice = createSlice({
     reducers: {
         clear_utxos: (state, action: { type: string }) => {
             state.utxos = {};
+        },
+        select_entity: (
+            state,
+            action: PayloadAction<TXID | OutpointInterface>
+        ) => {
+            state.selected = action.payload;
+        },
+        deselect_entity: (state) => {
+            state.selected = null;
         },
         __flash: (state, action: { type: string; payload: String | null }) => {
             if (action.payload) state.flash = action.payload;
@@ -57,7 +71,11 @@ function to_id(args: Outpoint): OutpointString {
 }
 /// private API
 const { __load_utxo, __flash } = entitySlice.actions;
-export const { clear_utxos } = entitySlice.actions;
+export const {
+    deselect_entity,
+    select_entity,
+    clear_utxos,
+} = entitySlice.actions;
 export const fetch_utxo = (args: Outpoint) => async (
     dispatch: AppDispatch,
     getState: () => RootState
@@ -108,5 +126,9 @@ export const selectUTXO = (
 };
 export const selectUTXOFlash = (state: RootState): String | null =>
     state.entityReducer.flash;
+
+export const selectEntityToView = (
+    state: RootState
+): TXID | OutpointInterface | null => state.entityReducer.selected;
 
 export default entitySlice.reducer;
