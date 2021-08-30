@@ -10,6 +10,7 @@ import register_handlers from './handlers';
 import { start_sapio_oracle } from './sapio';
 import { ChildProcessWithoutNullStreams } from 'child_process';
 import { sys } from 'typescript';
+import { register_devtools } from './devtools';
 
 export let client = null;
 let mainWindow: BrowserWindow | null = null;
@@ -80,6 +81,7 @@ function createWindow() {
         });
     }
 }
+register_devtools();
 
 app.on('ready', createWindow);
 

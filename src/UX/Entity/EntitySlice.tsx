@@ -8,18 +8,22 @@ import { AppDispatch, RootState } from '../../Store/store';
 import { load_new_model } from '../../AppSlice';
 import { OutpointInterface, TXID } from '../../util';
 import { TransactionModel } from '../../Data/Transaction';
-
-type EntityType = 'UTXO' | 'TXN';
+export type EntityType =
+    | ['TXN', TXID]
+    | ['UTXO', OutpointInterface]
+    | ['NULL', null];
 type StateType = {
     utxos: Record<string, QueriedUTXO>;
     flash: String | null;
-    selected: TXID | OutpointInterface | null;
+    last_selected: EntityType;
+    show_entity_viewer: boolean;
 };
 function default_state(): StateType {
     return {
         utxos: {},
         flash: null,
-        selected: null,
+        last_selected: ['NULL', null],
+        show_entity_viewer: false,
     };
 }
 
@@ -30,14 +34,16 @@ export const entitySlice = createSlice({
         clear_utxos: (state, action: { type: string }) => {
             state.utxos = {};
         },
-        select_entity: (
-            state,
-            action: PayloadAction<TXID | OutpointInterface>
-        ) => {
-            state.selected = action.payload;
+        select_txn: (state, action: PayloadAction<TXID>) => {
+            state.last_selected = ['TXN', action.payload];
+            state.show_entity_viewer = true;
+        },
+        select_utxo: (state, action: PayloadAction<OutpointInterface>) => {
+            state.last_selected = ['UTXO', action.payload];
+            state.show_entity_viewer = true;
         },
         deselect_entity: (state) => {
-            state.selected = null;
+            state.show_entity_viewer = false;
         },
         __flash: (state, action: { type: string; payload: String | null }) => {
             if (action.payload) state.flash = action.payload;
@@ -73,7 +79,8 @@ function to_id(args: Outpoint): OutpointString {
 const { __load_utxo, __flash } = entitySlice.actions;
 export const {
     deselect_entity,
-    select_entity,
+    select_txn,
+    select_utxo,
     clear_utxos,
 } = entitySlice.actions;
 export const fetch_utxo = (args: Outpoint) => async (
@@ -127,8 +134,9 @@ export const selectUTXO = (
 export const selectUTXOFlash = (state: RootState): String | null =>
     state.entityReducer.flash;
 
-export const selectEntityToView = (
-    state: RootState
-): TXID | OutpointInterface | null => state.entityReducer.selected;
+export const selectEntityToView = (state: RootState): EntityType =>
+    state.entityReducer.last_selected;
+export const selectShouldViewEntity = (state: RootState): boolean =>
+    state.entityReducer.show_entity_viewer;
 
 export default entitySlice.reducer;

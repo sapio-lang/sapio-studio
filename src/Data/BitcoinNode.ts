@@ -2,7 +2,7 @@ import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
 import { ContractBase, ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
-import { hash_to_hex } from '../util';
+import { hash_to_hex, TXIDAndWTXIDMap } from '../util';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { clamp } from 'lodash';
 import { DiagramModel } from '@projectstorm/react-diagrams-core';
@@ -32,7 +32,10 @@ export function update_broadcastable(
         const already_confirmed = confirmed_txs.has(tm.get_txid());
         const inputs_not_locals = tm.tx.ins.every(
             (inp: Input) =>
-                !current_contract.txid_map.has_by_txid(hash_to_hex(inp.hash))
+                !TXIDAndWTXIDMap.has_by_txid(
+                    current_contract.txid_map,
+                    hash_to_hex(inp.hash)
+                )
         );
         const all_inputs_confirmed = tm.tx.ins.every((inp: Input) =>
             confirmed_txs.has(hash_to_hex(inp.hash))

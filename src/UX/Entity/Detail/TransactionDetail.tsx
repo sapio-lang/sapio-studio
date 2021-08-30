@@ -17,7 +17,7 @@ import { sequence_convert, time_to_pretty_string } from '../../../util';
 import Color from 'color';
 import { SigningDataStore } from '../../../Data/ContractManager';
 import { Dispatch } from 'redux';
-import { deselect_entity, select_entity } from '../EntitySlice';
+import { deselect_entity, select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
 import { useEffect } from 'react-transition-group/node_modules/@types/react';
 interface TransactionDetailProps {
@@ -53,7 +53,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
             txoutput={o}
             goto={() =>
                 dispatch(
-                    select_entity({
+                    select_utxo({
                         hash: props.entity.utxo_models[i].txn.tx.getHash(),
                         index: props.entity.utxo_models[i].utxo.index,
                     })
@@ -69,7 +69,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
         return (
             <InputDetail
                 txinput={o}
-                goto={() => dispatch(select_entity(o))}
+                goto={() => dispatch(select_utxo(o))}
                 witnesses={witnesses}
                 psbts={psbts}
             />

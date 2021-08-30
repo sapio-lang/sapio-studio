@@ -4,27 +4,28 @@ import * as assert from 'assert';
 import _, { Collection } from 'lodash';
 import { SelectedEvent } from '../App';
 import {
-    hash_to_hex,
+    InputMapT,
     InputMap,
     TXID,
-    TXIDAndWTXIDMap,
+    TXIDAndWTXIDMapT,
     txid_buf_to_string,
+    TXIDAndWTXIDMap,
 } from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
-export class NodeColor {
-    c: string;
-    constructor(c: string) {
-        this.c = c;
-    }
-    get() {
-        return this.c;
-    }
-    fade() {}
-    clone() {
-        return new NodeColor(this.c);
-    }
-}
+export type NodeColorT = ['NodeColor', string];
+export const NodeColor = {
+    new(c: string): NodeColorT {
+        return ['NodeColor', c];
+    },
+    get(c: NodeColorT): string {
+        return c[1];
+    },
+    fade(c: NodeColorT) {},
+    clone(c: NodeColorT) {
+        return NodeColor.new(c[1].slice());
+    },
+};
 export interface UTXOFormatData {
     color: string;
     label: string;
@@ -41,26 +42,26 @@ export interface Data {
     program: Array<TransactionData>;
 }
 
-interface PreProcessedData {
+type PreProcessedData = {
     psbts: Array<Bitcoin.Psbt>;
     txns: Array<Bitcoin.Transaction>;
-    txn_colors: Array<NodeColor>;
+    txn_colors: Array<NodeColorT>;
     txn_labels: Array<string>;
     utxo_labels: Array<Array<UTXOFormatData | null>>;
-}
-interface ProcessedData {
-    inputs_map: InputMap<TransactionModel>;
-    txid_map: TXIDAndWTXIDMap<TransactionModel>;
+};
+type ProcessedData = {
+    inputs_map: InputMapT<TransactionModel>;
+    txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     txn_models: Array<TransactionModel>;
     utxo_models: Array<UTXOModel>;
-}
+};
 
 function preprocess_data(data: Data): PreProcessedData {
     let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
     let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt));
     let txn_labels = data.program.map((k) => k.label ?? 'unlabeled');
-    let txn_colors = data.program.map(
-        (k) => new NodeColor(k.color ?? 'orange')
+    let txn_colors = data.program.map((k) =>
+        NodeColor.new(k.color ?? 'orange')
     );
     let utxo_labels = data.program.map(
         (k, i) => k.utxo_metadata ?? new Array(txns[i].outs.length)
@@ -77,13 +78,13 @@ function preprocess_data(data: Data): PreProcessedData {
 
 function process_inputs_map(
     txns: Array<TransactionModel>
-): InputMap<TransactionModel> {
-    const inputs_map: InputMap<TransactionModel> = new InputMap();
+): InputMapT<TransactionModel> {
+    const inputs_map: InputMapT<TransactionModel> = InputMap.new();
     for (let x = 0; x < txns.length; ++x) {
         const txn: Bitcoin.Transaction = txns[x].tx;
         for (let y = 0; y < txn.ins.length; ++y) {
             const inp: Bitcoin.TxInput = txn.ins[y];
-            inputs_map.add(inp, txns[x]);
+            InputMap.add(inputs_map, inp, txns[x]);
         }
     }
     return inputs_map;
@@ -98,10 +99,10 @@ function process_txn_models(
     txns: Array<Bitcoin.Transaction>,
     update: (s: SelectedEvent) => void,
     txn_labels: Array<string>,
-    txn_colors: Array<NodeColor>,
+    txn_colors: Array<NodeColorT>,
     utxo_labels: Array<Array<UTXOFormatData | null>>
-): [TXIDAndWTXIDMap<TransactionModel>, Array<TransactionModel>] {
-    let txid_map: TXIDAndWTXIDMap<TransactionModel> = new TXIDAndWTXIDMap();
+): [TXIDAndWTXIDMapT<TransactionModel>, Array<TransactionModel>] {
+    let txid_map: TXIDAndWTXIDMapT<TransactionModel> = TXIDAndWTXIDMap.new();
     let txn_models: Array<TransactionModel> = [];
     assert.equal(txns.length, psbts.length);
     _.chain(txns)
@@ -119,7 +120,7 @@ function process_txn_models(
                 _key: string
             ) => {
                 let label = '';
-                let color = new NodeColor('');
+                let color = NodeColor.new('');
                 let utxo_label: Array<UTXOFormatData | null> = [];
                 let all_witnesses: SigningDataStore = {
                     witnesses: [],
@@ -150,7 +151,7 @@ function process_txn_models(
                     color,
                     utxo_label
                 );
-                txid_map.add(txn_model);
+                TXIDAndWTXIDMap.add(txid_map, txn_model);
                 txn_models.push(txn_model);
             }
         )
@@ -159,10 +160,9 @@ function process_txn_models(
     for (const txn_model of txn_models) {
         for (const input of txn_model.tx.ins) {
             const txid = txid_buf_to_string(input.hash);
-            if (txid_map.has_by_txid(txid)) {
+            if (TXIDAndWTXIDMap.has_by_txid(txid_map, txid)) {
                 continue;
             }
-            console.log('missing', txid);
             // Doesn't matter if already exists in array!
             // De Duplicated later...
             let inps = to_create.get(txid) || [];
@@ -170,7 +170,6 @@ function process_txn_models(
             to_create.set(txid, inps);
         }
     }
-    console.log(to_create);
     to_create.forEach((inps, txid) => {
         const mock_txn = new Bitcoin.Transaction();
         let n_outputs: number =
@@ -179,13 +178,12 @@ function process_txn_models(
                 .map((el) => el.index)
                 .max()
                 .value();
-        console.log('missing input', txid, n_outputs);
         for (let i = 0; i < n_outputs; ++i) {
             // Set to MAX sats...
             // TODO: a hack to make the flow technically correct and detectable
             mock_txn.addOutput(new Buffer(''), 21e6 * 100e6);
         }
-        const color = new NodeColor('white');
+        const color = NodeColor.new('white');
         const utxo_metadata: Array<UTXOFormatData | null> = new Array(
             n_outputs
         );
@@ -195,26 +193,29 @@ function process_txn_models(
             mock_txn,
             { witnesses: [], psbts: [] },
             update,
-            'Missing',
+            'Unknown Inputs',
             color,
             utxo_metadata
         );
-        txid_map.add(txn_model);
+        TXIDAndWTXIDMap.add(txid_map, txn_model);
         txn_models.push(txn_model);
-        console.log(txn_model);
     });
 
     return [txid_map, txn_models];
 }
 function process_utxo_models(
     txn_models: Array<TransactionModel>,
-    inputs_map: InputMap<TransactionModel>
+    inputs_map: InputMapT<TransactionModel>
 ): Array<UTXOModel> {
     const to_add: Array<UTXOModel> = [];
     for (let m_txn of txn_models) {
         m_txn.utxo_models.forEach((utxo_model, output_index) => {
             const spenders: Array<TransactionModel> =
-                inputs_map.get_txid_s(m_txn.get_txid(), output_index) ?? [];
+                InputMap.get_txid_s(
+                    inputs_map,
+                    m_txn.get_txid(),
+                    output_index
+                ) ?? [];
             if (
                 utxo_model.txn instanceof PhantomTransactionModel &&
                 spenders.length
@@ -327,13 +328,13 @@ export const timing_cache = new TimingCache();
 // work with future changes compute rather than infer this list
 function get_base_transactions(
     txns: Array<TransactionModel>,
-    map: TXIDAndWTXIDMap<TransactionModel>
+    map: TXIDAndWTXIDMapT<TransactionModel>
 ): Array<TransactionModel> {
     let phantoms = txns.filter((item) => {
         return (
             -1 ===
             item.tx.ins.findIndex((inp) =>
-                map.has_by_txid(txid_buf_to_string(inp.hash))
+                TXIDAndWTXIDMap.has_by_txid(map, txid_buf_to_string(inp.hash))
             )
         );
     });
@@ -380,7 +381,7 @@ function unreachable_by_time(
     max_height: number,
     start_height: number,
     start_time: number,
-    map: InputMap<TransactionModel>
+    map: InputMapT<TransactionModel>
 ): Array<TransactionModel> {
     // Every Array is Sorted and Unique, but *may* overlap
     const arrays = bases.map((b) =>
@@ -475,12 +476,12 @@ function compute_timing(txn: TransactionModel): TimingData {
 }
 function compute_timing_of_children(
     txn: TransactionModel,
-    map: InputMap<TransactionModel>
+    map: InputMapT<TransactionModel>
 ): Collection<TimingData> {
-    const spenders: Map<number, TransactionModel[]> =
-        map.map.get(txn.get_txid()) ?? new Map();
+    const spenders: Record<number, TransactionModel[]> =
+        InputMap.get_txid_s_group(map, txn.get_txid()) ?? {};
     return _(
-        Array.from(spenders.values())
+        Array.from(Object.values(spenders))
     ).flatMap((output_spender: TransactionModel[]) =>
         output_spender.map(compute_timing)
     );
@@ -492,7 +493,7 @@ function unreachable_by_time_inner(
     max_height: number,
     elapsed_time: number,
     elapsed_blocks: number,
-    map: InputMap<TransactionModel>
+    map: InputMapT<TransactionModel>
 ): Array<TransactionModel> {
     return compute_timing_of_children(base, map)
         .value()
@@ -536,7 +537,7 @@ function unreachable_by_time_inner(
 }
 function all_descendants(
     t: TransactionModel,
-    inputs_map: InputMap<TransactionModel>
+    inputs_map: InputMapT<TransactionModel>
 ): Array<TransactionModel> {
     let cache_entry = timing_cache.cache.get(t.get_txid());
     if (cache_entry && cache_entry[1]) return cache_entry[1];
@@ -546,7 +547,11 @@ function all_descendants(
         timing_cache.cache.set(t.get_txid(), cache_entry);
     }
     cache_entry[1] = _(
-        Array.from(inputs_map.map.get(t.get_txid())?.values() ?? [])
+        Array.from(
+            Object.values(
+                InputMap.get_txid_s_group(inputs_map, t.get_txid()) ?? {}
+            ) ?? []
+        )
             .flat(1)
             .map((x) => all_descendants(x, inputs_map))
             .flat(1)
@@ -561,13 +566,13 @@ function all_descendants(
 export class ContractBase {
     utxo_models: Array<UTXOModel>;
     txn_models: Array<TransactionModel>;
-    inputs_map: InputMap<TransactionModel>;
-    txid_map: TXIDAndWTXIDMap<TransactionModel>;
+    inputs_map: InputMapT<TransactionModel>;
+    txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     constructor() {
         this.utxo_models = [];
-        this.inputs_map = new InputMap();
+        this.inputs_map = InputMap.new();
         this.txn_models = [];
-        this.txid_map = new TXIDAndWTXIDMap();
+        this.txid_map = TXIDAndWTXIDMap.new();
     }
     process_finality(is_final: Array<string>, model: any) {
         console.log('called empty');
@@ -600,7 +605,6 @@ export class ContractModel extends ContractBase {
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
         this.txid_map = txid_map;
-        console.log(this);
     }
     should_update() {
         return this.checkable;
@@ -610,14 +614,17 @@ export class ContractModel extends ContractBase {
         let txid_s = txid_buf_to_string(txid);
         const txn_model:
             | TransactionModel
-            | undefined = this.txid_map.get_by_txid_s(txid_s);
+            | undefined = TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid_s);
         if (!txn_model) return null;
         return txn_model.utxo_models[n];
     }
     process_finality(is_final: Array<string>, model: any) {
         // TODO: Reimplement in terms of WTXID
         is_final.forEach((txid) => {
-            const m: TransactionModel | undefined = this.txid_map.get_by_txid_s(
+            const m:
+                | TransactionModel
+                | undefined = TXIDAndWTXIDMap.get_by_txid_s(
+                this.txid_map,
                 txid
             );
             if (m) {

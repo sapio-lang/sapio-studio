@@ -22,34 +22,40 @@ export function txid_buf_to_string(txid: Buffer): TXID {
     return copy.toString('hex');
 }
 // Maps an Input (TXID) to all Spenders
-export class InputMap<T> {
-    map: Map<OpaqueKey, Map<number, Array<T>>>;
-    constructor() {
-        this.map = new Map();
-    }
-    add(t: OutpointInterface, model: T) {
+export type InputMapT<T> = Record<OpaqueKey, Record<number, Array<T>>>;
+export const InputMap = {
+    new<T>(): InputMapT<T> {
+        return {};
+    },
+    add<T>(that: InputMapT<T>, t: OutpointInterface, model: T) {
         const key1 = txid_buf_to_string(t.hash);
-        let vals = this.map.get(key1);
+        let vals = that[key1];
         if (vals === undefined) {
-            vals = new Map();
-            this.map.set(key1, vals);
+            vals = {};
+            that[key1] = vals;
         }
 
-        let vals2 = vals.get(t.index);
+        let vals2 = vals[t.index];
         if (vals2 === undefined) {
             vals2 = [];
-            vals.set(t.index, vals2);
+            vals[t.index] = vals2;
         }
         vals2.push(model);
-    }
-    get(t: OutpointInterface): Array<T> | undefined {
-        return this.map.get(txid_buf_to_string(t.hash))?.get(t.index);
-    }
+    },
+    get_txid_s_group<T>(
+        that: InputMapT<T>,
+        t: string
+    ): Record<number, Array<T>> | null {
+        return that[t] ?? null;
+    },
+    get<T>(that: InputMapT<T>, t: OutpointInterface): Array<T> | null {
+        return that[txid_buf_to_string(t.hash)]?.[t.index] ?? null;
+    },
 
-    get_txid_s(t: string, i: number): Array<T> | undefined {
-        return this.map.get(t)?.get(i);
-    }
-}
+    get_txid_s<T>(that: InputMapT<T>, t: string, i: number): Array<T> | null {
+        return that[t]?.[i] ?? null;
+    },
+};
 
 export const DEFAULT_MAX_SATS_DISPLAY: number = 9999999;
 let INTERNAL_MAX_SATS_DISPLAY: number = DEFAULT_MAX_SATS_DISPLAY;
@@ -93,27 +99,36 @@ export interface HasKeys {
     get_txid: () => TXID;
 }
 // Maps an TXID to a Transaction,
-export class TXIDAndWTXIDMap<K extends HasKeys> {
-    map: Map<TXID, K>;
-    constructor() {
-        this.map = new Map();
-    }
-    add(t: K): void {
-        this.map.set(t.get_txid(), t);
-    }
-    get_by_txid(t: K): K | undefined {
-        return this.map.get(t.get_txid());
-    }
-    get_by_txid_s(t: TXID): K | undefined {
-        return this.map.get(t);
-    }
-    delete_by_txid(t: K) {
-        this.map.delete(t.get_txid());
-    }
-    has_by_txid(t: TXID): boolean {
-        return this.map.has(t);
-    }
-}
+export type TXIDAndWTXIDMapT<K extends HasKeys> = Record<TXID, K>;
+export const TXIDAndWTXIDMap = {
+    new() {
+        return {};
+    },
+    add<K extends HasKeys>(that: TXIDAndWTXIDMapT<K>, t: K): void {
+        that[t.get_txid()] = t;
+    },
+    get_by_txid<K extends HasKeys>(
+        that: TXIDAndWTXIDMapT<K>,
+        t: K
+    ): K | undefined {
+        return that[t.get_txid()];
+    },
+    get_by_txid_s<K extends HasKeys>(
+        that: TXIDAndWTXIDMapT<K>,
+        t: TXID
+    ): K | undefined {
+        return that[t];
+    },
+    delete_by_txid<K extends HasKeys>(that: TXIDAndWTXIDMapT<K>, t: K) {
+        delete that[t.get_txid()];
+    },
+    has_by_txid<K extends HasKeys>(
+        that: TXIDAndWTXIDMapT<K>,
+        t: TXID
+    ): boolean {
+        return that.hasOwnProperty(t);
+    },
+};
 
 export function hash_to_hex(h: Buffer): string {
     const b = new Buffer(32);

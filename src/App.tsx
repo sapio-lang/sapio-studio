@@ -21,11 +21,7 @@ import { UTXONodeFactory } from './UX/Diagram/DiagramComponents/UTXONode/UTXONod
 import { SimulationController } from './Simulation';
 import { AppNavbar } from './UX/AppNavbar';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
-import {
-    EmptyViewer,
-    CurrentlyViewedEntity,
-    ViewableEntityInterface,
-} from './UX/Entity/EntityViewer';
+import { CurrentlyViewedEntity } from './UX/Entity/EntityViewer';
 import Collapse from 'react-bootstrap/Collapse';
 import './Glyphs.css';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
@@ -38,38 +34,86 @@ import {
 } from './AppSlice';
 import {
     deselect_entity,
+    EntityType,
     selectEntityToView,
-    select_entity,
+    selectShouldViewEntity,
+    select_txn,
+    select_utxo,
 } from './UX/Entity/EntitySlice';
-import { OutpointInterface, TXID } from './util';
+import { OutpointInterface, TXID, TXIDAndWTXIDMap } from './util';
 import { Dispatch } from 'redux';
+import { last } from 'lodash';
 
 export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
     isSelected: boolean;
 };
 
 function selection_handler(model: DiagramModel, engine: DiagramEngine) {
-    let last_entity_id: TXID | OutpointInterface | null = null;
+    let last_entity_id: EntityType = ['NULL', null];
+    let last_entity: TransactionModel | UTXOModel | null = null;
     return (contract: ContractModel, entity_id: typeof last_entity_id) => {
-        if (entity_id === last_entity_id || entity_id === null) return;
-        const entity =
-            typeof entity_id === 'string'
-                ? contract.txid_map.get_by_txid_s(entity_id)
-                : contract.lookup_utxo_model(entity_id.hash, entity_id.index);
-        if (!entity) return;
-        if (!entity.isSelected()) {
-            entity.setSelected(true);
+        if (entity_id === last_entity_id) {
+            // No switch hapenning
+            return;
+        } else if (
+            // new entity is deselected, last entity still selected (will trigger selection_handler again)
+            entity_id === null &&
+            last_entity &&
+            last_entity.isSelected()
+        ) {
+            last_entity.setSelected(false);
+            last_entity = null;
+            last_entity_id = ['NULL', null];
+            return;
+        } else if (entity_id[0] === 'NULL') {
+            // Only proceed when selecting
+            return;
+        } else {
+            let entity = null;
+            switch (entity_id[0]) {
+                case 'TXN':
+                    entity = TXIDAndWTXIDMap.get_by_txid_s(
+                        contract.txid_map,
+                        entity_id[1]
+                    );
+                    break;
+                case 'UTXO':
+                    entity = contract.lookup_utxo_model(
+                        entity_id[1].hash,
+                        entity_id[1].index
+                    );
+                    break;
+            }
+            console.log('ENTITY', entity);
+            if (!entity) {
+                last_entity = null;
+                last_entity_id = ['NULL', null];
+                return;
+            } else if (!entity.isSelected()) {
+                // will re-call this code from the selected callback
+                last_entity = null;
+                last_entity_id = ['NULL', null];
+                entity.setSelected(true);
+                return;
+            } else {
+                model.setZoomLevel(100);
+                const { clientHeight, clientWidth } = engine.getCanvas();
+                const {
+                    left,
+                    top,
+                } = engine.getCanvas().getBoundingClientRect();
+                let { x, y } = entity.getPosition();
+                x += entity.width / 2;
+                y += entity.height;
+                const zoomf = model.getZoomLevel() / 100;
+                const x_coord = (left + clientWidth / 3 - x) * zoomf;
+                const y_coord = (top + clientHeight / 2 - y) * zoomf;
+                model.setOffset(x_coord, y_coord);
+                last_entity = entity ?? null;
+                last_entity_id = entity_id;
+                return;
+            }
         }
-        model.setZoomLevel(100);
-        const { clientHeight, clientWidth } = engine.getCanvas();
-        const { left, top } = engine.getCanvas().getBoundingClientRect();
-        let { x, y } = entity.getPosition();
-        x += entity.width / 2;
-        y += entity.height;
-        const zoomf = model.getZoomLevel() / 100;
-        const x_coord = (left + clientWidth / 3 - x) * zoomf;
-        const y_coord = (top + clientHeight / 2 - y) * zoomf;
-        model.setOffset(x_coord, y_coord);
     };
 }
 function diagram_select_handler(
@@ -83,14 +127,14 @@ function diagram_select_handler(
             case TransactionModel:
                 {
                     let txn = data.entity as TransactionModel;
-                    dispatch(select_entity(txn.get_txid()));
+                    dispatch(select_txn(txn.get_txid()));
                 }
                 break;
             case UTXOModel:
                 {
                     let utxo = data.entity as UTXOModel;
                     dispatch(
-                        select_entity({
+                        select_utxo({
                             hash: utxo.txn.tx.getHash(),
                             index: utxo.utxo.index,
                         })
@@ -181,10 +225,7 @@ function AppInner(props: {
         counter: number,
         diagream_select: (s: SelectedEvent) => void
     ) => ContractModel;
-    selection_handler: (
-        c: ContractModel,
-        entity_id: TXID | OutpointInterface | null
-    ) => void;
+    selection_handler: (c: ContractModel, entity_id: EntityType) => void;
 }) {
     let {
         engine,
@@ -194,11 +235,10 @@ function AppInner(props: {
         selection_handler,
     } = props;
     const dispatch = useDispatch();
-    const entity_id: TXID | OutpointInterface | null = useSelector(
-        selectEntityToView
-    );
+    const entity_id: EntityType = useSelector(selectEntityToView);
 
-    const details = entity_id !== null;
+    const show = useSelector(selectShouldViewEntity);
+    const details = entity_id !== null && show;
 
     const [
         timing_simulator_enabled,
