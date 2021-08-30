@@ -6,12 +6,15 @@ import { TransactionModel } from '../../Data/Transaction';
 import { UTXOModel } from '../../Data/UTXO';
 import './EntityViewer.css';
 import Button from 'react-bootstrap/esm/Button';
-import { OutpointInterface, TXID } from '../../util';
+import { OutpointInterface, TXID, TXIDAndWTXIDMap } from '../../util';
 import { useDispatch, useSelector } from 'react-redux';
-import { deselect_entity, selectEntityToView } from './EntitySlice';
+import {
+    deselect_entity,
+    EntityType,
+    selectEntityToView,
+    selectShouldViewEntity,
+} from './EntitySlice';
 export interface ViewableEntityInterface {}
-
-export class EmptyViewer implements ViewableEntityInterface {}
 
 interface CurrentylViewedEntityProps {
     current_contract: ContractModel;
@@ -35,46 +38,49 @@ export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
         document.addEventListener('mouseup', onMouseUp);
     };
 
-    const entity_id: TXID | OutpointInterface | null = useSelector(
-        selectEntityToView
-    );
-    let entity: ViewableEntityInterface = new EmptyViewer();
-    if (entity_id) {
-        if (typeof entity_id === 'string') {
-            entity =
-                props.current_contract.txid_map.get_by_txid_s(
-                    entity_id as string
-                ) ?? entity;
-        } else {
-            entity =
-                props.current_contract.lookup_utxo_model(
-                    (entity_id as OutpointInterface).hash,
-                    (entity_id as OutpointInterface).index
-                ) ?? entity;
-        }
-    }
-
+    const show = useSelector(selectShouldViewEntity);
+    const entity_id: EntityType = useSelector(selectEntityToView);
     let guts = null;
-    switch (entity.constructor) {
-        case TransactionModel:
-            guts = (
-                <TransactionDetail
-                    entity={entity as TransactionModel}
-                    find_tx_model={(a: Buffer, b: number) =>
-                        props.current_contract.lookup_utxo_model(a, b)
-                    }
-                />
-            );
-            break;
-        case UTXOModel:
-            guts = (
-                <UTXODetail
-                    entity={entity as UTXOModel}
-                    contract={props.current_contract}
-                />
-            );
-
-            break;
+    if (show) {
+        let entity: TransactionModel | UTXOModel | null = null;
+        switch (entity_id[0]) {
+            case 'TXN': {
+                entity =
+                    TXIDAndWTXIDMap.get_by_txid_s(
+                        props.current_contract.txid_map,
+                        entity_id[1]
+                    ) ?? null;
+                if (entity) {
+                    guts = (
+                        <TransactionDetail
+                            entity={entity as TransactionModel}
+                            find_tx_model={(a: Buffer, b: number) =>
+                                props.current_contract.lookup_utxo_model(a, b)
+                            }
+                        />
+                    );
+                }
+                break;
+            }
+            case 'UTXO': {
+                entity =
+                    props.current_contract.lookup_utxo_model(
+                        entity_id[1].hash,
+                        entity_id[1].index
+                    ) ?? null;
+                if (entity) {
+                    guts = (
+                        <UTXODetail
+                            entity={entity as UTXOModel}
+                            contract={props.current_contract}
+                        />
+                    );
+                }
+                break;
+            }
+            case 'NULL':
+                break;
+        }
     }
     const dispatch = useDispatch();
     return (

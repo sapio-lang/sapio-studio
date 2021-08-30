@@ -22,8 +22,7 @@ import {
     selectUTXOFlash,
     Outpoint,
     selectUTXO,
-    select_entity,
-    deselect_entity,
+    select_txn,
 } from '../EntitySlice';
 import React from 'react';
 import { Dispatch } from 'redux';
@@ -70,13 +69,11 @@ export function update_utxomodel(utxo_in: UTXOModel) {
     }
 }
 export function UTXODetail(props: UTXODetailProps) {
+    const dispatch = useDispatch();
     React.useEffect(() => {
-        return () => {
-            props.entity.setSelected(false);
-        };
+        return () => {};
     });
 
-    const dispatch = useDispatch();
     const select_utxo = useSelector(selectUTXO);
     const flash = useSelector(selectUTXOFlash);
     const txid = props.entity.txn.get_txid();
@@ -106,7 +103,7 @@ export function UTXODetail(props: UTXODetailProps) {
             <Hex value={elt.get_txid()} />
             <Button
                 variant="link"
-                onClick={() => dispatch(select_entity(elt.get_txid()))}
+                onClick={() => dispatch(select_txn(elt.get_txid()))}
             >
                 <span
                     className="glyphicon glyphicon-chevron-right"
@@ -167,7 +164,7 @@ export function UTXODetail(props: UTXODetailProps) {
             <OutpointDetail
                 txid={txid}
                 n={idx}
-                onClick={() => dispatch(select_entity(txid))}
+                onClick={() => dispatch(select_txn(txid))}
             />
             <div>
                 Address: <ASM className="txhex" readOnly value={address} />

@@ -6,7 +6,7 @@ import Modal from 'react-bootstrap/Modal';
 import { FormEventHandler } from 'react-transition-group/node_modules/@types/react';
 import { ContractModel } from '../../Data/ContractManager';
 import { TransactionModel } from '../../Data/Transaction';
-import { txid_buf_to_string } from '../../util';
+import { TXIDAndWTXIDMap, txid_buf_to_string } from '../../util';
 
 interface IProps {
     contract: ContractModel;
@@ -26,7 +26,8 @@ export class SaveHexModal extends React.Component<IProps, IState> {
             return (
                 -1 !==
                 item.tx.ins.findIndex((inp) =>
-                    props.contract.txid_map.has_by_txid(
+                    TXIDAndWTXIDMap.has_by_txid(
+                        props.contract.txid_map,
                         txid_buf_to_string(inp.hash)
                     )
                 )
