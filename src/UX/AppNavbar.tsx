@@ -13,13 +13,11 @@ export function AppNavbar(props: any): JSX.Element {
 
     const [modalSapioCompiler, setModalaSapioCompiler] = useState(false);
 
-    const [showSim, setSim] = useState(true);
-    const toggleSim = (args: string) => {
-        console.log('TOG', showSim, args);
-        props.toggle_timing_simulator(showSim);
-        setSim(!showSim);
-    };
-    useEffect(() => window.electron.register('simulate', toggleSim));
+    useEffect(() =>
+        window.electron.register('simulate', (_: string) =>
+            props.toggle_timing_simulator()
+        )
+    );
 
     const [modalLoadHex, setModalLoadHex] = useState(false);
     useEffect(() => window.electron.register('load_hex', setModalLoadHex));

@@ -9,4 +9,22 @@
 }
 
 .Controler {
+    display: grid;
+    grid-template-rows: min-content 1fr;
+    column-gap: 3em;
+    padding-left: 3em;
+    padding-right: 3em;
+}
+
+.ControlerSettings {
+    display: grid;
+    grid-template-columns: repeat(5, 15vw);
+    column-gap: 2vw;
+}
+
+.ControlerSliders {
+    display: grid;
+    grid-template-columns: 10em 1fr;
+    column-gap: 1em;
+    height: min-content;
 }

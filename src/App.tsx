@@ -269,7 +269,11 @@ function AppInner(props: {
         <CurrentlyViewedEntity current_contract={current_contract} />
     );
     const simulator = !timing_simulator_enabled ? null : (
-        <SimulationController contract={current_contract} engine={engine} />
+        <SimulationController
+            contract={current_contract}
+            engine={engine}
+            hide={() => set_timing_simulator_enabled(false)}
+        />
     );
     return (
         <div className="App">
@@ -287,7 +291,11 @@ function AppInner(props: {
                             dispatch(load_new_model(x))
                         }
                         contract={current_contract}
-                        toggle_timing_simulator={set_timing_simulator_enabled}
+                        toggle_timing_simulator={() =>
+                            set_timing_simulator_enabled(
+                                !timing_simulator_enabled
+                            )
+                        }
                     />
                 </div>
                 <div className="area-inner">
