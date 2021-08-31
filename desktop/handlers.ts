@@ -34,7 +34,7 @@ export default function (window: BrowserWindow, client: typeof Client) {
             ],
         });
         if (path && path.filePaths.length) {
-            return await readFile(path.filePaths[0], { encoding: 'utf-8' });
+            return await readFile(path.filePaths[0]!, { encoding: 'utf-8' });
         }
     });
     ipcMain.handle('save_contract', async (event, psbt) => {

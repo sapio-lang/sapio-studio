@@ -122,13 +122,8 @@ export const selectUTXO = (
     state: RootState
 ): ((id: Outpoint) => QueriedUTXO | null) => {
     return (id: Outpoint) => {
-        console.debug(id);
         const id_s = to_id(id);
-        console.debug(state);
-        if (state.entityReducer.utxos.hasOwnProperty(id_s)) {
-            return state.entityReducer.utxos[id_s];
-        }
-        return null;
+        return state.entityReducer.utxos[id_s] ?? null;
     };
 };
 export const selectUTXOFlash = (state: RootState): String | null =>

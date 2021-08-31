@@ -1,7 +1,7 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
-import _, { Collection } from 'lodash';
+import _, { Collection, ObjectIterator } from 'lodash';
 import { SelectedEvent } from '../App';
 import {
     InputMapT,
@@ -64,7 +64,7 @@ function preprocess_data(data: Data): PreProcessedData {
         NodeColor.new(k.color ?? 'orange')
     );
     let utxo_labels = data.program.map(
-        (k, i) => k.utxo_metadata ?? new Array(txns[i].outs.length)
+        (k, i) => k.utxo_metadata ?? new Array(txns[i]?.outs.length ?? 0)
     );
 
     return {
@@ -80,11 +80,10 @@ function process_inputs_map(
     txns: Array<TransactionModel>
 ): InputMapT<TransactionModel> {
     const inputs_map: InputMapT<TransactionModel> = InputMap.new();
-    for (let x = 0; x < txns.length; ++x) {
-        const txn: Bitcoin.Transaction = txns[x].tx;
-        for (let y = 0; y < txn.ins.length; ++y) {
-            const inp: Bitcoin.TxInput = txn.ins[y];
-            InputMap.add(inputs_map, inp, txns[x]);
+    for (const txn_m of txns) {
+        const txn: Bitcoin.Transaction = txn_m.tx;
+        for (const inp of txn.ins) {
+            InputMap.add(inputs_map, inp, txn_m);
         }
     }
     return inputs_map;
@@ -105,9 +104,18 @@ function process_txn_models(
     let txid_map: TXIDAndWTXIDMapT<TransactionModel> = TXIDAndWTXIDMap.new();
     let txn_models: Array<TransactionModel> = [];
     assert.equal(txns.length, psbts.length);
-    _.chain(txns)
-        .map((tx, x) => {
-            return { tx: tx, x: x, psbt: psbts[x] };
+    assert.equal(txns.length, txn_labels.length);
+    assert.equal(txns.length, txn_colors.length);
+    assert.equal(txns.length, utxo_labels.length);
+    _.chain(_.zip(txns, psbts, txn_labels, txn_colors, utxo_labels))
+        .map(([tx, psbt, txn_label, txn_color, utxo_labels], index) => {
+            return {
+                tx: tx!,
+                psbt: psbt!,
+                txn_label: txn_label!,
+                txn_color: txn_color!,
+                utxo_labels: utxo_labels!,
+            };
         })
         .groupBy(({ tx }: { tx: Bitcoin.Transaction }) => tx.getId())
         .forEach(
@@ -115,9 +123,10 @@ function process_txn_models(
                 txn_group: {
                     tx: Bitcoin.Transaction;
                     psbt: Bitcoin.Psbt;
-                    x: number;
-                }[],
-                _key: string
+                    txn_label: string;
+                    txn_color: NodeColorT;
+                    utxo_labels: (UTXOFormatData | null)[];
+                }[]
             ) => {
                 let label = '';
                 let color = NodeColor.new('');
@@ -126,10 +135,16 @@ function process_txn_models(
                     witnesses: [],
                     psbts: [],
                 };
-                for (let { tx, x, psbt } of txn_group) {
-                    utxo_label = utxo_labels[x];
-                    color = txn_colors[x];
-                    label = txn_labels[x];
+                for (let {
+                    tx,
+                    psbt,
+                    txn_label,
+                    txn_color,
+                    utxo_labels,
+                } of txn_group) {
+                    utxo_label = utxo_labels;
+                    color = txn_color;
+                    label = txn_label;
                     let witnesses: Buffer[][] = [];
                     for (let input of tx.ins) {
                         witnesses.push(input.witness);
@@ -138,7 +153,8 @@ function process_txn_models(
                     all_witnesses.witnesses.push(witnesses);
                     all_witnesses.psbts.push(psbt);
                 }
-                let base_txn: Bitcoin.Transaction = txn_group[0].tx.clone();
+                assert.ok(txn_group.length > 0); // because group call must be true
+                let base_txn: Bitcoin.Transaction = txn_group[0]!.tx.clone();
                 // Clear out witness Data
                 for (let input of base_txn.ins) {
                     input.witness = [];
@@ -209,77 +225,78 @@ function process_utxo_models(
 ): Array<UTXOModel> {
     const to_add: Array<UTXOModel> = [];
     for (let m_txn of txn_models) {
-        m_txn.utxo_models.forEach((utxo_model, output_index) => {
-            const spenders: Array<TransactionModel> =
-                InputMap.get_txid_s(
-                    inputs_map,
-                    m_txn.get_txid(),
-                    output_index
-                ) ?? [];
-            if (
-                utxo_model.txn instanceof PhantomTransactionModel &&
-                spenders.length
-            ) {
-                if (spenders[0].witness_set.witnesses.length) {
-                    const witstack =
-                        spenders[0].witness_set.witnesses[0][
-                            utxo_model.utxo.index
-                        ];
-                    if (witstack) {
-                        const program = witstack[witstack.length - 1];
-                        if (program) {
-                            Bitcoin.crypto.sha256(program);
-                            const script = Buffer.alloc(34);
-                            script[0] = 0x0;
-                            script[1] = 0x20;
-                            program.copy(script, 2);
-                            utxo_model.txn.tx.outs[
+        assert.equal(m_txn.utxo_models.length, m_txn.tx.outs.length);
+        _.zip(m_txn.utxo_models, m_txn.tx.outs).forEach(
+            ([opt_utxo_model, opt_out], output_index) => {
+                // safe because of assert
+                const utxo_model = opt_utxo_model!;
+                const out = opt_out!;
+                const spenders: Array<TransactionModel> =
+                    InputMap.get_txid_s(
+                        inputs_map,
+                        m_txn.get_txid(),
+                        output_index
+                    ) ?? [];
+                if (
+                    utxo_model?.txn instanceof PhantomTransactionModel &&
+                    spenders.length > 0
+                ) {
+                    if (spenders[0]?.witness_set.witnesses.length) {
+                        const witstack =
+                            spenders[0]?.witness_set.witnesses[0]?.[
                                 utxo_model.utxo.index
-                            ].script = script;
-                            // TODO: Single Input assumption!
-                            utxo_model.txn.tx.outs[
-                                utxo_model.utxo.index
-                            ].script = script;
-                            const max_amount = spenders.reduce(
-                                (m, s) =>
-                                    Math.max(
-                                        s.tx.outs.reduce(
-                                            (a, v) =>
-                                                a + (v as Output).value ?? 0,
-                                            0
+                            ];
+                        if (witstack) {
+                            const program = witstack[witstack.length - 1];
+                            if (program) {
+                                Bitcoin.crypto.sha256(program);
+                                const script = Buffer.alloc(34);
+                                script[0] = 0x0;
+                                script[1] = 0x20;
+                                program.copy(script, 2);
+                                // TODO: Single Input assumption!
+                                out.script = script;
+                                const max_amount = spenders.reduce(
+                                    (m, s) =>
+                                        Math.max(
+                                            s.tx.outs.reduce(
+                                                (a, v) =>
+                                                    a + (v as Output).value ??
+                                                    0,
+                                                0
+                                            ),
+                                            m
                                         ),
-                                        m
-                                    ),
-                                0
-                            );
-                            (utxo_model.txn.tx.outs[
-                                utxo_model.utxo.index
-                            ] as Output).value = max_amount;
-                            utxo_model.utxo.amount = max_amount;
-                            console.log('MAX', max_amount, utxo_model.txn.tx);
-                            const _address = Bitcoin.address.fromOutputScript(
-                                script,
-                                Bitcoin.networks.regtest
-                            );
+                                    0
+                                );
+                                (utxo_model.txn.tx.outs[
+                                    utxo_model.utxo.index
+                                ] as Output).value = max_amount;
+                                utxo_model.utxo.amount = max_amount;
+                                const _address = Bitcoin.address.fromOutputScript(
+                                    script,
+                                    Bitcoin.networks.regtest
+                                );
+                            }
                         }
                     }
                 }
+                spenders.forEach((spender, spend_idx) => {
+                    const spender_tx: Bitcoin.Transaction = spender.tx;
+                    const idx = spender_tx.ins.findIndex(
+                        (elt) =>
+                            elt.index === output_index &&
+                            txid_buf_to_string(elt.hash) === m_txn.get_txid()
+                    );
+                    if (idx === -1) {
+                        throw new Error('Missing Spender Error');
+                    }
+                    const link = utxo_model.spent_by(spender, spend_idx, idx);
+                    spender.input_links.push(link);
+                    utxo_model.utxo.spends.push(spender);
+                });
             }
-            spenders.forEach((spender, spend_idx) => {
-                const spender_tx: Bitcoin.Transaction = spender.tx;
-                const idx = spender_tx.ins.findIndex(
-                    (elt) =>
-                        elt.index === output_index &&
-                        txid_buf_to_string(elt.hash) === m_txn.get_txid()
-                );
-                if (idx === -1) {
-                    throw new Error('Missing Spender Error');
-                }
-                const link = utxo_model.spent_by(spender, spend_idx, idx);
-                spender.input_links.push(link);
-                utxo_model.utxo.spends.push(spender);
-            });
-        });
+        );
         to_add.push(...m_txn.utxo_models);
     }
     return to_add;
@@ -347,30 +364,30 @@ function mergeAndDeduplicateSorted<T, T2>(
     array2: T[],
     iteratee: (t: T) => T2
 ): Array<T> {
-    const mergedArray = [];
+    const mergedArray: Array<T> = [];
     let i = 0;
     let j = 0;
     while (i < array1.length && j < array2.length) {
-        if (iteratee(array1[i]) < iteratee(array2[j])) {
-            mergedArray.push(array1[i]);
+        if (iteratee(array1[i]!) < iteratee(array2[j]!)) {
+            mergedArray.push(array1[i]!);
             i++;
-        } else if (iteratee(array1[i]) > iteratee(array2[j])) {
-            mergedArray.push(array2[j]);
+        } else if (iteratee(array1[i]!) > iteratee(array2[j]!)) {
+            mergedArray.push(array2[j]!);
             j++;
         } else {
             // Arbitrary
-            mergedArray.push(array1[i]);
+            mergedArray.push(array1[i]!);
             i++;
             j++;
         }
     }
     if (i < array1.length) {
         for (let p = i; p < array1.length; p++) {
-            mergedArray.push(array1[p]);
+            mergedArray.push(array1[p]!);
         }
     } else {
         for (let p = j; p < array2.length; p++) {
-            mergedArray.push(array2[p]);
+            mergedArray.push(array2[p]!);
         }
     }
     return mergedArray;
@@ -409,8 +426,8 @@ function unreachable_by_time(
         }
         arrays[v1] = _(
             mergeAndDeduplicateSorted(
-                arrays[v1],
-                arrays[v2],
+                arrays[v1]!,
+                arrays[v2]!,
                 (t: TransactionModel) => t.get_txid()
             )
         )
@@ -422,7 +439,7 @@ function unreachable_by_time(
             arrays[v2] = last;
         }
     }
-    return arrays.length > 0 ? arrays[0] : [];
+    return arrays[0] ?? [];
 }
 function compute_timing(txn: TransactionModel): TimingData {
     let cache_entry = timing_cache.cache.get(txn.get_txid());
@@ -612,11 +629,11 @@ export class ContractModel extends ContractBase {
     // TODO: Return an Array of UTXOModels
     lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
         let txid_s = txid_buf_to_string(txid);
-        const txn_model:
-            | TransactionModel
-            | undefined = TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid_s);
-        if (!txn_model) return null;
-        return txn_model.utxo_models[n];
+        return (
+            TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid_s)?.utxo_models[
+                n
+            ] ?? null
+        );
     }
     process_finality(is_final: Array<string>, model: any) {
         // TODO: Reimplement in terms of WTXID

@@ -321,7 +321,7 @@ export const custom_sapio_config = () => {
                 error = true;
                 return;
             }
-            return [opts[1].trim(), opts[0].trim()];
+            return [opts[1]?.trim(), opts[0]?.trim()];
         });
     let plugin_map: Record<string, string> = {};
     settings.value('sapio.plugin_map').forEach((line: string) => {
@@ -334,8 +334,8 @@ export const custom_sapio_config = () => {
             error = true;
             return;
         }
-        let name = opts[0].trim();
-        let hash = opts[1].trim();
+        let name = opts[0]?.trim() ?? '';
+        let hash = opts[1]?.trim() ?? '';
         if (hash.length != 64) {
             dialog.showErrorBox(
                 'Setting Error:',

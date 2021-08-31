@@ -69,7 +69,7 @@ export class TransactionModel
 
     get_json(): TransactionData {
         return {
-            psbt: this.witness_set.psbts[0].toBase64(),
+            psbt: this.witness_set.psbts[0]!.toBase64(),
             hex: this.tx.toHex(),
             label: this.name,
             color: this.color,
