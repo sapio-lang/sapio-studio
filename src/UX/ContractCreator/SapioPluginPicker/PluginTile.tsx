@@ -3,7 +3,7 @@ import { PluginSelector } from './PluginSelector';
 import { JSONSchema7 } from 'json-schema';
 
 interface TileProps {
-    parent: PluginSelector;
+    select: (key: string) => void;
     app: Plugin;
 }
 export interface Plugin {
@@ -34,7 +34,7 @@ export class PluginTile extends React.Component<TileProps> {
             <div className="PluginTile">
                 <a
                     onClick={() => {
-                        this.props.parent.select(this.props.app.key);
+                        this.props.select(this.props.app.key);
                     }}
                 >
                     {logo_image(this.props.app)}
