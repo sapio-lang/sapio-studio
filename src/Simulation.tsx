@@ -1,17 +1,15 @@
 import React, { FormEvent } from 'react';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
 import { ContractModel } from './Data/ContractManager';
 import Form from 'react-bootstrap/Form';
-import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
 import _ from 'lodash';
 import './Simulation.css';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
-import { current } from 'immer';
 import { useDispatch } from 'react-redux';
 import { set_unreachable } from './SimulationSlice';
 import { TXID } from './util';
+import OverlayTrigger from 'react-bootstrap/esm/OverlayTrigger';
+import Tooltip from 'react-bootstrap/esm/Tooltip';
 export function SimulationController(props: {
     contract: ContractModel;
     engine: DiagramEngine;
@@ -183,33 +181,34 @@ export function SimulationController(props: {
                     style={{ color: 'pink' }}
                 ></span>
             </Button>
-            <BlockControl
-                min_blocks={min_blocks}
-                first_tx_block_pct={first_tx_block_pct}
-                first_tx_block={first_tx_block()}
-                current_block={current_block()}
-                current_block_pct={current_block_pct}
-                max_blocks={max_blocks}
-                updateMinBlocks={updateMinBlocks}
-                updateMaxBlocks={updateMaxBlocks}
-                updateFirstTxBlock={updateFirstTxBlock}
-                updateCurrentBlock={updateCurrentBlock}
-                snapBlocks={snapBlocks}
-            />
-            <hr></hr>
-            <ClockControl
-                min_time={min_time}
-                max_time={max_time}
-                first_tx_time={first_tx_time()}
-                first_tx_time_pct={first_tx_time_pct}
-                current_time={current_time()}
-                current_time_pct={current_time_pct}
-                updateMinTime={updateMinTime}
-                updateMaxTime={updateMaxTime}
-                updateCurrentTime={updateCurrentTime}
-                updateFirstTxTime={updateFirstTxTime}
-                snapTime={snapTime}
-            />
+            <div className="Controlers">
+                <BlockControl
+                    min_blocks={min_blocks}
+                    first_tx_block_pct={first_tx_block_pct}
+                    first_tx_block={first_tx_block()}
+                    current_block={current_block()}
+                    current_block_pct={current_block_pct}
+                    max_blocks={max_blocks}
+                    updateMinBlocks={updateMinBlocks}
+                    updateMaxBlocks={updateMaxBlocks}
+                    updateFirstTxBlock={updateFirstTxBlock}
+                    updateCurrentBlock={updateCurrentBlock}
+                    snapBlocks={snapBlocks}
+                />
+                <ClockControl
+                    min_time={min_time}
+                    max_time={max_time}
+                    first_tx_time={first_tx_time()}
+                    first_tx_time_pct={first_tx_time_pct}
+                    current_time={current_time()}
+                    current_time_pct={current_time_pct}
+                    updateMinTime={updateMinTime}
+                    updateMaxTime={updateMaxTime}
+                    updateCurrentTime={updateCurrentTime}
+                    updateFirstTxTime={updateFirstTxTime}
+                    snapTime={snapTime}
+                />
+            </div>
         </Form>
     );
 }
@@ -230,7 +229,8 @@ function ClockControl(props: ClockControlProps) {
     return (
         <div className="Controler">
             <div className="ControlerSettings">
-                <h6>Start Date</h6>
+                <h6> Date</h6>
+                <h6>Start </h6>
                 <Form.Control
                     value={props.min_time.toLocaleDateString('en-CA', {
                         timeZone: 'UTC',
@@ -238,7 +238,7 @@ function ClockControl(props: ClockControlProps) {
                     type="date"
                     onChange={props.updateMinTime}
                 ></Form.Control>
-                <h6>End Date</h6>
+                <h6>End </h6>
                 <Form.Control
                     value={props.max_time.toLocaleDateString('en-CA', {
                         timeZone: 'UTC',
@@ -246,14 +246,26 @@ function ClockControl(props: ClockControlProps) {
                     type="date"
                     onChange={props.updateMaxTime}
                 ></Form.Control>
-
-                <Button
-                    onClick={props.snapTime}
-                    name={'action'}
-                    value={'snap-time'}
+                <OverlayTrigger
+                    placement={'top'}
+                    overlay={
+                        <Tooltip id="snap-time-tooltip">
+                            Click me to Snap Time.
+                        </Tooltip>
+                    }
                 >
-                    Snap Time
-                </Button>
+                    <Button
+                        onClick={props.snapTime}
+                        name={'action'}
+                        value={'snap-time'}
+                        variant="test"
+                    >
+                        <i
+                            className="glyphicon glyphicon-resize-horizontal"
+                            style={{ color: 'green' }}
+                        ></i>
+                    </Button>
+                </OverlayTrigger>
             </div>
             <div className="ControlerSliders">
                 <Form.Label>
@@ -268,7 +280,6 @@ function ClockControl(props: ClockControlProps) {
                     type="range"
                     onChange={props.updateFirstTxTime}
                 ></Form.Control>
-
                 <Form.Label>
                     {' '}
                     Current Time{' '}
@@ -281,6 +292,7 @@ function ClockControl(props: ClockControlProps) {
                     type="range"
                     onChange={props.updateCurrentTime}
                 ></Form.Control>
+                <div></div>
             </div>
         </div>
     );
@@ -302,41 +314,60 @@ function BlockControl(props: BlockControlProps) {
     return (
         <div className="Controler">
             <div className="ControlerSettings">
-                <h6>Start Height</h6>
+                <h6> Height</h6>
+                <h6>Start </h6>
                 <Form.Control
                     value={props.min_blocks}
                     type="number"
                     onChange={props.updateMinBlocks}
                 ></Form.Control>
-                <h6>End Height</h6>
+                <h6>End </h6>
                 <Form.Control
                     value={props.max_blocks}
                     type="number"
                     onChange={props.updateMaxBlocks}
                 ></Form.Control>
 
-                <Button
-                    onClick={props.snapBlocks}
-                    name={'action'}
-                    value={'snap-blocks'}
+                <OverlayTrigger
+                    placement={'top'}
+                    overlay={
+                        <Tooltip id="snap-blocks-tooltip">
+                            Click me to Snap Blocks.
+                        </Tooltip>
+                    }
                 >
-                    Snap Blocks
-                </Button>
+                    <Button
+                        onClick={props.snapBlocks}
+                        name={'action'}
+                        value={'snap-blocks'}
+                        variant="test"
+                    >
+                        <i
+                            className="glyphicon glyphicon-resize-horizontal"
+                            style={{ color: 'green' }}
+                        ></i>
+                    </Button>
+                </OverlayTrigger>
             </div>
             <div className="ControlerSliders">
-                <Form.Label>First Tx {props.first_tx_block} </Form.Label>
-                <Form.Control
-                    value={props.first_tx_block_pct}
-                    type="range"
-                    onChange={props.updateFirstTxBlock}
-                />
-
-                <Form.Label>Current Block {props.current_block} </Form.Label>
-                <Form.Control
-                    value={props.current_block_pct}
-                    type="range"
-                    onChange={props.updateCurrentBlock}
-                />
+                <div>
+                    <Form.Label>First Tx {props.first_tx_block} </Form.Label>
+                    <Form.Control
+                        value={props.first_tx_block_pct}
+                        type="range"
+                        onChange={props.updateFirstTxBlock}
+                    />
+                </div>
+                <div>
+                    <Form.Label>
+                        Current Block {props.current_block}{' '}
+                    </Form.Label>
+                    <Form.Control
+                        value={props.current_block_pct}
+                        type="range"
+                        onChange={props.updateCurrentBlock}
+                    />
+                </div>
             </div>
         </div>
     );
