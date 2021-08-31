@@ -59,22 +59,11 @@ export function SimulationController(props: {
     const clear = () => {
         dispatch(set_unreachable({}));
     };
-    const updateForUnreachable = (unreachable: Array<TransactionModel>) => {
-        let r: Record<TXID, null> = {};
-        for (const model of unreachable) {
-            r[model.get_txid()] = null;
-        }
-        dispatch(set_unreachable(r));
-    };
-    const changeFinalizer = () => {
-        throttled_update();
-    };
     const wrapper = (f: (input: HTMLInputElement) => void) => (
         e: FormEvent
     ) => {
         const input = e.currentTarget as HTMLInputElement;
         f(input);
-        changeFinalizer();
     };
 
     const updateMinTime = wrapper((input: HTMLInputElement) => {
@@ -101,20 +90,29 @@ export function SimulationController(props: {
     const updateMaxBlocks = wrapper((input: HTMLInputElement) => {
         setMaxBlocks(input.valueAsNumber);
     });
-    const immediateUpdate = () => {
+    React.useEffect(() => {
         const unreachable = props.contract.reachable_at_time(
             current_time().getTime() / 1000,
             current_block(),
             first_tx_time().getTime() / 1000,
             first_tx_block()
         );
-        updateForUnreachable(unreachable);
-    };
+        let r: Record<TXID, null> = {};
+        for (const model of unreachable) {
+            r[model.get_txid()] = null;
+        }
+        dispatch(set_unreachable(r));
+    }, [
+        first_tx_block_pct,
+        first_tx_time_pct,
+        max_blocks,
+        min_blocks,
+        max_time,
+        min_time,
+        current_time_pct,
+        current_block_pct,
+    ]);
 
-    const throttled_update = _.throttle(immediateUpdate, 30, {
-        trailing: true,
-        leading: false,
-    });
     const snapBlocks = () => {
         const new_first_tx_block = first_tx_block();
         const new_current_block = current_block();
