@@ -39,33 +39,34 @@ function is_mock(args: Outpoint): boolean {
 }
 
 export function update_utxomodel(utxo_in: UTXOModel) {
-    const s: Array<UTXOModel> = [utxo_in];
-    for (let count = 0; count < s.length; ++count) {
-        const utxo = s[count];
-        // Pop a node for processing...
-        utxo.utxo.spends.forEach((spend: TransactionModel) => {
-            spend.tx.ins
-                .filter(
-                    (inp) => txid_buf_to_string(inp.hash) === utxo.utxo.txid
-                )
-                .forEach((inp) => {
-                    inp.hash = utxo.txn.tx.getHash();
-                });
-            spend.tx.ins
-                .filter((inp) =>
-                    is_mock({
-                        hash: txid_buf_to_string(inp.hash),
-                        nIn: inp.index,
-                    })
-                )
-                .forEach((inp) => {
-                    // TODO: Only modify the mock that was intended
-                    inp.hash = utxo.txn.tx.getHash();
-                    inp.index = utxo.utxo.index;
-                });
-
-            spend.utxo_models.forEach((u: UTXOModel) => s.push(u));
-        });
+    const to_iterate: Array<UTXOModel>[] = [[utxo_in]];
+    while (to_iterate.length) {
+        const s = to_iterate.pop()!;
+        for (const utxo of s) {
+            // Pop a node for processing...
+            utxo.utxo.spends.forEach((spend: TransactionModel) => {
+                spend.tx.ins
+                    .filter(
+                        (inp) => txid_buf_to_string(inp.hash) === utxo.utxo.txid
+                    )
+                    .forEach((inp) => {
+                        inp.hash = utxo.txn.tx.getHash();
+                    });
+                spend.tx.ins
+                    .filter((inp) =>
+                        is_mock({
+                            hash: txid_buf_to_string(inp.hash),
+                            nIn: inp.index,
+                        })
+                    )
+                    .forEach((inp) => {
+                        // TODO: Only modify the mock that was intended
+                        inp.hash = utxo.txn.tx.getHash();
+                        inp.index = utxo.utxo.index;
+                    });
+                to_iterate.push(spend.utxo_models);
+            });
+        }
     }
 }
 export function UTXODetail(props: UTXODetailProps) {

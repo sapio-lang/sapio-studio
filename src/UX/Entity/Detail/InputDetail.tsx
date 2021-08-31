@@ -124,27 +124,21 @@ export class InputDetail extends React.Component<IProps, IState> {
         }
     }
     render() {
-        const witness_display =
-            this.state.witness_selection === undefined
-                ? null
-                : this.props.witnesses[
-                      this.state.witness_selection
-                  ].map((elt, i) => (
-                      <Hex
-                          key={i}
-                          readOnly
-                          className="txhex"
-                          value={maybeDecode(
-                              true ||
-                                  i ===
-                                      this.props.witnesses[
-                                          this.state.witness_selection ?? 0
-                                      ].length -
-                                          1,
-                              elt
-                          )}
-                      />
-                  ));
+        let witness_display = null;
+        if (
+            this.state.witness_selection !== undefined &&
+            this.props.witnesses.length > this.state.witness_selection
+        ) {
+            const index: number = this.state.witness_selection;
+            witness_display = this.props.witnesses[index]!.map((elt, i) => (
+                <Hex
+                    key={i}
+                    readOnly
+                    className="txhex"
+                    value={maybeDecode(true, elt)}
+                />
+            ));
+        }
         const psbts_display =
             this.state.psbt === undefined ? (
                 <>

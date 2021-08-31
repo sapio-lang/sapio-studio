@@ -35,8 +35,8 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                                 },
                             ],
                         });
-                        if (file && file.length) {
-                            const data = readFileSync(file[0], {
+                        if (file && file.length === 1) {
+                            const data = readFileSync(file[0]!, {
                                 encoding: 'utf-8',
                             });
                             window.webContents.send('load_contract', data);
@@ -50,7 +50,8 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                             properties: ['openFile'],
                             filters: [{ extensions: ['wasm'], name: 'WASM' }],
                         });
-                        sapio.load_contract_file_name(plugin![0]);
+                        if (plugin && plugin.length)
+                            sapio.load_contract_file_name(plugin[0]!);
                     },
                 },
                 {
@@ -191,7 +192,7 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
         */
 
         // Window menu
-        template[6].submenu = [
+        template[6]!.submenu = [
             { role: 'close' },
             { role: 'minimize' },
             { role: 'zoom' },

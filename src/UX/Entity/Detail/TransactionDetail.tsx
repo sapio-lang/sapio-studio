@@ -54,22 +54,25 @@ export function TransactionDetail(props: TransactionDetailProps) {
             goto={() =>
                 dispatch(
                     select_utxo({
-                        hash: props.entity.utxo_models[i].txn.tx.getHash(),
-                        index: props.entity.utxo_models[i].utxo.index,
+                        hash: o.txn.tx.getHash(),
+                        index: o.utxo.index,
                     })
                 )
             }
         />
     ));
-    const ins = props.entity.tx.ins.map((o, i) => {
-        const witnesses: Buffer[][] = props.entity.witness_set.witnesses.map(
-            (w) => w[i]
+    const ins = props.entity.tx.ins.map((inp, i) => {
+        const witnesses: Buffer[][] = props.entity.witness_set.witnesses.flatMap(
+            (w) => {
+                let b: Buffer[] | undefined = w[i];
+                return b ? [b] : [];
+            }
         );
         const psbts: Bitcoin.Psbt[] = props.entity.witness_set.psbts;
         return (
             <InputDetail
-                txinput={o}
-                goto={() => dispatch(select_utxo(o))}
+                txinput={inp}
+                goto={() => dispatch(select_utxo(inp))}
                 witnesses={witnesses}
                 psbts={psbts}
             />
