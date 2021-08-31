@@ -7,12 +7,14 @@ export type APIs = Record<
 >;
 type CreatorStateType = {
     apis: null | APIs;
+    selected_api: keyof APIs | null;
     show: boolean;
 };
 function default_state(): CreatorStateType {
     return {
         apis: null,
         show: false,
+        selected_api: null,
     };
 }
 
@@ -23,12 +25,15 @@ export const contractCreatorSlice = createSlice({
         set_apis: (state, action: PayloadAction<APIs>) => {
             state.apis = action.payload;
         },
+        select_api: (state, action: PayloadAction<keyof APIs | null>) => {
+            state.selected_api = action.payload;
+        },
         show_apis: (state, action: PayloadAction<boolean>) => {
             state.show = action.payload;
         },
     },
 });
-export const { show_apis, set_apis } = contractCreatorSlice.actions;
+export const { show_apis, set_apis, select_api } = contractCreatorSlice.actions;
 
 export const register = (dispatch: Dispatch) => {
     window.electron.register('create_contracts', (apis: APIs) => {
@@ -38,6 +43,9 @@ export const register = (dispatch: Dispatch) => {
 };
 export const selectAPIs = (rs: RootState): APIs | null => {
     return rs.contractCreatorReducer.apis;
+};
+export const selectSelectedAPI = (rs: RootState): keyof APIs | null => {
+    return rs.contractCreatorReducer.selected_api;
 };
 export const showAPIs = (rs: RootState): boolean => {
     return rs.contractCreatorReducer.show;
