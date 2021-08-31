@@ -20,22 +20,14 @@ export function SimulationController(props: {
     // Start at 0 to make scaling work riht away
     const [first_tx_time_pct, setFirstTxTimePct] = React.useState(0);
     const [current_time_pct, setCurrentTimePct] = React.useState(50);
-    const [min_time, setMinTime] = React.useState(new Date(Date.now()));
-    const [max_time, setMaxTime] = React.useState(
-        new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    const [min_time_ms, setMinTimeMs] = React.useState(Date.now());
+    const [max_time_ms, setMaxTimeMs] = React.useState(
+        Date.now() + 365 * 24 * 60 * 60 * 1000
     );
-    const current_time = () =>
-        new Date(
-            (max_time.getTime() - min_time.getTime()) *
-                (current_time_pct / 100.0) +
-                min_time.getTime()
-        );
-    const first_tx_time = () =>
-        new Date(
-            (max_time.getTime() - min_time.getTime()) *
-                (first_tx_time_pct / 100.0) +
-                min_time.getTime()
-        );
+    const current_time_ms = () =>
+        (max_time_ms - min_time_ms) * (current_time_pct / 100.0) + min_time_ms;
+    const first_tx_time_ms = () =>
+        (max_time_ms - min_time_ms) * (first_tx_time_pct / 100.0) + min_time_ms;
     const is_regtest = prefs['bitcoin-config'].network === 'regtest';
     const current_year = Math.round(
         (new Date().getFullYear() - 2008) * 144 * 365 - (144 * 365) / 2
@@ -65,7 +57,7 @@ export function SimulationController(props: {
     };
 
     const updateMinTime = wrapper((input: HTMLInputElement) => {
-        setMinTime(input.valueAsDate ?? min_time);
+        setMinTimeMs(input.valueAsDate?.getTime() ?? min_time_ms);
     });
     const updateFirstTxTime = wrapper((input: HTMLInputElement) => {
         setFirstTxTimePct(input.valueAsNumber);
@@ -74,7 +66,7 @@ export function SimulationController(props: {
         setCurrentTimePct(input.valueAsNumber);
     });
     const updateMaxTime = wrapper((input: HTMLInputElement) => {
-        setMaxTime(input.valueAsDate ?? max_time);
+        setMaxTimeMs(input.valueAsDate?.getTime() ?? max_time_ms);
     });
     const updateMinBlocks = wrapper((input: HTMLInputElement) => {
         setMinBlocks(input.valueAsNumber);
@@ -90,9 +82,9 @@ export function SimulationController(props: {
     });
     React.useEffect(() => {
         const unreachable = props.contract.reachable_at_time(
-            current_time().getTime() / 1000,
+            current_time_ms() / 1000,
             current_block(),
-            first_tx_time().getTime() / 1000,
+            first_tx_time_ms() / 1000,
             first_tx_block()
         );
         let r: Record<TXID, null> = {};
@@ -105,8 +97,8 @@ export function SimulationController(props: {
         first_tx_time_pct,
         max_blocks,
         min_blocks,
-        max_time,
-        min_time,
+        max_time_ms,
+        min_time_ms,
         current_time_pct,
         current_block_pct,
     ]);
@@ -134,8 +126,8 @@ export function SimulationController(props: {
     };
     const snapTime = () => {
         // work in seconds
-        const new_first_tx_time = first_tx_time().getTime() / 1000;
-        const new_current_time = current_time().getTime() / 1000;
+        const new_first_tx_time = first_tx_time_ms() / 1000;
+        const new_current_time = current_time_ms() / 1000;
         if (new_first_tx_time === new_current_time) return;
 
         let new_start = Math.min(new_first_tx_time, new_current_time);
@@ -149,8 +141,8 @@ export function SimulationController(props: {
         new_start -= delta;
         new_end += delta;
 
-        setMinTime(new Date(new_start * 1000));
-        setMaxTime(new Date(new_end * 1000));
+        setMinTimeMs(new_start * 1000);
+        setMaxTimeMs(new_end * 1000);
         setCurrentTimePct(new_current_time > new_first_tx_time ? 66 : 33);
         setFirstTxTimePct(new_current_time > new_first_tx_time ? 33 : 66);
     };
@@ -196,11 +188,11 @@ export function SimulationController(props: {
                     snapBlocks={snapBlocks}
                 />
                 <ClockControl
-                    min_time={min_time}
-                    max_time={max_time}
-                    first_tx_time={first_tx_time()}
+                    min_time={new Date(min_time_ms)}
+                    max_time={new Date(max_time_ms)}
+                    first_tx_time={new Date(first_tx_time_ms())}
                     first_tx_time_pct={first_tx_time_pct}
-                    current_time={current_time()}
+                    current_time={new Date(current_time_ms())}
                     current_time_pct={current_time_pct}
                     updateMinTime={updateMinTime}
                     updateMaxTime={updateMaxTime}
