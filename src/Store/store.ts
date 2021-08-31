@@ -7,9 +7,15 @@ import {
     register,
 } from '../UX/ContractCreator/ContractCreatorSlice';
 import { composeWithDevTools } from '@reduxjs/toolkit/dist/devtoolsExtension';
+import { simulationReducer } from '../SimulationSlice';
 
 export const store = configureStore({
-    reducer: { entityReducer, appReducer, contractCreatorReducer },
+    reducer: {
+        entityReducer,
+        appReducer,
+        contractCreatorReducer,
+        simulationReducer,
+    },
     middleware: [thunk],
     devTools: true,
 });

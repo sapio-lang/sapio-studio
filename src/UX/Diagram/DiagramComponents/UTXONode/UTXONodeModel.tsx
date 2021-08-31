@@ -8,6 +8,7 @@ import { SpendLinkModel } from '../SpendLink/SpendLinkModel';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import _ from 'lodash';
 import { TransactionModel } from '../../../../Data/Transaction';
+import { TXID } from '../../../../util';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
     name: string;
@@ -15,6 +16,7 @@ export interface UTXONodeModelOptions extends BasePositionModelOptions {
     amount: number;
     confirmed: boolean;
     reachable: boolean;
+    txid: TXID;
     reachable_callback: (b: boolean) => void;
     confirmed_callback: (b: boolean) => void;
 }
@@ -29,6 +31,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     protected portsOut: SpendPortModel[];
     constructor(
         options: any = {},
+        txid: TXID,
         name?: string,
         color?: string,
         amount?: number,
@@ -37,9 +40,10 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         color = color || 'red';
         super({
             name,
+            txid,
             color,
             amount,
-            confirmed: false,
+            confirmed,
             type: 'utxo-node',
             reachable: true,
             reachable_callback: (b) => null,

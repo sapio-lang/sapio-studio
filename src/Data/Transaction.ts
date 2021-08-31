@@ -33,7 +33,7 @@ export class TransactionModel
         color: NodeColorT,
         utxo_labels: Array<UTXOFormatData | null>
     ) {
-        super(tx.getId().substr(0, 16), name, NodeColor.get(color));
+        super(tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
         this.broadcastable = false;
         this.broadcastable_hook = (b) => {};
         this.tx = tx;

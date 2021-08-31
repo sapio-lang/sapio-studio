@@ -10,8 +10,14 @@ import './Ants.css';
 import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
+import { useSelector } from 'react-redux';
+import { selectIsUnreachable } from '../../../../SimulationSlice';
+import * as Bitcoin from 'bitcoinjs-lib';
 //import { css } from '@emotion/core';
 
+const white = Color('white').toString();
+const black = Color('black').toString();
+const yellow = Color('yellow').fade(0.2).toString();
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
 export const Node = styled.div<{
     background: string;
@@ -107,100 +113,88 @@ interface IState {
  * Default node that models the CustomNodeModel. It creates two columns
  * for both all the input ports on the left, and the output ports on the right.
  */
-export class TransactionNodeWidget extends React.Component<
-    DefaultNodeProps,
-    IState
-> {
-    constructor(props: any) {
-        super(props);
-        this.state = {
-            is_confirmed: this.props.node.isConfirmed(),
-            is_reachable: this.props.node.is_reachable,
-            color: this.props.node.color,
-            purpose: this.props.node.purpose,
-        };
-        this.props.node.registerConfirmed((b: boolean) =>
-            this.setState({ is_confirmed: b })
-        );
-        this.props.node.registerReachable((b: boolean) => {
-            return this.setState({ is_reachable: b });
-        });
-        this.props.node.registerListener({
+export function TransactionNodeWidget(props: DefaultNodeProps) {
+    const [is_confirmed, setConfirmed] = React.useState(
+        props.node.isConfirmed()
+    );
+    const [color, setColor] = React.useState(props.node.color);
+    const [purpose, setPurpose] = React.useState(props.node.purpose);
+    const is_reachable = useSelector(selectIsUnreachable)(
+        (props.node.txn as Bitcoin.Transaction).getId()
+    );
+    React.useEffect(() => {
+        props.node.registerConfirmed((b: boolean) => setConfirmed(b));
+        const h = props.node.registerListener({
             colorChanged: (e: BaseEvent) => {
-                this.setState({ color: this.props.node.color });
+                setColor(props.node.color);
             },
             purposeChanged: (e: BaseEvent) => {
-                this.setState({ purpose: this.props.node.purpose });
+                setPurpose(props.node.purpose);
             },
         });
-    }
-    generatePort = (port: DefaultPortModel) => {
+        return () => {
+            props.node.deregisterListener(h);
+            props.node.registerConfirmed(() => {});
+        };
+    });
+    const generatePort = (port: DefaultPortModel) => {
         return (
             <DefaultPortLabel
-                engine={this.props.engine}
+                engine={props.engine}
                 port={port}
                 key={port.getID()}
             />
         );
     };
 
-    render() {
-        let color = Color(this.state.color).alpha(0.2).toString();
-        let white = Color('white').toString();
-        let black = Color('black').toString();
-        let yellow = Color('yellow').fade(0.2).toString();
-        const is_conf = this.state.is_confirmed ? null : (
-            <div
-                style={{
-                    background: yellow,
-                    color: 'black',
-                    textAlign: 'center',
-                }}
+    let color_render = Color(color).alpha(0.2).toString();
+    const is_conf = is_confirmed ? null : (
+        <div
+            style={{
+                background: yellow,
+                color: 'black',
+                textAlign: 'center',
+            }}
+        >
+            UNCONFIRMED
+        </div>
+    );
+    return (
+        <>
+            <PortsTop
+                color={'transparent'}
+                style={{ justifyContent: 'center' }}
             >
-                UNCONFIRMED
-            </div>
-        );
-        return (
-            <>
-                <PortsTop
-                    color={'transparent'}
-                    style={{ justifyContent: 'center' }}
-                >
-                    <PortsContainerTop>
-                        {_.map(this.props.node.getInPorts(), this.generatePort)}
-                    </PortsContainerTop>
-                </PortsTop>
-                <Node
-                    data-default-node-name={this.props.node.name}
-                    selected={this.props.node.isSelected()}
-                    confirmed={this.state.is_confirmed}
-                    background={this.props.node.color}
-                    className={
-                        (this.state.is_reachable
-                            ? 'reachable'
-                            : 'unreachable') + ' TransactionNode'
-                    }
-                >
-                    <div>
-                        <Title color={color}>
-                            <TitleName>Transaction</TitleName>
-                            <TitleName>{this.props.node.name}</TitleName>
-                        </Title>
-                        {is_conf}
-                        <Title color={color}>
-                            <TitleName>{this.state.purpose}</TitleName>
-                        </Title>
-                        <PortsBottom color={black}>
-                            <PortsContainerBottom>
-                                {_.map(
-                                    this.props.node.getOutPorts(),
-                                    this.generatePort
-                                )}
-                            </PortsContainerBottom>
-                        </PortsBottom>
-                    </div>
-                </Node>
-            </>
-        );
-    }
+                <PortsContainerTop>
+                    {_.map(props.node.getInPorts(), generatePort)}
+                </PortsContainerTop>
+            </PortsTop>
+            <Node
+                data-default-node-name={props.node.name}
+                selected={props.node.isSelected()}
+                confirmed={is_confirmed}
+                background={props.node.color}
+                className={
+                    (is_reachable ? 'reachable' : 'unreachable') +
+                    ' TransactionNode'
+                }
+            >
+                <div>
+                    <Title color={color_render}>
+                        <TitleName>Transaction</TitleName>
+                        <TitleName>{props.node.name}</TitleName>
+                    </Title>
+                    {is_conf}
+                    <Title color={color_render}>
+                        <TitleName>{purpose}</TitleName>
+                    </Title>
+                    <PortsBottom color={black}>
+                        <PortsContainerBottom>
+                            {_.map(props.node.getOutPorts(), generatePort)}
+                        </PortsContainerBottom>
+                    </PortsBottom>
+                </div>
+            </Node>
+        </>
+    );
 }

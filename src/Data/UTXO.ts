@@ -34,12 +34,15 @@ export class UTXOModel
         color: NodeColorT,
         txn: TransactionModel
     ) {
-        super({
-            name,
-            color: NodeColor.get(color),
-            amount: utxo.amount,
-            confirmed: false,
-        });
+        super(
+            {
+                name,
+                color: NodeColor.get(color),
+                amount: utxo.amount,
+                confirmed: false,
+            },
+            txn.get_txid()
+        );
         this.utxo = utxo;
         this.txn = txn;
         this.registerListener({
