@@ -16,6 +16,10 @@ import './TransactionDetail.css';
 import { sequence_convert, time_to_pretty_string } from '../../../util';
 import Color from 'color';
 import { SigningDataStore } from '../../../Data/ContractManager';
+import { Dispatch } from 'redux';
+import { deselect_entity, select_utxo } from '../EntitySlice';
+import { useDispatch } from 'react-redux';
+import { useEffect } from 'react-transition-group/node_modules/@types/react';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
@@ -24,151 +28,134 @@ interface IState {
     broadcastable: boolean;
     color: Color;
 }
-export class TransactionDetail extends React.Component<
-    TransactionDetailProps,
-    IState
-> {
-    constructor(props: any) {
-        super(props);
-        this.props.entity.set_broadcastable_hook((b) =>
-            this.setState({ broadcastable: b })
-        );
-        this.state = { broadcastable: false, color: Color('red') };
-    }
-    static getDerivedStateFromProps(
-        props: TransactionDetailProps,
-        state: IState
-    ) {
-        state.broadcastable = props.entity.is_broadcastable();
-        state.color = Color(props.entity.color);
-        return state;
-    }
+export function TransactionDetail(props: TransactionDetailProps) {
+    const [broadcastable, setBroadcastable] = React.useState(
+        props.entity.is_broadcastable()
+    );
+    const [color, setColor] = React.useState(Color(props.entity.color));
+    React.useEffect(() => {
+        props.entity.set_broadcastable_hook((b) => setBroadcastable(b));
 
-    componentWillUnmount() {
-        this.props.entity.setSelected(false);
-    }
-    goto(x: UTXOModel | TransactionModel) {
-        if (!(x instanceof PhantomTransactionModel)) x.setSelected(true);
-    }
-    onchange_color(e: ChangeEvent<HTMLInputElement>) {
+        return () => props.entity.setSelected(false);
+    });
+
+    const onchange_color = (e: ChangeEvent<HTMLInputElement>) => {
         let color = new Color(e.target.value);
-        this.props.entity.setColor(color.hex());
-        this.setState({ color });
-    }
-    onchange_purpose(e: ChangeEvent<HTMLInputElement>) {
-        this.props.entity.setPurpose(e.target.value);
-    }
-    render() {
-        const outs = this.props.entity.utxo_models.map((o, i) => (
-            <OutputDetail
-                txoutput={o}
-                goto={() => this.goto(this.props.entity.utxo_models[i])}
-            />
-        ));
-        const ins = this.props.entity.tx.ins.map((o, i) => {
-            const witnesses: Buffer[][] = this.props.entity.witness_set.witnesses.map(
-                (w) => w[i]
-            );
-            const psbts: Bitcoin.Psbt[] = this.props.entity.witness_set.psbts;
-            return (
-                <InputDetail
-                    txinput={o}
-                    goto={() =>
-                        this.goto(
-                            this.props.find_tx_model(o.hash, o.index) ??
-                            this.props.entity
-                        )
-                    }
-                    witnesses={witnesses}
-                    psbts={psbts}
-                />
-            );
-        });
-
-        const {
-            greatest_relative_height,
-            greatest_relative_time,
-            locktime_enable,
-            relative_time_jsx,
-            relative_height_jsx,
-        } = compute_relative_timelocks(this.props.entity.tx);
-
-        const locktime = this.props.entity.tx.locktime;
-        const as_date = new Date(1970, 0, 1);
-        as_date.setSeconds(locktime);
-        const lt =
-            !locktime_enable || locktime === 0
-                ? 'None'
-                : locktime < 500_000_000
-                    ? 'Block #' + locktime.toString()
-                    : as_date.toUTCString() + ' MTP';
-        // note missing horizontal
-        const inner_debounce_color = _.debounce(
-            this.onchange_color.bind(this),
-            30
+        props.entity.setColor(color.hex());
+        setColor(color);
+    };
+    const onchange_purpose = (e: ChangeEvent<HTMLInputElement>) => {
+        props.entity.setPurpose(e.target.value);
+    };
+    const dispatch = useDispatch();
+    const outs = props.entity.utxo_models.map((o, i) => (
+        <OutputDetail
+            txoutput={o}
+            goto={() =>
+                dispatch(
+                    select_utxo({
+                        hash: o.txn.tx.getHash(),
+                        index: o.utxo.index,
+                    })
+                )
+            }
+        />
+    ));
+    const ins = props.entity.tx.ins.map((inp, i) => {
+        const witnesses: Buffer[][] = props.entity.witness_set.witnesses.flatMap(
+            (w) => {
+                let b: Buffer[] | undefined = w[i];
+                return b ? [b] : [];
+            }
         );
-        const debounce_color = (e: ChangeEvent<HTMLInputElement>) => {
-            e.persist();
-            inner_debounce_color(e);
-        };
-        const inner_debounce_purpose = _.debounce(
-            this.onchange_purpose.bind(this),
-            30
-        );
-        const debounce_purpose = (e: ChangeEvent<HTMLInputElement>) => {
-            e.persist();
-            inner_debounce_purpose(e);
-        };
-        const absolute_lock_jsx =
-            !locktime_enable || locktime === 0 ? null : (
-                <>
-                    <span>Absolute Lock Time:</span>
-                    <span> {lt} </span>
-                </>
-            );
+        const psbts: Bitcoin.Psbt[] = props.entity.witness_set.psbts;
         return (
-            <div className="TransactionDetail">
-                <TXIDDetail txid={this.props.entity.get_txid()} />
-                <div className="serialized-tx">
-                    <span> Tx Hex </span>
-                    <Hex
-                        value={this.props.entity.tx.toHex()}
-                        readOnly
-                        className="txhex"
-                    />
-                </div>
-                <div className="purpose">
-                    <span>Purpose:</span>
-                    <input
-                        defaultValue={this.props.entity.purpose}
-                        onChange={debounce_purpose}
-                    />
-                </div>
-                <div className="color">
-                    <span>Color:</span>
-                    <div>
-                        <input
-                            defaultValue={this.state.color.hex()}
-                            type="color"
-                            onChange={debounce_color}
-                        />
-                        <span> {this.state.color.hex()}</span>
-                    </div>
-                </div>
-                <div className="properties">
-                    {absolute_lock_jsx}
-                    {relative_height_jsx}
-                    {relative_time_jsx}
-                </div>
-                <hr></hr>
-                <h4> Inputs</h4>
-                <div className="inputs">{ins}</div>
-                <hr></hr>
-                <h4>Outputs</h4>
-                <div className="outputs">{outs}</div>
-            </div>
+            <InputDetail
+                txinput={inp}
+                goto={() => dispatch(select_utxo(inp))}
+                witnesses={witnesses}
+                psbts={psbts}
+            />
         );
-    }
+    });
+
+    const {
+        greatest_relative_height,
+        greatest_relative_time,
+        locktime_enable,
+        relative_time_jsx,
+        relative_height_jsx,
+    } = compute_relative_timelocks(props.entity.tx);
+
+    const locktime = props.entity.tx.locktime;
+    const as_date = new Date(1970, 0, 1);
+    as_date.setSeconds(locktime);
+    const lt =
+        !locktime_enable || locktime === 0
+            ? 'None'
+            : locktime < 500_000_000
+            ? 'Block #' + locktime.toString()
+            : as_date.toUTCString() + ' MTP';
+    // note missing horizontal
+    const inner_debounce_color = _.debounce(onchange_color, 30);
+    const debounce_color = (e: ChangeEvent<HTMLInputElement>) => {
+        e.persist();
+        inner_debounce_color(e);
+    };
+    const inner_debounce_purpose = _.debounce(onchange_purpose, 30);
+    const debounce_purpose = (e: ChangeEvent<HTMLInputElement>) => {
+        e.persist();
+        inner_debounce_purpose(e);
+    };
+    const absolute_lock_jsx =
+        !locktime_enable || locktime === 0 ? null : (
+            <>
+                <span>Absolute Lock Time:</span>
+                <span> {lt} </span>
+            </>
+        );
+    return (
+        <div className="TransactionDetail">
+            <TXIDDetail txid={props.entity.get_txid()} />
+            <div className="serialized-tx">
+                <span> Tx Hex </span>
+                <Hex
+                    value={props.entity.tx.toHex()}
+                    readOnly
+                    className="txhex"
+                />
+            </div>
+            <div className="purpose">
+                <span>Purpose:</span>
+                <input
+                    defaultValue={props.entity.purpose}
+                    onChange={debounce_purpose}
+                />
+            </div>
+            <div className="color">
+                <span>Color:</span>
+                <div>
+                    <input
+                        defaultValue={color.hex()}
+                        type="color"
+                        onChange={debounce_color}
+                    />
+                    <span> {color.hex()}</span>
+                </div>
+            </div>
+            <div className="properties">
+                {absolute_lock_jsx}
+                {relative_height_jsx}
+                {relative_time_jsx}
+            </div>
+            <hr></hr>
+            <h4> Inputs</h4>
+            <div className="inputs">{ins}</div>
+            <hr></hr>
+            <h4>Outputs</h4>
+            <div className="outputs">{outs}</div>
+        </div>
+    );
 }
 
 // TODO: Make this check the input's context

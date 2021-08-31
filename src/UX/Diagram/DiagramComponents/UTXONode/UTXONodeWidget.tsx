@@ -131,10 +131,9 @@ export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
         this.props.node.registerReachableCallback((b: boolean) =>
             this.setState({ is_reachable: b })
         );
-        this.props.node.registerConfirmedCallback((b:boolean)=>
-        {
-            this.setState({is_confirmed:b})
-        })
+        this.props.node.registerConfirmedCallback((b: boolean) => {
+            this.setState({ is_confirmed: b });
+        });
         this.props.node.registerListener({
             sync: (e: BaseEvent) => {
                 console.log(this.props.node);

@@ -6,7 +6,7 @@ import Modal from 'react-bootstrap/Modal';
 import { FormEventHandler } from 'react-transition-group/node_modules/@types/react';
 import { ContractModel } from '../../Data/ContractManager';
 import { TransactionModel } from '../../Data/Transaction';
-import { txid_buf_to_string } from '../../util';
+import { TXIDAndWTXIDMap, txid_buf_to_string } from '../../util';
 
 interface IProps {
     contract: ContractModel;
@@ -26,28 +26,30 @@ export class SaveHexModal extends React.Component<IProps, IState> {
             return (
                 -1 !==
                 item.tx.ins.findIndex((inp) =>
-                    props.contract.txid_map.has_by_txid(
+                    TXIDAndWTXIDMap.has_by_txid(
+                        props.contract.txid_map,
                         txid_buf_to_string(inp.hash)
                     )
                 )
             );
         });
         return {
-            data: JSON.stringify({
-                program: non_phantoms.map((t) =>
-                    t.get_json())
-            }, undefined, 4)
+            data: JSON.stringify(
+                {
+                    program: non_phantoms.map((t) => t.get_json()),
+                },
+                undefined,
+                4
+            ),
         };
     }
     handleSubmit: FormEventHandler = (event) => {
         event.preventDefault();
         window.electron.save_contract(this.state.data);
-    }
+    };
     render() {
         return (
-            <Modal show={this.props.show} onHide={this.props.hide}
-                size="xl"
-            >
+            <Modal show={this.props.show} onHide={this.props.hide} size="xl">
                 <Modal.Header closeButton>
                     <Modal.Title>Contract JSON </Modal.Title>
                 </Modal.Header>
@@ -58,7 +60,7 @@ export class SaveHexModal extends React.Component<IProps, IState> {
                         type="text"
                         readOnly
                         defaultValue={this.state.data}
-                        style={{ minHeight: "50vh" }}
+                        style={{ minHeight: '50vh' }}
                     />
                     <Button variant="primary" type="submit">
                         Save

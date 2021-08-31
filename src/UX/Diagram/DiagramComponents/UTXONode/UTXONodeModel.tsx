@@ -43,7 +43,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
             type: 'utxo-node',
             reachable: true,
             reachable_callback: (b) => null,
-            confirmed_callback: (b:boolean) => null,
+            confirmed_callback: (b: boolean) => null,
             ...options,
         });
         this.portsOut = [];
@@ -69,7 +69,7 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     isConfirmed(): boolean {
         return this.options.confirmed;
     }
-    registerConfirmedCallback(f: (b:boolean)=>void) {
+    registerConfirmedCallback(f: (b: boolean) => void) {
         this.options.confirmed_callback = f;
     }
 

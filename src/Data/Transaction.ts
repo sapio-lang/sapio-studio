@@ -3,9 +3,14 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
-import { HasKeys, InputMap, TXID } from '../util';
+import { HasKeys, InputMap, InputMapT, TXID } from '../util';
 import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
-import { NodeColor, UTXOFormatData, SigningDataStore } from './ContractManager';
+import {
+    NodeColorT,
+    UTXOFormatData,
+    SigningDataStore,
+    NodeColor,
+} from './ContractManager';
 import './Transaction.css';
 import { UTXOMetaData, UTXOModel } from './UTXO';
 import { TransactionData } from './ContractManager';
@@ -25,10 +30,10 @@ export class TransactionModel
         all_witnesses: SigningDataStore,
         update: any,
         name: string,
-        color: NodeColor,
+        color: NodeColorT,
         utxo_labels: Array<UTXOFormatData | null>
     ) {
-        super(tx.getId().substr(0, 16), name, color.get());
+        super(tx.getId().substr(0, 16), name, NodeColor.get(color));
         this.broadcastable = false;
         this.broadcastable_hook = (b) => {};
         this.tx = tx;
@@ -37,10 +42,10 @@ export class TransactionModel
         this.input_links = [];
         this.witness_set = all_witnesses;
         for (let y = 0; y < this.tx.outs.length; ++y) {
-            const subcolor = color.clone();
-            subcolor.fade();
+            const subcolor = NodeColor.clone(color);
+            NodeColor.fade(subcolor);
             let metadata = utxo_labels[y] || {
-                color: subcolor.get(),
+                color: NodeColor.get(subcolor),
                 label: name,
             };
             // TODO: Get rid of assertion
@@ -49,7 +54,7 @@ export class TransactionModel
                 new UTXOMetaData(out.script, out.value, tx, y),
                 update,
                 metadata.label,
-                new NodeColor(metadata.color),
+                NodeColor.new(metadata.color),
                 this
             );
             this.utxo_models.push(utxo);
@@ -64,7 +69,7 @@ export class TransactionModel
 
     get_json(): TransactionData {
         return {
-            psbt: this.witness_set.psbts[0].toBase64(),
+            psbt: this.witness_set.psbts[0]!.toBase64(),
             hex: this.tx.toHex(),
             label: this.name,
             color: this.color,
@@ -115,10 +120,10 @@ export class TransactionModel
         this.broadcastable_hook = hook;
     }
 
-    consume_inputs(inputs_map: InputMap<TransactionModel>, model: any) {
+    consume_inputs(inputs_map: InputMapT<TransactionModel>, model: any) {
         const to_clear: Array<TransactionModel> = [];
         this.tx.ins.forEach((inp) => {
-            const to_prune = inputs_map.get(inp) || [];
+            const to_prune = InputMap.get(inputs_map, inp) || [];
             to_prune.forEach((txn_model) => {
                 if (txn_model.tx !== this.tx) {
                     txn_model.remove_from_model(model);
@@ -131,18 +136,15 @@ export class TransactionModel
             const tx = mtx.tx;
             // now remove children
             for (let i = 0; i < tx.outs.length; ++i) {
-                const to_prune:
-                    | Array<TransactionModel>
-                    | undefined = inputs_map.get({
-                    hash: tx.getHash(),
-                    index: i,
-                });
-                if (to_prune) {
-                    to_prune.forEach((txn_model) =>
-                        txn_model.remove_from_model(model)
-                    );
-                    to_clear.push(...to_prune);
-                }
+                const to_prune: Array<TransactionModel> =
+                    InputMap.get(inputs_map, {
+                        hash: tx.getHash(),
+                        index: i,
+                    }) ?? [];
+                to_prune.forEach((txn_model) =>
+                    txn_model.remove_from_model(model)
+                );
+                to_clear.push(...to_prune);
             }
         }
     }
@@ -156,7 +158,7 @@ export class PhantomTransactionModel extends TransactionModel {
         all_witnesses: SigningDataStore,
         update: any,
         name: string,
-        color: NodeColor,
+        color: NodeColorT,
         utxo_labels: Array<UTXOFormatData | null>
     ) {
         super(tx, all_witnesses, update, name, color, utxo_labels);

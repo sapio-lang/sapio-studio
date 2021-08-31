@@ -28,12 +28,18 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                     click() {
                         const file = dialog.showOpenDialogSync(window, {
                             properties: ['openFile'],
-                            filters: [{ extensions: ['json'], name: 'Sapio Contract Object' }],
+                            filters: [
+                                {
+                                    extensions: ['json'],
+                                    name: 'Sapio Contract Object',
+                                },
+                            ],
                         });
-                        if (file && file.length) {
-                            const data = readFileSync(file[0], { encoding: 'utf-8' });
-                            window.webContents.send("load_contract", data);
-
+                        if (file && file.length === 1) {
+                            const data = readFileSync(file[0]!, {
+                                encoding: 'utf-8',
+                            });
+                            window.webContents.send('load_contract', data);
                         }
                     },
                 },
@@ -44,7 +50,8 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                             properties: ['openFile'],
                             filters: [{ extensions: ['wasm'], name: 'WASM' }],
                         });
-                        sapio.load_contract_file_name(plugin![0]);
+                        if (plugin && plugin.length)
+                            sapio.load_contract_file_name(plugin[0]!);
                     },
                 },
                 {
@@ -119,10 +126,12 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                     label: 'Attempt Generating 10 Blocks',
                     async click() {
                         let result = await client.command('getnewaddress');
-                        await client.command([{
-                            method: 'generatetoaddress',
-                            parameters: [10, result]
-                        }]);
+                        await client.command([
+                            {
+                                method: 'generatetoaddress',
+                                parameters: [10, result],
+                            },
+                        ]);
                     },
                 },
             ],
@@ -183,7 +192,7 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
         */
 
         // Window menu
-        template[6].submenu = [
+        template[6]!.submenu = [
             { role: 'close' },
             { role: 'minimize' },
             { role: 'zoom' },

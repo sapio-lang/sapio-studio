@@ -1,33 +1,32 @@
 import React from 'react';
 import Form, { ISubmitEvent } from '@rjsf/core';
-import { CompilerServer } from '../../../Compiler/ContractCompilerServer';
 import { logo_image, Plugin } from './PluginTile';
+import { create } from '../../Entity/EntitySlice';
+import { create_contract_of_type } from '../../../AppSlice';
+import { useDispatch } from 'react-redux';
+import { Dispatch } from 'redux';
 
 interface PluginFormProps {
     app: Plugin;
-    compiler: CompilerServer;
-    load_new_model: any;
     hide: () => void;
     deselect: () => void;
 }
-export class PluginForm extends React.Component<PluginFormProps> {
-    render() {
-        return (
-            <div style={{ padding: '5%' }}>
-                {logo_image(this.props.app)}
-                <Form
-                    schema={this.props.app.api}
-                    onSubmit={(e: ISubmitEvent<any>) =>
-                        this.handleSubmit(e, this.props.app.key)
-                    }
-                ></Form>
-            </div>
-        );
-    }
-    async handleSubmit(event: ISubmitEvent<any>, type: string) {
+export function PluginForm(props: PluginFormProps) {
+    const dispatch = useDispatch();
+    const handleSubmit = async (event: ISubmitEvent<any>, type: string) => {
         let formData = event.formData;
-        const compiler = this.props.compiler;
-        await compiler.create(type, JSON.stringify(formData));
-        this.props.hide();
-    }
+        await dispatch(create_contract_of_type(type, JSON.stringify(formData)));
+        props.hide();
+    };
+    return (
+        <div style={{ padding: '5%' }}>
+            {logo_image(props.app)}
+            <Form
+                schema={props.app.api}
+                onSubmit={(e: ISubmitEvent<any>) =>
+                    handleSubmit(e, props.app.key)
+                }
+            ></Form>
+        </div>
+    );
 }

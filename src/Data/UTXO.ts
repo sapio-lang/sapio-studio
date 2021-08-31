@@ -1,5 +1,5 @@
 import { Transaction } from 'bitcoinjs-lib';
-import { NodeColor } from './ContractManager';
+import { NodeColor, NodeColorT } from './ContractManager';
 import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
 import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import { TransactionModel } from './Transaction';
@@ -31,12 +31,12 @@ export class UTXOModel
         utxo: UTXOMetaData,
         update: any,
         name: string,
-        color: NodeColor,
+        color: NodeColorT,
         txn: TransactionModel
     ) {
         super({
             name,
-            color: color.get(),
+            color: NodeColor.get(color),
             amount: utxo.amount,
             confirmed: false,
         });

@@ -1,24 +1,31 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
-import _, { Collection } from 'lodash';
+import _, { Collection, ObjectIterator } from 'lodash';
 import { SelectedEvent } from '../App';
-import { InputMap, TXID, TXIDAndWTXIDMap, txid_buf_to_string } from '../util';
+import {
+    InputMapT,
+    InputMap,
+    TXID,
+    TXIDAndWTXIDMapT,
+    txid_buf_to_string,
+    TXIDAndWTXIDMap,
+} from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
-export class NodeColor {
-    c: string;
-    constructor(c: string) {
-        this.c = c;
-    }
-    get() {
-        return this.c;
-    }
-    fade() { }
-    clone() {
-        return new NodeColor(this.c);
-    }
-}
+export type NodeColorT = ['NodeColor', string];
+export const NodeColor = {
+    new(c: string): NodeColorT {
+        return ['NodeColor', c];
+    },
+    get(c: NodeColorT): string {
+        return c[1];
+    },
+    fade(c: NodeColorT) {},
+    clone(c: NodeColorT) {
+        return NodeColor.new(c[1].slice());
+    },
+};
 export interface UTXOFormatData {
     color: string;
     label: string;
@@ -35,29 +42,29 @@ export interface Data {
     program: Array<TransactionData>;
 }
 
-interface PreProcessedData {
+type PreProcessedData = {
     psbts: Array<Bitcoin.Psbt>;
     txns: Array<Bitcoin.Transaction>;
-    txn_colors: Array<NodeColor>;
+    txn_colors: Array<NodeColorT>;
     txn_labels: Array<string>;
     utxo_labels: Array<Array<UTXOFormatData | null>>;
-}
-interface ProcessedData {
-    inputs_map: InputMap<TransactionModel>;
-    txid_map: TXIDAndWTXIDMap<TransactionModel>;
+};
+type ProcessedData = {
+    inputs_map: InputMapT<TransactionModel>;
+    txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     txn_models: Array<TransactionModel>;
     utxo_models: Array<UTXOModel>;
-}
+};
 
 function preprocess_data(data: Data): PreProcessedData {
     let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
-    let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt))
+    let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt));
     let txn_labels = data.program.map((k) => k.label ?? 'unlabeled');
-    let txn_colors = data.program.map(
-        (k) => new NodeColor(k.color ?? 'orange')
+    let txn_colors = data.program.map((k) =>
+        NodeColor.new(k.color ?? 'orange')
     );
     let utxo_labels = data.program.map(
-        (k, i) => k.utxo_metadata ?? new Array(txns[i].outs.length)
+        (k, i) => k.utxo_metadata ?? new Array(txns[i]?.outs.length ?? 0)
     );
 
     return {
@@ -71,80 +78,107 @@ function preprocess_data(data: Data): PreProcessedData {
 
 function process_inputs_map(
     txns: Array<TransactionModel>
-): InputMap<TransactionModel> {
-    const inputs_map: InputMap<TransactionModel> = new InputMap();
-    for (let x = 0; x < txns.length; ++x) {
-        const txn: Bitcoin.Transaction = txns[x].tx;
-        for (let y = 0; y < txn.ins.length; ++y) {
-            const inp: Bitcoin.TxInput = txn.ins[y];
-            inputs_map.add(inp, txns[x]);
+): InputMapT<TransactionModel> {
+    const inputs_map: InputMapT<TransactionModel> = InputMap.new();
+    for (const txn_m of txns) {
+        const txn: Bitcoin.Transaction = txn_m.tx;
+        for (const inp of txn.ins) {
+            InputMap.add(inputs_map, inp, txn_m);
         }
     }
     return inputs_map;
 }
 
 export type SigningDataStore = {
-    witnesses: Buffer[][][],
-    psbts: Bitcoin.Psbt[]
-}
+    witnesses: Buffer[][][];
+    psbts: Bitcoin.Psbt[];
+};
 function process_txn_models(
     psbts: Array<Bitcoin.Psbt>,
     txns: Array<Bitcoin.Transaction>,
     update: (s: SelectedEvent) => void,
     txn_labels: Array<string>,
-    txn_colors: Array<NodeColor>,
+    txn_colors: Array<NodeColorT>,
     utxo_labels: Array<Array<UTXOFormatData | null>>
-): [TXIDAndWTXIDMap<TransactionModel>, Array<TransactionModel>] {
-    let txid_map: TXIDAndWTXIDMap<TransactionModel> = new TXIDAndWTXIDMap();
+): [TXIDAndWTXIDMapT<TransactionModel>, Array<TransactionModel>] {
+    let txid_map: TXIDAndWTXIDMapT<TransactionModel> = TXIDAndWTXIDMap.new();
     let txn_models: Array<TransactionModel> = [];
     assert.equal(txns.length, psbts.length);
-    _.chain(txns)
-        .map((tx, x) => {
-            return { tx: tx, x: x, psbt: psbts[x] };
+    assert.equal(txns.length, txn_labels.length);
+    assert.equal(txns.length, txn_colors.length);
+    assert.equal(txns.length, utxo_labels.length);
+    _.chain(_.zip(txns, psbts, txn_labels, txn_colors, utxo_labels))
+        .map(([tx, psbt, txn_label, txn_color, utxo_labels], index) => {
+            return {
+                tx: tx!,
+                psbt: psbt!,
+                txn_label: txn_label!,
+                txn_color: txn_color!,
+                utxo_labels: utxo_labels!,
+            };
         })
         .groupBy(({ tx }: { tx: Bitcoin.Transaction }) => tx.getId())
-        .forEach((txn_group: { tx: Bitcoin.Transaction, psbt: Bitcoin.Psbt, x: number }[], _key: string) => {
-            let label = '';
-            let color = new NodeColor('');
-            let utxo_label: Array<UTXOFormatData | null> = [];
-            let all_witnesses: SigningDataStore = { witnesses: [], psbts: [] };
-            for (let { tx, x, psbt } of txn_group) {
-                utxo_label = utxo_labels[x];
-                color = txn_colors[x];
-                label = txn_labels[x];
-                let witnesses: Buffer[][] = [];
-                for (let input of tx.ins) {
-                    witnesses.push(input.witness);
-                }
+        .forEach(
+            (
+                txn_group: {
+                    tx: Bitcoin.Transaction;
+                    psbt: Bitcoin.Psbt;
+                    txn_label: string;
+                    txn_color: NodeColorT;
+                    utxo_labels: (UTXOFormatData | null)[];
+                }[]
+            ) => {
+                let label = '';
+                let color = NodeColor.new('');
+                let utxo_label: Array<UTXOFormatData | null> = [];
+                let all_witnesses: SigningDataStore = {
+                    witnesses: [],
+                    psbts: [],
+                };
+                for (let {
+                    tx,
+                    psbt,
+                    txn_label,
+                    txn_color,
+                    utxo_labels,
+                } of txn_group) {
+                    utxo_label = utxo_labels;
+                    color = txn_color;
+                    label = txn_label;
+                    let witnesses: Buffer[][] = [];
+                    for (let input of tx.ins) {
+                        witnesses.push(input.witness);
+                    }
 
-                all_witnesses.witnesses.push(witnesses);
-                all_witnesses.psbts.push(psbt);
+                    all_witnesses.witnesses.push(witnesses);
+                    all_witnesses.psbts.push(psbt);
+                }
+                assert.ok(txn_group.length > 0); // because group call must be true
+                let base_txn: Bitcoin.Transaction = txn_group[0]!.tx.clone();
+                // Clear out witness Data
+                for (let input of base_txn.ins) {
+                    input.witness = [];
+                }
+                const txn_model = new TransactionModel(
+                    base_txn,
+                    all_witnesses,
+                    update,
+                    label,
+                    color,
+                    utxo_label
+                );
+                TXIDAndWTXIDMap.add(txid_map, txn_model);
+                txn_models.push(txn_model);
             }
-            let base_txn: Bitcoin.Transaction = txn_group[0].tx.clone();
-            // Clear out witness Data
-            for (let input of base_txn.ins) {
-                input.witness = [];
-            }
-            const txn_model = new TransactionModel(
-                base_txn,
-                all_witnesses,
-                update,
-                label,
-                color,
-                utxo_label
-            );
-            txid_map.add(txn_model);
-            txn_models.push(txn_model);
-        })
+        )
         .value();
     let to_create: Map<TXID, Array<Bitcoin.TxInput>> = new Map();
     for (const txn_model of txn_models) {
         for (const input of txn_model.tx.ins) {
             const txid = txid_buf_to_string(input.hash);
-            if (txid_map.has_by_txid(txid)) {
+            if (TXIDAndWTXIDMap.has_by_txid(txid_map, txid)) {
                 continue;
             }
-            console.log('missing', txid);
             // Doesn't matter if already exists in array!
             // De Duplicated later...
             let inps = to_create.get(txid) || [];
@@ -152,7 +186,6 @@ function process_txn_models(
             to_create.set(txid, inps);
         }
     }
-    console.log(to_create);
     to_create.forEach((inps, txid) => {
         const mock_txn = new Bitcoin.Transaction();
         let n_outputs: number =
@@ -161,13 +194,12 @@ function process_txn_models(
                 .map((el) => el.index)
                 .max()
                 .value();
-        console.log('missing input', txid, n_outputs);
         for (let i = 0; i < n_outputs; ++i) {
             // Set to MAX sats...
             // TODO: a hack to make the flow technically correct and detectable
             mock_txn.addOutput(new Buffer(''), 21e6 * 100e6);
         }
-        const color = new NodeColor('white');
+        const color = NodeColor.new('white');
         const utxo_metadata: Array<UTXOFormatData | null> = new Array(
             n_outputs
         );
@@ -177,88 +209,94 @@ function process_txn_models(
             mock_txn,
             { witnesses: [], psbts: [] },
             update,
-            'Missing',
+            'Unknown Inputs',
             color,
             utxo_metadata
         );
-        txid_map.add(txn_model);
+        TXIDAndWTXIDMap.add(txid_map, txn_model);
         txn_models.push(txn_model);
-        console.log(txn_model);
     });
 
     return [txid_map, txn_models];
 }
 function process_utxo_models(
     txn_models: Array<TransactionModel>,
-    inputs_map: InputMap<TransactionModel>
+    inputs_map: InputMapT<TransactionModel>
 ): Array<UTXOModel> {
     const to_add: Array<UTXOModel> = [];
     for (let m_txn of txn_models) {
-        m_txn.utxo_models.forEach((utxo_model, output_index) => {
-            const spenders: Array<TransactionModel> =
-                inputs_map.get_txid_s(m_txn.get_txid(), output_index) ?? [];
-            if (
-                utxo_model.txn instanceof PhantomTransactionModel &&
-                spenders.length
-            ) {
-                if (spenders[0].witness_set.witnesses.length) {
-                    const witstack =
-                        spenders[0].witness_set.witnesses[0][utxo_model.utxo.index];
-                    if (witstack) {
-                        const program = witstack[witstack.length - 1];
-                        if (program) {
-                            Bitcoin.crypto.sha256(program);
-                            const script = Buffer.alloc(34);
-                            script[0] = 0x0;
-                            script[1] = 0x20;
-                            program.copy(script, 2);
-                            utxo_model.txn.tx.outs[
+        assert.equal(m_txn.utxo_models.length, m_txn.tx.outs.length);
+        _.zip(m_txn.utxo_models, m_txn.tx.outs).forEach(
+            ([opt_utxo_model, opt_out], output_index) => {
+                // safe because of assert
+                const utxo_model = opt_utxo_model!;
+                const out = opt_out!;
+                const spenders: Array<TransactionModel> =
+                    InputMap.get_txid_s(
+                        inputs_map,
+                        m_txn.get_txid(),
+                        output_index
+                    ) ?? [];
+                if (
+                    utxo_model?.txn instanceof PhantomTransactionModel &&
+                    spenders.length > 0
+                ) {
+                    if (spenders[0]?.witness_set.witnesses.length) {
+                        const witstack =
+                            spenders[0]?.witness_set.witnesses[0]?.[
                                 utxo_model.utxo.index
-                            ].script = script;
-                            // TODO: Single Input assumption!
-                            utxo_model.txn.tx.outs[
-                                utxo_model.utxo.index
-                            ].script = script;
-                            const max_amount = spenders.reduce(
-                                (m, s) =>
-                                    Math.max(
-                                        s.tx.outs.reduce(
-                                            (a, v) =>
-                                                a + (v as Output).value ?? 0,
-                                            0
+                            ];
+                        if (witstack) {
+                            const program = witstack[witstack.length - 1];
+                            if (program) {
+                                Bitcoin.crypto.sha256(program);
+                                const script = Buffer.alloc(34);
+                                script[0] = 0x0;
+                                script[1] = 0x20;
+                                program.copy(script, 2);
+                                // TODO: Single Input assumption!
+                                out.script = script;
+                                const max_amount = spenders.reduce(
+                                    (m, s) =>
+                                        Math.max(
+                                            s.tx.outs.reduce(
+                                                (a, v) =>
+                                                    a + (v as Output).value ??
+                                                    0,
+                                                0
+                                            ),
+                                            m
                                         ),
-                                        m
-                                    ),
-                                0
-                            );
-                            (utxo_model.txn.tx.outs[
-                                utxo_model.utxo.index
-                            ] as Output).value = max_amount;
-                            utxo_model.utxo.amount = max_amount;
-                            console.log('MAX', max_amount, utxo_model.txn.tx);
-                            const _address = Bitcoin.address.fromOutputScript(
-                                script,
-                                Bitcoin.networks.regtest
-                            );
+                                    0
+                                );
+                                (utxo_model.txn.tx.outs[
+                                    utxo_model.utxo.index
+                                ] as Output).value = max_amount;
+                                utxo_model.utxo.amount = max_amount;
+                                const _address = Bitcoin.address.fromOutputScript(
+                                    script,
+                                    Bitcoin.networks.regtest
+                                );
+                            }
                         }
                     }
                 }
+                spenders.forEach((spender, spend_idx) => {
+                    const spender_tx: Bitcoin.Transaction = spender.tx;
+                    const idx = spender_tx.ins.findIndex(
+                        (elt) =>
+                            elt.index === output_index &&
+                            txid_buf_to_string(elt.hash) === m_txn.get_txid()
+                    );
+                    if (idx === -1) {
+                        throw new Error('Missing Spender Error');
+                    }
+                    const link = utxo_model.spent_by(spender, spend_idx, idx);
+                    spender.input_links.push(link);
+                    utxo_model.utxo.spends.push(spender);
+                });
             }
-            spenders.forEach((spender, spend_idx) => {
-                const spender_tx: Bitcoin.Transaction = spender.tx;
-                const idx = spender_tx.ins.findIndex(
-                    (elt) =>
-                        elt.index === output_index &&
-                        txid_buf_to_string(elt.hash) === m_txn.get_txid()
-                );
-                if (idx === -1) {
-                    throw new Error('Missing Spender Error');
-                }
-                const link = utxo_model.spent_by(spender, spend_idx, idx);
-                spender.input_links.push(link);
-                utxo_model.utxo.spends.push(spender);
-            });
-        });
+        );
         to_add.push(...m_txn.utxo_models);
     }
     return to_add;
@@ -307,13 +345,13 @@ export const timing_cache = new TimingCache();
 // work with future changes compute rather than infer this list
 function get_base_transactions(
     txns: Array<TransactionModel>,
-    map: TXIDAndWTXIDMap<TransactionModel>
+    map: TXIDAndWTXIDMapT<TransactionModel>
 ): Array<TransactionModel> {
     let phantoms = txns.filter((item) => {
         return (
             -1 ===
             item.tx.ins.findIndex((inp) =>
-                map.has_by_txid(txid_buf_to_string(inp.hash))
+                TXIDAndWTXIDMap.has_by_txid(map, txid_buf_to_string(inp.hash))
             )
         );
     });
@@ -326,30 +364,30 @@ function mergeAndDeduplicateSorted<T, T2>(
     array2: T[],
     iteratee: (t: T) => T2
 ): Array<T> {
-    const mergedArray = [];
+    const mergedArray: Array<T> = [];
     let i = 0;
     let j = 0;
     while (i < array1.length && j < array2.length) {
-        if (iteratee(array1[i]) < iteratee(array2[j])) {
-            mergedArray.push(array1[i]);
+        if (iteratee(array1[i]!) < iteratee(array2[j]!)) {
+            mergedArray.push(array1[i]!);
             i++;
-        } else if (iteratee(array1[i]) > iteratee(array2[j])) {
-            mergedArray.push(array2[j]);
+        } else if (iteratee(array1[i]!) > iteratee(array2[j]!)) {
+            mergedArray.push(array2[j]!);
             j++;
         } else {
             // Arbitrary
-            mergedArray.push(array1[i]);
+            mergedArray.push(array1[i]!);
             i++;
             j++;
         }
     }
     if (i < array1.length) {
         for (let p = i; p < array1.length; p++) {
-            mergedArray.push(array1[p]);
+            mergedArray.push(array1[p]!);
         }
     } else {
         for (let p = j; p < array2.length; p++) {
-            mergedArray.push(array2[p]);
+            mergedArray.push(array2[p]!);
         }
     }
     return mergedArray;
@@ -360,7 +398,7 @@ function unreachable_by_time(
     max_height: number,
     start_height: number,
     start_time: number,
-    map: InputMap<TransactionModel>
+    map: InputMapT<TransactionModel>
 ): Array<TransactionModel> {
     // Every Array is Sorted and Unique, but *may* overlap
     const arrays = bases.map((b) =>
@@ -388,8 +426,8 @@ function unreachable_by_time(
         }
         arrays[v1] = _(
             mergeAndDeduplicateSorted(
-                arrays[v1],
-                arrays[v2],
+                arrays[v1]!,
+                arrays[v2]!,
                 (t: TransactionModel) => t.get_txid()
             )
         )
@@ -401,7 +439,7 @@ function unreachable_by_time(
             arrays[v2] = last;
         }
     }
-    return arrays.length > 0 ? arrays[0] : [];
+    return arrays[0] ?? [];
 }
 function compute_timing(txn: TransactionModel): TimingData {
     let cache_entry = timing_cache.cache.get(txn.get_txid());
@@ -455,12 +493,12 @@ function compute_timing(txn: TransactionModel): TimingData {
 }
 function compute_timing_of_children(
     txn: TransactionModel,
-    map: InputMap<TransactionModel>
+    map: InputMapT<TransactionModel>
 ): Collection<TimingData> {
-    const spenders: Map<number, TransactionModel[]> =
-        map.map.get(txn.get_txid()) ?? new Map();
+    const spenders: Record<number, TransactionModel[]> =
+        InputMap.get_txid_s_group(map, txn.get_txid()) ?? {};
     return _(
-        Array.from(spenders.values())
+        Array.from(Object.values(spenders))
     ).flatMap((output_spender: TransactionModel[]) =>
         output_spender.map(compute_timing)
     );
@@ -472,7 +510,7 @@ function unreachable_by_time_inner(
     max_height: number,
     elapsed_time: number,
     elapsed_blocks: number,
-    map: InputMap<TransactionModel>
+    map: InputMapT<TransactionModel>
 ): Array<TransactionModel> {
     return compute_timing_of_children(base, map)
         .value()
@@ -516,7 +554,7 @@ function unreachable_by_time_inner(
 }
 function all_descendants(
     t: TransactionModel,
-    inputs_map: InputMap<TransactionModel>
+    inputs_map: InputMapT<TransactionModel>
 ): Array<TransactionModel> {
     let cache_entry = timing_cache.cache.get(t.get_txid());
     if (cache_entry && cache_entry[1]) return cache_entry[1];
@@ -526,7 +564,11 @@ function all_descendants(
         timing_cache.cache.set(t.get_txid(), cache_entry);
     }
     cache_entry[1] = _(
-        Array.from(inputs_map.map.get(t.get_txid())?.values() ?? [])
+        Array.from(
+            Object.values(
+                InputMap.get_txid_s_group(inputs_map, t.get_txid()) ?? {}
+            ) ?? []
+        )
             .flat(1)
             .map((x) => all_descendants(x, inputs_map))
             .flat(1)
@@ -541,21 +583,22 @@ function all_descendants(
 export class ContractBase {
     utxo_models: Array<UTXOModel>;
     txn_models: Array<TransactionModel>;
-    protected inputs_map: InputMap<TransactionModel>;
-    txid_map: TXIDAndWTXIDMap<TransactionModel>;
+    inputs_map: InputMapT<TransactionModel>;
+    txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     constructor() {
         this.utxo_models = [];
-        this.inputs_map = new InputMap();
+        this.inputs_map = InputMap.new();
         this.txn_models = [];
-        this.txid_map = new TXIDAndWTXIDMap();
+        this.txid_map = TXIDAndWTXIDMap.new();
     }
     process_finality(is_final: Array<string>, model: any) {
         console.log('called empty');
+        throw 'Called Empty';
     }
 
-    lookup(txid: Buffer, n: number): UTXOModel | null {
+    lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
         console.log('called empty');
-        return null;
+        throw 'Called Empty';
     }
     should_update() {
         return false;
@@ -579,24 +622,28 @@ export class ContractModel extends ContractBase {
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
         this.txid_map = txid_map;
-        console.log(this);
     }
     should_update() {
         return this.checkable;
     }
     // TODO: Return an Array of UTXOModels
-    lookup(txid: Buffer, n: number): UTXOModel | null {
+    lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
         let txid_s = txid_buf_to_string(txid);
-        const txn_model:
-            | TransactionModel
-            | undefined = this.txid_map.get_by_txid_s(txid_s);
-        if (!txn_model) return null;
-        return txn_model.utxo_models[n];
+        return (
+            TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid_s)?.utxo_models[
+                n
+            ] ?? null
+        );
     }
     process_finality(is_final: Array<string>, model: any) {
         // TODO: Reimplement in terms of WTXID
         is_final.forEach((txid) => {
-            const m: TransactionModel | undefined = this.txid_map.get_by_txid_s(txid);
+            const m:
+                | TransactionModel
+                | undefined = TXIDAndWTXIDMap.get_by_txid_s(
+                this.txid_map,
+                txid
+            );
             if (m) {
                 m.setConfirmed(true);
                 m.utxo_models.forEach((m) => m.setConfirmed(true));

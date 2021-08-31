@@ -3,11 +3,11 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { ContractModel } from './Data/ContractManager';
 import Form from 'react-bootstrap/Form';
-import { App } from './App';
 import { TransactionModel } from './Data/Transaction';
 import Button from 'react-bootstrap/Button';
 import _ from 'lodash';
-import "./Simulation.css";
+import './Simulation.css';
+import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 type Field =
     | 'current_time'
     | 'first_tx_time'
@@ -22,7 +22,7 @@ type SimAction = 'clear' | 'snap-time' | 'snap-blocks';
 export class SimulationController extends React.Component<
     {
         contract: ContractModel;
-        app: App;
+        engine: DiagramEngine;
     },
     {
         date: Date;
@@ -60,7 +60,7 @@ export class SimulationController extends React.Component<
         this.current_block = 0.5;
         this.first_tx_block = 0;
         const prefs = window.electron.get_preferences_sync();
-        if (prefs['bitcoin-config'].network === "regtest") {
+        if (prefs['bitcoin-config'].network === 'regtest') {
             this.min_blocks = 0;
             this.max_blocks = 1000;
         } else {
@@ -192,7 +192,7 @@ export class SimulationController extends React.Component<
             m.setReachable(false);
         });
         setTimeout(() => {
-            this.props.app.engine.repaintCanvas();
+            this.props.engine.repaintCanvas();
         }, 0);
     }
     handleSubmit(e: SimAction) {
@@ -273,7 +273,10 @@ export class SimulationController extends React.Component<
     render() {
         const changeHandler = this.changeHandler.bind(this);
         return (
-            <Form onSubmit={(e: React.FormEvent) => e.preventDefault()} className="Simulation">
+            <Form
+                onSubmit={(e: React.FormEvent) => e.preventDefault()}
+                className="Simulation"
+            >
                 <Form.Group as={Row}>
                     <Col sm={1}>
                         <h3>Block</h3>
@@ -346,7 +349,9 @@ export class SimulationController extends React.Component<
                         <Form.Control
                             value={this.state.min_time.toLocaleDateString(
                                 'en-CA',
-                                { timeZone: 'UTC' }
+                                {
+                                    timeZone: 'UTC',
+                                }
                             )}
                             type="date"
                             onChange={(e: FormEvent) =>
@@ -359,7 +364,9 @@ export class SimulationController extends React.Component<
                             First Tx{' '}
                             {this.state.first_tx_time.toLocaleString(
                                 undefined,
-                                { timeZone: 'UTC' }
+                                {
+                                    timeZone: 'UTC',
+                                }
                             )}
                         </Form.Label>
                         <Form.Control
@@ -389,7 +396,9 @@ export class SimulationController extends React.Component<
                         <Form.Control
                             value={this.state.max_time.toLocaleDateString(
                                 'en-CA',
-                                { timeZone: 'UTC' }
+                                {
+                                    timeZone: 'UTC',
+                                }
                             )}
                             type="date"
                             onChange={(e: FormEvent) =>
