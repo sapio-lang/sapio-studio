@@ -1,4 +1,8 @@
-import { AbstractReactFactory } from '@projectstorm/react-canvas-core';
+import {
+    AbstractReactFactory,
+    GenerateModelEvent,
+    GenerateWidgetEvent,
+} from '@projectstorm/react-canvas-core';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import * as React from 'react';
 import { TransactionNodeModel } from './TransactionNodeModel';
@@ -12,11 +16,11 @@ export class TransactionNodeFactory extends AbstractReactFactory<
         super('transaction-node');
     }
 
-    generateModel(event: any) {
+    generateModel(event: GenerateModelEvent) {
         return new TransactionNodeModel();
     }
 
-    generateReactWidget(event: any): JSX.Element {
+    generateReactWidget(event: GenerateWidgetEvent<any>): JSX.Element {
         console.log(this);
         return (
             <TransactionNodeWidget engine={this.engine} node={event.model} />
