@@ -1,8 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { BitcoinNodeManager, QueriedUTXO } from '../../Data/BitcoinNode';
 import * as Bitcoin from 'bitcoinjs-lib';
-import { update_utxomodel } from './Detail/UTXODetail';
-import { UTXOModel } from '../../Data/UTXO';
+import { update_utxomodel, UTXOModel } from '../../Data/UTXO';
 import { ContractModel, Data } from '../../Data/ContractManager';
 import { AppDispatch, RootState } from '../../Store/store';
 import { load_new_model } from '../../AppSlice';

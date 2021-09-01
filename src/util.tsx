@@ -174,3 +174,10 @@ export function time_to_pretty_string(time: number): string {
     }
     return (Math.trunc(time * 10) / 10).toString() + suffix;
 }
+
+// is_mock_outpoint detects if the Outpoint's hash is sha256('mock:'+index)
+// it is useful for external services to tag outputs that are unbound.
+export function is_mock_outpoint(args: Outpoint): boolean {
+    const hash = Bitcoin.crypto.sha256(Buffer.from('mock:' + args.nIn));
+    return txid_buf_to_string(hash) === args.hash;
+}
