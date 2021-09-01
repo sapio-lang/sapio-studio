@@ -1,8 +1,10 @@
+import { equal } from 'assert';
 import spawn from 'await-spawn';
 import {
     ChildProcessWithoutNullStreams,
     spawn as spawnSync,
 } from 'child_process';
+import { JSONSchema7 } from 'json-schema';
 
 import { BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { sys } from 'typescript';
@@ -16,7 +18,7 @@ class SapioCompiler {
     constructor() {
         this.#contract_cache = null;
     }
-    static async command(args: string[]): Promise<any> {
+    static async command(args: string[]): Promise<string> {
         const binary = settings.value('sapio.binary');
         const source = settings.value('sapio.configsource');
         console.log(source);
@@ -41,66 +43,82 @@ class SapioCompiler {
         return spawn(binary, new_args);
     }
     async list_contracts(): Promise<
-        Map<string, { name: string; key: string; api: string; logo: string }>
+        Record<
+            string,
+            { name: string; key: string; api: JSONSchema7; logo: string }
+        >
     > {
-        const results = new Map();
         const contracts = (
             await SapioCompiler.command(['contract', 'list'])
         ).toString();
-        let lines = contracts
+        let lines: Array<[string, string]> = contracts
             .trim()
             .split(/\r?\n/)
-            .map((line: string) => line.split(' -- '));
+            .map((line: string) => {
+                let v: string[] = line.split(' -- ')!;
+                equal(v.length, 2);
+                return v as [string, string];
+            });
 
-        let apis = await Promise.all(
-            lines.map(([name, key]: [string, string]) => {
-                if (memo_apis.has(key)) {
-                    return memo_apis.get(key);
-                } else {
-                    return SapioCompiler.command([
-                        'contract',
-                        'api',
-                        '--key',
-                        key,
-                    ])
-                        .then((v: any) => JSON.parse(v.toString()))
-                        .then((api: any) => {
+        const apis_p = Promise.all(
+            lines.map(
+                ([name, key]: [string, string]): Promise<JSONSchema7> => {
+                    if (memo_apis.has(key)) {
+                        return Promise.resolve(memo_apis.get(key));
+                    } else {
+                        return SapioCompiler.command([
+                            'contract',
+                            'api',
+                            '--key',
+                            key,
+                        ]).then((v) => {
+                            const api = JSON.parse(v.toString());
                             memo_apis.set(key, api);
                             return api;
                         });
+                    }
                 }
-            })
+            )
         );
-        let logos = await Promise.all(
-            lines.map(([name, key]: [string, string]) => {
-                if (memo_logos.has(key)) {
-                    return memo_logos.get(key);
-                } else {
-                    return SapioCompiler.command([
-                        'contract',
-                        'logo',
-                        '--key',
-                        key,
-                    ])
-                        .then((logo: any) => logo.toString().trim())
-                        .then((logo: string) => {
-                            memo_logos.set(key, logo);
-                            return logo;
-                        });
+        const logos_p = Promise.all(
+            lines.map(
+                ([name, key]: [string, string]): Promise<string> => {
+                    if (memo_logos.has(key)) {
+                        return Promise.resolve(memo_logos.get(key));
+                    } else {
+                        return SapioCompiler.command([
+                            'contract',
+                            'logo',
+                            '--key',
+                            key,
+                        ])
+                            .then((logo: any) => logo.toString().trim())
+                            .then((logo: string) => {
+                                memo_logos.set(key, logo);
+                                return logo;
+                            });
+                    }
                 }
-            })
+            )
         );
+        const [apis, logos] = await Promise.all([apis_p, logos_p]);
 
+        const results: Record<
+            string,
+            { name: string; key: string; api: Object; logo: string }
+        > = {};
+        equal(lines.length, apis.length);
+        equal(lines.length, logos.length);
         for (var i = 0; i < lines.length; ++i) {
-            const [name, key] = lines[i];
-            const api = apis[i];
-            const logo = logos[i];
-            results.set(key, {
+            const [name, key] = lines[i]!;
+            const api = apis[i]!;
+            const logo = logos[i]!;
+            results[key] = {
                 name,
                 key,
                 api,
                 logo,
-            });
+            };
         }
         return results;
     }

@@ -1,9 +1,10 @@
 import React from 'react';
 import { PluginSelector } from './PluginSelector';
 import { JSONSchema7 } from 'json-schema';
+import { useDispatch } from 'react-redux';
+import { select_api } from '../ContractCreatorSlice';
 
 interface TileProps {
-    parent: PluginSelector;
     app: Plugin;
 }
 export interface Plugin {
@@ -28,19 +29,18 @@ export function logo_image(app: Plugin) {
         </div>
     );
 }
-export class PluginTile extends React.Component<TileProps> {
-    render() {
-        return (
-            <div className="PluginTile">
-                <a
-                    onClick={() => {
-                        this.props.parent.select(this.props.app.key);
-                    }}
-                >
-                    {logo_image(this.props.app)}
-                    <div>{this.props.app.name}</div>
-                </a>
-            </div>
-        );
-    }
+export function PluginTile(props: TileProps) {
+    const dispatch = useDispatch();
+    return (
+        <div className="PluginTile">
+            <a
+                onClick={() => {
+                    dispatch(select_api(props.app.key));
+                }}
+            >
+                {logo_image(props.app)}
+                <div>{props.app.name}</div>
+            </a>
+        </div>
+    );
 }

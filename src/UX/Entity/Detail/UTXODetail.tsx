@@ -2,99 +2,62 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import Hex, { ASM } from './Hex';
 import {
     get_wtxid_backwards,
+    is_mock_outpoint,
     pretty_amount,
     txid_buf_to_string,
 } from '../../../util';
 import { UTXOModel } from '../../../Data/UTXO';
 import './UTXODetail.css';
 import { OutpointDetail } from './OutpointDetail';
-import { NodeModel } from '@projectstorm/react-diagrams';
 import {
     PhantomTransactionModel,
     TransactionModel,
 } from '../../../Data/Transaction';
-import { Data, ContractModel } from '../../../Data/ContractManager';
+import { ContractModel } from '../../../Data/ContractManager';
 import Button from 'react-bootstrap/esm/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     create,
     fetch_utxo,
     selectUTXOFlash,
-    Outpoint,
     selectUTXO,
     select_txn,
 } from '../EntitySlice';
 import React from 'react';
-import { Dispatch } from 'redux';
-import { create_contract_of_type } from '../../../AppSlice';
 
 interface UTXODetailProps {
     entity: UTXOModel;
     contract: ContractModel;
 }
 
-function is_mock(args: Outpoint): boolean {
-    const hash = Bitcoin.crypto.sha256(new Buffer('mock:' + args.nIn));
-    return txid_buf_to_string(hash) === args.hash;
-}
-
-export function update_utxomodel(utxo_in: UTXOModel) {
-    const to_iterate: Array<UTXOModel>[] = [[utxo_in]];
-    while (to_iterate.length) {
-        const s = to_iterate.pop()!;
-        for (const utxo of s) {
-            // Pop a node for processing...
-            utxo.utxo.spends.forEach((spend: TransactionModel) => {
-                spend.tx.ins
-                    .filter(
-                        (inp) => txid_buf_to_string(inp.hash) === utxo.utxo.txid
-                    )
-                    .forEach((inp) => {
-                        inp.hash = utxo.txn.tx.getHash();
-                    });
-                spend.tx.ins
-                    .filter((inp) =>
-                        is_mock({
-                            hash: txid_buf_to_string(inp.hash),
-                            nIn: inp.index,
-                        })
-                    )
-                    .forEach((inp) => {
-                        // TODO: Only modify the mock that was intended
-                        inp.hash = utxo.txn.tx.getHash();
-                        inp.index = utxo.utxo.index;
-                    });
-                to_iterate.push(spend.utxo_models);
-            });
-        }
-    }
-}
 export function UTXODetail(props: UTXODetailProps) {
     const dispatch = useDispatch();
     React.useEffect(() => {
         return () => {};
     });
-
-    const select_utxo = useSelector(selectUTXO);
-    const flash = useSelector(selectUTXOFlash);
     const txid = props.entity.txn.get_txid();
     const idx = props.entity.utxo.index;
     const outpoint = { hash: txid, nIn: idx };
-    const this_is_mock = is_mock(outpoint);
-    const utxo = select_utxo(outpoint);
-    const is_confirmed = utxo && utxo.confirmations > 0;
+
+    const external_utxo = useSelector(selectUTXO)(outpoint);
+    const flash = useSelector(selectUTXOFlash);
+    const this_is_mock = is_mock_outpoint(outpoint);
+    const is_confirmed = external_utxo && external_utxo.confirmations > 0;
     const decomp =
-        utxo?.scriptPubKey.address ??
+        external_utxo?.scriptPubKey.address ??
         Bitcoin.script.toASM(
             Bitcoin.script.decompile(props.entity.utxo.script) ??
                 Buffer.from('')
         );
-    let address = utxo?.scriptPubKey.address;
+    // first attempt to get the address from the extenral utxo if it's present,
+    // otherwise attempt to read if from the utxo model
+    let address = external_utxo?.scriptPubKey.address;
     if (!address) {
         address = 'UNKNOWN';
         try {
             address = Bitcoin.address.fromOutputScript(
                 props.entity.utxo.script,
+                /// TODO: Read from preferences?
                 Bitcoin.networks.regtest
             );
         } catch {}

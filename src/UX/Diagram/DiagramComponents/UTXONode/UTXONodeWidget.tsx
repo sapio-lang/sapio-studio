@@ -12,6 +12,11 @@ import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { UTXOModel } from '../../../../Data/UTXO';
+import { useSelector } from 'react-redux';
+import { selectIsUnreachable } from '../../../../SimulationSlice';
+const white = Color('white').toString();
+const black = Color('black').toString();
+const yellow = Color('yellow').fade(0.2).toString();
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
@@ -110,134 +115,91 @@ interface IState {
  * Default node that models the UTXONodeModel. It creates two columns
  * for both all the input ports on the left, and the output ports on the right.
  */
-export class UTXONodeWidget extends React.Component<DefaultNodeProps, IState> {
-    node: HTMLDivElement | null;
-    callback: () => any;
-    mounted: boolean;
-    id: number;
-    constructor(props: any) {
-        super(props);
-        this.node = null;
-        this.mounted = false;
-        this.id = Math.random();
-        this.callback = () => {
-            if (this.node === null) return;
-        };
-        this.state = {
-            is_confirmed: this.props.node.isConfirmed(),
-            is_reachable: this.props.node.isReachable(),
-            amount: this.props.node.getAmount(),
-        };
-        this.props.node.registerReachableCallback((b: boolean) =>
-            this.setState({ is_reachable: b })
-        );
-        this.props.node.registerConfirmedCallback((b: boolean) => {
-            this.setState({ is_confirmed: b });
+//node: HTMLDivElement | null;
+//callback: () => any;
+export function UTXONodeWidget(props: DefaultNodeProps) {
+    const [id, setID] = React.useState(Math.random());
+    const is_reachable = useSelector(selectIsUnreachable)(
+        props.node.getOptions().txid
+    );
+    const [is_confirmed, setConfirmed] = React.useState(
+        props.node.isConfirmed()
+    );
+    const [amount, setAmount] = React.useState(props.node.getAmount());
+    React.useEffect(() => {
+        props.node.registerConfirmedCallback((b: boolean) => setConfirmed(b));
+        const l = props.node.registerListener({
+            sync: (e: BaseEvent) =>
+                setAmount((props.node as UTXOModel).getAmount()),
         });
-        this.props.node.registerListener({
-            sync: (e: BaseEvent) => {
-                console.log(this.props.node);
-                this.setState({
-                    amount: (this.props.node as UTXOModel).getAmount(),
-                });
-            },
-        });
-    }
-    generatePort = (port: DefaultPortModel) => {
+        return () => {
+            props.node.registerConfirmedCallback((b: boolean) => {});
+            props.node.deregisterListener(l);
+        };
+    });
+    const generatePort = (port: DefaultPortModel) => {
         return (
             <DefaultPortLabel
-                engine={this.props.engine}
+                engine={props.engine}
                 port={port}
                 key={port.getID()}
             />
         );
     };
-
-    componentDidMount() {
-        this.mounted = true;
-        this.callback();
-    }
-
-    componentWillUnmount() {
-        this.mounted = false;
-    }
-
-    render() {
-        const ports_in = _.map(this.props.node.getInPorts(), this.generatePort);
-        const ports_out = _.map(
-            this.props.node.getOutPorts(),
-            this.generatePort
+    const ports_in = _.map(props.node.getInPorts(), generatePort);
+    const ports_out = _.map(props.node.getOutPorts(), generatePort);
+    let color = Color(props.node.getOptions().color).alpha(0.2).toString();
+    const ports_top =
+        ports_in.length === 0 ? null : (
+            <PortsTop key="ports" color={'transparent'}>
+                <PortsContainerUTXOTop key="inputs">
+                    {ports_in}
+                </PortsContainerUTXOTop>
+            </PortsTop>
         );
-        let color = Color(this.props.node.getOptions().color)
-            .alpha(0.2)
-            .toString();
-        let white = Color('white').toString();
-        let black = Color('black').toString();
-        const ports_top =
-            ports_in.length === 0 ? null : (
-                <PortsTop key="ports" color={'transparent'}>
-                    <PortsContainerUTXOTop key="inputs">
-                        {ports_in}
-                    </PortsContainerUTXOTop>
-                </PortsTop>
-            );
-        const ports_bottom =
-            ports_out.length === 0 ? null : (
-                <PortsBottom color={white}>
-                    <PortsContainerUTXOBottom key="outputs">
-                        {ports_out}
-                    </PortsContainerUTXOBottom>
-                </PortsBottom>
-            );
+    const ports_bottom =
+        ports_out.length === 0 ? null : (
+            <PortsBottom color={white}>
+                <PortsContainerUTXOBottom key="outputs">
+                    {ports_out}
+                </PortsContainerUTXOBottom>
+            </PortsBottom>
+        );
 
-        let yellow = Color('yellow').fade(0.2).toString();
-        const is_conf = this.state.is_confirmed ? null : (
-            <div
-                style={{
-                    background: yellow,
-                    color: 'black',
-                    textAlign: 'center',
-                }}
-            >
-                UNCONFIRMED
+    const is_conf = is_confirmed ? null : (
+        <div
+            style={{
+                background: yellow,
+                color: 'black',
+                textAlign: 'center',
+            }}
+        >
+            UNCONFIRMED
+        </div>
+    );
+
+    const reachable_cl = is_reachable ? 'reachable' : 'unreachable';
+    return (
+        <div>
+            {ports_top}
+            <div style={{ position: 'relative' }}>
+                <UTXONode
+                    data-default-utxonode-name={props.node.getOptions().name}
+                    key={id}
+                    selected={props.node.isSelected()}
+                    confirmed={is_confirmed}
+                    className={reachable_cl}
+                >
+                    <Title color={color}>
+                        <TitleName>{props.node.getOptions().name}</TitleName>
+                    </Title>
+                    {is_conf}
+                    <Title color={color}>
+                        <TitleName>{pretty_amount(amount)}</TitleName>
+                    </Title>
+                    {ports_bottom}
+                </UTXONode>
             </div>
-        );
-
-        const reachable_cl = this.state.is_reachable
-            ? 'reachable'
-            : 'unreachable';
-        return (
-            <div>
-                {ports_top}
-                <div style={{ position: 'relative' }}>
-                    <UTXONode
-                        ref={(node) => (this.node = node)}
-                        data-default-utxonode-name={
-                            this.props.node.getOptions().name
-                        }
-                        key={this.id}
-                        selected={this.props.node.isSelected()}
-                        confirmed={this.state.is_confirmed}
-                        className={reachable_cl}
-                    >
-                        <Title color={color}>
-                            <TitleName>
-                                {this.props.node.getOptions().name}
-                            </TitleName>
-                        </Title>
-                        {is_conf}
-                        <Title color={color}>
-                            <TitleName>
-                                {pretty_amount(this.state.amount)}
-                            </TitleName>
-                        </Title>
-                        {ports_bottom}
-                    </UTXONode>
-                </div>
-            </div>
-        );
-    }
+        </div>
+    );
 }
-
-/*
- */

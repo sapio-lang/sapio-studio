@@ -9,13 +9,14 @@ import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
  * Example of a custom model using pure javascript
  */
 export class TransactionNodeModel extends NodeModel {
-    constructor(name, purpose, color, options = {}) {
+    constructor(name, purpose, color, txn, options = {}) {
         super({
             name,
             color,
             type: 'transaction-node',
             ...options,
         });
+        this.txn = txn;
         this.color = color || 'red';
         this.purpose = purpose;
         this.portsOut = [];

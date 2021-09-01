@@ -6,4 +6,28 @@
     max-height: 50vh;
     width: 100%;
     overflow-y: scroll;
+    padding-bottom: 3em;
+    padding-right: 1em;
+    padding-left: 1em;
+}
+
+.Controlers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1em;
+}
+
+.Controler {
+    display: grid;
+    grid-template-rows: min-content 1fr;
+}
+
+.ControlerSettings {
+    display: grid;
+    grid-template-columns: min-content min-content 15vw min-content 15vw min-content;
+    column-gap: 1em;
+}
+
+.ControlerSliders {
+    height: min-content;
 }

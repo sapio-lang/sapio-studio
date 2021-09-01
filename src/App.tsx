@@ -69,22 +69,23 @@ function selection_handler(model: DiagramModel, engine: DiagramEngine) {
             // Only proceed when selecting
             return;
         } else {
-            let entity = null;
+            let entity: UTXOModel | TransactionModel | null = null;
             switch (entity_id[0]) {
                 case 'TXN':
-                    entity = TXIDAndWTXIDMap.get_by_txid_s(
-                        contract.txid_map,
-                        entity_id[1]
-                    );
+                    entity =
+                        TXIDAndWTXIDMap.get_by_txid_s(
+                            contract.txid_map,
+                            entity_id[1]
+                        ) ?? null;
                     break;
                 case 'UTXO':
-                    entity = contract.lookup_utxo_model(
-                        entity_id[1].hash,
-                        entity_id[1].index
-                    );
+                    entity =
+                        TXIDAndWTXIDMap.get_by_txid_s(
+                            contract.txid_map,
+                            entity_id[1].hash
+                        )?.utxo_models[entity_id[1].nIn] ?? null;
                     break;
             }
-            console.log('ENTITY', entity);
             if (!entity) {
                 last_entity = null;
                 last_entity_id = ['NULL', null];
@@ -135,8 +136,8 @@ function diagram_select_handler(
                     let utxo = data.entity as UTXOModel;
                     dispatch(
                         select_utxo({
-                            hash: utxo.txn.tx.getHash(),
-                            index: utxo.utxo.index,
+                            hash: utxo.txn.get_txid(),
+                            nIn: utxo.utxo.index,
                         })
                     );
                 }
@@ -269,7 +270,11 @@ function AppInner(props: {
         <CurrentlyViewedEntity current_contract={current_contract} />
     );
     const simulator = !timing_simulator_enabled ? null : (
-        <SimulationController contract={current_contract} engine={engine} />
+        <SimulationController
+            contract={current_contract}
+            engine={engine}
+            hide={() => set_timing_simulator_enabled(false)}
+        />
     );
     return (
         <div className="App">
@@ -287,7 +292,11 @@ function AppInner(props: {
                             dispatch(load_new_model(x))
                         }
                         contract={current_contract}
-                        toggle_timing_simulator={set_timing_simulator_enabled}
+                        toggle_timing_simulator={() =>
+                            set_timing_simulator_enabled(
+                                !timing_simulator_enabled
+                            )
+                        }
                     />
                 </div>
                 <div className="area-inner">
