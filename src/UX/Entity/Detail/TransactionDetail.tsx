@@ -1,11 +1,7 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React, { ChangeEvent } from 'react';
 import * as Bitcoin from 'bitcoinjs-lib';
-import ListGroup from 'react-bootstrap/ListGroup';
-import {
-    TransactionModel,
-    PhantomTransactionModel,
-} from '../../../Data/Transaction';
+import { TransactionModel } from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
 import Hex from './Hex';
 import { InputDetail } from './InputDetail';
@@ -19,11 +15,8 @@ import {
     txid_buf_to_string,
 } from '../../../util';
 import Color from 'color';
-import { SigningDataStore } from '../../../Data/ContractManager';
-import { Dispatch } from 'redux';
-import { deselect_entity, select_utxo } from '../EntitySlice';
+import { select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
-import { useEffect } from 'react-transition-group/node_modules/@types/react';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
@@ -36,7 +29,9 @@ export function TransactionDetail(props: TransactionDetailProps) {
     const [broadcastable, setBroadcastable] = React.useState(
         props.entity.is_broadcastable()
     );
-    const [color, setColor] = React.useState(Color(props.entity.color));
+    const [color, setColor] = React.useState(
+        Color(props.entity.getOptions().color)
+    );
     React.useEffect(() => {
         props.entity.set_broadcastable_hook((b) => setBroadcastable(b));
 
@@ -139,7 +134,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
             <div className="purpose">
                 <span>Purpose:</span>
                 <input
-                    defaultValue={props.entity.purpose}
+                    defaultValue={props.entity.getOptions().purpose}
                     onChange={debounce_purpose}
                 />
             </div>

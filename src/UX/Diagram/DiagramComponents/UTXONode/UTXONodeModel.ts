@@ -26,12 +26,12 @@ export interface UTXONodeModelGenerics extends NodeModelGenerics {
 /**
  * Example of a custom model using pure javascript
  */
-export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
+export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     protected portsIn: DefaultPortModel[];
     protected portsOut: SpendPortModel[];
     constructor(
         options: any = {},
-        txid: TXID,
+        txid?: TXID,
         name?: string,
         color?: string,
         amount?: number,
@@ -65,7 +65,9 @@ export abstract class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
             spender.addInPort('in' + idx, true)
         );
     }
-    abstract getAmount(): number;
+    getAmount(): number {
+        return this.getOptions().amount;
+    }
     setConfirmed(opt: boolean) {
         this.options.confirmed = opt;
         this.options.confirmed_callback(opt);

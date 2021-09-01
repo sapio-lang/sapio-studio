@@ -33,7 +33,7 @@ export class TransactionModel
         color: NodeColorT,
         utxo_labels: Array<UTXOFormatData | null>
     ) {
-        super(tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
+        super({}, tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
         this.broadcastable = false;
         this.broadcastable_hook = (b) => {};
         this.tx = tx;
@@ -71,8 +71,8 @@ export class TransactionModel
         return {
             psbt: this.witness_set.psbts[0]!.toBase64(),
             hex: this.tx.toHex(),
-            label: this.name,
-            color: this.color,
+            label: this.getOptions().name,
+            color: this.getOptions().color,
             utxo_metadata: this.utxo_models.map((u) => {
                 return {
                     color: u.getOptions().color,

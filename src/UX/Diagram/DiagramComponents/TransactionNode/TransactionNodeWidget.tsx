@@ -117,19 +117,20 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
     const [is_confirmed, setConfirmed] = React.useState(
         props.node.isConfirmed()
     );
-    const [color, setColor] = React.useState(props.node.color);
-    const [purpose, setPurpose] = React.useState(props.node.purpose);
+    const opts = props.node.getOptions();
+    const [color, setColor] = React.useState(opts.color);
+    const [purpose, setPurpose] = React.useState(opts.purpose);
     const is_reachable = useSelector(selectIsUnreachable)(
-        (props.node.txn as Bitcoin.Transaction).getId()
+        (opts.txn as Bitcoin.Transaction).getId()
     );
     React.useEffect(() => {
         props.node.registerConfirmed((b: boolean) => setConfirmed(b));
         const h = props.node.registerListener({
             colorChanged: (e: BaseEvent) => {
-                setColor(props.node.color);
+                setColor(opts.color);
             },
             purposeChanged: (e: BaseEvent) => {
-                setPurpose(props.node.purpose);
+                setPurpose(opts.purpose);
             },
         });
         return () => {
@@ -170,10 +171,10 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                 </PortsContainerTop>
             </PortsTop>
             <Node
-                data-default-node-name={props.node.name}
+                data-default-node-name={opts.name}
                 selected={props.node.isSelected()}
                 confirmed={is_confirmed}
-                background={props.node.color}
+                background={opts.color}
                 className={
                     (is_reachable ? 'reachable' : 'unreachable') +
                     ' TransactionNode'
@@ -182,7 +183,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                 <div>
                     <Title color={color_render}>
                         <TitleName>Transaction</TitleName>
-                        <TitleName>{props.node.name}</TitleName>
+                        <TitleName>{opts.name}</TitleName>
                     </Title>
                     {is_conf}
                     <Title color={color_render}>
