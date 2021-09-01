@@ -12,7 +12,7 @@ export class OutputLinkModel extends SpendLinkModel {
 }
 
 export class OutputPortModel extends SpendPortModel {
-    createLinkModel(factory) {
+    createLinkModel(factory: any) {
         return new OutputLinkModel();
     }
 }
