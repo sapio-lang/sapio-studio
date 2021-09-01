@@ -88,26 +88,43 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         super.doClone(lookupTable, clone);
     }
 
-    removePort(port: SpendPortModel | OutputPortModel) {
+    removePort(port: PortModel) {
         super.removePort(port);
-        if (port.getOptions().in) {
-            this.portsIn.splice(this.portsIn.indexOf(port));
-        } else {
-            this.portsOut.splice(this.portsOut.indexOf(port));
+        switch (port.constructor) {
+            case SpendPortModel:
+                this.portsIn.splice(
+                    this.portsIn.indexOf((port as unknown) as SpendPortModel)
+                );
+                break;
+            case OutputPortModel:
+                this.portsOut.splice(
+                    this.portsOut.indexOf((port as unknown) as SpendPortModel)
+                );
+                break;
+            default:
+                throw 'Wrong Port Type';
         }
     }
 
-    addPort<T extends SpendPortModel | OutputPortModel>(port: T): T {
+    addPort(port: PortModel): PortModel {
         super.addPort(port);
         switch (port.constructor) {
             case SpendPortModel:
-                if (this.portsIn.indexOf(port) === -1) {
-                    this.portsIn.push(port);
+                if (
+                    this.portsIn.indexOf(
+                        (port as unknown) as SpendPortModel
+                    ) === -1
+                ) {
+                    this.portsIn.push((port as unknown) as SpendPortModel);
                 }
                 break;
             case OutputPortModel:
-                if (this.portsOut.indexOf(port) === -1) {
-                    this.portsOut.push(port);
+                if (
+                    this.portsOut.indexOf(
+                        (port as unknown) as OutputPortModel
+                    ) === -1
+                ) {
+                    this.portsOut.push((port as unknown) as OutputPortModel);
                 }
                 break;
         }
@@ -124,7 +141,9 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         if (!after) {
             this.portsIn.splice(0, 0, p);
         }
-        return this.addPort(p);
+        return (this.addPort(
+            (p as unknown) as PortModel
+        ) as unknown) as SpendPortModel;
     }
 
     addOutPort(label: string, after: boolean): OutputPortModel {
@@ -138,7 +157,9 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         if (!after) {
             this.portsOut.splice(0, 0, p);
         }
-        return this.addPort(p);
+        return (this.addPort(
+            (p as unknown) as PortModel
+        ) as unknown) as OutputPortModel;
     }
 
     getInPorts(): DefaultPortModel[] {

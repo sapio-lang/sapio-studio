@@ -1,4 +1,8 @@
-import { DiagramModel, LinkModel } from '@projectstorm/react-diagrams';
+import {
+    DiagramModel,
+    LinkModel,
+    NodeModel,
+} from '@projectstorm/react-diagrams';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
@@ -99,7 +103,8 @@ export class TransactionModel
     }
     remove_from_model(model: DiagramModel) {
         if (!(this instanceof PhantomTransactionModel)) {
-            model.removeNode(this);
+            // TODO: is this a valid cast
+            model.removeNode((this as unknown) as NodeModel);
             this.utxo_links.map((x) =>
                 model.removeLink((x as unknown) as LinkModel)
             );
