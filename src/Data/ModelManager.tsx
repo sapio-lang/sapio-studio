@@ -1,8 +1,8 @@
 import { DiagramModel, LinkModel } from '@projectstorm/react-diagrams';
-import { ContractModel, timing_cache } from './Data/ContractManager';
-import { TransactionModel, PhantomTransactionModel } from './Data/Transaction';
-import { UTXOModel } from './Data/UTXO';
-import { SpendPortModel } from './UX/Diagram/DiagramComponents/SpendLink/SpendLink';
+import { ContractModel, timing_cache } from './ContractManager';
+import { TransactionModel, PhantomTransactionModel } from './Transaction';
+import { UTXOModel } from './UTXO';
+import { SpendPortModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLink';
 
 export class ModelManager {
     model: DiagramModel;

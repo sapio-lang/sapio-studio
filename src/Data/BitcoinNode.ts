@@ -144,14 +144,14 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
     }
     async check_balance(): Promise<number> {
         let results = await window.electron.bitcoin_command([
-            { method: 'getbalance' },
+            { method: 'getbalance', parameters: [] },
         ]);
         return results[0];
     }
     async blockchaininfo(): Promise<any> {
         return (
             await window.electron.bitcoin_command([
-                { method: 'getblockchaininfo' },
+                { method: 'getblockchaininfo', parameters: [] },
             ])
         )[0];
     }

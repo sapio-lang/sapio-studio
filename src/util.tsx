@@ -31,7 +31,7 @@ declare global {
             ) => void;
             save_psbt: (psbt: string) => Promise<null>;
             save_contract: (contract: string) => Promise<null>;
-            fetch_psbt: () => Promise<null>;
+            fetch_psbt: () => Promise<string>;
         };
     }
 }

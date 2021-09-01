@@ -11,7 +11,7 @@ import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
-import { selectIsUnreachable } from '../../../../SimulationSlice';
+import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
 //import { css } from '@emotion/core';
 

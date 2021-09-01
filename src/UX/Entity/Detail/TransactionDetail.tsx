@@ -13,7 +13,11 @@ import { TXIDDetail } from './OutpointDetail';
 import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
 import './TransactionDetail.css';
-import { sequence_convert, time_to_pretty_string } from '../../../util';
+import {
+    sequence_convert,
+    time_to_pretty_string,
+    txid_buf_to_string,
+} from '../../../util';
 import Color from 'color';
 import { SigningDataStore } from '../../../Data/ContractManager';
 import { Dispatch } from 'redux';
@@ -54,8 +58,8 @@ export function TransactionDetail(props: TransactionDetailProps) {
             goto={() =>
                 dispatch(
                     select_utxo({
-                        hash: o.txn.tx.getHash(),
-                        index: o.utxo.index,
+                        hash: o.txn.get_txid(),
+                        nIn: o.utxo.index,
                     })
                 )
             }
@@ -72,7 +76,14 @@ export function TransactionDetail(props: TransactionDetailProps) {
         return (
             <InputDetail
                 txinput={inp}
-                goto={() => dispatch(select_utxo(inp))}
+                goto={() =>
+                    dispatch(
+                        select_utxo({
+                            hash: txid_buf_to_string(inp.hash),
+                            nIn: inp.index,
+                        })
+                    )
+                }
                 witnesses={witnesses}
                 psbts={psbts}
             />

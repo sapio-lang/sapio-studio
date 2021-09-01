@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from './Store/store';
-import { TXID } from './util';
+import { RootState } from '../Store/store';
+import { TXID } from '../util';
 type SimulationState = {
     unreachable_models: Record<TXID, null>;
 };

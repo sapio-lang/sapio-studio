@@ -13,7 +13,7 @@ import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { UTXOModel } from '../../../../Data/UTXO';
 import { useSelector } from 'react-redux';
-import { selectIsUnreachable } from '../../../../SimulationSlice';
+import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
 const white = Color('white').toString();
 const black = Color('black').toString();
 const yellow = Color('yellow').fade(0.2).toString();
