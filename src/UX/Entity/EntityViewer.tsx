@@ -40,12 +40,11 @@ export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
 
     const show = useSelector(selectShouldViewEntity);
     const entity_id: EntityType = useSelector(selectEntityToView);
-    let guts = null;
+    let guts: JSX.Element | null = null;
     if (show) {
-        let entity: TransactionModel | UTXOModel | null = null;
         switch (entity_id[0]) {
             case 'TXN': {
-                entity =
+                const entity =
                     TXIDAndWTXIDMap.get_by_txid_s(
                         props.current_contract.txid_map,
                         entity_id[1]
@@ -63,11 +62,11 @@ export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
                 break;
             }
             case 'UTXO': {
-                entity =
-                    props.current_contract.lookup_utxo_model(
-                        entity_id[1].hash,
-                        entity_id[1].index
-                    ) ?? null;
+                const entity =
+                    TXIDAndWTXIDMap.get_by_txid_s(
+                        props.current_contract.txid_map,
+                        entity_id[1].hash
+                    )?.utxo_models[entity_id[1].nIn] ?? null;
                 if (entity) {
                     guts = (
                         <UTXODetail

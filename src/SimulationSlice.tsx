@@ -1,11 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { BitcoinNodeManager, QueriedUTXO } from './Data/BitcoinNode';
-import * as Bitcoin from 'bitcoinjs-lib';
-import { update_utxomodel } from './UX/Entity/Detail/UTXODetail';
-import { UTXOModel } from './Data/UTXO';
-import { ContractModel, Data } from './Data/ContractManager';
-import { AppDispatch, RootState } from './Store/store';
-import { State } from '@projectstorm/react-canvas-core';
+import { RootState } from './Store/store';
 import { TXID } from './util';
 type SimulationState = {
     unreachable_models: Record<TXID, null>;

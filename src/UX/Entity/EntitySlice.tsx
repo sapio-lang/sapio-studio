@@ -8,10 +8,7 @@ import { AppDispatch, RootState } from '../../Store/store';
 import { load_new_model } from '../../AppSlice';
 import { OutpointInterface, TXID } from '../../util';
 import { TransactionModel } from '../../Data/Transaction';
-export type EntityType =
-    | ['TXN', TXID]
-    | ['UTXO', OutpointInterface]
-    | ['NULL', null];
+export type EntityType = ['TXN', TXID] | ['UTXO', Outpoint] | ['NULL', null];
 type StateType = {
     utxos: Record<string, QueriedUTXO>;
     flash: String | null;
@@ -38,7 +35,7 @@ export const entitySlice = createSlice({
             state.last_selected = ['TXN', action.payload];
             state.show_entity_viewer = true;
         },
-        select_utxo: (state, action: PayloadAction<OutpointInterface>) => {
+        select_utxo: (state, action: PayloadAction<Outpoint>) => {
             state.last_selected = ['UTXO', action.payload];
             state.show_entity_viewer = true;
         },

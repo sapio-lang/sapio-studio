@@ -25,8 +25,6 @@ import {
     select_txn,
 } from '../EntitySlice';
 import React from 'react';
-import { Dispatch } from 'redux';
-import { create_contract_of_type } from '../../../AppSlice';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -74,14 +72,13 @@ export function UTXODetail(props: UTXODetailProps) {
     React.useEffect(() => {
         return () => {};
     });
-
-    const select_utxo = useSelector(selectUTXO);
-    const flash = useSelector(selectUTXOFlash);
     const txid = props.entity.txn.get_txid();
     const idx = props.entity.utxo.index;
     const outpoint = { hash: txid, nIn: idx };
+
+    const utxo = useSelector(selectUTXO)(outpoint);
+    const flash = useSelector(selectUTXOFlash);
     const this_is_mock = is_mock(outpoint);
-    const utxo = select_utxo(outpoint);
     const is_confirmed = utxo && utxo.confirmations > 0;
     const decomp =
         utxo?.scriptPubKey.address ??
