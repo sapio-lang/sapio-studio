@@ -2,25 +2,63 @@ import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { Outpoint } from './UX/Entity/EntitySlice';
-
+// must manually copy from preload
+type Callback =
+    | 'simulate'
+    | 'load_hex'
+    | 'save_hex'
+    | 'create_contracts'
+    | 'load_contract'
+    | 'bitcoin-node-bar'
+    | 'create_contract_from_cache';
 declare global {
     interface Window {
-        electron: any;
+        electron: {
+            bitcoin_command: (
+                command: {
+                    method: string;
+                    parameters: any[];
+                }[]
+            ) => Promise<any>;
+            register: (
+                msg: Callback,
+                action: (args: any) => void
+            ) => () => void;
+            create_contract: (which: string, args: string) => Promise<any>;
+            get_preferences_sync: () => any;
+            preferences_listener: (
+                listener: (e: any, preferences: any) => void
+            ) => void;
+            save_psbt: (psbt: string) => Promise<null>;
+            save_contract: (contract: string) => Promise<null>;
+            fetch_psbt: () => Promise<null>;
+        };
     }
 }
-export interface OutpointInterface {
-    index: number;
-    hash: Buffer;
-}
-type OpaqueKey = string;
 
+/// txid_buf_to_string converts a buffer into a reverse encoded hex format.
 export function txid_buf_to_string(txid: Buffer): TXID {
-    let copy = new Buffer(txid.length);
+    let copy = Buffer.alloc(txid.length);
     txid.forEach((v, i) => {
         copy[txid.length - 1 - i] = v;
     });
     return copy.toString('hex');
 }
+
+// hash_to_hex converts a buffer into a reverse encoded hex format
+// TODO: is this the same as txid_buf_to_string?
+export function hash_to_hex(h: Buffer): string {
+    const b = Buffer.alloc(32);
+    h.copy(b);
+    b.reverse();
+    return b.toString('hex');
+}
+
+export interface OutpointInterface {
+    index: number;
+    hash: Buffer;
+}
+type OpaqueKey = string;
 // Maps an Input (TXID) to all Spenders
 export type InputMapT<T> = Record<OpaqueKey, Record<number, Array<T>>>;
 export const InputMap = {
@@ -70,7 +108,7 @@ let INTERNAL_MAX_SATS_DISPLAY: number = DEFAULT_MAX_SATS_DISPLAY;
     });
 })();
 
-export function pretty_amount(amount: number) {
+export function PrettyAmount(amount: number) {
     if (amount > INTERNAL_MAX_SATS_DISPLAY) {
         amount /= 100_000_000;
         return (
@@ -130,13 +168,6 @@ export const TXIDAndWTXIDMap = {
     },
 };
 
-export function hash_to_hex(h: Buffer): string {
-    const b = new Buffer(32);
-    h.copy(b);
-    b.reverse();
-    return b.toString('hex');
-}
-
 export function sequence_convert(
     sequence: number
 ): { relative_time: number; relative_height: number } {
@@ -151,17 +182,19 @@ export function sequence_convert(
     }
     return ret;
 }
+
+// convert a time to a pretty string like
+// 6 Hours, 10 Days, 5 Weeks, 3.3 Months
 export function time_to_pretty_string(time: number): string {
     time *= 512;
-    let relative_time_string = 'None';
-    time /= 60 * 60;
-    let suffix = '?';
+    time /= 6;
+    let suffix;
     if (time < 24 && time !== 0) {
         suffix = ' Hours';
     } else {
         time /= 24;
         if (time < 14) {
-            relative_time_string = suffix = ' Days';
+            suffix = ' Days';
         } else {
             time /= 7;
             if (time < 10) {

@@ -3,7 +3,7 @@ import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from './Hex';
 import { UTXOModel } from '../../../Data/UTXO';
-import { pretty_amount } from '../../../util';
+import { PrettyAmount } from '../../../util';
 import Button from 'react-bootstrap/esm/Button';
 import './OutputDetail.css';
 
@@ -19,7 +19,7 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
         const script = Bitcoin.script.toASM(decomp);
         return (
             <div className="OutputDetail">
-                <span> {pretty_amount(this.props.txoutput.utxo.amount)} </span>
+                <span> {PrettyAmount(this.props.txoutput.utxo.amount)} </span>
                 <Hex readOnly className="txhex" value={script} />
                 <Button variant="link" onClick={() => this.props.goto()}>
                     <span

@@ -3,7 +3,7 @@ import Hex, { ASM } from './Hex';
 import {
     get_wtxid_backwards,
     is_mock_outpoint,
-    pretty_amount,
+    PrettyAmount,
     txid_buf_to_string,
 } from '../../../util';
 import { UTXOModel } from '../../../Data/UTXO';
@@ -114,7 +114,7 @@ export function UTXODetail(props: UTXODetailProps) {
     const title =
         props.entity.txn instanceof PhantomTransactionModel
             ? 'External UTXO'
-            : pretty_amount(props.entity.utxo.amount);
+            : PrettyAmount(props.entity.utxo.amount);
 
     return (
         <div className="UTXODetail">

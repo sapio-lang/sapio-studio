@@ -7,7 +7,7 @@ import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import Color from 'color';
 import * as _ from 'lodash';
 import * as React from 'react';
-import { pretty_amount } from '../../../../util';
+import { PrettyAmount } from '../../../../util';
 import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
@@ -195,7 +195,7 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                     </Title>
                     {is_conf}
                     <Title color={color}>
-                        <TitleName>{pretty_amount(amount)}</TitleName>
+                        <TitleName>{PrettyAmount(amount)}</TitleName>
                     </Title>
                     {ports_bottom}
                 </UTXONode>
