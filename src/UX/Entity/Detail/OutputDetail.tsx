@@ -15,12 +15,12 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
     render() {
         const decomp =
             Bitcoin.script.decompile(this.props.txoutput.utxo.script) ??
-            new Buffer('');
+            Buffer.from('');
         const script = Bitcoin.script.toASM(decomp);
         return (
             <div className="OutputDetail">
                 <span> {PrettyAmount(this.props.txoutput.utxo.amount)} </span>
-                <Hex readOnly className="txhex" value={script} />
+                <Hex className="txhex" value={script} />
                 <Button variant="link" onClick={() => this.props.goto()}>
                     <span
                         className="glyphicon glyphicon-chevron-right"

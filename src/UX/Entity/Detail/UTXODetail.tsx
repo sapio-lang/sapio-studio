@@ -131,7 +131,7 @@ export function UTXODetail(props: UTXODetailProps) {
                 onClick={() => dispatch(select_txn(txid))}
             />
             <div>
-                Address: <ASM className="txhex" readOnly value={address} />
+                Address: <ASM className="txhex" value={address} />
             </div>
             <div>Spent By: {spends}</div>
         </div>

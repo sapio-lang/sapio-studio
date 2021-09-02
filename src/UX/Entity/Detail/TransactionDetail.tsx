@@ -125,11 +125,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
             <TXIDDetail txid={props.entity.get_txid()} />
             <div className="serialized-tx">
                 <span> Tx Hex </span>
-                <Hex
-                    value={props.entity.tx.toHex()}
-                    readOnly
-                    className="txhex"
-                />
+                <Hex value={props.entity.tx.toHex()} className="txhex" />
             </div>
             <div className="purpose">
                 <span>Purpose:</span>
