@@ -1,5 +1,5 @@
 import React, { FormEvent } from 'react';
-import { ContractModel } from './Data/ContractManager';
+import { ContractModel } from '../Data/ContractManager';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import _ from 'lodash';
@@ -7,7 +7,7 @@ import './Simulation.css';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import { useDispatch } from 'react-redux';
 import { set_unreachable } from './SimulationSlice';
-import { TXID } from './util';
+import { TXID } from '../util';
 import OverlayTrigger from 'react-bootstrap/esm/OverlayTrigger';
 import Tooltip from 'react-bootstrap/esm/Tooltip';
 export function SimulationController(props: {

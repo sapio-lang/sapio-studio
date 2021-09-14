@@ -7,13 +7,13 @@ import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import Color from 'color';
 import * as _ from 'lodash';
 import * as React from 'react';
-import { pretty_amount } from '../../../../util';
+import { PrettyAmount } from '../../../../util';
 import './Ants.css';
 import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { UTXOModel } from '../../../../Data/UTXO';
 import { useSelector } from 'react-redux';
-import { selectIsUnreachable } from '../../../../SimulationSlice';
+import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
 const white = Color('white').toString();
 const black = Color('black').toString();
 const yellow = Color('yellow').fade(0.2).toString();
@@ -195,7 +195,7 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                     </Title>
                     {is_conf}
                     <Title color={color}>
-                        <TitleName>{pretty_amount(amount)}</TitleName>
+                        <TitleName>{PrettyAmount(amount)}</TitleName>
                     </Title>
                     {ports_bottom}
                 </UTXONode>

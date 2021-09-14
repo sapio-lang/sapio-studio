@@ -6,8 +6,7 @@ import {
     contractCreatorReducer,
     register,
 } from '../UX/ContractCreator/ContractCreatorSlice';
-import { composeWithDevTools } from '@reduxjs/toolkit/dist/devtoolsExtension';
-import { simulationReducer } from '../SimulationSlice';
+import { simulationReducer } from '../Data/SimulationSlice';
 
 export const store = configureStore({
     reducer: {

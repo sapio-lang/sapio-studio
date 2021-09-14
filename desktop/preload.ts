@@ -10,13 +10,13 @@ async function bitcoin_command(
 async function create_contract(which: string, args: string) {
     return ipcRenderer.invoke('create_contract', [which, args]);
 }
-async function save_psbt(psbt: string) {
+async function save_psbt(psbt: string): Promise<null> {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
-async function fetch_psbt() {
+async function fetch_psbt(): Promise<null> {
     return ipcRenderer.invoke('fetch_psbt');
 }
-async function save_contract(contract: string) {
+async function save_contract(contract: string): Promise<null> {
     return ipcRenderer.invoke('save_contract', contract);
 }
 
@@ -48,7 +48,7 @@ function get_preferences_sync() {
 function preferences_listener(listener: (e: any, preferences: any) => void) {
     ipcRenderer.on('preferencesUpdated', listener);
 }
-contextBridge.exposeInMainWorld('electron', {
+const api = {
     bitcoin_command,
     register,
     create_contract,
@@ -57,4 +57,5 @@ contextBridge.exposeInMainWorld('electron', {
     save_psbt,
     save_contract,
     fetch_psbt,
-});
+};
+contextBridge.exposeInMainWorld('electron', api);

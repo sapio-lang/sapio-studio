@@ -18,14 +18,14 @@ import { UTXOModel } from './Data/UTXO';
 import { SpendLinkFactory } from './UX/Diagram/DiagramComponents/SpendLink/SpendLinkFactory';
 import { TransactionNodeFactory } from './UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeFactory';
 import { UTXONodeFactory } from './UX/Diagram/DiagramComponents/UTXONode/UTXONodeFactory';
-import { SimulationController } from './Simulation';
+import { SimulationController } from './Data/Simulation';
 import { AppNavbar } from './UX/AppNavbar';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
 import { CurrentlyViewedEntity } from './UX/Entity/EntityViewer';
 import Collapse from 'react-bootstrap/Collapse';
 import './Glyphs.css';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
-import { ModelManager } from './ModelManager';
+import { ModelManager } from './Data/ModelManager';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     create_contract_of_type,
@@ -33,16 +33,14 @@ import {
     selectContract,
 } from './AppSlice';
 import {
-    deselect_entity,
     EntityType,
     selectEntityToView,
     selectShouldViewEntity,
     select_txn,
     select_utxo,
 } from './UX/Entity/EntitySlice';
-import { OutpointInterface, TXID, TXIDAndWTXIDMap } from './util';
+import { TXIDAndWTXIDMap } from './util';
 import { Dispatch } from 'redux';
-import { last } from 'lodash';
 
 export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
     isSelected: boolean;

@@ -1,4 +1,8 @@
-import { DiagramModel, LinkModel } from '@projectstorm/react-diagrams';
+import {
+    DiagramModel,
+    LinkModel,
+    NodeModel,
+} from '@projectstorm/react-diagrams';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
@@ -33,7 +37,7 @@ export class TransactionModel
         color: NodeColorT,
         utxo_labels: Array<UTXOFormatData | null>
     ) {
-        super(tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
+        super({}, tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
         this.broadcastable = false;
         this.broadcastable_hook = (b) => {};
         this.tx = tx;
@@ -71,8 +75,8 @@ export class TransactionModel
         return {
             psbt: this.witness_set.psbts[0]!.toBase64(),
             hex: this.tx.toHex(),
-            label: this.name,
-            color: this.color,
+            label: this.getOptions().name,
+            color: this.getOptions().color,
             utxo_metadata: this.utxo_models.map((u) => {
                 return {
                     color: u.getOptions().color,
@@ -99,7 +103,8 @@ export class TransactionModel
     }
     remove_from_model(model: DiagramModel) {
         if (!(this instanceof PhantomTransactionModel)) {
-            model.removeNode(this);
+            // TODO: is this a valid cast
+            model.removeNode((this as unknown) as NodeModel);
             this.utxo_links.map((x) =>
                 model.removeLink((x as unknown) as LinkModel)
             );

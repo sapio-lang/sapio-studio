@@ -15,7 +15,6 @@ export class OutpointDetail extends React.Component<{
                 <div className="OutpointDetail">
                     <Hex
                         className="txhex"
-                        readOnly
                         value={this.props.txid.toString() + ':' + this.props.n}
                     />
 
@@ -39,7 +38,7 @@ export class TXIDDetail extends React.Component<{
         return (
             <div className="TXIDDetail">
                 <span>txid:</span>
-                <Hex className="txhex" readOnly value={this.props.txid} />
+                <Hex className="txhex" value={this.props.txid} />
             </div>
         );
     }

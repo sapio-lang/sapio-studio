@@ -131,12 +131,7 @@ export class InputDetail extends React.Component<IProps, IState> {
         ) {
             const index: number = this.state.witness_selection;
             witness_display = this.props.witnesses[index]!.map((elt, i) => (
-                <Hex
-                    key={i}
-                    readOnly
-                    className="txhex"
-                    value={maybeDecode(true, elt)}
-                />
+                <Hex key={i} className="txhex" value={maybeDecode(true, elt)} />
             ));
         }
         const psbts_display =
@@ -194,7 +189,6 @@ export class InputDetail extends React.Component<IProps, IState> {
                         </div>
                     </div>
                     <Hex
-                        readOnly
                         className="txhex"
                         value={this.state.psbt.toBase64()}
                     ></Hex>
@@ -230,7 +224,7 @@ export class InputDetail extends React.Component<IProps, IState> {
             this.props.txinput.script.length === 0 ? null : (
                 <div className="InputDetailScriptSig">
                     <p>ScriptSig:</p>
-                    <Hex readOnly className="txhex" value={scriptValue}></Hex>
+                    <Hex className="txhex" value={scriptValue}></Hex>
                 </div>
             );
         // missing horizontal

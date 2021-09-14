@@ -1,11 +1,7 @@
 import { Transaction } from 'bitcoinjs-lib';
 import React, { ChangeEvent } from 'react';
 import * as Bitcoin from 'bitcoinjs-lib';
-import ListGroup from 'react-bootstrap/ListGroup';
-import {
-    TransactionModel,
-    PhantomTransactionModel,
-} from '../../../Data/Transaction';
+import { TransactionModel } from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
 import Hex from './Hex';
 import { InputDetail } from './InputDetail';
@@ -13,13 +9,14 @@ import { TXIDDetail } from './OutpointDetail';
 import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
 import './TransactionDetail.css';
-import { sequence_convert, time_to_pretty_string } from '../../../util';
+import {
+    sequence_convert,
+    time_to_pretty_string,
+    txid_buf_to_string,
+} from '../../../util';
 import Color from 'color';
-import { SigningDataStore } from '../../../Data/ContractManager';
-import { Dispatch } from 'redux';
-import { deselect_entity, select_utxo } from '../EntitySlice';
+import { select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
-import { useEffect } from 'react-transition-group/node_modules/@types/react';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
@@ -32,7 +29,9 @@ export function TransactionDetail(props: TransactionDetailProps) {
     const [broadcastable, setBroadcastable] = React.useState(
         props.entity.is_broadcastable()
     );
-    const [color, setColor] = React.useState(Color(props.entity.color));
+    const [color, setColor] = React.useState(
+        Color(props.entity.getOptions().color)
+    );
     React.useEffect(() => {
         props.entity.set_broadcastable_hook((b) => setBroadcastable(b));
 
@@ -54,8 +53,8 @@ export function TransactionDetail(props: TransactionDetailProps) {
             goto={() =>
                 dispatch(
                     select_utxo({
-                        hash: o.txn.tx.getHash(),
-                        index: o.utxo.index,
+                        hash: o.txn.get_txid(),
+                        nIn: o.utxo.index,
                     })
                 )
             }
@@ -72,7 +71,14 @@ export function TransactionDetail(props: TransactionDetailProps) {
         return (
             <InputDetail
                 txinput={inp}
-                goto={() => dispatch(select_utxo(inp))}
+                goto={() =>
+                    dispatch(
+                        select_utxo({
+                            hash: txid_buf_to_string(inp.hash),
+                            nIn: inp.index,
+                        })
+                    )
+                }
                 witnesses={witnesses}
                 psbts={psbts}
             />
@@ -119,16 +125,12 @@ export function TransactionDetail(props: TransactionDetailProps) {
             <TXIDDetail txid={props.entity.get_txid()} />
             <div className="serialized-tx">
                 <span> Tx Hex </span>
-                <Hex
-                    value={props.entity.tx.toHex()}
-                    readOnly
-                    className="txhex"
-                />
+                <Hex value={props.entity.tx.toHex()} className="txhex" />
             </div>
             <div className="purpose">
                 <span>Purpose:</span>
                 <input
-                    defaultValue={props.entity.purpose}
+                    defaultValue={props.entity.getOptions().purpose}
                     onChange={debounce_purpose}
                 />
             </div>
