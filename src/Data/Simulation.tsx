@@ -1,7 +1,6 @@
 import React, { FormEvent } from 'react';
 import { ContractModel } from '../Data/ContractManager';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
+
 import _ from 'lodash';
 import './Simulation.css';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
@@ -10,6 +9,8 @@ import { set_unreachable } from './SimulationSlice';
 import { TXID } from '../util';
 import OverlayTrigger from 'react-bootstrap/esm/OverlayTrigger';
 import Tooltip from 'react-bootstrap/esm/Tooltip';
+import { Button, Slider, TextField, Typography } from '@material-ui/core';
+import { ChangeEvent } from 'react-transition-group/node_modules/@types/react';
 export function SimulationController(props: {
     contract: ContractModel;
     engine: DiagramEngine;
@@ -56,26 +57,30 @@ export function SimulationController(props: {
         f(input);
     };
 
-    const updateMinTime = wrapper((input: HTMLInputElement) => {
-        setMinTimeMs(input.valueAsDate?.getTime() ?? min_time_ms);
-    });
-    const updateFirstTxTime = wrapper((input: HTMLInputElement) => {
-        setFirstTxTimePct(input.valueAsNumber);
-    });
-    const updateCurrentTime = wrapper((input: HTMLInputElement) => {
-        setCurrentTimePct(input.valueAsNumber);
-    });
-    const updateMaxTime = wrapper((input: HTMLInputElement) => {
-        setMaxTimeMs(input.valueAsDate?.getTime() ?? max_time_ms);
-    });
+    const updateMinTime = (e: ChangeEvent<HTMLInputElement>) => {
+        setMinTimeMs(Date.parse(e.currentTarget.value) ?? max_time_ms);
+    };
+    const updateBlocks = (e: ChangeEvent<{}>, n: number | number[]) => {
+        if (typeof n !== 'number') {
+            if (n.length === 2) {
+                setFirstTxBlockPct(n[0]!);
+                setCurrentBlockPct(n[1]!);
+            }
+        }
+    };
+    const updateTimes = (e: ChangeEvent<{}>, n: number | number[]) => {
+        if (typeof n !== 'number') {
+            if (n.length === 2) {
+                setFirstTxTimePct(n[0]!);
+                setCurrentTimePct(n[1]!);
+            }
+        }
+    };
+    const updateMaxTime = (e: ChangeEvent<HTMLInputElement>) => {
+        setMaxTimeMs(Date.parse(e.currentTarget.value) ?? max_time_ms);
+    };
     const updateMinBlocks = wrapper((input: HTMLInputElement) => {
         setMinBlocks(input.valueAsNumber);
-    });
-    const updateCurrentBlock = wrapper((input: HTMLInputElement) => {
-        setCurrentBlockPct(input.valueAsNumber);
-    });
-    const updateFirstTxBlock = wrapper((input: HTMLInputElement) => {
-        setFirstTxBlockPct(input.valueAsNumber);
     });
     const updateMaxBlocks = wrapper((input: HTMLInputElement) => {
         setMaxBlocks(input.valueAsNumber);
@@ -146,98 +151,56 @@ export function SimulationController(props: {
         setCurrentTimePct(new_current_time > new_first_tx_time ? 66 : 33);
         setFirstTxTimePct(new_current_time > new_first_tx_time ? 33 : 66);
     };
-    return (
-        <Form
-            onSubmit={(e: React.FormEvent) => e.preventDefault()}
-            className="Simulation"
-        >
-            <Button
-                onClick={props.hide}
-                name={'action'}
-                value={'hide'}
-                variant="link"
-            >
-                <span
-                    className="glyphicon glyphicon-remove"
-                    style={{ color: 'red' }}
-                ></span>
-            </Button>
-            <Button
-                onClick={clear}
-                name={'action'}
-                value={'clear'}
-                variant="link"
-            >
-                <span
-                    className="glyphicon glyphicon-erase"
-                    style={{ color: 'pink' }}
-                ></span>
-            </Button>
-            <div className="Controlers">
-                <BlockControl
-                    min_blocks={min_blocks}
-                    first_tx_block_pct={first_tx_block_pct}
-                    first_tx_block={first_tx_block()}
-                    current_block={current_block()}
-                    current_block_pct={current_block_pct}
-                    max_blocks={max_blocks}
-                    updateMinBlocks={updateMinBlocks}
-                    updateMaxBlocks={updateMaxBlocks}
-                    updateFirstTxBlock={updateFirstTxBlock}
-                    updateCurrentBlock={updateCurrentBlock}
-                    snapBlocks={snapBlocks}
-                />
-                <ClockControl
-                    min_time={new Date(min_time_ms)}
-                    max_time={new Date(max_time_ms)}
-                    first_tx_time={new Date(first_tx_time_ms())}
-                    first_tx_time_pct={first_tx_time_pct}
-                    current_time={new Date(current_time_ms())}
-                    current_time_pct={current_time_pct}
-                    updateMinTime={updateMinTime}
-                    updateMaxTime={updateMaxTime}
-                    updateCurrentTime={updateCurrentTime}
-                    updateFirstTxTime={updateFirstTxTime}
-                    snapTime={snapTime}
-                />
-            </div>
-        </Form>
+    const first_tx_time_str = new Date(first_tx_time_ms()).toLocaleString(
+        undefined,
+        {
+            timeZone: 'UTC',
+        }
     );
-}
-interface ClockControlProps {
-    min_time: Date;
-    max_time: Date;
-    first_tx_time: Date;
-    first_tx_time_pct: number;
-    current_time: Date;
-    current_time_pct: number;
-    updateMinTime: (e: FormEvent) => void;
-    updateMaxTime: (e: FormEvent) => void;
-    updateCurrentTime: (e: FormEvent) => void;
-    updateFirstTxTime: (e: FormEvent) => void;
-    snapTime: () => void;
-}
-function ClockControl(props: ClockControlProps) {
-    return (
+    const current_time_str = new Date(current_time_ms()).toLocaleString(
+        undefined,
+        {
+            timeZone: 'UTC',
+        }
+    );
+    const to_time_str = (t: Date) =>
+        `${t.getUTCFullYear()}-${t
+            .getUTCMonth()
+            .toString()
+            .padStart(2, '0')}-${t
+            .getUTCDay()
+            .toString()
+            .padStart(2, '0')}T${t
+            .getUTCHours()
+            .toString()
+            .padStart(2, '0')}:${t
+            .getUTCMinutes()
+            .toString()
+            .padStart(2, '0')}`;
+    const max_time_str = to_time_str(new Date(max_time_ms));
+    const min_time_str = to_time_str(new Date(min_time_ms));
+    const ClockControl = (
         <div className="Controler">
             <div className="ControlerSettings">
                 <h6> Date</h6>
-                <h6>Start </h6>
-                <Form.Control
-                    value={props.min_time.toLocaleDateString('en-CA', {
-                        timeZone: 'UTC',
-                    })}
-                    type="date"
-                    onChange={props.updateMinTime}
-                ></Form.Control>
-                <h6>End </h6>
-                <Form.Control
-                    value={props.max_time.toLocaleDateString('en-CA', {
-                        timeZone: 'UTC',
-                    })}
-                    type="date"
-                    onChange={props.updateMaxTime}
-                ></Form.Control>
+                <TextField
+                    label="Start Time"
+                    type="datetime-local"
+                    defaultValue={min_time_str}
+                    onChange={updateMinTime}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                />
+                <TextField
+                    label="End Time"
+                    type="datetime-local"
+                    defaultValue={max_time_str}
+                    onChange={updateMaxTime}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                />
                 <OverlayTrigger
                     placement={'top'}
                     overlay={
@@ -247,10 +210,10 @@ function ClockControl(props: ClockControlProps) {
                     }
                 >
                     <Button
-                        onClick={props.snapTime}
+                        onClick={snapTime}
                         name={'action'}
                         value={'snap-time'}
-                        variant="test"
+                        variant="text"
                     >
                         <i
                             className="glyphicon glyphicon-resize-horizontal"
@@ -260,65 +223,45 @@ function ClockControl(props: ClockControlProps) {
                 </OverlayTrigger>
             </div>
             <div className="ControlerSliders">
-                <Form.Label>
-                    First Tx{' '}
-                    {props.first_tx_time.toLocaleString(undefined, {
-                        timeZone: 'UTC',
-                    })}
-                </Form.Label>
+                <Typography id="slider-first-tx-time" gutterBottom>
+                    {first_tx_time_str} till {current_time_str}
+                </Typography>
 
-                <Form.Control
-                    value={props.first_tx_time_pct}
-                    type="range"
-                    onChange={props.updateFirstTxTime}
-                ></Form.Control>
-                <Form.Label>
-                    {' '}
-                    Current Time{' '}
-                    {props.current_time.toLocaleString(undefined, {
-                        timeZone: 'UTC',
-                    })}{' '}
-                </Form.Label>
-                <Form.Control
-                    value={props.current_time_pct}
-                    type="range"
-                    onChange={props.updateCurrentTime}
-                ></Form.Control>
-                <div></div>
+                <Slider
+                    value={[first_tx_time_pct, current_time_pct]}
+                    aria-labelledby="slider-first-tx-time"
+                    aria-valuetext={first_tx_time_str}
+                    step={1}
+                    marks
+                    min={0}
+                    max={100}
+                    valueLabelDisplay="auto"
+                    onChange={updateTimes}
+                />
             </div>
         </div>
     );
-}
-interface BlockControlProps {
-    min_blocks: number;
-    first_tx_block_pct: number;
-    first_tx_block: number;
-    current_block: number;
-    current_block_pct: number;
-    max_blocks: number;
-    updateMinBlocks: (a1: FormEvent) => void;
-    updateMaxBlocks: (a1: FormEvent) => void;
-    updateFirstTxBlock: (a1: FormEvent) => void;
-    updateCurrentBlock: (a1: FormEvent) => void;
-    snapBlocks: () => void;
-}
-function BlockControl(props: BlockControlProps) {
-    return (
+
+    const BlockControl = (
         <div className="Controler">
-            <div className="ControlerSettings">
+            <form className="ControlerSettings">
                 <h6> Height</h6>
-                <h6>Start </h6>
-                <Form.Control
-                    value={props.min_blocks}
-                    type="number"
-                    onChange={props.updateMinBlocks}
-                ></Form.Control>
-                <h6>End </h6>
-                <Form.Control
-                    value={props.max_blocks}
-                    type="number"
-                    onChange={props.updateMaxBlocks}
-                ></Form.Control>
+                <div>
+                    <TextField
+                        label="Start Height"
+                        value={min_blocks}
+                        type="number"
+                        onChange={updateMinBlocks}
+                    />
+                </div>
+                <div>
+                    <TextField
+                        label="End Height"
+                        value={max_blocks}
+                        type="number"
+                        onChange={updateMaxBlocks}
+                    />
+                </div>
 
                 <OverlayTrigger
                     placement={'top'}
@@ -329,10 +272,10 @@ function BlockControl(props: BlockControlProps) {
                     }
                 >
                     <Button
-                        onClick={props.snapBlocks}
+                        onClick={snapBlocks}
                         name={'action'}
                         value={'snap-blocks'}
-                        variant="test"
+                        variant="text"
                     >
                         <i
                             className="glyphicon glyphicon-resize-horizontal"
@@ -340,27 +283,55 @@ function BlockControl(props: BlockControlProps) {
                         ></i>
                     </Button>
                 </OverlayTrigger>
-            </div>
+            </form>
             <div className="ControlerSliders">
-                <div>
-                    <Form.Label>First Tx {props.first_tx_block} </Form.Label>
-                    <Form.Control
-                        value={props.first_tx_block_pct}
-                        type="range"
-                        onChange={props.updateFirstTxBlock}
-                    />
-                </div>
-                <div>
-                    <Form.Label>
-                        Current Block {props.current_block}{' '}
-                    </Form.Label>
-                    <Form.Control
-                        value={props.current_block_pct}
-                        type="range"
-                        onChange={props.updateCurrentBlock}
-                    />
-                </div>
+                <Typography id="slider-blocks" gutterBottom>
+                    {first_tx_block()} till {current_block()}
+                </Typography>
+                <Slider
+                    value={[first_tx_block_pct, current_block_pct]}
+                    aria-labelledby="discrete-slider-small-steps"
+                    step={1}
+                    marks
+                    min={0}
+                    max={100}
+                    valueLabelDisplay="auto"
+                    onChange={updateBlocks}
+                />
             </div>
         </div>
+    );
+    return (
+        <form
+            onSubmit={(e: React.FormEvent) => e.preventDefault()}
+            className="Simulation"
+        >
+            <Button
+                onClick={props.hide}
+                name={'action'}
+                value={'hide'}
+                variant="text"
+            >
+                <span
+                    className="glyphicon glyphicon-remove"
+                    style={{ color: 'red' }}
+                ></span>
+            </Button>
+            <Button
+                onClick={clear}
+                name={'action'}
+                value={'clear'}
+                variant="text"
+            >
+                <span
+                    className="glyphicon glyphicon-erase"
+                    style={{ color: 'pink' }}
+                ></span>
+            </Button>
+            <div className="Controlers">
+                {BlockControl}
+                {ClockControl}
+            </div>
+        </form>
     );
 }

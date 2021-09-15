@@ -24,7 +24,7 @@
 
 .ControlerSettings {
     display: grid;
-    grid-template-columns: min-content min-content 15vw min-content 15vw min-content;
+    grid-template-columns: min-content 15vw 15vw min-content;
     column-gap: 1em;
 }
 
