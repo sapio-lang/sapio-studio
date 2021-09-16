@@ -41,6 +41,8 @@ import {
 } from './UX/Entity/EntitySlice';
 import { TXIDAndWTXIDMap } from './util';
 import { Dispatch } from 'redux';
+import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import useMediaQuery from '@material-ui/core/useMediaQuery';
 
 export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
     isSelected: boolean;
@@ -274,48 +276,65 @@ function AppInner(props: {
             hide={() => set_timing_simulator_enabled(false)}
         />
     );
-    return (
-        <div className="App">
-            <BitcoinNodeManager
-                current_contract={current_contract}
-                model={model}
-                ref={(bnm) =>
-                    (bitcoin_node_manager = bnm || bitcoin_node_manager)
-                }
-            />
-            <div className="area">
-                <div>
-                    <AppNavbar
-                        load_new_model={(x: Data) =>
-                            dispatch(load_new_model(x))
-                        }
-                        contract={current_contract}
-                        toggle_timing_simulator={() =>
-                            set_timing_simulator_enabled(
-                                !timing_simulator_enabled
-                            )
-                        }
-                    />
-                </div>
-                <div className="area-inner">
-                    <div className="main-container">
-                        <DemoCanvasWidget engine={engine} model={model}>
-                            <CanvasWidget engine={engine as any} key={'main'} />
-                        </DemoCanvasWidget>
-                    </div>
-                    <div>{entityViewer}</div>
-                    {simulator}
-                </div>
 
-                <Collapse in={props.bitcoin_node_bar}>
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+
+    const theme = React.useMemo(
+        () =>
+            createTheme({
+                palette: {
+                    type: prefersDarkMode ? 'dark' : 'light',
+                },
+            }),
+        [prefersDarkMode]
+    );
+    return (
+        <ThemeProvider theme={theme}>
+            <div className="App">
+                <BitcoinNodeManager
+                    current_contract={current_contract}
+                    model={model}
+                    ref={(bnm) =>
+                        (bitcoin_node_manager = bnm || bitcoin_node_manager)
+                    }
+                />
+                <div className="area">
                     <div>
-                        <BitcoinStatusBar
-                            api={bitcoin_node_manager}
-                        ></BitcoinStatusBar>
+                        <AppNavbar
+                            load_new_model={(x: Data) =>
+                                dispatch(load_new_model(x))
+                            }
+                            contract={current_contract}
+                            toggle_timing_simulator={() =>
+                                set_timing_simulator_enabled(
+                                    !timing_simulator_enabled
+                                )
+                            }
+                        />
                     </div>
-                </Collapse>
+                    <div className="area-inner">
+                        <div className="main-container">
+                            <DemoCanvasWidget engine={engine} model={model}>
+                                <CanvasWidget
+                                    engine={engine as any}
+                                    key={'main'}
+                                />
+                            </DemoCanvasWidget>
+                        </div>
+                        <div>{entityViewer}</div>
+                        {simulator}
+                    </div>
+
+                    <Collapse in={props.bitcoin_node_bar}>
+                        <div>
+                            <BitcoinStatusBar
+                                api={bitcoin_node_manager}
+                            ></BitcoinStatusBar>
+                        </div>
+                    </Collapse>
+                </div>
             </div>
-        </div>
+        </ThemeProvider>
     );
 }
 

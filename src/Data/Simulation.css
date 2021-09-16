@@ -1,7 +1,7 @@
 .Simulation {
     position: absolute;
     bottom: 0px;
-    background-color: rgba(100, 100, 100, 0.3);
+    background-color: rgba(50, 50, 50, 0.8);
     background-blend-mode: screen;
     max-height: 50vh;
     width: 100%;
@@ -12,6 +12,7 @@
 }
 
 .Controlers {
+    padding-top: 40px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: 1em;

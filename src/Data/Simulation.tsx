@@ -7,9 +7,18 @@ import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import { useDispatch } from 'react-redux';
 import { set_unreachable } from './SimulationSlice';
 import { TXID } from '../util';
-import OverlayTrigger from 'react-bootstrap/esm/OverlayTrigger';
-import Tooltip from 'react-bootstrap/esm/Tooltip';
-import { Button, Slider, TextField, Typography } from '@material-ui/core';
+import {
+    IconButton,
+    Slider,
+    TextField,
+    Typography,
+    Tooltip,
+} from '@material-ui/core';
+import MoreHorizOutlinedIcon from '@material-ui/icons/MoreHorizOutlined';
+import { green, red, pink } from '@material-ui/core/colors';
+import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
+import VisibilityOffOutlinedIcon from '@material-ui/icons/VisibilityOffOutlined';
+
 import { ChangeEvent } from 'react-transition-group/node_modules/@types/react';
 export function SimulationController(props: {
     contract: ContractModel;
@@ -19,16 +28,18 @@ export function SimulationController(props: {
     const dispatch = useDispatch();
     const prefs = window.electron.get_preferences_sync();
     // Start at 0 to make scaling work riht away
-    const [first_tx_time_pct, setFirstTxTimePct] = React.useState(0);
-    const [current_time_pct, setCurrentTimePct] = React.useState(50);
     const [min_time_ms, setMinTimeMs] = React.useState(Date.now());
     const [max_time_ms, setMaxTimeMs] = React.useState(
         Date.now() + 365 * 24 * 60 * 60 * 1000
     );
-    const current_time_ms = () =>
-        (max_time_ms - min_time_ms) * (current_time_pct / 100.0) + min_time_ms;
-    const first_tx_time_ms = () =>
-        (max_time_ms - min_time_ms) * (first_tx_time_pct / 100.0) + min_time_ms;
+    const pct_to_value = (p: number, max: number, min: number) =>
+        Math.round((max - min) * (p / 100.0) + min);
+    const [first_tx_time_ms, setFirstTxTime] = React.useState(
+        pct_to_value(33, max_time_ms, min_time_ms)
+    );
+    const [current_time_ms, setCurrentTxTime] = React.useState(
+        pct_to_value(50, max_time_ms, min_time_ms)
+    );
     const is_regtest = prefs['bitcoin-config'].network === 'regtest';
     const current_year = Math.round(
         (new Date().getFullYear() - 2008) * 144 * 365 - (144 * 365) / 2
@@ -39,14 +50,12 @@ export function SimulationController(props: {
     const [max_blocks, setMaxBlocks] = React.useState(
         is_regtest ? 1000 : current_year + 365 * 144
     );
-    const [first_tx_block_pct, setFirstTxBlockPct] = React.useState(33);
-    const [current_block_pct, setCurrentBlockPct] = React.useState(66);
-    const current_block = () =>
-        Math.round((current_block_pct / 100) * (max_blocks - min_blocks)) +
-        min_blocks;
-    const first_tx_block = () =>
-        Math.round((first_tx_block_pct / 100) * (max_blocks - min_blocks)) +
-        min_blocks;
+    const [first_tx_block, setFirstTxBlockPct] = React.useState(
+        pct_to_value(33, max_blocks, min_blocks)
+    );
+    const [current_block, setCurrentBlockPct] = React.useState(
+        pct_to_value(66, max_blocks, min_blocks)
+    );
     const clear = () => {
         dispatch(set_unreachable({}));
     };
@@ -71,8 +80,8 @@ export function SimulationController(props: {
     const updateTimes = (e: ChangeEvent<{}>, n: number | number[]) => {
         if (typeof n !== 'number') {
             if (n.length === 2) {
-                setFirstTxTimePct(n[0]!);
-                setCurrentTimePct(n[1]!);
+                setFirstTxTime(n[0]!);
+                setCurrentTxTime(n[1]!);
             }
         }
     };
@@ -87,10 +96,10 @@ export function SimulationController(props: {
     });
     React.useEffect(() => {
         const unreachable = props.contract.reachable_at_time(
-            current_time_ms() / 1000,
-            current_block(),
-            first_tx_time_ms() / 1000,
-            first_tx_block()
+            current_time_ms / 1000,
+            current_block,
+            first_tx_time_ms / 1000,
+            first_tx_block
         );
         let r: Record<TXID, null> = {};
         for (const model of unreachable) {
@@ -98,19 +107,19 @@ export function SimulationController(props: {
         }
         dispatch(set_unreachable(r));
     }, [
-        first_tx_block_pct,
-        first_tx_time_pct,
+        first_tx_block,
+        first_tx_time_ms,
         max_blocks,
         min_blocks,
         max_time_ms,
         min_time_ms,
-        current_time_pct,
-        current_block_pct,
+        current_time_ms,
+        current_block,
     ]);
 
     const snapBlocks = () => {
-        const new_first_tx_block = first_tx_block();
-        const new_current_block = current_block();
+        const new_first_tx_block = first_tx_block;
+        const new_current_block = current_block;
         if (new_first_tx_block === new_current_block) return;
 
         let new_start = Math.min(new_first_tx_block, new_current_block);
@@ -126,13 +135,25 @@ export function SimulationController(props: {
 
         setMinBlocks(Math.round(new_start));
         setMaxBlocks(Math.round(new_end));
-        setFirstTxBlockPct(new_current_block > new_first_tx_block ? 33 : 66);
-        setCurrentBlockPct(new_current_block > new_first_tx_block ? 66 : 33);
+        setFirstTxBlockPct(
+            pct_to_value(
+                new_current_block > new_first_tx_block ? 33 : 66,
+                Math.round(new_end),
+                Math.round(new_start)
+            )
+        );
+        setCurrentBlockPct(
+            pct_to_value(
+                new_current_block > new_first_tx_block ? 66 : 33,
+                Math.round(new_end),
+                Math.round(new_start)
+            )
+        );
     };
     const snapTime = () => {
         // work in seconds
-        const new_first_tx_time = first_tx_time_ms() / 1000;
-        const new_current_time = current_time_ms() / 1000;
+        const new_first_tx_time = first_tx_time_ms / 1000;
+        const new_current_time = current_time_ms / 1000;
         if (new_first_tx_time === new_current_time) return;
 
         let new_start = Math.min(new_first_tx_time, new_current_time);
@@ -148,16 +169,28 @@ export function SimulationController(props: {
 
         setMinTimeMs(new_start * 1000);
         setMaxTimeMs(new_end * 1000);
-        setCurrentTimePct(new_current_time > new_first_tx_time ? 66 : 33);
-        setFirstTxTimePct(new_current_time > new_first_tx_time ? 33 : 66);
+        setCurrentTxTime(
+            pct_to_value(
+                new_current_time > new_first_tx_time ? 66 : 33,
+                new_end * 1000,
+                new_start * 1000
+            )
+        );
+        setFirstTxTime(
+            pct_to_value(
+                new_current_time > new_first_tx_time ? 33 : 66,
+                new_end * 1000,
+                new_start * 1000
+            )
+        );
     };
-    const first_tx_time_str = new Date(first_tx_time_ms()).toLocaleString(
+    const first_tx_time_str = new Date(first_tx_time_ms).toLocaleString(
         undefined,
         {
             timeZone: 'UTC',
         }
     );
-    const current_time_str = new Date(current_time_ms()).toLocaleString(
+    const current_time_str = new Date(current_time_ms).toLocaleString(
         undefined,
         {
             timeZone: 'UTC',
@@ -181,6 +214,27 @@ export function SimulationController(props: {
     const min_time_str = to_time_str(new Date(min_time_ms));
     const ClockControl = (
         <div className="Controler">
+            <div className="ControlerSliders">
+                <Slider
+                    value={[first_tx_time_ms, current_time_ms]}
+                    valueLabelFormat={(value: number, index: number) => {
+                        const d = new Date(value);
+                        return (
+                            <div>
+                                <Typography>
+                                    {d.toLocaleDateString()}
+                                </Typography>
+                                <p>{d.toLocaleTimeString()}</p>
+                            </div>
+                        );
+                    }}
+                    step={1000}
+                    min={min_time_ms}
+                    max={max_time_ms}
+                    valueLabelDisplay="on"
+                    onChange={updateTimes}
+                />
+            </div>
             <div className="ControlerSettings">
                 <h6> Date</h6>
                 <TextField
@@ -201,50 +255,28 @@ export function SimulationController(props: {
                         shrink: true,
                     }}
                 />
-                <OverlayTrigger
-                    placement={'top'}
-                    overlay={
-                        <Tooltip id="snap-time-tooltip">
-                            Click me to Snap Time.
-                        </Tooltip>
-                    }
-                >
-                    <Button
-                        onClick={snapTime}
-                        name={'action'}
-                        value={'snap-time'}
-                        variant="text"
-                    >
-                        <i
-                            className="glyphicon glyphicon-resize-horizontal"
-                            style={{ color: 'green' }}
-                        ></i>
-                    </Button>
-                </OverlayTrigger>
-            </div>
-            <div className="ControlerSliders">
-                <Typography id="slider-first-tx-time" gutterBottom>
-                    {first_tx_time_str} till {current_time_str}
-                </Typography>
 
-                <Slider
-                    value={[first_tx_time_pct, current_time_pct]}
-                    aria-labelledby="slider-first-tx-time"
-                    aria-valuetext={first_tx_time_str}
-                    step={1}
-                    marks
-                    min={0}
-                    max={100}
-                    valueLabelDisplay="auto"
-                    onChange={updateTimes}
-                />
+                <Tooltip title="Click to Snap Time">
+                    <IconButton aria-label="snap-time" onClick={snapTime}>
+                        <MoreHorizOutlinedIcon style={{ color: green[500] }} />
+                    </IconButton>
+                </Tooltip>
             </div>
         </div>
     );
 
     const BlockControl = (
         <div className="Controler">
-            <form className="ControlerSettings">
+            <div className="ControlerSliders">
+                <Slider
+                    value={[first_tx_block, current_block]}
+                    min={min_blocks}
+                    max={max_blocks}
+                    valueLabelDisplay="on"
+                    onChange={updateBlocks}
+                />
+            </div>
+            <div className="ControlerSettings">
                 <h6> Height</h6>
                 <div>
                     <TextField
@@ -263,41 +295,11 @@ export function SimulationController(props: {
                     />
                 </div>
 
-                <OverlayTrigger
-                    placement={'top'}
-                    overlay={
-                        <Tooltip id="snap-blocks-tooltip">
-                            Click me to Snap Blocks.
-                        </Tooltip>
-                    }
-                >
-                    <Button
-                        onClick={snapBlocks}
-                        name={'action'}
-                        value={'snap-blocks'}
-                        variant="text"
-                    >
-                        <i
-                            className="glyphicon glyphicon-resize-horizontal"
-                            style={{ color: 'green' }}
-                        ></i>
-                    </Button>
-                </OverlayTrigger>
-            </form>
-            <div className="ControlerSliders">
-                <Typography id="slider-blocks" gutterBottom>
-                    {first_tx_block()} till {current_block()}
-                </Typography>
-                <Slider
-                    value={[first_tx_block_pct, current_block_pct]}
-                    aria-labelledby="discrete-slider-small-steps"
-                    step={1}
-                    marks
-                    min={0}
-                    max={100}
-                    valueLabelDisplay="auto"
-                    onChange={updateBlocks}
-                />
+                <Tooltip title="Click to Snap Blocks">
+                    <IconButton aria-label="snap-blocks" onClick={snapBlocks}>
+                        <MoreHorizOutlinedIcon style={{ color: green[500] }} />
+                    </IconButton>
+                </Tooltip>
             </div>
         </div>
     );
@@ -306,28 +308,16 @@ export function SimulationController(props: {
             onSubmit={(e: React.FormEvent) => e.preventDefault()}
             className="Simulation"
         >
-            <Button
-                onClick={props.hide}
-                name={'action'}
-                value={'hide'}
-                variant="text"
-            >
-                <span
-                    className="glyphicon glyphicon-remove"
-                    style={{ color: 'red' }}
-                ></span>
-            </Button>
-            <Button
-                onClick={clear}
-                name={'action'}
-                value={'clear'}
-                variant="text"
-            >
-                <span
-                    className="glyphicon glyphicon-erase"
-                    style={{ color: 'pink' }}
-                ></span>
-            </Button>
+            <Tooltip title="Close Simulator">
+                <IconButton aria-label="close-sim" onClick={props.hide}>
+                    <CancelOutlinedIcon style={{ color: red[500] }} />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Hide Simulator Results">
+                <IconButton aria-label="hide-sim" onClick={clear}>
+                    <VisibilityOffOutlinedIcon style={{ color: pink[500] }} />
+                </IconButton>
+            </Tooltip>
             <div className="Controlers">
                 {BlockControl}
                 {ClockControl}
