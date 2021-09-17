@@ -1,9 +1,10 @@
 import React from 'react';
-import Tooltip from 'react-bootstrap/Tooltip';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import { Tooltip } from '@material-ui/core';
+import { useTheme } from '@material-ui/core';
 function BaseHex(props: { value: string; styling: string }) {
     const [tip_message, set_tip] = React.useState(null as null | string);
     const code = React.useRef(null as null | HTMLElement);
+    const theme = useTheme();
     const copy = () => {
         const select = window.getSelection();
         if (!select || !code.current) return;
@@ -23,18 +24,19 @@ function BaseHex(props: { value: string; styling: string }) {
         code.current?.addEventListener('dblclick', copy);
     });
     return (
-        <OverlayTrigger
+        <Tooltip
+            title={tip_message ?? 'double click to copy.'}
+            arrow
             placement="top"
-            overlay={
-                <Tooltip id={'hex-copyable-' + Math.random().toString()}>
-                    {tip_message ?? 'double click to copy.'}
-                </Tooltip>
-            }
         >
-            <code className={props.styling} ref={code}>
+            <code
+                className={props.styling}
+                ref={code}
+                style={{ color: theme.palette.success.main }}
+            >
                 {props.value}{' '}
             </code>
-        </OverlayTrigger>
+        </Tooltip>
     );
 }
 export default function Hex(props: { value: string; className?: string }) {
