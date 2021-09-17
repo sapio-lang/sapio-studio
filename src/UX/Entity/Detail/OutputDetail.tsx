@@ -1,10 +1,11 @@
+import { IconButton, Tooltip } from '@material-ui/core';
+import { green } from '@material-ui/core/colors';
+import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import ListGroup from 'react-bootstrap/ListGroup';
-import Hex from './Hex';
 import { UTXOModel } from '../../../Data/UTXO';
 import { PrettyAmount } from '../../../util';
-import Button from 'react-bootstrap/esm/Button';
+import Hex from './Hex';
 import './OutputDetail.css';
 
 interface OutputDetailProps {
@@ -21,13 +22,14 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
             <div className="OutputDetail">
                 <span> {PrettyAmount(this.props.txoutput.utxo.amount)} </span>
                 <Hex className="txhex" value={script} />
-                <Button variant="link" onClick={() => this.props.goto()}>
-                    <span
-                        className="glyphicon glyphicon-chevron-right"
-                        style={{ color: 'green' }}
-                        title="Go to the transaction that created this."
-                    ></span>
-                </Button>
+                <Tooltip title="Go To the Transaction that created this.">
+                    <IconButton
+                        aria-label="goto-creating-txn"
+                        onClick={() => this.props.goto()}
+                    >
+                        <DoubleArrowIcon style={{ color: green[500] }} />
+                    </IconButton>
+                </Tooltip>
             </div>
         );
     }

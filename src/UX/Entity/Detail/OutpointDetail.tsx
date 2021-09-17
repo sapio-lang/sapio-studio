@@ -1,6 +1,7 @@
+import { IconButton, Tooltip } from '@material-ui/core';
+import { green } from '@material-ui/core/colors';
+import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
 import React from 'react';
-import Button from 'react-bootstrap/esm/Button';
-import ListGroup from 'react-bootstrap/ListGroup';
 import Hex from './Hex';
 import './OutpointDetail.css';
 export class OutpointDetail extends React.Component<{
@@ -18,13 +19,14 @@ export class OutpointDetail extends React.Component<{
                         value={this.props.txid.toString() + ':' + this.props.n}
                     />
 
-                    <Button variant="link" onClick={() => this.props.onClick()}>
-                        <span
-                            className="glyphicon glyphicon-chevron-right"
-                            style={{ color: 'green' }}
-                            title="Go to the transaction that created this."
-                        ></span>
-                    </Button>
+                    <Tooltip title="Go To the Transaction that created this.">
+                        <IconButton
+                            aria-label="goto-creating-txn"
+                            onClick={() => this.props.onClick()}
+                        >
+                            <DoubleArrowIcon style={{ color: green[500] }} />
+                        </IconButton>
+                    </Tooltip>
                 </div>
             </div>
         );

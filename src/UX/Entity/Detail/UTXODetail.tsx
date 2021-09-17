@@ -1,29 +1,29 @@
+import { IconButton, Tooltip } from '@material-ui/core';
+import { green, purple } from '@material-ui/core/colors';
+import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
+import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
+import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
 import * as Bitcoin from 'bitcoinjs-lib';
-import Hex, { ASM } from './Hex';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { ContractModel } from '../../../Data/ContractManager';
+import { PhantomTransactionModel } from '../../../Data/Transaction';
+import { UTXOModel } from '../../../Data/UTXO';
 import {
     get_wtxid_backwards,
     is_mock_outpoint,
     PrettyAmount,
-    txid_buf_to_string,
 } from '../../../util';
-import { UTXOModel } from '../../../Data/UTXO';
-import './UTXODetail.css';
-import { OutpointDetail } from './OutpointDetail';
-import {
-    PhantomTransactionModel,
-    TransactionModel,
-} from '../../../Data/Transaction';
-import { ContractModel } from '../../../Data/ContractManager';
-import Button from 'react-bootstrap/esm/Button';
-import { useDispatch, useSelector } from 'react-redux';
 import {
     create,
     fetch_utxo,
-    selectUTXOFlash,
     selectUTXO,
+    selectUTXOFlash,
     select_txn,
 } from '../EntitySlice';
-import React from 'react';
+import Hex, { ASM } from './Hex';
+import { OutpointDetail } from './OutpointDetail';
+import './UTXODetail.css';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -65,51 +65,45 @@ export function UTXODetail(props: UTXODetailProps) {
     const spends = props.entity.utxo.spends.map((elt, i) => (
         <div key={get_wtxid_backwards(elt.tx)} className="Spend">
             <Hex value={elt.get_txid()} />
-            <Button
-                variant="link"
-                onClick={() => dispatch(select_txn(elt.get_txid()))}
-            >
-                <span
-                    className="glyphicon glyphicon-chevron-right"
-                    style={{ color: 'green' }}
-                    title="Go To The Spending Transaction"
-                ></span>
-            </Button>
+            <Tooltip title="Go To The Spending Transaction">
+                <IconButton
+                    aria-label="goto-spending-txn"
+                    onClick={() => dispatch(select_txn(elt.get_txid()))}
+                >
+                    <DoubleArrowIcon style={{ color: green[500] }} />
+                </IconButton>
+            </Tooltip>
         </div>
     ));
     const creator =
         !this_is_mock || is_confirmed ? null : (
-            <Button
-                variant="link"
-                onClick={() =>
-                    dispatch(
-                        create(
-                            props.entity.txn.tx,
-                            props.entity,
-                            props.contract
+            <Tooltip title="Create Contract">
+                <IconButton
+                    aria-label="create-contract"
+                    onClick={() =>
+                        dispatch(
+                            create(
+                                props.entity.txn.tx,
+                                props.entity,
+                                props.contract
+                            )
                         )
-                    )
-                }
-            >
-                <span
-                    className="glyphicon glyphicon-cloud-plus"
-                    style={{ color: 'green' }}
-                    title="Create Output"
-                ></span>
-            </Button>
+                    }
+                >
+                    <AddCircleOutlineIcon style={{ color: green[500] }} />
+                </IconButton>
+            </Tooltip>
         );
     const check_exists =
         this_is_mock || is_confirmed ? null : (
-            <Button
-                variant="link"
-                onClick={() => dispatch(fetch_utxo(outpoint))}
-            >
-                <span
-                    className="glyphicon glyphicon-cloud-download"
-                    style={{ color: 'purple' }}
-                    title="Query Node for this Output"
-                ></span>
-            </Button>
+            <Tooltip title="Check if Coin Exists">
+                <IconButton
+                    aria-label="check-coin-exists"
+                    onClick={() => dispatch(fetch_utxo(outpoint))}
+                >
+                    <CloudDownloadIcon style={{ color: purple[500] }} />
+                </IconButton>
+            </Tooltip>
         );
     const title =
         props.entity.txn instanceof PhantomTransactionModel

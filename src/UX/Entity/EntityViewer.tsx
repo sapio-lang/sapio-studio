@@ -1,19 +1,21 @@
+import { IconButton, Tooltip } from '@material-ui/core';
+import { red } from '@material-ui/core/colors';
+import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 import React from 'react';
-import { ContractModel, Data } from '../../Data/ContractManager';
-import { TransactionDetail } from './Detail/TransactionDetail';
-import { UTXODetail } from './Detail/UTXODetail';
+import { useDispatch, useSelector } from 'react-redux';
+import { ContractModel } from '../../Data/ContractManager';
 import { TransactionModel } from '../../Data/Transaction';
 import { UTXOModel } from '../../Data/UTXO';
-import './EntityViewer.css';
-import Button from 'react-bootstrap/esm/Button';
-import { OutpointInterface, TXID, TXIDAndWTXIDMap } from '../../util';
-import { useDispatch, useSelector } from 'react-redux';
+import { TXIDAndWTXIDMap } from '../../util';
+import { TransactionDetail } from './Detail/TransactionDetail';
+import { UTXODetail } from './Detail/UTXODetail';
 import {
     deselect_entity,
     EntityType,
     selectEntityToView,
     selectShouldViewEntity,
 } from './EntitySlice';
+import './EntityViewer.css';
 export interface ViewableEntityInterface {}
 
 interface CurrentylViewedEntityProps {
@@ -86,15 +88,14 @@ export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
         <div className="EntityViewerFrame">
             <div className="EntityViewerResize" onMouseDown={onMouseDown}></div>
             <div>
-                <Button
-                    onClick={() => dispatch(deselect_entity())}
-                    variant="link"
-                >
-                    <span
-                        className="glyphicon glyphicon-remove"
-                        style={{ color: 'red' }}
-                    ></span>
-                </Button>
+                <Tooltip title="Close Entity Viewer">
+                    <IconButton
+                        aria-label="close-entity-viewer"
+                        onClick={() => dispatch(deselect_entity())}
+                    >
+                        <CancelOutlinedIcon style={{ color: red[500] }} />
+                    </IconButton>
+                </Tooltip>
                 <div
                     className="EntityViewer"
                     style={{
