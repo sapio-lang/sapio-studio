@@ -1,12 +1,13 @@
 import React from 'react';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import FormControl from 'react-bootstrap/FormControl';
-import Modal from 'react-bootstrap/Modal';
 import { FormEventHandler } from 'react-transition-group/node_modules/@types/react';
 import { ContractModel } from '../../Data/ContractManager';
-import { TransactionModel } from '../../Data/Transaction';
 import { TXIDAndWTXIDMap, txid_buf_to_string } from '../../util';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import { Button, TextField, Typography } from '@material-ui/core';
 
 interface IProps {
     contract: ContractModel;
@@ -43,38 +44,34 @@ export class SaveHexModal extends React.Component<IProps, IState> {
             ),
         };
     }
-    handleSubmit: FormEventHandler = (event) => {
-        event.preventDefault();
+    handleSave = () => {
         window.electron.save_contract(this.state.data);
     };
     render() {
         return (
-            <Modal show={this.props.show} onHide={this.props.hide} size="xl">
-                <Modal.Header closeButton>
-                    <Modal.Title>Contract JSON </Modal.Title>
-                </Modal.Header>
-                <Form onSubmit={(e) => this.handleSubmit(e)}>
-                    <FormControl
-                        name="data"
-                        as="textarea"
-                        type="text"
-                        readOnly
-                        defaultValue={this.state.data}
-                        style={{ minHeight: '50vh' }}
-                    />
-                    <Button variant="primary" type="submit">
-                        Save
-                    </Button>
-                </Form>
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => this.props.hide()}
-                    >
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <Dialog open={this.props.show} onClose={this.props.hide} fullScreen>
+                <DialogTitle>Contract JSON</DialogTitle>
+                <DialogContent>
+                    <form onSubmit={(e) => e.preventDefault()}>
+                        <TextField
+                            name="data"
+                            multiline
+                            fullWidth
+                            type="text"
+                            aria-readonly
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                            defaultValue={this.state.data}
+                            style={{ minHeight: '50vh' }}
+                        />
+                    </form>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => this.handleSave()}>Save</Button>
+                    <Button onClick={() => this.props.hide()}>Close</Button>
+                </DialogActions>
+            </Dialog>
         );
     }
 }

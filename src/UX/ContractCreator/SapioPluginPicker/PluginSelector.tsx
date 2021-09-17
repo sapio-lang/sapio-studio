@@ -1,5 +1,4 @@
 import React from 'react';
-import Button from 'react-bootstrap/Button';
 import './PluginSelector.css';
 import { Plugin, PluginTile } from './PluginTile';
 import { PluginForm } from './PluginForm';
@@ -10,6 +9,8 @@ import {
     select_api,
 } from '../ContractCreatorSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import DialogActions from '@material-ui/core/DialogActions';
+import { Button } from '@material-ui/core';
 export function PluginSelector() {
     const dispatch = useDispatch();
     const apis = useSelector(selectAPIs);
@@ -19,11 +20,6 @@ export function PluginSelector() {
     if (selected !== null) {
         return (
             <div>
-                <div style={{ textAlign: 'right', paddingRight: '20px' }}>
-                    <a onClick={() => dispatch(select_api(null))}>
-                        <span className="glyphicon glyphicon-arrow-left"></span>
-                    </a>
-                </div>
                 <PluginForm app={apis[selected]!} />
             </div>
         );
