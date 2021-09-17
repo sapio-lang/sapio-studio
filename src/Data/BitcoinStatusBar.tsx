@@ -2,57 +2,51 @@ import { clamp } from 'lodash';
 import React from 'react';
 import { BitcoinNodeManager } from './BitcoinNode';
 import './BitcoinStatusBar.css';
+import { useTheme } from '@material-ui/core';
 interface BitcoinStatusBarProps {
     api: BitcoinNodeManager;
 }
-interface BitcoinStatusBarState {
-    balance: number;
-    blockchaininfo: any;
-}
-export class BitcoinStatusBar extends React.Component<
-    BitcoinStatusBarProps,
-    BitcoinStatusBarState
-> {
-    mounted: boolean;
-    constructor(props: BitcoinStatusBarProps) {
-        super(props);
-        this.mounted = false;
-        this.state = { balance: 0, blockchaininfo: null };
-    }
-    componentDidMount() {
-        this.mounted = true;
-        setTimeout(this.periodic_update_stats.bind(this), 10);
-    }
-    async periodic_update_stats() {
-        this.setState({ balance: await this.props.api.check_balance() });
-        this.setState({
-            blockchaininfo: await this.props.api.blockchaininfo(),
-        });
-        if (this.mounted) {
+export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
+    const [balance, setBalance] = React.useState(0);
+    const [blockchaininfo, setBlockchaininfo] = React.useState<any>(null);
+    React.useEffect(() => {
+        let next: ReturnType<typeof setTimeout> | null = null;
+        let mounted = true;
+        async function periodic_update_stats() {
+            next = null;
+            setBalance(await props.api.check_balance());
+            setBlockchaininfo(await props.api.blockchaininfo());
             let prefs =
                 window.electron.get_preferences_sync().display[
                     'poll-node-freq'
                 ] ?? 0;
             prefs = clamp(prefs, 5, 5 * 60);
-            setTimeout(this.periodic_update_stats.bind(this), prefs * 1000);
+            if (mounted) next = setTimeout(periodic_update_stats, prefs * 1000);
         }
-    }
-    componentWillUnmount() {
-        this.mounted = false;
-    }
-    render() {
-        if (this.state.blockchaininfo === null) return null;
-        const network = this.state.blockchaininfo.chain;
-        const headers = this.state.blockchaininfo.headers;
-        const blocks = this.state.blockchaininfo.headers;
-        return (
-            <div className="BitcoinStatusBar">
-                <div>chain: {network}</div>
-                <div>balance: {this.state.balance} BTC</div>
-                <div>
-                    processed: {blocks}/{headers}
-                </div>
+        next = setTimeout(periodic_update_stats, 10);
+        return () => {
+            mounted = false;
+            if (next !== null) clearTimeout(next);
+        };
+    });
+    const theme = useTheme();
+    if (blockchaininfo === null) return null;
+    const network = blockchaininfo.chain;
+    const headers = blockchaininfo.headers;
+    const blocks = blockchaininfo.headers;
+    return (
+        <div
+            className="BitcoinStatusBar"
+            style={{
+                background: theme.palette.background.default,
+                color: theme.palette.info.main,
+            }}
+        >
+            <div>chain: {network}</div>
+            <div>balance: {balance} BTC</div>
+            <div>
+                processed: {blocks}/{headers}
             </div>
-        );
-    }
+        </div>
+    );
 }
