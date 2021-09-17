@@ -69,7 +69,13 @@
 .App > .area > .area-inner {
     display: grid;
     grid-template-columns: 1fr max-content;
-    height: 100%;
+    height: 100vh;
+}
+
+.App > .area > .area-overlays {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
 }
 
 .main-container {

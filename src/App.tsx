@@ -1,3 +1,6 @@
+import { Collapse } from '@material-ui/core';
+import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import useMediaQuery from '@material-ui/core/useMediaQuery';
 import {
     BaseEntityEvent,
     BaseModel,
@@ -10,28 +13,28 @@ import createEngine, {
 } from '@projectstorm/react-diagrams';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
-import './App.css';
-import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
-import { ContractModel, Data } from './Data/ContractManager';
-import { TransactionModel } from './Data/Transaction';
-import { UTXOModel } from './Data/UTXO';
-import { SpendLinkFactory } from './UX/Diagram/DiagramComponents/SpendLink/SpendLinkFactory';
-import { TransactionNodeFactory } from './UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeFactory';
-import { UTXONodeFactory } from './UX/Diagram/DiagramComponents/UTXONode/UTXONodeFactory';
-import { SimulationController } from './Data/Simulation';
-import { AppNavbar } from './UX/AppNavbar';
-import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
-import { CurrentlyViewedEntity } from './UX/Entity/EntityViewer';
-import Collapse from 'react-bootstrap/Collapse';
-import './Glyphs.css';
-import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
-import { ModelManager } from './Data/ModelManager';
 import { useDispatch, useSelector } from 'react-redux';
+import { Dispatch } from 'redux';
+import './App.css';
 import {
     create_contract_of_type,
     load_new_model,
     selectContract,
 } from './AppSlice';
+import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
+import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
+import { ContractModel, Data } from './Data/ContractManager';
+import { ModelManager } from './Data/ModelManager';
+import { SimulationController } from './Data/Simulation';
+import { TransactionModel } from './Data/Transaction';
+import { UTXOModel } from './Data/UTXO';
+import './Glyphs.css';
+import { TXIDAndWTXIDMap } from './util';
+import { AppNavbar } from './UX/AppNavbar';
+import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
+import { SpendLinkFactory } from './UX/Diagram/DiagramComponents/SpendLink/SpendLinkFactory';
+import { TransactionNodeFactory } from './UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeFactory';
+import { UTXONodeFactory } from './UX/Diagram/DiagramComponents/UTXONode/UTXONodeFactory';
 import {
     EntityType,
     selectEntityToView,
@@ -39,10 +42,7 @@ import {
     select_txn,
     select_utxo,
 } from './UX/Entity/EntitySlice';
-import { TXIDAndWTXIDMap } from './util';
-import { Dispatch } from 'redux';
-import { createTheme, ThemeProvider } from '@material-ui/core/styles';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { CurrentlyViewedEntity } from './UX/Entity/EntityViewer';
 
 export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
     isSelected: boolean;
@@ -269,13 +269,6 @@ function AppInner(props: {
     const entityViewer = !details ? null : (
         <CurrentlyViewedEntity current_contract={current_contract} />
     );
-    const simulator = !timing_simulator_enabled ? null : (
-        <SimulationController
-            contract={current_contract}
-            engine={engine}
-            hide={() => set_timing_simulator_enabled(false)}
-        />
-    );
 
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
@@ -333,16 +326,23 @@ function AppInner(props: {
                             </DemoCanvasWidget>
                         </div>
                         <div>{entityViewer}</div>
-                        {simulator}
                     </div>
-
-                    <Collapse in={props.bitcoin_node_bar}>
-                        <div>
-                            <BitcoinStatusBar
-                                api={bitcoin_node_manager}
-                            ></BitcoinStatusBar>
-                        </div>
-                    </Collapse>
+                    <div className="area-overlays">
+                        <Collapse in={timing_simulator_enabled}>
+                            <SimulationController
+                                contract={current_contract}
+                                engine={engine}
+                                hide={() => set_timing_simulator_enabled(false)}
+                            />
+                        </Collapse>
+                        <Collapse in={props.bitcoin_node_bar}>
+                            <div>
+                                <BitcoinStatusBar
+                                    api={bitcoin_node_manager}
+                                ></BitcoinStatusBar>
+                            </div>
+                        </Collapse>
+                    </div>
                 </div>
             </div>
         </ThemeProvider>
