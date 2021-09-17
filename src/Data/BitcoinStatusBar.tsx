@@ -30,10 +30,9 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
         };
     });
     const theme = useTheme();
-    if (blockchaininfo === null) return null;
-    const network = blockchaininfo.chain;
-    const headers = blockchaininfo.headers;
-    const blocks = blockchaininfo.headers;
+    const network = blockchaininfo?.chain ?? 'disconnected';
+    const headers = blockchaininfo?.headers ?? '?';
+    const blocks = blockchaininfo?.headers ?? '?';
     return (
         <div
             className="BitcoinStatusBar"

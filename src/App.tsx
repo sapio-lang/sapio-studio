@@ -98,7 +98,15 @@ function selection_handler(model: DiagramModel, engine: DiagramEngine) {
                 return;
             } else {
                 model.setZoomLevel(100);
-                const { clientHeight, clientWidth } = engine.getCanvas();
+                const canvas = engine.getCanvas();
+                // Bug, sometimes no fields
+                if (
+                    canvas === undefined ||
+                    !canvas.hasAttribute('clientHeight') ||
+                    !canvas.hasAttribute('clientWidth')
+                )
+                    return;
+                const { clientHeight, clientWidth } = canvas;
                 const {
                     left,
                     top,
@@ -147,14 +155,6 @@ function diagram_select_handler(
 }
 function App() {
     const dispatch = useDispatch();
-    const [bitcoin_node_bar, set_bitcoin_node_bar] = React.useState(true);
-    React.useEffect(() => {
-        return window.electron.register('bitcoin-node-bar', (msg: string) => {
-            if (msg === 'show') {
-                set_bitcoin_node_bar(!bitcoin_node_bar);
-            }
-        });
-    });
 
     // TODO: This should go somewhere else :(
     React.useEffect(() => {
@@ -207,7 +207,6 @@ function App() {
     };
     return (
         <AppInner
-            bitcoin_node_bar={bitcoin_node_bar}
             engine={engine}
             model={model}
             model_manager={model_manager}
@@ -217,7 +216,6 @@ function App() {
     );
 }
 function AppInner(props: {
-    bitcoin_node_bar: boolean;
     engine: DiagramEngine;
     model: DiagramModel;
     model_manager: ModelManager;
@@ -228,6 +226,14 @@ function AppInner(props: {
     ) => ContractModel;
     selection_handler: (c: ContractModel, entity_id: EntityType) => void;
 }) {
+    const [bitcoin_node_bar, set_bitcoin_node_bar] = React.useState(true);
+    React.useEffect(() => {
+        return window.electron.register('bitcoin-node-bar', (msg: string) => {
+            if (msg === 'show') {
+                set_bitcoin_node_bar(!bitcoin_node_bar);
+            }
+        });
+    });
     let {
         engine,
         model,
@@ -335,7 +341,7 @@ function AppInner(props: {
                                 hide={() => set_timing_simulator_enabled(false)}
                             />
                         </Collapse>
-                        <Collapse in={props.bitcoin_node_bar}>
+                        <Collapse in={bitcoin_node_bar}>
                             <div>
                                 <BitcoinStatusBar
                                     api={bitcoin_node_manager}
