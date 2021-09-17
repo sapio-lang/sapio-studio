@@ -197,9 +197,9 @@ function process_txn_models(
         for (let i = 0; i < n_outputs; ++i) {
             // Set to MAX sats...
             // TODO: a hack to make the flow technically correct and detectable
-            mock_txn.addOutput(new Buffer(''), 21e6 * 100e6);
+            mock_txn.addOutput(Buffer.from(''), 21e6 * 100e6);
         }
-        const color = NodeColor.new('white');
+        const color = NodeColor.new('magenta');
         const utxo_metadata: Array<UTXOFormatData | null> = new Array(
             n_outputs
         );

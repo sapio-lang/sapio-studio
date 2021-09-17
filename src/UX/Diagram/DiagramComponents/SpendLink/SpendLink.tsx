@@ -7,6 +7,7 @@ import * as React from 'react';
 import Color from 'color';
 import { SpendLinkModel } from './SpendLinkModel';
 import { MutableRefObject } from 'react-transition-group/node_modules/@types/react';
+import { useTheme } from '@material-ui/core';
 
 export class SpendPortModel extends DefaultPortModel {
     constructor(options: DefaultPortModelOptions) {
@@ -124,7 +125,11 @@ export function SpendLinkSegment(props: {
     let path = React.useRef(null as null | SVGPathElement);
     let x = React.useRef(0);
     let y = React.useRef(0);
-    let stroke = props.model.getOptions().color;
+    const theme = useTheme();
+    const stroke =
+        props.model.link_type === 'exclusive'
+            ? theme.palette.secondary.light
+            : theme.palette.primary.light;
     let color = React.useRef('none');
     let white = React.useRef('white');
     let key = unique_key++;
@@ -165,7 +170,7 @@ export function SpendLinkSegment(props: {
                 ref={(ref) => {
                     path.current = ref;
                 }}
-                stroke={props.model.getOptions().color}
+                stroke={stroke}
                 strokeWidth={props.model.getOptions().width}
                 d={props.path}
             />{' '}

@@ -14,6 +14,7 @@ import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { UTXOModel } from '../../../../Data/UTXO';
 import { useSelector } from 'react-redux';
 import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
+import { useTheme } from '@material-ui/core';
 const white = Color('white').toString();
 const black = Color('black').toString();
 const yellow = Color('yellow').fade(0.2).toString();
@@ -51,8 +52,9 @@ const UTXONode = styled.div<{ selected: boolean; confirmed: boolean }>`
 //}};
 //animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
 
-const Title = styled.div<{ color: string }>`
+const Title = styled.div<{ color: string; textColor: string }>`
     background: ${(p) => p.color};
+    color: ${(p) => p.textColor};
     display: flex;
     width: 100%;
     white-space: nowrap;
@@ -65,16 +67,16 @@ const TitleName = styled.div`
     padding: 5px 5px;
 `;
 
-const PortsTop = styled.div<{ color: string }>`
+const PortsTop = styled.div<{ color: string; textColor: string }>`
     display: flex;
+    color: ${(p) => p.textColor};
     background-color: ${(p) => p.color};
-    color: white;
 `;
 
-const PortsBottom = styled.div<{ color: string }>`
+const PortsBottom = styled.div<{ color: string; textColor: string }>`
     display: flex;
-    background-color: ${(p) => p.color};
-    color: black;
+    background: ${(p) => p.color};
+    color: ${(p) => p.textColor};
 `;
 
 interface PortsContainer2Props {
@@ -148,10 +150,11 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
     };
     const ports_in = _.map(props.node.getInPorts(), generatePort);
     const ports_out = _.map(props.node.getOutPorts(), generatePort);
-    let color = Color(props.node.getOptions().color).alpha(0.2).toString();
+    const theme = useTheme();
+    const textColor = theme.palette.text.primary;
     const ports_top =
         ports_in.length === 0 ? null : (
-            <PortsTop key="ports" color={'transparent'}>
+            <PortsTop key="ports" color={'transparent'} textColor={textColor}>
                 <PortsContainerUTXOTop key="inputs">
                     {ports_in}
                 </PortsContainerUTXOTop>
@@ -159,7 +162,10 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
         );
     const ports_bottom =
         ports_out.length === 0 ? null : (
-            <PortsBottom color={white}>
+            <PortsBottom
+                color={theme.palette.secondary.light}
+                textColor={theme.palette.secondary.contrastText}
+            >
                 <PortsContainerUTXOBottom key="outputs">
                     {ports_out}
                 </PortsContainerUTXOBottom>
@@ -169,8 +175,8 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
     const is_conf = is_confirmed ? null : (
         <div
             style={{
-                background: yellow,
-                color: 'black',
+                background: theme.palette.warning.light,
+                color: theme.palette.warning.contrastText,
                 textAlign: 'center',
             }}
         >
@@ -179,6 +185,8 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
     );
 
     const reachable_cl = is_reachable ? 'reachable' : 'unreachable';
+    let colorObj = Color(props.node.getOptions().color);
+    let color = colorObj.alpha(0.2).toString();
     return (
         <div>
             {ports_top}
@@ -190,11 +198,11 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                     confirmed={is_confirmed}
                     className={reachable_cl}
                 >
-                    <Title color={color}>
+                    <Title color={color} textColor={textColor}>
                         <TitleName>{props.node.getOptions().name}</TitleName>
                     </Title>
                     {is_conf}
-                    <Title color={color}>
+                    <Title color={color} textColor={textColor}>
                         <TitleName>{PrettyAmount(amount)}</TitleName>
                     </Title>
                     {ports_bottom}

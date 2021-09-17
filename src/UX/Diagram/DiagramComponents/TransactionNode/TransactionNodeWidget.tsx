@@ -13,11 +13,9 @@ import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
 import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
+import { useTheme } from '@material-ui/core';
 //import { css } from '@emotion/core';
 
-const white = Color('white').toString();
-const black = Color('black').toString();
-const yellow = Color('yellow').fade(0.2).toString();
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
 export const Node = styled.div<{
     background: string;
@@ -53,8 +51,9 @@ export const Node = styled.div<{
 // }};
 // animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
 
-export const Title = styled.div<{ color: string }>`
+export const Title = styled.div<{ color: string; textColor: string }>`
     background: ${(p) => p.color};
+    color: ${(p) => p.textColor};
     display: flex;
     white-space: nowrap;
     justify-items: center;
@@ -65,16 +64,16 @@ export const TitleName = styled.div`
     padding: 5px 5px;
 `;
 
-export const PortsTop = styled.div<{ color: string }>`
+export const PortsTop = styled.div<{ color: string; textColor: string }>`
     display: flex;
     background-color: ${(p) => p.color};
-    color: black;
+    color: ${(p) => p.textColor};
 `;
 
-export const PortsBottom = styled.div<{ color: string }>`
+export const PortsBottom = styled.div<{ color: string; textColor: string }>`
     display: flex;
     background-color: ${(p) => p.color};
-    color: white;
+    color: ${(p) => p.textColor};
 `;
 // background-image: linear-gradient(rgba(255,255,255,1), rgba(255, 255, 255,1));
 
@@ -149,11 +148,13 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
     };
 
     let color_render = Color(color).alpha(0.2).toString();
+    const theme = useTheme();
+    const text_color = theme.palette.text.primary;
     const is_conf = is_confirmed ? null : (
         <div
             style={{
-                background: yellow,
-                color: 'black',
+                background: theme.palette.warning.light,
+                color: theme.palette.warning.contrastText,
                 textAlign: 'center',
             }}
         >
@@ -164,6 +165,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
         <>
             <PortsTop
                 color={'transparent'}
+                textColor={text_color}
                 style={{ justifyContent: 'center' }}
             >
                 <PortsContainerTop>
@@ -181,15 +183,18 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                 }
             >
                 <div>
-                    <Title color={color_render}>
+                    <Title color={color_render} textColor={text_color}>
                         <TitleName>Transaction</TitleName>
                         <TitleName>{opts.name}</TitleName>
                     </Title>
                     {is_conf}
-                    <Title color={color_render}>
+                    <Title color={color_render} textColor={text_color}>
                         <TitleName>{purpose}</TitleName>
                     </Title>
-                    <PortsBottom color={black}>
+                    <PortsBottom
+                        color={theme.palette.primary.light}
+                        textColor={theme.palette.primary.contrastText}
+                    >
                         <PortsContainerBottom>
                             {_.map(props.node.getOutPorts(), generatePort)}
                         </PortsContainerBottom>

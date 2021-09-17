@@ -284,6 +284,12 @@ function AppInner(props: {
             createTheme({
                 palette: {
                     type: prefersDarkMode ? 'dark' : 'light',
+                    primary: {
+                        main: '#90caf9',
+                    },
+                    secondary: {
+                        main: '#9c27b0',
+                    },
                 },
             }),
         [prefersDarkMode]
@@ -314,7 +320,12 @@ function AppInner(props: {
                     </div>
                     <div className="area-inner">
                         <div className="main-container">
-                            <DemoCanvasWidget engine={engine} model={model}>
+                            <DemoCanvasWidget
+                                engine={engine}
+                                model={model}
+                                background={theme.palette.background.paper}
+                                color={theme.palette.divider}
+                            >
                                 <CanvasWidget
                                     engine={engine as any}
                                     key={'main'}
