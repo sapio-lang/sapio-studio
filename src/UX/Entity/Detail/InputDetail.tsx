@@ -18,7 +18,6 @@ import { red, yellow, orange, purple } from '@material-ui/core/colors';
 interface IProps {
     txinput: Bitcoin.TxInput;
     witnesses: Buffer[][];
-    psbts: Bitcoin.Psbt[];
     goto: () => void;
 }
 function maybeDecode(to_asm: boolean, elt: Buffer): string {
@@ -30,115 +29,9 @@ function maybeDecode(to_asm: boolean, elt: Buffer): string {
         return elt.toString('hex');
     }
 }
-class PSBTHandler {
-    show_flash: (
-        msg: string | JSX.Element,
-        color: string,
-        onclick?: () => void
-    ) => void;
-    constructor(
-        show_flash: (
-            msg: string | JSX.Element,
-            color: string,
-            onclick?: () => void
-        ) => void
-    ) {
-        this.show_flash = show_flash;
-    }
-    async combine_psbt(psbt: Bitcoin.Psbt) {
-        let psbt_in = Bitcoin.Psbt.fromBase64(
-            await window.electron.fetch_psbt()
-        );
-        try {
-            psbt.combine(psbt_in);
-            this.show_flash('PSBT Combined', 'green');
-        } catch (e: any) {
-            this.show_flash(
-                <div>
-                    PSBT Error{' '}
-                    <span className="glyphicon glyphicon-question-sign"></span>
-                </div>,
-                'red',
-                () => alert(e.toString())
-            );
-        }
-    }
-    async sign_psbt(psbt: string) {
-        const command = [{ method: 'walletprocesspsbt', parameters: [psbt] }];
-        const signed = (await window.electron.bitcoin_command(command))[0];
-        const as_psbt = Bitcoin.Psbt.fromBase64(signed.psbt);
-        if (signed.complete) {
-            this.show_flash('Fully Signed', 'green');
-        } else {
-            this.show_flash('Partial Signed', 'red');
-        }
-        return as_psbt;
-    }
-    async finalize_psbt(psbt: string) {
-        const command = [{ method: 'finalizepsbt', parameters: [psbt] }];
-        const result = (await window.electron.bitcoin_command(command))[0];
-        if (!result.complete || !result.hex) {
-            this.show_flash('PSBT Not Complete', 'red');
-            return;
-        }
-        try {
-            const hex_tx = Bitcoin.Transaction.fromHex(result.hex);
-            const send = [
-                { method: 'sendrawtransaction', parameters: [result.hex] },
-            ];
-
-            const sent = (await window.electron.bitcoin_command(send))[0];
-            if (sent !== hex_tx.getId()) {
-                this.show_flash(
-                    <div>
-                        Relay Error{' '}
-                        <span className="glyphicon glyphicon-question-sign"></span>
-                    </div>,
-                    'red',
-                    () => alert(sent.message.toString())
-                );
-            } else {
-                this.show_flash('Transaction Relayed!', 'green');
-            }
-        } catch (e: any) {
-            this.show_flash(
-                <div>
-                    PSBT Error{' '}
-                    <span className="glyphicon glyphicon-question-sign"></span>
-                </div>,
-                'red',
-                () => alert(e.toString())
-            );
-        }
-    }
-
-    async save_psbt(psbt: string) {
-        // no await
-        window.electron.save_psbt(psbt);
-    }
-}
 export function InputDetail(props: IProps) {
     const witness_selection_form = React.useRef<HTMLSelectElement>(null);
     const [witness_selection, setWitness] = React.useState(0);
-    const [psbt, setPSBT] = React.useState<Bitcoin.Psbt>(props.psbts[0]!);
-    const [flash, setFlash] = React.useState<JSX.Element | null>(null);
-    if (props.psbts.length === 0) return null;
-    if (props.psbts.length !== props.witnesses.length) return null;
-    function show_flash(
-        msg: string | JSX.Element,
-        color: string,
-        onclick?: () => void
-    ) {
-        const click = onclick ?? (() => null);
-        const elt = (
-            <h3 style={{ color: color }} onClick={click}>
-                {msg}
-            </h3>
-        );
-        setFlash(elt);
-        setTimeout(() => setFlash(<div></div>), 2000);
-    }
-    const psbt_handler = new PSBTHandler(show_flash);
     let witness_display = null;
     if (
         witness_selection !== undefined &&
@@ -211,8 +104,7 @@ export function InputDetail(props: IProps) {
                             parseInt(
                                 witness_selection_form.current?.value ?? '0'
                             ) ?? 0;
-                        if (idx < props.psbts.length && idx >= 0) {
-                            setPSBT(props.psbts[idx]!);
+                        if (idx < props.witnesses.length && idx >= 0) {
                             setWitness(idx);
                         }
                     }}
@@ -221,67 +113,6 @@ export function InputDetail(props: IProps) {
                 </Select>
             </form>
             <div>{witness_display}</div>
-            {flash}
-            <div className="InputDetailPSBT">
-                <Hex
-                    className="txhex"
-                    value={psbt.toBase64()}
-                    label="PSBT"
-                ></Hex>
-                <div className="PSBTActions">
-                    <Tooltip title="Save PSBT to Disk">
-                        <IconButton
-                            aria-label="save-psbt-disk"
-                            onClick={() =>
-                                psbt_handler.save_psbt(psbt.toBase64())
-                            }
-                        >
-                            <SaveIcon style={{ color: red[500] }} />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Sign PSBT using Node">
-                        <IconButton
-                            aria-label="sign-psbt-node"
-                            onClick={async () => {
-                                const new_psbt = await psbt_handler.sign_psbt(
-                                    psbt.toBase64()
-                                );
-                                // TODO: Confirm this saves to model?
-                                psbt.combine(new_psbt);
-                                setPSBT(psbt);
-                            }}
-                        >
-                            <VpnKeyIcon style={{ color: yellow[500] }} />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Combine PSBT from File">
-                        <IconButton
-                            aria-label="combine-psbt-file"
-                            onClick={async () => {
-                                // TODO: Confirm this saves to model?
-                                await psbt_handler.combine_psbt(psbt);
-                                setPSBT(psbt);
-                            }}
-                        >
-                            <MergeTypeIcon style={{ color: purple[500] }} />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Finalize and Broadcast PSBT with Node">
-                        <IconButton
-                            aria-label="combine-psbt-file"
-                            onClick={async () => {
-                                await psbt_handler.finalize_psbt(
-                                    psbt.toBase64()
-                                );
-                                setPSBT(psbt);
-                            }}
-                        >
-                            <SendIcon style={{ color: orange[500] }} />
-                        </IconButton>
-                    </Tooltip>
-                    <div></div>
-                </div>
-            </div>
         </div>
     );
 }

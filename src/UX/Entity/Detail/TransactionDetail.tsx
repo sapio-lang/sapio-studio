@@ -18,6 +18,7 @@ import Color from 'color';
 import { select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
 import { Divider, TextField } from '@material-ui/core';
+import { PSBTDetail } from './PSBTDetail';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
@@ -68,7 +69,6 @@ export function TransactionDetail(props: TransactionDetailProps) {
                 return b ? [b] : [];
             }
         );
-        const psbts: Bitcoin.Psbt[] = props.entity.witness_set.psbts;
         return (
             <InputDetail
                 txinput={inp}
@@ -81,7 +81,6 @@ export function TransactionDetail(props: TransactionDetailProps) {
                     )
                 }
                 witnesses={witnesses}
-                psbts={psbts}
             />
         );
     });
@@ -124,6 +123,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
     return (
         <div className="TransactionDetail">
             <TXIDDetail txid={props.entity.get_txid()} />
+            <PSBTDetail psbts={props.entity.witness_set.psbts} />
             <Hex
                 value={props.entity.tx.toHex()}
                 className="txhex"
