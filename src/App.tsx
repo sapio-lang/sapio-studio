@@ -8,6 +8,7 @@ import {
     CanvasWidget,
 } from '@projectstorm/react-canvas-core';
 import createEngine, {
+    DagreEngine,
     DiagramEngine,
     DiagramModel,
 } from '@projectstorm/react-diagrams';
@@ -154,6 +155,17 @@ function diagram_select_handler(
         }
     };
 }
+
+const dag = new DagreEngine({
+    graph: {
+        rankdir: 'TB',
+        align: 'DL',
+        ranker: 'tight-tree',
+        marginx: 25,
+        marginy: 25,
+    },
+    includeLinks: false,
+});
 function App() {
     const dispatch = useDispatch();
 
@@ -261,6 +273,11 @@ function AppInner(props: {
         counter,
         diagram_select_handler(dispatch, model, engine)
     );
+    React.useEffect(() => {
+        dag.redistribute(props.model);
+        engine.repaintCanvas();
+        setTimeout(() => engine.zoomToFit(), 0);
+    }, [counter]);
     selection_handler(current_contract, entity_id);
     /* current_contract is the contract loaded into the
      * backend logic interface */
