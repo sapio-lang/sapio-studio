@@ -12,7 +12,6 @@ import { UTXOModel } from '../../../Data/UTXO';
 import {
     get_wtxid_backwards,
     is_mock_outpoint,
-    PrettyAmount,
     PrettyAmountField,
 } from '../../../util';
 import {
@@ -128,7 +127,7 @@ export function UTXODetail(props: UTXODetailProps) {
                 onClick={() => dispatch(select_txn(txid))}
             />
             <ASM className="txhex" value={address} label="Address" />
-            <Typography variant="h3"> Spent By </Typography>
+            <Typography variant="h5"> Spent By </Typography>
             {spends}
         </div>
     );

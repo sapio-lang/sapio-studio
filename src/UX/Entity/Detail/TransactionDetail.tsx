@@ -17,7 +17,7 @@ import {
 import Color from 'color';
 import { select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
-import { Divider, TextField } from '@material-ui/core';
+import { Divider, TextField, Typography } from '@material-ui/core';
 import { PSBTDetail } from './PSBTDetail';
 interface TransactionDetailProps {
     entity: TransactionModel;
@@ -122,6 +122,19 @@ export function TransactionDetail(props: TransactionDetailProps) {
         );
     return (
         <div className="TransactionDetail">
+            <TextField
+                label="Purpose"
+                defaultValue={props.entity.getOptions().purpose}
+                onChange={debounce_purpose}
+            />
+            <TextField
+                label={'Color ' + color.hex()}
+                defaultValue={color.hex()}
+                fullWidth
+                type="color"
+                onChange={debounce_color}
+            />
+            <Divider />
             <TXIDDetail txid={props.entity.get_txid()} />
             <PSBTDetail psbts={props.entity.witness_set.psbts} />
             <Hex
@@ -129,30 +142,16 @@ export function TransactionDetail(props: TransactionDetailProps) {
                 className="txhex"
                 label="Tx Hex"
             />
-            <TextField
-                label="Purpose"
-                defaultValue={props.entity.getOptions().purpose}
-                onChange={debounce_purpose}
-            />
-            <div>
-                <TextField
-                    label={'Color ' + color.hex()}
-                    defaultValue={color.hex()}
-                    fullWidth
-                    type="color"
-                    onChange={debounce_color}
-                />
-            </div>
             <div className="properties">
                 {absolute_lock_jsx}
                 {relative_height_jsx}
                 {relative_time_jsx}
             </div>
             <Divider />
-            <h4> Inputs</h4>
+            <Typography variant="h5"> Inputs</Typography>
             <div className="inputs">{ins}</div>
             <Divider />
-            <h4>Outputs</h4>
+            <Typography variant="h5"> Outputs </Typography>
             <div className="outputs">{outs}</div>
         </div>
     );
