@@ -12,7 +12,6 @@ import createEngine, {
     DiagramEngine,
     DiagramModel,
 } from '@projectstorm/react-diagrams';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Dispatch } from 'redux';
