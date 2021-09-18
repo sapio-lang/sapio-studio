@@ -50,17 +50,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
     };
     const dispatch = useDispatch();
     const outs = props.entity.utxo_models.map((o, i) => (
-        <OutputDetail
-            txoutput={o}
-            goto={() =>
-                dispatch(
-                    select_utxo({
-                        hash: o.txn.get_txid(),
-                        nIn: o.utxo.index,
-                    })
-                )
-            }
-        />
+        <OutputDetail txoutput={o} />
     ));
     const ins = props.entity.tx.ins.map((inp, i) => {
         const witnesses: Buffer[][] = props.entity.witness_set.witnesses.flatMap(
@@ -69,20 +59,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
                 return b ? [b] : [];
             }
         );
-        return (
-            <InputDetail
-                txinput={inp}
-                goto={() =>
-                    dispatch(
-                        select_utxo({
-                            hash: txid_buf_to_string(inp.hash),
-                            nIn: inp.index,
-                        })
-                    )
-                }
-                witnesses={witnesses}
-            />
-        );
+        return <InputDetail txinput={inp} witnesses={witnesses} />;
     });
 
     const {

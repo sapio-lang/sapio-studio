@@ -121,11 +121,7 @@ export function UTXODetail(props: UTXODetailProps) {
             </div>
             {title}
 
-            <OutpointDetail
-                txid={txid}
-                n={idx}
-                onClick={() => dispatch(select_txn(txid))}
-            />
+            <OutpointDetail txid={txid} n={idx} />
             <ASM className="txhex" value={address} label="Address" />
             <Typography variant="h5"> Spent By </Typography>
             {spends}

@@ -1,24 +1,18 @@
-import { MenuItem, Select, InputLabel } from '@material-ui/core';
+import { InputLabel, MenuItem, Select } from '@material-ui/core';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
+import { useDispatch } from 'react-redux';
 import {
-    hash_to_hex,
     sequence_convert,
     time_to_pretty_string,
+    txid_buf_to_string,
 } from '../../../util';
 import Hex, { ReadOnly } from './Hex';
 import './InputDetail.css';
-import { OutpointDetail } from './OutpointDetail';
-import SaveIcon from '@material-ui/icons/Save';
-import VpnKeyIcon from '@material-ui/icons/VpnKey';
-import SendIcon from '@material-ui/icons/Send';
-import MergeTypeIcon from '@material-ui/icons/MergeType';
-import { IconButton, Tooltip } from '@material-ui/core';
-import { red, yellow, orange, purple } from '@material-ui/core/colors';
+import { RefOutpointDetail } from './OutpointDetail';
 interface IProps {
     txinput: Bitcoin.TxInput;
     witnesses: Buffer[][];
-    goto: () => void;
 }
 function maybeDecode(to_asm: boolean, elt: Buffer): string {
     if (to_asm) {
@@ -30,6 +24,7 @@ function maybeDecode(to_asm: boolean, elt: Buffer): string {
     }
 }
 export function InputDetail(props: IProps) {
+    const dispatch = useDispatch();
     const witness_selection_form = React.useRef<HTMLSelectElement>(null);
     const [witness_selection, setWitness] = React.useState(0);
     let witness_display = null;
@@ -85,10 +80,9 @@ export function InputDetail(props: IProps) {
     // missing horizontal
     return (
         <div className="InputDetail">
-            <OutpointDetail
-                txid={hash_to_hex(props.txinput.hash)}
+            <RefOutpointDetail
+                txid={txid_buf_to_string(props.txinput.hash)}
                 n={props.txinput.index}
-                onClick={() => props.goto()}
             />
             {sequence}
             {scriptSig}
