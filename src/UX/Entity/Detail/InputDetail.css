@@ -38,7 +38,6 @@
 }
 
 .PSBTActions {
-    padding-top: 1em;
     display: grid;
     grid-template-columns: repeat(4, min-content) max-content;
     grid-column-gap: 1em;

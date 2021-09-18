@@ -9,6 +9,12 @@ import {
 import Hex, { ReadOnly } from './Hex';
 import './InputDetail.css';
 import { OutpointDetail } from './OutpointDetail';
+import SaveIcon from '@material-ui/icons/Save';
+import VpnKeyIcon from '@material-ui/icons/VpnKey';
+import SendIcon from '@material-ui/icons/Send';
+import MergeTypeIcon from '@material-ui/icons/MergeType';
+import { IconButton, Tooltip } from '@material-ui/core';
+import { red, yellow, orange, purple } from '@material-ui/core/colors';
 interface IProps {
     txinput: Bitcoin.TxInput;
     witnesses: Buffer[][];
@@ -223,17 +229,19 @@ export function InputDetail(props: IProps) {
                     label="PSBT"
                 ></Hex>
                 <div className="PSBTActions">
-                    <div title="Save PSBT to Disk">
-                        <i
-                            className="glyphicon glyphicon-floppy-save SavePSBT"
+                    <Tooltip title="Save PSBT to Disk">
+                        <IconButton
+                            aria-label="save-psbt-disk"
                             onClick={() =>
                                 psbt_handler.save_psbt(psbt.toBase64())
                             }
-                        ></i>
-                    </div>
-                    <div title="Sign PSBT Using Node Wallet">
-                        <i
-                            className="glyphicon glyphicon-pencil SignPSBT"
+                        >
+                            <SaveIcon style={{ color: red[500] }} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Sign PSBT using Node">
+                        <IconButton
+                            aria-label="sign-psbt-node"
                             onClick={async () => {
                                 const new_psbt = await psbt_handler.sign_psbt(
                                     psbt.toBase64()
@@ -242,29 +250,35 @@ export function InputDetail(props: IProps) {
                                 psbt.combine(new_psbt);
                                 setPSBT(psbt);
                             }}
-                        ></i>
-                    </div>
-                    <div title="Combine PSBT from File">
-                        <i
-                            className="glyphicon glyphicon-compressed CombinePSBT"
+                        >
+                            <VpnKeyIcon style={{ color: yellow[500] }} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Combine PSBT from File">
+                        <IconButton
+                            aria-label="combine-psbt-file"
                             onClick={async () => {
                                 // TODO: Confirm this saves to model?
                                 await psbt_handler.combine_psbt(psbt);
                                 setPSBT(psbt);
                             }}
-                        ></i>
-                    </div>
-                    <div title="Attempt Finalizing and Broadcast">
-                        <i
-                            className="glyphicon glyphicon-send BroadcastPSBT"
+                        >
+                            <MergeTypeIcon style={{ color: purple[500] }} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Finalize and Broadcast PSBT with Node">
+                        <IconButton
+                            aria-label="combine-psbt-file"
                             onClick={async () => {
                                 await psbt_handler.finalize_psbt(
                                     psbt.toBase64()
                                 );
                                 setPSBT(psbt);
                             }}
-                        ></i>
-                    </div>
+                        >
+                            <SendIcon style={{ color: orange[500] }} />
+                        </IconButton>
+                    </Tooltip>
                     <div></div>
                 </div>
             </div>
