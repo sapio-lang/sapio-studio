@@ -1,6 +1,10 @@
+import { Button } from '@material-ui/core';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    selectAPIs,
     selectSelectedAPI,
     select_api,
     showAPIs,
@@ -8,12 +12,6 @@ import {
 } from './ContractCreatorSlice';
 import { PluginSelector } from './SapioPluginPicker/PluginSelector';
 
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import { Button } from '@material-ui/core';
 export function CreateContractModal() {
     const show = useSelector(showAPIs);
     const dispatch = useDispatch();

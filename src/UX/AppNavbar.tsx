@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
+import React, { useEffect, useState } from 'react';
 import './AppNavbar.css';
-import { SaveHexModal } from './ContractCreator/SaveHexModal';
+import { CreateContractModal } from './ContractCreator/CreateContractModal';
 import { LoadHexModal } from './ContractCreator/LoadHexModal';
 import { SapioCompilerModal } from './ContractCreator/SapioCompilerModal';
+import { SaveHexModal } from './ContractCreator/SaveHexModal';
 import { ViewContractModal } from './ContractCreator/ViewContractModal';
-import { CreateContractModal } from './ContractCreator/CreateContractModal';
-import { JSONSchema7 } from 'json-schema';
 export function AppNavbar(props: any): JSX.Element {
     const [modalView, setModalView] = useState(false);
 
