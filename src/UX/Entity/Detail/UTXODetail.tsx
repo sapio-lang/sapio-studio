@@ -1,4 +1,4 @@
-import { IconButton, Tooltip } from '@material-ui/core';
+import { IconButton, Tooltip, Typography } from '@material-ui/core';
 import { green, purple } from '@material-ui/core/colors';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
@@ -13,6 +13,7 @@ import {
     get_wtxid_backwards,
     is_mock_outpoint,
     PrettyAmount,
+    PrettyAmountField,
 } from '../../../util';
 import {
     create,
@@ -64,7 +65,7 @@ export function UTXODetail(props: UTXODetailProps) {
     }
     const spends = props.entity.utxo.spends.map((elt, i) => (
         <div key={get_wtxid_backwards(elt.tx)} className="Spend">
-            <Hex value={elt.get_txid()} />
+            <Hex value={elt.get_txid()} label="TXID" />
             <Tooltip title="Go To The Spending Transaction">
                 <IconButton
                     aria-label="goto-spending-txn"
@@ -106,9 +107,11 @@ export function UTXODetail(props: UTXODetailProps) {
             </Tooltip>
         );
     const title =
-        props.entity.txn instanceof PhantomTransactionModel
-            ? 'External UTXO'
-            : PrettyAmount(props.entity.utxo.amount);
+        props.entity.txn instanceof PhantomTransactionModel ? (
+            <p>External UTXO</p>
+        ) : (
+            <PrettyAmountField amount={props.entity.utxo.amount} />
+        );
 
     return (
         <div className="UTXODetail">
@@ -117,17 +120,16 @@ export function UTXODetail(props: UTXODetailProps) {
                 {creator}
                 {check_exists}
             </div>
-            <p>{title}</p>
+            {title}
 
             <OutpointDetail
                 txid={txid}
                 n={idx}
                 onClick={() => dispatch(select_txn(txid))}
             />
-            <div>
-                Address: <ASM className="txhex" value={address} />
-            </div>
-            <div>Spent By: {spends}</div>
+            <ASM className="txhex" value={address} label="Address" />
+            <Typography variant="h3"> Spent By </Typography>
+            {spends}
         </div>
     );
 }

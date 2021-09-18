@@ -1,4 +1,5 @@
 .OutputDetail {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: minmax(4em, 10em) minmax(5em, 1fr) min-content;
+    column-gap: 0.5em;
 }

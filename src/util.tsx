@@ -2,6 +2,7 @@ import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { Outpoint } from './UX/Entity/EntitySlice';
+import { TextField, OutlinedInput, InputAdornment } from '@material-ui/core';
 // must manually copy from preload
 type Callback =
     | 'simulate'
@@ -123,6 +124,54 @@ export function PrettyAmount(amount: number) {
                 {amount}
                 <span style={{ fontSize: 'larger', color: '#f2a900' }}>§</span>
             </span>
+        );
+    }
+}
+
+export function PrettyAmountField(props: { amount: number }) {
+    let amount = props.amount;
+    if (amount > INTERNAL_MAX_SATS_DISPLAY) {
+        amount /= 100_000_000;
+        return (
+            <TextField
+                label="Amount (btc)"
+                type="text"
+                value={amount}
+                variant="outlined"
+                InputProps={{
+                    readOnly: true,
+                    endAdornment: (
+                        <InputAdornment position="end">
+                            <span
+                                style={{ fontSize: 'larger', color: '#f2a900' }}
+                            >
+                                ₿
+                            </span>
+                        </InputAdornment>
+                    ),
+                }}
+            />
+        );
+    } else {
+        return (
+            <TextField
+                label="Amount (sats)"
+                type="text"
+                value={amount}
+                variant="outlined"
+                InputProps={{
+                    readOnly: true,
+                    endAdornment: (
+                        <InputAdornment position="end">
+                            <span
+                                style={{ fontSize: 'larger', color: '#f2a900' }}
+                            >
+                                §
+                            </span>
+                        </InputAdornment>
+                    ),
+                }}
+            />
         );
     }
 }

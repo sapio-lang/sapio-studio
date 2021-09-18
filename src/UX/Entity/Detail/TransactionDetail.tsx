@@ -17,6 +17,7 @@ import {
 import Color from 'color';
 import { select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
+import { Divider, TextField } from '@material-ui/core';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
@@ -123,37 +124,34 @@ export function TransactionDetail(props: TransactionDetailProps) {
     return (
         <div className="TransactionDetail">
             <TXIDDetail txid={props.entity.get_txid()} />
-            <div className="serialized-tx">
-                <span> Tx Hex </span>
-                <Hex value={props.entity.tx.toHex()} className="txhex" />
-            </div>
-            <div className="purpose">
-                <span>Purpose:</span>
-                <input
-                    defaultValue={props.entity.getOptions().purpose}
-                    onChange={debounce_purpose}
+            <Hex
+                value={props.entity.tx.toHex()}
+                className="txhex"
+                label="Tx Hex"
+            />
+            <TextField
+                label="Purpose"
+                defaultValue={props.entity.getOptions().purpose}
+                onChange={debounce_purpose}
+            />
+            <div>
+                <TextField
+                    label={'Color ' + color.hex()}
+                    defaultValue={color.hex()}
+                    fullWidth
+                    type="color"
+                    onChange={debounce_color}
                 />
-            </div>
-            <div className="color">
-                <span>Color:</span>
-                <div>
-                    <input
-                        defaultValue={color.hex()}
-                        type="color"
-                        onChange={debounce_color}
-                    />
-                    <span> {color.hex()}</span>
-                </div>
             </div>
             <div className="properties">
                 {absolute_lock_jsx}
                 {relative_height_jsx}
                 {relative_time_jsx}
             </div>
-            <hr></hr>
+            <Divider />
             <h4> Inputs</h4>
             <div className="inputs">{ins}</div>
-            <hr></hr>
+            <Divider />
             <h4>Outputs</h4>
             <div className="outputs">{outs}</div>
         </div>

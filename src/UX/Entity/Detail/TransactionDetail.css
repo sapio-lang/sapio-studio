@@ -2,6 +2,10 @@
     padding: 10px;
 }
 
+.TransactionDetail > * {
+    padding-top: 10px;
+}
+
 .serialized-tx {
     display: grid;
     grid-template-columns: 1fr 16em;

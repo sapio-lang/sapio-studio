@@ -1,19 +1,12 @@
 import React from 'react';
-import { Tooltip } from '@material-ui/core';
+import { Tooltip, TextField } from '@material-ui/core';
 import { useTheme } from '@material-ui/core';
-function BaseHex(props: { value: string; styling: string }) {
+function BaseHex(props: { value: string; styling: string; label?: string }) {
     const [tip_message, set_tip] = React.useState(null as null | string);
-    const code = React.useRef(null as null | HTMLElement);
+    const code = React.useRef<HTMLDivElement>(null);
     const theme = useTheme();
     const copy = () => {
-        const select = window.getSelection();
-        if (!select || !code.current) return;
-        select.removeAllRanges();
-        const range = document.createRange();
-        range.selectNodeContents(code.current);
-        select.addRange(range);
-        const txt = select.toString().trim();
-        navigator.clipboard.writeText(txt);
+        navigator.clipboard.writeText(props.value);
         set_tip('Copied!');
         setTimeout(() => {
             set_tip(null);
@@ -29,20 +22,47 @@ function BaseHex(props: { value: string; styling: string }) {
             arrow
             placement="top"
         >
-            <code
-                className={props.styling}
-                ref={code}
-                style={{ color: theme.palette.success.main }}
-            >
-                {props.value}{' '}
-            </code>
+            <div>
+                <TextField
+                    ref={code}
+                    fullWidth
+                    label={props.label}
+                    defaultValue={props.value}
+                    variant="outlined"
+                    InputProps={{
+                        readOnly: true,
+                    }}
+                />
+            </div>
         </Tooltip>
     );
 }
-export default function Hex(props: { value: string; className?: string }) {
+export default function Hex(props: {
+    value: string;
+    className?: string;
+    label?: string;
+}) {
     return BaseHex({ ...props, styling: 'truncate ' + props.className });
 }
 
-export function ASM(props: { value: string; className?: string }) {
+export function ASM(props: {
+    value: string;
+    className?: string;
+    label?: string;
+}) {
     return BaseHex({ ...props, styling: 'ASM ' + props.className });
+}
+
+export function ReadOnly(props: { value: React.ReactNode; label: string }) {
+    return (
+        <TextField
+            fullWidth
+            label={props.label}
+            defaultValue={props.value}
+            variant="outlined"
+            InputProps={{
+                readOnly: true,
+            }}
+        />
+    );
 }

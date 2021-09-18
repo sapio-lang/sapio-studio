@@ -4,8 +4,8 @@ import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { UTXOModel } from '../../../Data/UTXO';
-import { PrettyAmount } from '../../../util';
-import Hex from './Hex';
+import { PrettyAmount, PrettyAmountField } from '../../../util';
+import Hex, { ReadOnly } from './Hex';
 import './OutputDetail.css';
 
 interface OutputDetailProps {
@@ -20,8 +20,8 @@ export class OutputDetail extends React.Component<OutputDetailProps> {
         const script = Bitcoin.script.toASM(decomp);
         return (
             <div className="OutputDetail">
-                <span> {PrettyAmount(this.props.txoutput.utxo.amount)} </span>
-                <Hex className="txhex" value={script} />
+                <PrettyAmountField amount={this.props.txoutput.utxo.amount} />
+                <Hex className="txhex" value={script} label="Script" />
                 <Tooltip title="Go To the Transaction that created this.">
                     <IconButton
                         aria-label="goto-creating-txn"

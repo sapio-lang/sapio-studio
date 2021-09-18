@@ -1,4 +1,4 @@
-import { MenuItem, Select, Typography } from '@material-ui/core';
+import { MenuItem, Select, InputLabel } from '@material-ui/core';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import {
@@ -6,7 +6,7 @@ import {
     sequence_convert,
     time_to_pretty_string,
 } from '../../../util';
-import Hex from './Hex';
+import Hex, { ReadOnly } from './Hex';
 import './InputDetail.css';
 import { OutpointDetail } from './OutpointDetail';
 interface IProps {
@@ -143,51 +143,6 @@ export function InputDetail(props: IProps) {
             <Hex key={i} className="txhex" value={maybeDecode(true, elt)} />
         ));
     }
-    const psbts_display = (
-        <>
-            <div className="PSBTActions">
-                <div title="Save PSBT to Disk">
-                    <i
-                        className="glyphicon glyphicon-floppy-save SavePSBT"
-                        onClick={() => psbt_handler.save_psbt(psbt.toBase64())}
-                    ></i>
-                </div>
-                <div title="Sign PSBT Using Node Wallet">
-                    <i
-                        className="glyphicon glyphicon-pencil SignPSBT"
-                        onClick={async () => {
-                            const new_psbt = await psbt_handler.sign_psbt(
-                                psbt.toBase64()
-                            );
-                            // TODO: Confirm this saves to model?
-                            psbt.combine(new_psbt);
-                            setPSBT(psbt);
-                        }}
-                    ></i>
-                </div>
-                <div title="Combine PSBT from File">
-                    <i
-                        className="glyphicon glyphicon-compressed CombinePSBT"
-                        onClick={async () => {
-                            // TODO: Confirm this saves to model?
-                            await psbt_handler.combine_psbt(psbt);
-                            setPSBT(psbt);
-                        }}
-                    ></i>
-                </div>
-                <div title="Attempt Finalizing and Broadcast">
-                    <i
-                        className="glyphicon glyphicon-send BroadcastPSBT"
-                        onClick={async () => {
-                            await psbt_handler.finalize_psbt(psbt.toBase64());
-                            setPSBT(psbt);
-                        }}
-                    ></i>
-                </div>
-            </div>
-            <Hex className="txhex" value={psbt.toBase64()}></Hex>
-        </>
-    );
     const scriptValue = Bitcoin.script.toASM(
         Bitcoin.script.decompile(props.txinput.script) ??
             Buffer.from('Error Decompiling')
@@ -198,14 +153,18 @@ export function InputDetail(props: IProps) {
         relative_time === 0 ? (
             relative_height === 0 ? null : (
                 <div className="InputDetailSequence">
-                    <span>Relative Height: </span>
-                    {relative_height}
+                    <ReadOnly
+                        value={relative_height.toString()}
+                        label="Relative Height"
+                    ></ReadOnly>
                 </div>
             )
         ) : (
             <div className="InputDetailSequence">
-                <span>Relative Time: </span>
-                {time_to_pretty_string(relative_time)}
+                <ReadOnly
+                    value={time_to_pretty_string(relative_time)}
+                    label="Relative Time"
+                ></ReadOnly>
             </div>
         );
 
@@ -217,13 +176,16 @@ export function InputDetail(props: IProps) {
     const scriptSig =
         props.txinput.script.length === 0 ? null : (
             <div className="InputDetailScriptSig">
-                <p>ScriptSig:</p>
-                <Hex className="txhex" value={scriptValue}></Hex>
+                <Hex
+                    className="txhex"
+                    value={scriptValue}
+                    label="ScriptSig"
+                ></Hex>
             </div>
         );
     // missing horizontal
     return (
-        <div>
+        <div className="InputDetail">
             <OutpointDetail
                 txid={hash_to_hex(props.txinput.hash)}
                 n={props.txinput.index}
@@ -232,8 +194,11 @@ export function InputDetail(props: IProps) {
             {sequence}
             {scriptSig}
             <form>
-                <Typography>Witness: {witness_selection}</Typography>
+                <InputLabel id="label-select-witness">Witness</InputLabel>
                 <Select
+                    labelId="label-select-witness"
+                    label="Witness"
+                    variant="outlined"
                     ref={witness_selection_form}
                     onChange={() => {
                         const idx: number =
@@ -249,11 +214,59 @@ export function InputDetail(props: IProps) {
                     {witness_options}
                 </Select>
             </form>
-            {witness_display}
+            <div>{witness_display}</div>
             {flash}
             <div className="InputDetailPSBT">
-                <div> PSBT: </div>
-                {psbts_display}
+                <Hex
+                    className="txhex"
+                    value={psbt.toBase64()}
+                    label="PSBT"
+                ></Hex>
+                <div className="PSBTActions">
+                    <div title="Save PSBT to Disk">
+                        <i
+                            className="glyphicon glyphicon-floppy-save SavePSBT"
+                            onClick={() =>
+                                psbt_handler.save_psbt(psbt.toBase64())
+                            }
+                        ></i>
+                    </div>
+                    <div title="Sign PSBT Using Node Wallet">
+                        <i
+                            className="glyphicon glyphicon-pencil SignPSBT"
+                            onClick={async () => {
+                                const new_psbt = await psbt_handler.sign_psbt(
+                                    psbt.toBase64()
+                                );
+                                // TODO: Confirm this saves to model?
+                                psbt.combine(new_psbt);
+                                setPSBT(psbt);
+                            }}
+                        ></i>
+                    </div>
+                    <div title="Combine PSBT from File">
+                        <i
+                            className="glyphicon glyphicon-compressed CombinePSBT"
+                            onClick={async () => {
+                                // TODO: Confirm this saves to model?
+                                await psbt_handler.combine_psbt(psbt);
+                                setPSBT(psbt);
+                            }}
+                        ></i>
+                    </div>
+                    <div title="Attempt Finalizing and Broadcast">
+                        <i
+                            className="glyphicon glyphicon-send BroadcastPSBT"
+                            onClick={async () => {
+                                await psbt_handler.finalize_psbt(
+                                    psbt.toBase64()
+                                );
+                                setPSBT(psbt);
+                            }}
+                        ></i>
+                    </div>
+                    <div></div>
+                </div>
             </div>
         </div>
     );
