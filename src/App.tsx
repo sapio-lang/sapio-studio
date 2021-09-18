@@ -104,13 +104,14 @@ function selection_handler(model: DiagramModel, engine: DiagramEngine) {
                     canvas === undefined ||
                     !canvas.hasAttribute('clientHeight') ||
                     !canvas.hasAttribute('clientWidth')
-                )
+                ) {
+                    entity?.setSelected(false);
+                    last_entity = entity;
+                    last_entity_id = entity_id;
                     return;
+                }
                 const { clientHeight, clientWidth } = canvas;
-                const {
-                    left,
-                    top,
-                } = engine.getCanvas().getBoundingClientRect();
+                const { left, top } = canvas.getBoundingClientRect();
                 let { x, y } = entity.getPosition();
                 x += entity.width / 2;
                 y += entity.height;
@@ -118,7 +119,7 @@ function selection_handler(model: DiagramModel, engine: DiagramEngine) {
                 const x_coord = (left + clientWidth / 3 - x) * zoomf;
                 const y_coord = (top + clientHeight / 2 - y) * zoomf;
                 model.setOffset(x_coord, y_coord);
-                last_entity = entity ?? null;
+                last_entity = entity;
                 last_entity_id = entity_id;
                 return;
             }
