@@ -1,6 +1,5 @@
 import { SpendPortModel } from './SpendLink/SpendLink';
 import { SpendLinkModel } from './SpendLink/SpendLinkModel';
-import { useTheme } from '@material-ui/core';
 
 export class OutputLinkModel extends SpendLinkModel {
     constructor() {

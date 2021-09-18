@@ -13,11 +13,11 @@ import {
     TextField,
     Typography,
     Tooltip,
-} from '@material-ui/core';
-import MoreHorizOutlinedIcon from '@material-ui/icons/MoreHorizOutlined';
-import { green, red, pink } from '@material-ui/core/colors';
-import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
-import VisibilityOffOutlinedIcon from '@material-ui/icons/VisibilityOffOutlined';
+} from '@mui/material';
+import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
+import { green, red, pink } from '@mui/material/colors';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 
 import { ChangeEvent } from 'react-transition-group/node_modules/@types/react';
 export function SimulationController(props: {
@@ -69,7 +69,11 @@ export function SimulationController(props: {
     const updateMinTime = (e: ChangeEvent<HTMLInputElement>) => {
         setMinTimeMs(Date.parse(e.currentTarget.value) ?? max_time_ms);
     };
-    const updateBlocks = (e: ChangeEvent<{}>, n: number | number[]) => {
+    const updateBlocks = (
+        e: Event,
+        n: number | number[],
+        activeThumb: number
+    ) => {
         if (typeof n !== 'number') {
             if (n.length === 2) {
                 setFirstTxBlockPct(n[0]!);
@@ -77,7 +81,11 @@ export function SimulationController(props: {
             }
         }
     };
-    const updateTimes = (e: ChangeEvent<{}>, n: number | number[]) => {
+    const updateTimes = (
+        e: Event,
+        n: number | number[],
+        activeThumb: number
+    ) => {
         if (typeof n !== 'number') {
             if (n.length === 2) {
                 setFirstTxTime(n[0]!);

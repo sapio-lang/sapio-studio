@@ -2,7 +2,7 @@ import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { Outpoint } from './UX/Entity/EntitySlice';
-import { TextField, OutlinedInput, InputAdornment } from '@material-ui/core';
+import { TextField, OutlinedInput, InputAdornment } from '@mui/material';
 // must manually copy from preload
 type Callback =
     | 'simulate'

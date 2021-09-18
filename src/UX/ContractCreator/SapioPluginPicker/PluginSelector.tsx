@@ -9,8 +9,8 @@ import {
     select_api,
 } from '../ContractCreatorSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import DialogActions from '@material-ui/core/DialogActions';
-import { Button } from '@material-ui/core';
+import DialogActions from '@mui/material/DialogActions';
+import { Button } from '@mui/material';
 export function PluginSelector() {
     const dispatch = useDispatch();
     const apis = useSelector(selectAPIs);

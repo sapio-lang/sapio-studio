@@ -2,7 +2,7 @@ import { clamp } from 'lodash';
 import React from 'react';
 import { BitcoinNodeManager } from './BitcoinNode';
 import './BitcoinStatusBar.css';
-import { useTheme } from '@material-ui/core';
+import { useTheme } from '@mui/material';
 interface BitcoinStatusBarProps {
     api: BitcoinNodeManager;
 }

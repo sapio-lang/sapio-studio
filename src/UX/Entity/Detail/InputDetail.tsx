@@ -1,4 +1,4 @@
-import { InputLabel, MenuItem, Select } from '@material-ui/core';
+import { InputLabel, MenuItem, Select } from '@mui/material';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { useDispatch } from 'react-redux';

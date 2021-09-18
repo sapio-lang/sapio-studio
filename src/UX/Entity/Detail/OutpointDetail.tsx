@@ -1,6 +1,6 @@
-import { IconButton, Tooltip } from '@material-ui/core';
-import { green } from '@material-ui/core/colors';
-import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
+import { IconButton, Tooltip } from '@mui/material';
+import { green } from '@mui/material/colors';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { select_txn, select_utxo } from '../EntitySlice';

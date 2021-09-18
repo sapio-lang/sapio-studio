@@ -2,12 +2,12 @@ import React from 'react';
 import { FormEventHandler } from 'react-transition-group/node_modules/@types/react';
 import { ContractModel } from '../../Data/ContractManager';
 import { TXIDAndWTXIDMap, txid_buf_to_string } from '../../util';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import { Button, TextField, Typography } from '@material-ui/core';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { Button, TextField, Typography } from '@mui/material';
 
 interface IProps {
     contract: ContractModel;

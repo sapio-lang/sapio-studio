@@ -1,8 +1,8 @@
-import { IconButton, Tooltip, Typography } from '@material-ui/core';
-import { green, purple } from '@material-ui/core/colors';
-import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
-import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
-import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
+import { IconButton, Tooltip, Typography } from '@mui/material';
+import { green, purple } from '@mui/material/colors';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';

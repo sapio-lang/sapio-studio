@@ -13,7 +13,7 @@ import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
 import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
-import { useTheme } from '@material-ui/core';
+import { useTheme } from '@mui/material';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};

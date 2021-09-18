@@ -4,12 +4,12 @@ import {
     MenuItem,
     Select,
     Tooltip,
-} from '@material-ui/core';
-import { orange, purple, red, yellow } from '@material-ui/core/colors';
-import MergeTypeIcon from '@material-ui/icons/MergeType';
-import SaveIcon from '@material-ui/icons/Save';
-import SendIcon from '@material-ui/icons/Send';
-import VpnKeyIcon from '@material-ui/icons/VpnKey';
+} from '@mui/material';
+import { orange, purple, red, yellow } from '@mui/material/colors';
+import MergeTypeIcon from '@mui/icons-material/MergeType';
+import SaveIcon from '@mui/icons-material/Save';
+import SendIcon from '@mui/icons-material/Send';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import Hex from './Hex';

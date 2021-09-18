@@ -17,7 +17,7 @@ import {
 import Color from 'color';
 import { select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
-import { Divider, TextField, Typography } from '@material-ui/core';
+import { Divider, TextField, Typography } from '@mui/material';
 import { PSBTDetail } from './PSBTDetail';
 interface TransactionDetailProps {
     entity: TransactionModel;

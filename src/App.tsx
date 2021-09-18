@@ -1,6 +1,6 @@
-import { Collapse } from '@material-ui/core';
-import { createTheme, ThemeProvider } from '@material-ui/core/styles';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { Collapse } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
     BaseEntityEvent,
     BaseModel,
@@ -299,7 +299,7 @@ function AppInner(props: {
         () =>
             createTheme({
                 palette: {
-                    type: prefersDarkMode ? 'dark' : 'light',
+                    mode: prefersDarkMode ? 'dark' : 'light',
                     primary: {
                         main: '#90caf9',
                     },

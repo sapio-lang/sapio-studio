@@ -1,6 +1,6 @@
-import { IconButton, Tooltip } from '@material-ui/core';
-import { red } from '@material-ui/core/colors';
-import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
+import { IconButton, Tooltip } from '@mui/material';
+import { red } from '@mui/material/colors';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ContractModel } from '../../Data/ContractManager';

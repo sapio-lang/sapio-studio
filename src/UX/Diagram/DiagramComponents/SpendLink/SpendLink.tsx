@@ -7,7 +7,7 @@ import * as React from 'react';
 import Color from 'color';
 import { SpendLinkModel } from './SpendLinkModel';
 import { MutableRefObject } from 'react-transition-group/node_modules/@types/react';
-import { useTheme } from '@material-ui/core';
+import { useTheme } from '@mui/material';
 
 export class SpendPortModel extends DefaultPortModel {
     constructor(options: DefaultPortModelOptions) {
