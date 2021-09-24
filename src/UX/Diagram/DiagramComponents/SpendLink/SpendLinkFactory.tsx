@@ -21,8 +21,7 @@ export class SpendLinkFactory extends DefaultLinkFactory {
     ): JSX.Element {
         return (
             <g>
-                {' '}
-                <SpendLinkSegment model={model} path={path} />{' '}
+                <SpendLinkSegment model={model} path={path} />
             </g>
         );
     }

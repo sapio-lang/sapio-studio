@@ -98,7 +98,7 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
                 break;
             case OutputPortModel:
                 this.portsOut.splice(
-                    this.portsOut.indexOf((port as unknown) as SpendPortModel)
+                    this.portsOut.indexOf((port as unknown) as OutputPortModel)
                 );
                 break;
             default:

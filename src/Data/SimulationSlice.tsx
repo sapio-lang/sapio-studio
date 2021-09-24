@@ -22,7 +22,7 @@ export const simulationSlice = createSlice({
 
 export const { set_unreachable } = simulationSlice.actions;
 
-export const selectIsUnreachable: (state: RootState) => (t: TXID) => boolean = (
+export const selectIsReachable: (state: RootState) => (t: TXID) => boolean = (
     state: RootState
 ) => (t: TXID) => !state.simulationReducer.unreachable_models.hasOwnProperty(t);
 

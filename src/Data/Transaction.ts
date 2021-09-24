@@ -63,7 +63,11 @@ export class TransactionModel
             );
             this.utxo_models.push(utxo);
             this.utxo_links.push(
-                this.addOutPort('out' + y, true).link(utxo.addInPort('create'))
+                this.addOutPort('out' + y, true).create_link(
+                    utxo.addInPort('create'),
+                    this,
+                    undefined
+                )
             );
         }
         this.registerListener({
@@ -86,18 +90,6 @@ export class TransactionModel
         };
     }
 
-    setReachable(b: boolean) {
-        // Turns on/off the widget banner
-        super.setReachable(b);
-        //  Turns off the outputs animinations
-        for (const utxo_model of this.utxo_models) {
-            utxo_model.setReachable(b);
-        }
-        // Turns off the inputs animations
-        for (const input_link of this.input_links) {
-            input_link.setReachable(b);
-        }
-    }
     get_txid(): TXID {
         return this.tx.getId();
     }

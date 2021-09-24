@@ -11,7 +11,7 @@ import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
-import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
+import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { useTheme } from '@mui/material';
 //import { css } from '@emotion/core';
@@ -118,7 +118,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
     const opts = props.node.getOptions();
     const [color, setColor] = React.useState(opts.color);
     const [purpose, setPurpose] = React.useState(opts.purpose);
-    const is_reachable = useSelector(selectIsUnreachable)(
+    const is_reachable = useSelector(selectIsReachable)(
         (opts.txn as Bitcoin.Transaction).getId()
     );
     React.useEffect(() => {

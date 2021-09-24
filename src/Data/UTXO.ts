@@ -4,6 +4,7 @@ import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONode
 import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import { TransactionModel } from './Transaction';
 import { is_mock_outpoint, txid_buf_to_string } from '../util';
+import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 export class UTXOMetaData {
     index: number;
     script: Buffer;
@@ -52,6 +53,18 @@ export class UTXOModel
     }
     getAmount(): number {
         return this.utxo.amount;
+    }
+
+    spent_by(
+        spender: TransactionModel,
+        s_idx: number,
+        idx: number
+    ): SpendLinkModel {
+        return this.addOutPort('tx' + s_idx).spend_link(
+            spender.addInPort('in' + idx, true),
+            spender,
+            undefined
+        );
     }
 }
 

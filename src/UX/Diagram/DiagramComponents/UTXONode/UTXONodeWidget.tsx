@@ -13,7 +13,7 @@ import { UTXONodeModel } from './UTXONodeModel';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { UTXOModel } from '../../../../Data/UTXO';
 import { useSelector } from 'react-redux';
-import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
+import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import { useTheme } from '@mui/material';
 const white = Color('white').toString();
 const black = Color('black').toString();
@@ -121,7 +121,7 @@ interface IState {
 //callback: () => any;
 export function UTXONodeWidget(props: DefaultNodeProps) {
     const [id, setID] = React.useState(Math.random());
-    const is_reachable = useSelector(selectIsUnreachable)(
+    const is_reachable = useSelector(selectIsReachable)(
         props.node.getOptions().txid
     );
     const [is_confirmed, setConfirmed] = React.useState(
