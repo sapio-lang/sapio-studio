@@ -41,7 +41,7 @@ export function AppNavbar(props: {
     const [sim_open, setSimOpen] = React.useState(false);
     return (
         <>
-            <AppBar position="static">
+            <AppBar position="static" className="Draggable">
                 <Toolbar>
                     <Button ref={fileRef} onClick={() => setFileOpen(true)}>
                         File
