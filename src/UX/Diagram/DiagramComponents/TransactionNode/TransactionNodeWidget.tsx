@@ -38,7 +38,6 @@ export const Node = styled.div<{
         width: 100%;
         background: rgba(0, 0, 0, 0.7);
         box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.9);
-        border-radius: 3.5px 17px;
         background-clip: border-box;
     }
 `;
