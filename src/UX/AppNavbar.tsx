@@ -2,6 +2,7 @@ import {
     AppBar,
     Button,
     Divider,
+    IconButton,
     Link,
     Menu,
     MenuItem,
@@ -20,6 +21,7 @@ import { LoadHexModal } from './ContractCreator/LoadHexModal';
 import { SapioCompilerModal } from './ContractCreator/SapioCompilerModal';
 import { SaveHexModal } from './ContractCreator/SaveHexModal';
 import { ViewContractModal } from './ContractCreator/ViewContractModal';
+import SettingsIcon from '@mui/icons-material/Settings';
 export function AppNavbar(props: {
     toggle_timing_simulator: () => void;
     contract: ContractModel;
@@ -33,8 +35,9 @@ export function AppNavbar(props: {
     const [modalLoadHex, setModalLoadHex] = useState(false);
     const [modalSaveHex, setModalSaveHex] = useState(false);
 
-    const fileRef = React.useRef<HTMLButtonElement>(null);
-    const [file_open, setFileOpen] = React.useState(false);
+    const contractRef = React.useRef<HTMLButtonElement>(null);
+    const [contracts_open, setContractsOpen] = React.useState(false);
+
     const nodeRef = React.useRef<HTMLButtonElement>(null);
     const [node_open, setNodeOpen] = React.useState(false);
     const simulateRef = React.useRef<HTMLButtonElement>(null);
@@ -43,22 +46,25 @@ export function AppNavbar(props: {
         <>
             <AppBar position="static" className="Draggable">
                 <Toolbar>
-                    <Button ref={fileRef} onClick={() => setFileOpen(true)}>
-                        File
+                    <Button
+                        ref={contractRef}
+                        onClick={() => setContractsOpen(true)}
+                    >
+                        Contract
                     </Button>
                     <Menu
-                        anchorEl={fileRef.current}
+                        anchorEl={contractRef.current}
                         anchorOrigin={{
                             vertical: 'bottom',
                             horizontal: 'center',
                         }}
                         keepMounted
-                        open={file_open}
-                        onClose={() => setFileOpen(false)}
+                        open={contracts_open}
+                        onClose={() => setContractsOpen(false)}
                     >
                         <MenuItem
                             onClick={() => {
-                                setFileOpen(false);
+                                setContractsOpen(false);
                                 setModalLoadHex(true);
                             }}
                         >
@@ -66,7 +72,7 @@ export function AppNavbar(props: {
                         </MenuItem>
                         <MenuItem
                             onClick={() => {
-                                setFileOpen(false);
+                                setContractsOpen(false);
                                 window.electron.open_contract_from_file();
                             }}
                         >
@@ -74,7 +80,7 @@ export function AppNavbar(props: {
                         </MenuItem>
                         <MenuItem
                             onClick={() => {
-                                setFileOpen(false);
+                                setContractsOpen(false);
                                 setModalSaveHex(true);
                             }}
                         >
@@ -82,7 +88,7 @@ export function AppNavbar(props: {
                         </MenuItem>
                         <MenuItem
                             onClick={() => {
-                                setFileOpen(false);
+                                setContractsOpen(false);
                                 window.electron.load_wasm_plugin();
                             }}
                         >
@@ -90,7 +96,7 @@ export function AppNavbar(props: {
                         </MenuItem>
                         <MenuItem
                             onClick={async () => {
-                                setFileOpen(false);
+                                setContractsOpen(false);
                                 dispatch(
                                     set_apis(
                                         await window.electron.load_contract_list()
@@ -101,17 +107,13 @@ export function AppNavbar(props: {
                         >
                             Create New Contract
                         </MenuItem>
-                        <MenuItem onClick={() => setFileOpen(false)}>
-                            Recreate Last Contract
-                        </MenuItem>
-                        <Divider />
                         <MenuItem
                             onClick={() => {
-                                setFileOpen(false);
-                                window.electron.show_preferences();
+                                setContractsOpen(false);
+                                window.electron.recreate_contract();
                             }}
                         >
-                            Preferences
+                            Recreate Last Contract
                         </MenuItem>
                     </Menu>
                     <Button ref={nodeRef} onClick={() => setNodeOpen(true)}>
@@ -176,6 +178,15 @@ export function AppNavbar(props: {
                             Timing
                         </MenuItem>
                     </Menu>
+                    <div style={{ flex: 1 }} />
+                    <IconButton
+                        onClick={() => {
+                            setContractsOpen(false);
+                            window.electron.show_preferences();
+                        }}
+                    >
+                        <SettingsIcon />
+                    </IconButton>
                 </Toolbar>
             </AppBar>
             <div>
