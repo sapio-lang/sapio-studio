@@ -4,7 +4,7 @@ import { ContractModel } from '../Data/ContractManager';
 import _ from 'lodash';
 import './Simulation.css';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { set_unreachable } from './SimulationSlice';
 import { TXID } from '../util';
 import {
@@ -20,13 +20,14 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 
 import { ChangeEvent } from 'react-transition-group/node_modules/@types/react';
+import { selectNetwork } from '../Settings/SettingsSlice';
 export function SimulationController(props: {
     contract: ContractModel;
     engine: DiagramEngine;
     hide: () => void;
 }) {
     const dispatch = useDispatch();
-    const prefs = window.electron.get_preferences_sync();
+    const network = useSelector(selectNetwork);
     // Start at 0 to make scaling work riht away
     const [min_time_ms, setMinTimeMs] = React.useState(Date.now());
     const [max_time_ms, setMaxTimeMs] = React.useState(
@@ -40,7 +41,7 @@ export function SimulationController(props: {
     const [current_time_ms, setCurrentTxTime] = React.useState(
         pct_to_value(50, max_time_ms, min_time_ms)
     );
-    const is_regtest = prefs['bitcoin-config'].network === 'regtest';
+    const is_regtest = network === 'regtest';
     const current_year = Math.round(
         (new Date().getFullYear() - 2008) * 144 * 365 - (144 * 365) / 2
     );

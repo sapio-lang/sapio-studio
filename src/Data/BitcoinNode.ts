@@ -6,6 +6,8 @@ import { hash_to_hex, TXIDAndWTXIDMap } from '../util';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { clamp } from 'lodash';
 import { DiagramModel } from '@projectstorm/react-diagrams-core';
+import { selectNodePollFreq } from '../Settings/SettingsSlice';
+import { store } from '../Store/store';
 
 type TXID = string;
 
@@ -99,13 +101,8 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             );
         }
         if (this.mounted) {
-            let prefs = window.electron.get_preferences_sync();
-            console.log(prefs);
-            const period = clamp(
-                prefs.display['poll-node-freq'] ?? 0,
-                5,
-                60 * 5
-            );
+            const freq = selectNodePollFreq(store.getState());
+            const period = clamp(freq, 5, 60 * 5);
 
             console.info('NEXT PERIODIC CONTRACT CHECK ', period, ' SECONDS');
             this.next_periodic_check = setTimeout(

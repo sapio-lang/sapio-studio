@@ -8,6 +8,8 @@ import Color from 'color';
 import { SpendLinkModel } from './SpendLinkModel';
 import { MutableRefObject } from 'react-transition-group/node_modules/@types/react';
 import { useTheme } from '@mui/material';
+import { store } from '../../../../Store/store';
+import { selectAnimateFlow } from '../../../../Settings/SettingsSlice';
 
 export class SpendPortModel extends DefaultPortModel {
     constructor(options: DefaultPortModelOptions) {
@@ -38,27 +40,11 @@ type PathSettings = {
     white: MutableRefObject<string>;
 };
 const all_nodes: Map<typeof unique_key, PathSettings> = new Map();
-let percent_idx = 0;
-const DEFAULT_SECONDS_ANIMATION = 0;
-let seconds = DEFAULT_SECONDS_ANIMATION;
-let frames_per_second = 60;
-let increment = 100 / frames_per_second / seconds;
-(() => {
-    const preferences = window.electron.get_preferences_sync();
-    seconds =
-        (preferences.display['animate-flow'] || DEFAULT_SECONDS_ANIMATION) /
-        1000.0;
-    frames_per_second = 60;
-    increment = 100 / frames_per_second / seconds;
-    window.electron.preferences_listener((_, p) => {
-        seconds =
-            (p.display['animate-flow'] || DEFAULT_SECONDS_ANIMATION) / 1000.0;
-        frames_per_second = 60;
-        increment = 100 / frames_per_second / seconds;
-    });
-})();
 
-function update_loop() {
+function update_loop(percent_idx: number) {
+    let seconds = selectAnimateFlow(store.getState());
+    let frames_per_second = 60;
+    let increment = 100 / frames_per_second / seconds;
     if (seconds === 0) {
         const color = Color('transparent').toString();
         for (const [_, node] of all_nodes) {
@@ -94,10 +80,9 @@ function update_loop() {
         }
         requestAnimationFrame(animation_loop);
         percent_idx = (percent_idx + increment) % 101;
-        setTimeout(update_loop, 1000 / frames_per_second);
+        setTimeout(() => update_loop(percent_idx), 1000 / frames_per_second);
     }
 }
-update_loop();
 
 function animation_loop() {
     for (const [_, node] of all_nodes) {
@@ -112,12 +97,18 @@ function animation_loop() {
         node.text.current?.setAttribute('fill', node.white.current);
     }
 }
-animation_loop();
 
+let is_running = false;
 export function SpendLinkSegment(props: {
     model: SpendLinkModel;
     path: string;
 }) {
+    React.useEffect(() => {
+        if (!is_running) {
+            is_running = true;
+            update_loop(0);
+        }
+    });
     // TODO: make link appear once, make percent_idx random
     let mounted = React.useRef(false);
     let circle = React.useRef(null as null | SVGCircleElement);

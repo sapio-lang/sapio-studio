@@ -42,18 +42,18 @@ function register(msg: Callback, action: (args: any) => void): () => void {
     }
     throw 'Unregistered Callback';
 }
-function get_preferences_sync() {
-    return ipcRenderer.sendSync('getPreferences');
+function preferences_redux(listener: (preferences: any) => void) {
+    ipcRenderer.on('preferencesUpdated', (_e, p) => listener(p));
 }
-function preferences_listener(listener: (e: any, preferences: any) => void) {
-    ipcRenderer.on('preferencesUpdated', listener);
+function get_preferences_sync(): any {
+    return ipcRenderer.sendSync('getPreferences');
 }
 const api = {
     bitcoin_command,
     register,
     create_contract,
+    preferences_redux,
     get_preferences_sync,
-    preferences_listener,
     save_psbt,
     save_contract,
     fetch_psbt,
