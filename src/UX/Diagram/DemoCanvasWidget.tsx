@@ -5,7 +5,7 @@ import * as React from 'react';
 const Container = styled.div<{ color: string; background: string }>`
     height: 100%;
     background-color: ${(p) => p.background} !important;
-    background-size: 50px 50px;
+    background-size: 100px 100px;
     display: flex;
     > * {
         height: 100%;
