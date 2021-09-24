@@ -2,8 +2,6 @@
     background-color: rgba(50, 50, 50, 0.8);
     background-blend-mode: screen;
     max-height: 50vh;
-    width: 100%;
-    overflow-y: scroll;
     padding-bottom: 3em;
     padding-right: 1em;
     padding-left: 1em;
