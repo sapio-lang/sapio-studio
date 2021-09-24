@@ -1,6 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../Store/store';
-type Settings = any;
+type Networks = 'mainnet' | 'regtest' | 'testnet' | 'signet';
+type Settings = {
+    display: {
+        'sats-bound': number;
+        'poll-node-freq': number;
+        'animate-flow': number;
+    };
+    'bitcoin-config': {
+        network: Networks;
+    };
+};
 type StateType = {
     settings: Settings;
 };
@@ -21,25 +31,19 @@ export const settingsSlice = createSlice({
 
 export const { load_settings } = settingsSlice.actions;
 
-export const DEFAULT_MAX_SATS_DISPLAY: number = 9999999;
 export const selectMaxSats: (state: RootState) => number = (state: RootState) =>
-    state.settingsReducer?.settings?.display['sats-bound'] ??
-    DEFAULT_MAX_SATS_DISPLAY;
+    state.settingsReducer.settings.display['sats-bound'];
 
 export const selectNodePollFreq: (state: RootState) => number = (
     state: RootState
-) => state.settingsReducer?.settings?.display?.['poll-node-freq'] ?? 5;
+) => state.settingsReducer.settings.display['poll-node-freq'];
 
-type Networks = 'mainnet' | 'regtest' | 'testnet' | 'signet';
 export const selectNetwork: (state: RootState) => Networks = (
     state: RootState
-) => state.settingsReducer?.settings?.['bitcoin-config']?.network ?? 'regtest';
+) => state.settingsReducer.settings['bitcoin-config'].network;
 
-const DEFAULT_SECONDS_ANIMATION = 0;
 export const selectAnimateFlow: (state: RootState) => number = (
     state: RootState
-) =>
-    (state.settingsReducer?.settings?.display['animate-flow'] ||
-        DEFAULT_SECONDS_ANIMATION) / 1000.0;
+) => state.settingsReducer.settings.display['animate-flow'] / 1000.0;
 
 export const settingsReducer = settingsSlice.reducer;
