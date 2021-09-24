@@ -20,6 +20,7 @@ import {
     create_contract_of_type,
     load_new_model,
     selectContract,
+    selectStatusBar,
 } from './AppSlice';
 import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
@@ -238,14 +239,7 @@ function AppInner(props: {
     ) => ContractModel;
     selection_handler: (c: ContractModel, entity_id: EntityType) => void;
 }) {
-    const [bitcoin_node_bar, set_bitcoin_node_bar] = React.useState(true);
-    React.useEffect(() => {
-        return window.electron.register('bitcoin-node-bar', (msg: string) => {
-            if (msg === 'show') {
-                set_bitcoin_node_bar(!bitcoin_node_bar);
-            }
-        });
-    });
+    const bitcoin_node_bar = useSelector(selectStatusBar);
     let {
         engine,
         model,
@@ -323,9 +317,7 @@ function AppInner(props: {
                 <div className="area">
                     <div>
                         <AppNavbar
-                            load_new_model={(x: Data) =>
-                                dispatch(load_new_model(x))
-                            }
+                            bitcoin_node_manager={bitcoin_node_manager}
                             contract={current_contract}
                             toggle_timing_simulator={() =>
                                 set_timing_simulator_enabled(

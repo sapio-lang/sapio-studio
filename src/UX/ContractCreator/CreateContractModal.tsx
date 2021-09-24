@@ -21,7 +21,6 @@ export function CreateContractModal() {
             <Button onClick={() => dispatch(select_api(null))}>Back</Button>
         );
 
-    if (!show) return null;
     return (
         <Dialog
             open={show}

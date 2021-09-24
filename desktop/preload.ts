@@ -1,22 +1,30 @@
 import { ipcRenderer, contextBridge } from 'electron';
 import { IpcRendererEvent } from 'electron/main';
 
-async function bitcoin_command(
-    command: { method: string; parameters: any[] }[]
-) {
+function bitcoin_command(command: { method: string; parameters: any[] }[]) {
     return ipcRenderer.invoke('bitcoin-command', command);
 }
 
-async function create_contract(which: string, args: string) {
+function create_contract(which: string, args: string) {
     return ipcRenderer.invoke('create_contract', [which, args]);
 }
-async function save_psbt(psbt: string): Promise<null> {
+
+function recreate_contract() {
+    return ipcRenderer.invoke('recreate_contract');
+}
+function open_contract_from_file() {
+    return ipcRenderer.invoke('open_contract_from_file');
+}
+function load_wasm_plugin() {
+    return ipcRenderer.invoke('load_wasm_plugin');
+}
+function save_psbt(psbt: string): Promise<null> {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
-async function fetch_psbt(): Promise<null> {
+function fetch_psbt(): Promise<null> {
     return ipcRenderer.invoke('fetch_psbt');
 }
-async function save_contract(contract: string): Promise<null> {
+function save_contract(contract: string): Promise<null> {
     return ipcRenderer.invoke('save_contract', contract);
 }
 
@@ -48,6 +56,18 @@ function preferences_redux(listener: (preferences: any) => void) {
 function get_preferences_sync(): any {
     return ipcRenderer.sendSync('getPreferences');
 }
+
+function show_preferences() {
+    ipcRenderer.send('showPreferences');
+}
+function load_contract_list() {
+    return ipcRenderer.invoke('load_contract_list');
+}
+
+function write_clipboard(s: string) {
+    ipcRenderer.invoke('write_clipboard', s);
+}
+
 const api = {
     bitcoin_command,
     register,
@@ -57,5 +77,11 @@ const api = {
     save_psbt,
     save_contract,
     fetch_psbt,
+    recreate_contract,
+    load_wasm_plugin,
+    open_contract_from_file,
+    show_preferences,
+    load_contract_list,
+    write_clipboard,
 };
 contextBridge.exposeInMainWorld('electron', api);

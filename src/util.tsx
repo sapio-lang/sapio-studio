@@ -5,6 +5,8 @@ import { Outpoint } from './UX/Entity/EntitySlice';
 import { TextField, OutlinedInput, InputAdornment } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectMaxSats } from './Settings/SettingsSlice';
+import { JSONSchema7 } from 'json-schema';
+import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
 // must manually copy from preload
 type Callback =
     | 'simulate'
@@ -33,6 +35,12 @@ declare global {
             save_psbt: (psbt: string) => Promise<null>;
             save_contract: (contract: string) => Promise<null>;
             fetch_psbt: () => Promise<string>;
+            load_wasm_plugin: () => Promise<void>;
+            recreate_contract: () => Promise<void>;
+            open_contract_from_file: () => Promise<void>;
+            show_preferences: () => void;
+            load_contract_list: () => Promise<APIs>;
+            write_clipboard: (s: string) => void;
         };
     }
 }

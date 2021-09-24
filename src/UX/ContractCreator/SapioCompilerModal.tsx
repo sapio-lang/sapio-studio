@@ -6,17 +6,12 @@ import DialogTitle from '@mui/material/DialogTitle';
 import React from 'react';
 import { FormEventHandler } from 'react-transition-group/node_modules/@types/react';
 
-export function SapioCompilerModal(props: {
-    hide: () => void;
-    show: boolean;
-    compiler: any;
-}) {
+export function SapioCompilerModal(props: { hide: () => void; show: boolean }) {
     const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
         event.stopPropagation();
         const form = event.currentTarget;
         // triggers reconnect
-        props.compiler.socket.close();
         props.hide();
     };
     return (

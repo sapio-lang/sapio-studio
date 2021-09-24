@@ -4,11 +4,13 @@ import { AppDispatch, RootState } from './Store/store';
 type StateType = {
     data: Data | null;
     counter: number;
+    status_bar: boolean;
 };
 function default_state(): StateType {
     return {
         data: null,
         counter: -1,
+        status_bar: true,
     };
 }
 
@@ -20,10 +22,13 @@ export const appSlice = createSlice({
             state.data = action.payload;
             state.counter += 1;
         },
+        toggle_status_bar: (state) => {
+            state.status_bar = !state.status_bar;
+        },
     },
 });
 
-export const { load_new_model } = appSlice.actions;
+export const { load_new_model, toggle_status_bar } = appSlice.actions;
 
 export const create_contract_of_type = (
     type_arg: string,
@@ -39,5 +44,8 @@ export const create_contract_of_type = (
 export const selectContract: (state: RootState) => [Data | null, number] = (
     state: RootState
 ) => [state.appReducer.data, state.appReducer.counter];
+export const selectStatusBar: (state: RootState) => boolean = (
+    state: RootState
+) => state.appReducer.status_bar;
 
 export default appSlice.reducer;

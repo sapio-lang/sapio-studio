@@ -152,6 +152,19 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             ])
         )[0];
     }
+    async get_new_address(): Promise<string> {
+        return (
+            await window.electron.bitcoin_command([
+                { method: 'getnewaddress', parameters: [] },
+            ])
+        )[0];
+    }
+    async generate_blocks(n: number): Promise<void> {
+        const addr = await this.get_new_address();
+        await window.electron.bitcoin_command([
+            { method: 'generatetoaddress', parameters: [10, addr] },
+        ]);
+    }
     // get info about transactions
     async get_confirmed_transactions(
         current_contract: ContractModel
