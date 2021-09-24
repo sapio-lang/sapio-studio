@@ -41,22 +41,26 @@ type PathSettings = {
 };
 const all_nodes: Map<typeof unique_key, PathSettings> = new Map();
 
+const transparent = Color('transparent').toString();
 function update_loop(percent_idx: number) {
     let seconds = selectAnimateFlow(store.getState());
     let frames_per_second = 60;
     let increment = 100 / frames_per_second / seconds;
-    if (seconds === 0) {
-        const color = Color('transparent').toString();
+    if (seconds < 0.001) {
         for (const [_, node] of all_nodes) {
             if (!node.circle.current || !node.path) {
                 continue;
             }
             if (node.set_color) {
-                node.color.current = color;
+                node.color.current = transparent;
+                node.white.current = transparent;
             }
         }
         requestAnimationFrame(animation_loop);
-        setTimeout(update_loop, (3 * 1000) / frames_per_second);
+        setTimeout(
+            () => update_loop(percent_idx),
+            (3 * 1000) / frames_per_second
+        );
     } else {
         const percentage = percent_idx / 100;
         const fade = 2 * Math.abs(percentage - 0.5);
@@ -67,7 +71,7 @@ function update_loop(percent_idx: number) {
                 continue;
             }
             const point = node.path.current?.getPointAtLength(
-                node.path.current?.getTotalLength() * percentage
+                node.path.current?.getTotalLength() * percentage || 0
             );
             if (point) {
                 node.x.current = point.x;
