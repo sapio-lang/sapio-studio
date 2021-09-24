@@ -13,6 +13,7 @@ import {
     TextField,
     Typography,
     Tooltip,
+    useTheme,
 } from '@mui/material';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import { green, red, pink } from '@mui/material/colors';
@@ -21,11 +22,13 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 
 import { ChangeEvent } from 'react-transition-group/node_modules/@types/react';
 import { selectNetwork } from '../Settings/SettingsSlice';
+import Color from 'color';
 export function SimulationController(props: {
     contract: ContractModel;
     engine: DiagramEngine;
     hide: () => void;
 }) {
+    const theme = useTheme();
     const dispatch = useDispatch();
     const network = useSelector(selectNetwork);
     // Start at 0 to make scaling work riht away
@@ -316,6 +319,11 @@ export function SimulationController(props: {
         <form
             onSubmit={(e: React.FormEvent) => e.preventDefault()}
             className="Simulation"
+            style={{
+                backgroundColor: Color(theme.palette.background.default)
+                    .fade(0.2)
+                    .toString(),
+            }}
         >
             <Tooltip title="Close Simulator">
                 <IconButton aria-label="close-sim" onClick={props.hide}>

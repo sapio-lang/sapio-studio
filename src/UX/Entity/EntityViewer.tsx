@@ -1,4 +1,4 @@
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip, useTheme } from '@mui/material';
 import { red } from '@mui/material/colors';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import React from 'react';
@@ -16,6 +16,7 @@ import {
     selectShouldViewEntity,
 } from './EntitySlice';
 import './EntityViewer.css';
+import Color from 'color';
 export interface ViewableEntityInterface {}
 
 interface CurrentylViewedEntityProps {
@@ -23,6 +24,7 @@ interface CurrentylViewedEntityProps {
 }
 
 export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
+    const theme = useTheme();
     const [width, setWidth] = React.useState('20em');
     const onMouseUp = (e: MouseEvent) => {
         e.preventDefault();
@@ -85,7 +87,14 @@ export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
     }
     const dispatch = useDispatch();
     return (
-        <div className="EntityViewerFrame">
+        <div
+            className="EntityViewerFrame"
+            style={{
+                backgroundColor: Color(theme.palette.background.default)
+                    .fade(0.2)
+                    .toString(),
+            }}
+        >
             <div className="EntityViewerResize" onMouseDown={onMouseDown}></div>
             <div>
                 <Tooltip title="Close Entity Viewer">

@@ -49,6 +49,7 @@ export function AppNavbar(props: {
                     <Button
                         ref={contractRef}
                         onClick={() => setContractsOpen(true)}
+                        color="inherit"
                     >
                         Contract
                     </Button>
@@ -116,7 +117,11 @@ export function AppNavbar(props: {
                             Recreate Last Contract
                         </MenuItem>
                     </Menu>
-                    <Button ref={nodeRef} onClick={() => setNodeOpen(true)}>
+                    <Button
+                        ref={nodeRef}
+                        onClick={() => setNodeOpen(true)}
+                        color="inherit"
+                    >
                         Bitcoin Node
                     </Button>
                     <Menu
@@ -156,7 +161,11 @@ export function AppNavbar(props: {
                             Toggle Status
                         </MenuItem>
                     </Menu>
-                    <Button ref={simulateRef} onClick={() => setSimOpen(true)}>
+                    <Button
+                        ref={simulateRef}
+                        onClick={() => setSimOpen(true)}
+                        color="inherit"
+                    >
                         Simulate
                     </Button>
                     <Menu
@@ -180,6 +189,7 @@ export function AppNavbar(props: {
                     </Menu>
                     <div style={{ flex: 1 }} />
                     <IconButton
+                        color="inherit"
                         onClick={() => {
                             setContractsOpen(false);
                             window.electron.show_preferences();
