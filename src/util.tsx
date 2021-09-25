@@ -40,7 +40,7 @@ declare global {
             save_contract: (contract: string) => Promise<null>;
             fetch_psbt: () => Promise<string>;
             load_wasm_plugin: () => Promise<void>;
-            open_contract_from_file: () => Promise<void>;
+            open_contract_from_file: () => Promise<string>;
             show_preferences: () => void;
             load_contract_list: () => Promise<APIs>;
             write_clipboard: (s: string) => void;

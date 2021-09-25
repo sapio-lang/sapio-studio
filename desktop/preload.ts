@@ -12,7 +12,7 @@ function create_contract(which: string, args: string): Promise<string> {
 function recreate_contract(): Promise<string> {
     return ipcRenderer.invoke('recreate_contract');
 }
-function open_contract_from_file() {
+function open_contract_from_file(): Promise<string> {
     return ipcRenderer.invoke('open_contract_from_file');
 }
 function load_wasm_plugin() {

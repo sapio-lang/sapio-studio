@@ -49,6 +49,13 @@ export const recreate_contract = () => async (
     if (compiled_contract)
         dispatch(load_new_model(JSON.parse(compiled_contract)));
 };
+export const create_contract_from_file = () => async (
+    dispatch: AppDispatch,
+    getState: () => RootState
+) => {
+    const compiled_contract = await window.electron.open_contract_from_file();
+    dispatch(load_new_model(JSON.parse(compiled_contract)));
+};
 
 export const selectContract: (state: RootState) => [Data | null, number] = (
     state: RootState

@@ -45,7 +45,7 @@ export default function (window: BrowserWindow, client: typeof Client) {
             const data = readFileSync(file[0]!, {
                 encoding: 'utf-8',
             });
-            window.webContents.send('load_contract', data);
+            return data;
         }
     });
     ipcMain.handle('save_psbt', async (event, psbt) => {
