@@ -16,7 +16,6 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
         let next: ReturnType<typeof setTimeout> | null = null;
         let mounted = true;
         const periodic_update_stats = async () => {
-            console.log('DISMOUNT');
             next = null;
             const balance: number = await props.api.check_balance();
             const info = await props.api.blockchaininfo();

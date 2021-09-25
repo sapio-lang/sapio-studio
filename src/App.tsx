@@ -195,6 +195,12 @@ function AppInner(props: {
         })
     );
 
+    React.useEffect(() => {
+        return () => {
+            bitcoin_node_manager.current.destroy();
+        };
+    });
+
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
     const theme = React.useMemo(
