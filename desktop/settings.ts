@@ -6,6 +6,8 @@ import ElectronPreferences from 'electron-preferences';
 import { Menu } from 'electron';
 import { open, writeFileSync } from 'fs';
 
+const DEFAULT_MAX_SATS_DISPLAY: number = 9_999_999;
+const DEFAULT_ANIMATION: number = 500;
 export const settings = new ElectronPreferences({
     /**
      * Where should preferences be saved?
@@ -25,8 +27,8 @@ export const settings = new ElectronPreferences({
             configsource: 'default',
         },
         display: {
-            'sats-bound': 9_999_999,
-            'animate-flow': 500,
+            'sats-bound': DEFAULT_MAX_SATS_DISPLAY,
+            'animate-flow': DEFAULT_ANIMATION,
             'poll-node-freq': 60,
         },
     },

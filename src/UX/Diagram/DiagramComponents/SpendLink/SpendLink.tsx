@@ -7,6 +7,14 @@ import * as React from 'react';
 import Color from 'color';
 import { SpendLinkModel } from './SpendLinkModel';
 import { MutableRefObject } from 'react-transition-group/node_modules/@types/react';
+import { useTheme } from '@mui/material';
+import { store } from '../../../../Store/store';
+import { selectAnimateFlow } from '../../../../Settings/SettingsSlice';
+import { TransactionModel } from '../../../../Data/Transaction';
+import { UTXOModel } from '../../../../Data/UTXO';
+import { useSelector } from 'react-redux';
+import { selectIsReachable } from '../../../../Data/SimulationSlice';
+import { UTXONodeModel } from '../UTXONode/UTXONodeModel';
 
 export class SpendPortModel extends DefaultPortModel {
     constructor(options: DefaultPortModelOptions) {
@@ -17,11 +25,12 @@ export class SpendPortModel extends DefaultPortModel {
     createLinkModel(factory: any): SpendLinkModel {
         return new SpendLinkModel();
     }
-    spend_link(x: PortModel, factory: any) {
+    spend_link(x: SpendPortModel, to: TransactionModel, factory: any) {
         let link = this.createLinkModel(factory);
         // TODO: fix?
         link.setSourcePort((this as unknown) as PortModel);
-        link.setTargetPort(x);
+        link.setTargetPort((x as unknown) as PortModel);
+        link.linked_to = to;
         return link;
     }
 }
@@ -32,71 +41,61 @@ type PathSettings = {
     text: MutableRefObject<SVGTextElement | null>;
     x: MutableRefObject<number>;
     y: MutableRefObject<number>;
-    set_color: MutableRefObject<boolean>;
+    show: MutableRefObject<boolean>;
     color: MutableRefObject<string>;
     white: MutableRefObject<string>;
 };
 const all_nodes: Map<typeof unique_key, PathSettings> = new Map();
-let percent_idx = 0;
-const DEFAULT_SECONDS_ANIMATION = 0;
-let seconds = DEFAULT_SECONDS_ANIMATION;
-let frames_per_second = 60;
-let increment = 100 / frames_per_second / seconds;
-(() => {
-    const preferences = window.electron.get_preferences_sync();
-    seconds =
-        (preferences.display['animate-flow'] || DEFAULT_SECONDS_ANIMATION) /
-        1000.0;
-    frames_per_second = 60;
-    increment = 100 / frames_per_second / seconds;
-    window.electron.preferences_listener((_, p) => {
-        seconds =
-            (p.display['animate-flow'] || DEFAULT_SECONDS_ANIMATION) / 1000.0;
-        frames_per_second = 60;
-        increment = 100 / frames_per_second / seconds;
-    });
-})();
 
-function update_loop() {
-    if (seconds === 0) {
-        const color = Color('transparent').toString();
+const transparent = Color('transparent').toString();
+function update_loop(percent_idx: number) {
+    let seconds = selectAnimateFlow(store.getState());
+    let frames_per_second = 60;
+    let increment = 100 / frames_per_second / seconds;
+    if (seconds < 0.001) {
         for (const [_, node] of all_nodes) {
             if (!node.circle.current || !node.path) {
                 continue;
             }
-            if (node.set_color) {
-                node.color.current = color;
+            if (node.show) {
+                node.color.current = transparent;
+                node.white.current = transparent;
             }
         }
         requestAnimationFrame(animation_loop);
-        setTimeout(update_loop, (3 * 1000) / frames_per_second);
+        setTimeout(
+            () => update_loop(percent_idx),
+            (3 * 1000) / frames_per_second
+        );
     } else {
         const percentage = percent_idx / 100;
         const fade = 2 * Math.abs(percentage - 0.5);
         const color = Color('orange').fade(fade).toString();
         const white = Color('white').fade(fade).toString();
-        for (const [_, node] of all_nodes) {
-            if (!node.circle || !node.path) {
+        for (const [_id, node] of all_nodes) {
+            if (!node.path.current) {
                 continue;
             }
-            const point = node.path.current?.getPointAtLength(
-                node.path.current?.getTotalLength() * percentage
+            const point = node.path.current.getPointAtLength(
+                node.path.current.getTotalLength() * percentage || 0
             );
             if (point) {
                 node.x.current = point.x;
                 node.y.current = point.y;
             }
-            if (node.set_color) {
+            if (node.show.current) {
                 node.color.current = color;
                 node.white.current = white;
+            } else {
+                node.color.current = transparent;
+                node.white.current = transparent;
             }
         }
         requestAnimationFrame(animation_loop);
         percent_idx = (percent_idx + increment) % 101;
-        setTimeout(update_loop, 1000 / frames_per_second);
+        setTimeout(() => update_loop(percent_idx), 1000 / frames_per_second);
     }
 }
-update_loop();
 
 function animation_loop() {
     for (const [_, node] of all_nodes) {
@@ -111,12 +110,19 @@ function animation_loop() {
         node.text.current?.setAttribute('fill', node.white.current);
     }
 }
-animation_loop();
 
+let is_running = false;
 export function SpendLinkSegment(props: {
     model: SpendLinkModel;
     path: string;
 }) {
+    const check_is_reachable = useSelector(selectIsReachable);
+    React.useEffect(() => {
+        if (!is_running) {
+            is_running = true;
+            update_loop(0);
+        }
+    });
     // TODO: make link appear once, make percent_idx random
     let mounted = React.useRef(false);
     let circle = React.useRef(null as null | SVGCircleElement);
@@ -124,29 +130,33 @@ export function SpendLinkSegment(props: {
     let path = React.useRef(null as null | SVGPathElement);
     let x = React.useRef(0);
     let y = React.useRef(0);
-    let stroke = props.model.getOptions().color;
+    const theme = useTheme();
+    const stroke =
+        props.model.link_type === 'exclusive'
+            ? theme.palette.secondary.light
+            : theme.palette.primary.light;
     let color = React.useRef('none');
     let white = React.useRef('white');
     let key = unique_key++;
-    let set_color = React.useRef(true);
-    all_nodes.set(key, { circle, path, text, x, y, color, white, set_color });
-    props.model.registerReachableCallback((is_reachable: boolean) => {
-        if (is_reachable) {
-            set_color.current = true;
-            color.current = 'orange';
-            path.current?.setAttribute(
-                'stroke',
-                Color(props.model.getOptions().color).toString()
-            );
-        } else {
-            set_color.current = false;
-            color.current = Color('transparent').toString();
-            path.current?.setAttribute(
-                'stroke',
-                Color(props.model.getOptions().color).fade(0.8).toString()
-            );
+    let show = React.useRef(true);
+    all_nodes.set(key, { circle, path, text, x, y, color, white, show });
+    const faded_stroke = Color(stroke).fade(0.8).toString();
+    React.useEffect(() => {
+        const child = props.model.linked_to;
+        let reachable = false;
+        if (child) {
+            switch (child.constructor) {
+                case TransactionModel:
+                    reachable = check_is_reachable(
+                        (child as TransactionModel).get_txid()
+                    );
+                    break;
+            }
         }
-    });
+
+        show.current = reachable;
+        path.current?.setAttribute('stroke', reachable ? stroke : faded_stroke);
+    }, [check_is_reachable]);
 
     React.useEffect(() => {
         mounted.current = true;
@@ -165,10 +175,10 @@ export function SpendLinkSegment(props: {
                 ref={(ref) => {
                     path.current = ref;
                 }}
-                stroke={props.model.getOptions().color}
+                stroke={stroke}
                 strokeWidth={props.model.getOptions().width}
                 d={props.path}
-            />{' '}
+            />
             <circle
                 ref={(ref) => {
                     circle.current = ref;

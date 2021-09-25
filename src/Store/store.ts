@@ -2,6 +2,7 @@ import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import thunk from 'redux-thunk';
 import entityReducer from '../UX/Entity/EntitySlice';
 import appReducer from '../AppSlice';
+import { load_settings, settingsReducer } from '../Settings/SettingsSlice';
 import {
     contractCreatorReducer,
     register,
@@ -14,6 +15,7 @@ export const store = configureStore({
         appReducer,
         contractCreatorReducer,
         simulationReducer,
+        settingsReducer,
     },
     middleware: [thunk],
     devTools: true,
@@ -28,3 +30,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
     unknown,
     Action<string>
 >;
+
+window.electron.preferences_redux((preferences: any) => {
+    store.dispatch(load_settings(preferences));
+});

@@ -1,5 +1,6 @@
 import React from 'react';
-import Form, { ISubmitEvent } from '@rjsf/core';
+import Form from '@rjsf/material-ui';
+import { ISubmitEvent } from '@rjsf/core';
 import { logo_image, Plugin } from './PluginTile';
 import { create_contract_of_type } from '../../../AppSlice';
 import { useDispatch } from 'react-redux';

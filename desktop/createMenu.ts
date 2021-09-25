@@ -8,77 +8,6 @@ import { readFileSync } from 'fs';
 export function createMenu(window: BrowserWindow, client: typeof Client) {
     const template = [
         {
-            label: 'File',
-            submenu: [
-                {
-                    label: 'Open Contract From Clipboard',
-                    click() {
-                        window.webContents.send('load_hex', true);
-                    },
-                },
-                {
-                    label: 'Save Contract',
-                    click() {
-                        window.webContents.send('save_hex', true);
-                    },
-                },
-                {
-                    label: 'Open Contract From File',
-
-                    click() {
-                        const file = dialog.showOpenDialogSync(window, {
-                            properties: ['openFile'],
-                            filters: [
-                                {
-                                    extensions: ['json'],
-                                    name: 'Sapio Contract Object',
-                                },
-                            ],
-                        });
-                        if (file && file.length === 1) {
-                            const data = readFileSync(file[0]!, {
-                                encoding: 'utf-8',
-                            });
-                            window.webContents.send('load_contract', data);
-                        }
-                    },
-                },
-                {
-                    label: 'Load WASM Plugin',
-                    click() {
-                        const plugin = dialog.showOpenDialogSync({
-                            properties: ['openFile'],
-                            filters: [{ extensions: ['wasm'], name: 'WASM' }],
-                        });
-                        if (plugin && plugin.length)
-                            sapio.load_contract_file_name(plugin[0]!);
-                    },
-                },
-                {
-                    label: 'Create New Contract',
-                    async click() {
-                        const contracts = await sapio.list_contracts();
-                        window.webContents.send('create_contracts', contracts);
-                    },
-                },
-                {
-                    label: 'Recreate Last Contract',
-                    id: 'file-contract-recreate',
-                    async click() {
-                        sapio.recreate_contract(window);
-                    },
-                    enabled: false,
-                },
-                { type: 'separator' },
-                {
-                    label: 'Preferences',
-                    click() {
-                        settings.show();
-                    },
-                },
-            ],
-        },
-        {
             label: 'Edit',
             submenu: [
                 { role: 'undo' },
@@ -104,47 +33,6 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                 { role: 'zoomout' },
                 { type: 'separator' },
                 { role: 'togglefullscreen' },
-            ],
-        },
-        {
-            label: 'Bitcoin Node',
-            submenu: [
-                {
-                    label: 'Toggle Node Bar',
-                    async click() {
-                        window.webContents.send('bitcoin-node-bar', 'show');
-                    },
-                },
-                {
-                    label: 'Create New Address to Clipboard',
-                    async click() {
-                        let result = await client.command('getnewaddress');
-                        clipboard.writeText(result);
-                    },
-                },
-                {
-                    label: 'Attempt Generating 10 Blocks',
-                    async click() {
-                        let result = await client.command('getnewaddress');
-                        await client.command([
-                            {
-                                method: 'generatetoaddress',
-                                parameters: [10, result],
-                            },
-                        ]);
-                    },
-                },
-            ],
-        },
-        {
-            label: 'Simulate',
-            submenu: [
-                {
-                    label: 'Timing',
-                    click() {
-                        window.webContents.send('simulate', 'timing');
-                    },
-                },
             ],
         },
         {
@@ -192,7 +80,7 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
         */
 
         // Window menu
-        template[6]!.submenu = [
+        template[3]!.submenu = [
             { role: 'close' },
             { role: 'minimize' },
             { role: 'zoom' },

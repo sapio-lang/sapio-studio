@@ -132,13 +132,15 @@ class SapioCompiler {
         console.log(`child stdout:\n${child.toString()}`);
     }
 
-    async recreate_contract(window: BrowserWindow) {
-        window.webContents.send(
-            'create_contract_from_cache',
-            this.#contract_cache
-        );
+    async recreate_contract(window: BrowserWindow): Promise<string | null> {
+        if (this.#contract_cache)
+            return this.create_contract(
+                this.#contract_cache[0],
+                this.#contract_cache[1]
+            );
+        return null;
     }
-    async create_contract(which: string, args: string) {
+    async create_contract(which: string, args: string): Promise<string | null> {
         this.#contract_cache = [which, args];
         update_menu('file-contract-recreate', true);
         let created, bound;

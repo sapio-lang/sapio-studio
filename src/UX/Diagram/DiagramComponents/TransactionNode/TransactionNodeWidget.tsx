@@ -11,13 +11,12 @@ import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
-import { selectIsUnreachable } from '../../../../Data/SimulationSlice';
+import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
+import { useTheme } from '@mui/material';
+import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
 //import { css } from '@emotion/core';
 
-const white = Color('white').toString();
-const black = Color('black').toString();
-const yellow = Color('yellow').fade(0.2).toString();
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
 export const Node = styled.div<{
     background: string;
@@ -40,7 +39,6 @@ export const Node = styled.div<{
         width: 100%;
         background: rgba(0, 0, 0, 0.7);
         box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.9);
-        border-radius: 3.5px 17px;
         background-clip: border-box;
     }
 `;
@@ -53,8 +51,9 @@ export const Node = styled.div<{
 // }};
 // animation: ${p => !p.confirmed? "ants 12s linear infinite" : "none"};
 
-export const Title = styled.div<{ color: string }>`
+export const Title = styled.div<{ color: string; textColor: string }>`
     background: ${(p) => p.color};
+    color: ${(p) => p.textColor};
     display: flex;
     white-space: nowrap;
     justify-items: center;
@@ -65,16 +64,16 @@ export const TitleName = styled.div`
     padding: 5px 5px;
 `;
 
-export const PortsTop = styled.div<{ color: string }>`
+export const PortsTop = styled.div<{ color: string; textColor: string }>`
     display: flex;
     background-color: ${(p) => p.color};
-    color: black;
+    color: ${(p) => p.textColor};
 `;
 
-export const PortsBottom = styled.div<{ color: string }>`
+export const PortsBottom = styled.div<{ color: string; textColor: string }>`
     display: flex;
     background-color: ${(p) => p.color};
-    color: white;
+    color: ${(p) => p.textColor};
 `;
 // background-image: linear-gradient(rgba(255,255,255,1), rgba(255, 255, 255,1));
 
@@ -114,13 +113,14 @@ interface IState {
  * for both all the input ports on the left, and the output ports on the right.
  */
 export function TransactionNodeWidget(props: DefaultNodeProps) {
+    const selected_entity_id: EntityType = useSelector(selectEntityToView);
     const [is_confirmed, setConfirmed] = React.useState(
         props.node.isConfirmed()
     );
     const opts = props.node.getOptions();
     const [color, setColor] = React.useState(opts.color);
     const [purpose, setPurpose] = React.useState(opts.purpose);
-    const is_reachable = useSelector(selectIsUnreachable)(
+    const is_reachable = useSelector(selectIsReachable)(
         (opts.txn as Bitcoin.Transaction).getId()
     );
     React.useEffect(() => {
@@ -149,21 +149,29 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
     };
 
     let color_render = Color(color).alpha(0.2).toString();
+    const theme = useTheme();
+    const text_color = theme.palette.text.primary;
     const is_conf = is_confirmed ? null : (
         <div
             style={{
-                background: yellow,
-                color: 'black',
+                background: theme.palette.warning.light,
+                color: theme.palette.warning.contrastText,
                 textAlign: 'center',
             }}
         >
             UNCONFIRMED
         </div>
     );
+
+    const is_selected =
+        selected_entity_id[0] === 'TXN' &&
+        selected_entity_id[1] === props.node.getOptions().txn.getId();
+
     return (
         <>
             <PortsTop
                 color={'transparent'}
+                textColor={text_color}
                 style={{ justifyContent: 'center' }}
             >
                 <PortsContainerTop>
@@ -172,7 +180,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
             </PortsTop>
             <Node
                 data-default-node-name={opts.name}
-                selected={props.node.isSelected()}
+                selected={is_selected}
                 confirmed={is_confirmed}
                 background={opts.color}
                 className={
@@ -181,15 +189,18 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                 }
             >
                 <div>
-                    <Title color={color_render}>
+                    <Title color={color_render} textColor={text_color}>
                         <TitleName>Transaction</TitleName>
                         <TitleName>{opts.name}</TitleName>
                     </Title>
                     {is_conf}
-                    <Title color={color_render}>
+                    <Title color={color_render} textColor={text_color}>
                         <TitleName>{purpose}</TitleName>
                     </Title>
-                    <PortsBottom color={black}>
+                    <PortsBottom
+                        color={theme.palette.primary.light}
+                        textColor={theme.palette.primary.contrastText}
+                    >
                         <PortsContainerBottom>
                             {_.map(props.node.getOutPorts(), generatePort)}
                         </PortsContainerBottom>

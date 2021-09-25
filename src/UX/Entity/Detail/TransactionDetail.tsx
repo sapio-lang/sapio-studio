@@ -17,6 +17,8 @@ import {
 import Color from 'color';
 import { select_utxo } from '../EntitySlice';
 import { useDispatch } from 'react-redux';
+import { Divider, TextField, Typography } from '@mui/material';
+import { PSBTDetail } from './PSBTDetail';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
@@ -48,17 +50,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
     };
     const dispatch = useDispatch();
     const outs = props.entity.utxo_models.map((o, i) => (
-        <OutputDetail
-            txoutput={o}
-            goto={() =>
-                dispatch(
-                    select_utxo({
-                        hash: o.txn.get_txid(),
-                        nIn: o.utxo.index,
-                    })
-                )
-            }
-        />
+        <OutputDetail txoutput={o} />
     ));
     const ins = props.entity.tx.ins.map((inp, i) => {
         const witnesses: Buffer[][] = props.entity.witness_set.witnesses.flatMap(
@@ -67,22 +59,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
                 return b ? [b] : [];
             }
         );
-        const psbts: Bitcoin.Psbt[] = props.entity.witness_set.psbts;
-        return (
-            <InputDetail
-                txinput={inp}
-                goto={() =>
-                    dispatch(
-                        select_utxo({
-                            hash: txid_buf_to_string(inp.hash),
-                            nIn: inp.index,
-                        })
-                    )
-                }
-                witnesses={witnesses}
-                psbts={psbts}
-            />
-        );
+        return <InputDetail txinput={inp} witnesses={witnesses} />;
     });
 
     const {
@@ -122,39 +99,36 @@ export function TransactionDetail(props: TransactionDetailProps) {
         );
     return (
         <div className="TransactionDetail">
+            <TextField
+                label="Purpose"
+                defaultValue={props.entity.getOptions().purpose}
+                onChange={debounce_purpose}
+            />
+            <TextField
+                label={'Color ' + color.hex()}
+                defaultValue={color.hex()}
+                fullWidth
+                type="color"
+                onChange={debounce_color}
+            />
+            <Divider />
             <TXIDDetail txid={props.entity.get_txid()} />
-            <div className="serialized-tx">
-                <span> Tx Hex </span>
-                <Hex value={props.entity.tx.toHex()} className="txhex" />
-            </div>
-            <div className="purpose">
-                <span>Purpose:</span>
-                <input
-                    defaultValue={props.entity.getOptions().purpose}
-                    onChange={debounce_purpose}
-                />
-            </div>
-            <div className="color">
-                <span>Color:</span>
-                <div>
-                    <input
-                        defaultValue={color.hex()}
-                        type="color"
-                        onChange={debounce_color}
-                    />
-                    <span> {color.hex()}</span>
-                </div>
-            </div>
+            <PSBTDetail psbts={props.entity.witness_set.psbts} />
+            <Hex
+                value={props.entity.tx.toHex()}
+                className="txhex"
+                label="Tx Hex"
+            />
             <div className="properties">
                 {absolute_lock_jsx}
                 {relative_height_jsx}
                 {relative_time_jsx}
             </div>
-            <hr></hr>
-            <h4> Inputs</h4>
+            <Divider />
+            <Typography variant="h5"> Inputs</Typography>
             <div className="inputs">{ins}</div>
-            <hr></hr>
-            <h4>Outputs</h4>
+            <Divider />
+            <Typography variant="h5"> Outputs </Typography>
             <div className="outputs">{outs}</div>
         </div>
     );

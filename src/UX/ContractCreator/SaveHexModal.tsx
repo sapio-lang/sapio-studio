@@ -1,11 +1,10 @@
+import { Button, TextField } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import React from 'react';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import FormControl from 'react-bootstrap/FormControl';
-import Modal from 'react-bootstrap/Modal';
-import { FormEventHandler } from 'react-transition-group/node_modules/@types/react';
 import { ContractModel } from '../../Data/ContractManager';
-import { TransactionModel } from '../../Data/Transaction';
 import { TXIDAndWTXIDMap, txid_buf_to_string } from '../../util';
 
 interface IProps {
@@ -13,68 +12,51 @@ interface IProps {
     show: boolean;
     hide: () => void;
 }
-interface IState {
-    data: string;
-}
-export class SaveHexModal extends React.Component<IProps, IState> {
-    constructor(props: IProps) {
-        super(props);
-    }
-
-    static getDerivedStateFromProps(props: IProps, state: IState) {
-        let non_phantoms = props.contract.txn_models.filter((item) => {
-            return (
-                -1 !==
-                item.tx.ins.findIndex((inp) =>
-                    TXIDAndWTXIDMap.has_by_txid(
-                        props.contract.txid_map,
-                        txid_buf_to_string(inp.hash)
-                    )
-                )
-            );
-        });
-        return {
-            data: JSON.stringify(
-                {
-                    program: non_phantoms.map((t) => t.get_json()),
-                },
-                undefined,
-                4
-            ),
-        };
-    }
-    handleSubmit: FormEventHandler = (event) => {
-        event.preventDefault();
-        window.electron.save_contract(this.state.data);
-    };
-    render() {
+export function SaveHexModal(props: IProps) {
+    let non_phantoms = props.contract.txn_models.filter((item) => {
         return (
-            <Modal show={this.props.show} onHide={this.props.hide} size="xl">
-                <Modal.Header closeButton>
-                    <Modal.Title>Contract JSON </Modal.Title>
-                </Modal.Header>
-                <Form onSubmit={(e) => this.handleSubmit(e)}>
-                    <FormControl
+            -1 !==
+            item.tx.ins.findIndex((inp) =>
+                TXIDAndWTXIDMap.has_by_txid(
+                    props.contract.txid_map,
+                    txid_buf_to_string(inp.hash)
+                )
+            )
+        );
+    });
+    const data = JSON.stringify(
+        {
+            program: non_phantoms.map((t) => t.get_json()),
+        },
+        undefined,
+        4
+    );
+    const handleSave = () => {
+        window.electron.save_contract(data);
+    };
+    return (
+        <Dialog open={props.show} onClose={props.hide} fullScreen>
+            <DialogTitle>Contract JSON</DialogTitle>
+            <DialogContent>
+                <form onSubmit={(e) => e.preventDefault()}>
+                    <TextField
                         name="data"
-                        as="textarea"
+                        multiline
+                        fullWidth
                         type="text"
-                        readOnly
-                        defaultValue={this.state.data}
+                        aria-readonly
+                        InputProps={{
+                            readOnly: true,
+                        }}
+                        defaultValue={data}
                         style={{ minHeight: '50vh' }}
                     />
-                    <Button variant="primary" type="submit">
-                        Save
-                    </Button>
-                </Form>
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => this.props.hide()}
-                    >
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
+                </form>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => handleSave()}>Save</Button>
+                <Button onClick={() => props.hide()}>Close</Button>
+            </DialogActions>
+        </Dialog>
+    );
 }

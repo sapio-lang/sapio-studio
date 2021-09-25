@@ -1,15 +1,11 @@
 import styled from '@emotion/styled';
-import {
-    DagreEngine,
-    DiagramEngine,
-    DiagramModel,
-} from '@projectstorm/react-diagrams';
+import { DiagramEngine, DiagramModel } from '@projectstorm/react-diagrams';
 import * as React from 'react';
 
 const Container = styled.div<{ color: string; background: string }>`
     height: 100%;
     background-color: ${(p) => p.background} !important;
-    background-size: 50px 50px;
+    background-size: 100px 100px;
     display: flex;
     > * {
         height: 100%;
@@ -51,17 +47,6 @@ export interface DemoCanvasWidgetProps {
 }
 
 export function DemoCanvasWidget(props: DemoCanvasWidgetProps) {
-    const engine = new DagreEngine({
-        graph: {
-            rankdir: 'TB',
-            align: 'DL',
-            ranker: 'tight-tree',
-            marginx: 25,
-            marginy: 25,
-        },
-        includeLinks: false,
-    });
-    engine.redistribute(props.model);
     return (
         <Container
             background={props.background || 'rgb(60,60,60)'}

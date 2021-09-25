@@ -6,6 +6,8 @@ import { hash_to_hex, TXIDAndWTXIDMap } from '../util';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { clamp } from 'lodash';
 import { DiagramModel } from '@projectstorm/react-diagrams-core';
+import { selectNodePollFreq } from '../Settings/SettingsSlice';
+import { store } from '../Store/store';
 
 type TXID = string;
 
@@ -23,7 +25,6 @@ interface IProps {
     model: DiagramModel;
     current_contract: ContractModel;
 }
-interface IState {}
 export function update_broadcastable(
     current_contract: ContractModel,
     confirmed_txs: Set<TXID>
@@ -57,22 +58,19 @@ Currently non-functional, needs a server to be running somewhere.
 
 Should be upgraded to a socket managed driver that does not use polling.
 */
-export class BitcoinNodeManager extends React.Component<IProps, IState> {
+export class BitcoinNodeManager {
+    props: IProps;
     mounted: boolean;
-    next_periodic_check: NodeJS.Timeout | null;
+    next_periodic_check: NodeJS.Timeout;
     constructor(props: IProps) {
-        super(props);
-        this.mounted = false;
-        this.next_periodic_check = null;
-    }
-    componentDidMount() {
+        this.props = props;
         this.mounted = true;
         this.next_periodic_check = setTimeout(
             this.periodic_check.bind(this),
             1000
         );
     }
-    componentWillUnmount() {
+    destroy() {
         this.mounted = false;
         if (this.next_periodic_check != null)
             clearTimeout(this.next_periodic_check);
@@ -99,13 +97,8 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
             );
         }
         if (this.mounted) {
-            let prefs = window.electron.get_preferences_sync();
-            console.log(prefs);
-            const period = clamp(
-                prefs.display['poll-node-freq'] ?? 0,
-                5,
-                60 * 5
-            );
+            const freq = selectNodePollFreq(store.getState());
+            const period = clamp(freq, 5, 60 * 5);
 
             console.info('NEXT PERIODIC CONTRACT CHECK ', period, ' SECONDS');
             this.next_periodic_check = setTimeout(
@@ -154,6 +147,19 @@ export class BitcoinNodeManager extends React.Component<IProps, IState> {
                 { method: 'getblockchaininfo', parameters: [] },
             ])
         )[0];
+    }
+    async get_new_address(): Promise<string> {
+        return (
+            await window.electron.bitcoin_command([
+                { method: 'getnewaddress', parameters: [] },
+            ])
+        )[0];
+    }
+    async generate_blocks(n: number): Promise<void> {
+        const addr = await this.get_new_address();
+        await window.electron.bitcoin_command([
+            { method: 'generatetoaddress', parameters: [10, addr] },
+        ]);
     }
     // get info about transactions
     async get_confirmed_transactions(

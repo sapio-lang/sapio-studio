@@ -56,7 +56,6 @@ License: MIT
 }
 
 .EntityViewer {
-    background-color: transparent;
     overflow-y: scroll;
     max-width: 50vw;
     min-width: 5vw;
@@ -68,7 +67,6 @@ License: MIT
     min-width: 3px;
     position: absolute;
     right: 0px;
-    background-color: rgba(100, 100, 100, 0.3);
     background-blend-mode: screen;
     border-bottom: 1px solid grey;
     max-height: 50vh;

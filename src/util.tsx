@@ -2,6 +2,11 @@ import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { Outpoint } from './UX/Entity/EntitySlice';
+import { TextField, OutlinedInput, InputAdornment } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { selectMaxSats } from './Settings/SettingsSlice';
+import { JSONSchema7 } from 'json-schema';
+import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
 // must manually copy from preload
 type Callback =
     | 'simulate'
@@ -24,14 +29,21 @@ declare global {
                 msg: Callback,
                 action: (args: any) => void
             ) => () => void;
-            create_contract: (which: string, args: string) => Promise<any>;
+            create_contract: (
+                which: string,
+                args: string
+            ) => Promise<string | null>;
+            recreate_contract: () => Promise<string | null>;
+            preferences_redux: (listener: (preferences: any) => void) => void;
             get_preferences_sync: () => any;
-            preferences_listener: (
-                listener: (e: any, preferences: any) => void
-            ) => void;
             save_psbt: (psbt: string) => Promise<null>;
             save_contract: (contract: string) => Promise<null>;
             fetch_psbt: () => Promise<string>;
+            load_wasm_plugin: () => Promise<void>;
+            open_contract_from_file: () => Promise<string>;
+            show_preferences: () => void;
+            load_contract_list: () => Promise<APIs>;
+            write_clipboard: (s: string) => void;
         };
     }
 }
@@ -95,21 +107,9 @@ export const InputMap = {
     },
 };
 
-export const DEFAULT_MAX_SATS_DISPLAY: number = 9999999;
-let INTERNAL_MAX_SATS_DISPLAY: number = DEFAULT_MAX_SATS_DISPLAY;
-
-(() => {
-    const preferences = window.electron.get_preferences_sync();
-    INTERNAL_MAX_SATS_DISPLAY =
-        preferences.display['sats-bound'] ?? DEFAULT_MAX_SATS_DISPLAY;
-    window.electron.preferences_listener((_: any, p: any) => {
-        INTERNAL_MAX_SATS_DISPLAY =
-            p.display['sats-bound'] ?? DEFAULT_MAX_SATS_DISPLAY;
-    });
-})();
-
 export function PrettyAmount(amount: number) {
-    if (amount > INTERNAL_MAX_SATS_DISPLAY) {
+    const max_sats = useSelector(selectMaxSats);
+    if (amount > max_sats) {
         amount /= 100_000_000;
         return (
             <span title={amount.toString() + ' bitcoin'}>
@@ -123,6 +123,55 @@ export function PrettyAmount(amount: number) {
                 {amount}
                 <span style={{ fontSize: 'larger', color: '#f2a900' }}>§</span>
             </span>
+        );
+    }
+}
+
+export function PrettyAmountField(props: { amount: number }) {
+    let amount = props.amount;
+    const max_sats = useSelector(selectMaxSats);
+    if (amount > max_sats) {
+        amount /= 100_000_000;
+        return (
+            <TextField
+                label="Amount (btc)"
+                type="text"
+                value={amount}
+                variant="outlined"
+                InputProps={{
+                    readOnly: true,
+                    endAdornment: (
+                        <InputAdornment position="end">
+                            <span
+                                style={{ fontSize: 'larger', color: '#f2a900' }}
+                            >
+                                ₿
+                            </span>
+                        </InputAdornment>
+                    ),
+                }}
+            />
+        );
+    } else {
+        return (
+            <TextField
+                label="Amount (sats)"
+                type="text"
+                value={amount}
+                variant="outlined"
+                InputProps={{
+                    readOnly: true,
+                    endAdornment: (
+                        <InputAdornment position="end">
+                            <span
+                                style={{ fontSize: 'larger', color: '#f2a900' }}
+                            >
+                                §
+                            </span>
+                        </InputAdornment>
+                    ),
+                }}
+            />
         );
     }
 }

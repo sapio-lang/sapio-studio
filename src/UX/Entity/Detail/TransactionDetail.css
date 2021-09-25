@@ -1,5 +1,11 @@
 .TransactionDetail {
     padding: 10px;
+    display: grid;
+    row-gap: 1em;
+}
+
+.TransactionDetail > * {
+    padding-top: 10px;
 }
 
 .serialized-tx {

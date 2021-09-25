@@ -1,18 +1,42 @@
-import Modal from 'react-bootstrap/Modal';
+import { Button } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectAPIs, showAPIs, show_apis } from './ContractCreatorSlice';
+import {
+    selectSelectedAPI,
+    select_api,
+    showAPIs,
+    show_apis,
+} from './ContractCreatorSlice';
 import { PluginSelector } from './SapioPluginPicker/PluginSelector';
 
 export function CreateContractModal() {
     const show = useSelector(showAPIs);
     const dispatch = useDispatch();
-    if (!show) return null;
+    const selected = useSelector(selectSelectedAPI);
+    const unselect =
+        selected === null ? null : (
+            <Button onClick={() => dispatch(select_api(null))}>Back</Button>
+        );
+
     return (
-        <Modal show={show} onHide={() => dispatch(show_apis(false))} size="lg">
-            <Modal.Header closeButton>
-                <Modal.Title> Applications </Modal.Title>
-            </Modal.Header>
-            <PluginSelector />
-        </Modal>
+        <Dialog
+            open={show}
+            onClose={() => dispatch(show_apis(false))}
+            fullScreen
+        >
+            <DialogTitle>Applications</DialogTitle>
+            <DialogContent>
+                <PluginSelector />
+            </DialogContent>
+            <DialogActions>
+                {unselect}
+                <Button onClick={() => dispatch(show_apis(false))}>
+                    Close
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }

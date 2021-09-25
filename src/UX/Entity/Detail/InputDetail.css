@@ -1,6 +1,10 @@
 .InputDetail {
 }
 
+.InputDetail > * {
+    padding-top: 1em;
+}
+
 .InputDetailSequence {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -10,12 +14,6 @@
 }
 
 .InputDetailScriptSig {
-}
-
-.InputDetailPSBT {
-    display: grid;
-    grid-template-columns: max-content max-content 1fr;
-    grid-column-gap: 1em;
 }
 
 .SavePSBT {
@@ -34,8 +32,13 @@
     color: orange;
 }
 
+.InputDetailPSBT {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}
+
 .PSBTActions {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, min-content) max-content;
     grid-column-gap: 1em;
 }

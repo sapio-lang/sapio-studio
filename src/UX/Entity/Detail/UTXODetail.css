@@ -7,19 +7,19 @@
 
 .Spend {
     display: grid;
-    grid-template-columns: 16em 1fr;
+    grid-template-columns: 1fr min-content;
 }
 
 .Spend > * {
     padding: 0.5em;
 }
 
-.Spend > .truncate {
-    width: 16em;
-}
-
 .UTXODetail {
     padding: 10px;
+}
+
+.UTXODetail > * {
+    padding-top: 1em;
 }
 
 .UTXODetail > h1,

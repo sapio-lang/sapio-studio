@@ -1,0 +1,10 @@
+.PSBTDetail {
+    display: grid;
+    grid-row-gap: 1em;
+}
+
+.PSBTActions {
+    display: grid;
+    grid-template-columns: repeat(4, min-content) max-content;
+    grid-column-gap: 1em;
+}

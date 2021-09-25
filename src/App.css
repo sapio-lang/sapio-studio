@@ -72,6 +72,12 @@
     height: 100%;
 }
 
+.App > .area > .area-overlays {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+}
+
 .main-container {
     height: 100%;
     display: grid;
