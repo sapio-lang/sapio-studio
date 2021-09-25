@@ -14,7 +14,6 @@ import createEngine, {
 } from '@projectstorm/react-diagrams';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dispatch } from 'redux';
 import './App.css';
 import {
     create_contract_of_type,
@@ -128,7 +127,6 @@ function App() {
         <AppInner
             engine={engine}
             model={model.current}
-            model_manager={model_manager.current}
             load_new_contract={load_new_contract}
         ></AppInner>
     );
@@ -136,11 +134,10 @@ function App() {
 function AppInner(props: {
     engine: DiagramEngine;
     model: DiagramModel;
-    model_manager: ModelManager;
     load_new_contract: (data: Data | null, counter: number) => ContractModel;
 }) {
     const bitcoin_node_bar = useSelector(selectStatusBar);
-    const { engine, model, model_manager, load_new_contract } = props;
+    const { engine, model, load_new_contract } = props;
     const entity_id: EntityType = useSelector(selectEntityToView);
 
     const show = useSelector(selectShouldViewEntity);

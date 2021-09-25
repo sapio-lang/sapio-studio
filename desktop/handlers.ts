@@ -21,7 +21,7 @@ export default function (window: BrowserWindow, client: typeof Client) {
     });
 
     ipcMain.handle('recreate_contract', async (event) => {
-        return await sapio.recreate_contract(window);
+        return sapio.recreate_contract(window);
     });
     ipcMain.handle('load_wasm_plugin', (event) => {
         const plugin = dialog.showOpenDialogSync({

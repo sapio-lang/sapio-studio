@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { toggle_status_bar } from '../AppSlice';
+import { recreate_contract, toggle_status_bar } from '../AppSlice';
 import { BitcoinNodeManager } from '../Data/BitcoinNode';
 import { ContractModel } from '../Data/ContractManager';
 import './AppNavbar.css';
@@ -111,7 +111,7 @@ export function AppNavbar(props: {
                         <MenuItem
                             onClick={() => {
                                 setContractsOpen(false);
-                                window.electron.recreate_contract();
+                                dispatch(recreate_contract());
                             }}
                         >
                             Recreate Last Contract

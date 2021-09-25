@@ -5,11 +5,11 @@ function bitcoin_command(command: { method: string; parameters: any[] }[]) {
     return ipcRenderer.invoke('bitcoin-command', command);
 }
 
-function create_contract(which: string, args: string) {
+function create_contract(which: string, args: string): Promise<string> {
     return ipcRenderer.invoke('create_contract', [which, args]);
 }
 
-function recreate_contract() {
+function recreate_contract(): Promise<string> {
     return ipcRenderer.invoke('recreate_contract');
 }
 function open_contract_from_file() {

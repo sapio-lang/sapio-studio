@@ -29,14 +29,17 @@ declare global {
                 msg: Callback,
                 action: (args: any) => void
             ) => () => void;
-            create_contract: (which: string, args: string) => Promise<any>;
+            create_contract: (
+                which: string,
+                args: string
+            ) => Promise<string | null>;
+            recreate_contract: () => Promise<string | null>;
             preferences_redux: (listener: (preferences: any) => void) => void;
             get_preferences_sync: () => any;
             save_psbt: (psbt: string) => Promise<null>;
             save_contract: (contract: string) => Promise<null>;
             fetch_psbt: () => Promise<string>;
             load_wasm_plugin: () => Promise<void>;
-            recreate_contract: () => Promise<void>;
             open_contract_from_file: () => Promise<void>;
             show_preferences: () => void;
             load_contract_list: () => Promise<APIs>;
