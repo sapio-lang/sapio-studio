@@ -50,8 +50,9 @@ export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
 function jump_to_entity(
     model: DiagramModel,
     engine: DiagramEngine,
-    entity: TransactionModel | UTXOModel
+    entity: TransactionModel | UTXOModel | null
 ) {
+    if (entity === null) return;
     const canvas = engine.getCanvas();
     // Bug, sometimes no fields
     if (canvas === undefined) {
@@ -81,6 +82,9 @@ const dag = new DagreEngine({
 });
 function App() {
     const dispatch = useDispatch();
+    const contract = React.useRef<[ContractModel, number] | null>(null);
+    const engine: DiagramEngine = createEngine();
+    const model = React.useRef(new DiagramModel());
 
     // TODO: This should go somewhere else :(
     React.useEffect(() => {
@@ -97,38 +101,34 @@ function App() {
             }
         );
     });
-    const engine: DiagramEngine = createEngine();
     engine.getNodeFactories().registerFactory(new UTXONodeFactory() as any);
     engine
         .getNodeFactories()
         .registerFactory(new TransactionNodeFactory() as any);
     engine.getLinkFactories().registerFactory(new SpendLinkFactory() as any);
     // model is the system of nodes
-    const model = new DiagramModel();
-    model.setGridSize(50);
-    model.setLocked(true);
-    const model_manager = new ModelManager(model);
-    engine.setModel(model);
-    // TODO: multi-component safe memo?
-    let memo: [ContractModel, number] | null = null;
+    model.current.setGridSize(50);
+    model.current.setLocked(true);
+    const model_manager = React.useRef(new ModelManager(model.current));
+    engine.setModel(model.current);
     const load_new_contract = (data: Data | null, counter: number) => {
-        if (memo && data) {
-            if (memo[1] === counter) {
-                return memo[0];
+        if (contract.current && data) {
+            if (contract.current[1] === counter) {
+                return contract.current[0];
             }
         }
         const new_contract = new ContractModel(data ?? { program: [] });
         update_broadcastable(new_contract, new Set());
-        if (memo) model_manager.unload(memo[0]);
-        memo = [new_contract, counter];
-        model_manager.load(new_contract);
+        if (contract.current) model_manager.current.unload(contract.current[0]);
+        contract.current = [new_contract, counter];
+        model_manager.current.load(new_contract);
         return new_contract;
     };
     return (
         <AppInner
             engine={engine}
-            model={model}
-            model_manager={model_manager}
+            model={model.current}
+            model_manager={model_manager.current}
             load_new_contract={load_new_contract}
         ></AppInner>
     );
@@ -140,11 +140,11 @@ function AppInner(props: {
     load_new_contract: (data: Data | null, counter: number) => ContractModel;
 }) {
     const bitcoin_node_bar = useSelector(selectStatusBar);
-    let { engine, model, model_manager, load_new_contract } = props;
+    const { engine, model, model_manager, load_new_contract } = props;
     const entity_id: EntityType = useSelector(selectEntityToView);
 
     const show = useSelector(selectShouldViewEntity);
-    const details = entity_id !== null && show;
+    const details = entity_id[0] !== 'NULL' && show;
 
     const [
         timing_simulator_enabled,
@@ -157,24 +157,24 @@ function AppInner(props: {
     const current_contract = load_new_contract(contract_data, counter);
 
     React.useEffect(() => {
-        let entity: UTXOModel | TransactionModel | null = null;
-        switch (entity_id[0]) {
-            case 'TXN':
-                entity =
-                    TXIDAndWTXIDMap.get_by_txid_s(
-                        current_contract.txid_map,
-                        entity_id[1]
-                    ) ?? null;
-                break;
-            case 'UTXO':
-                entity =
-                    TXIDAndWTXIDMap.get_by_txid_s(
-                        current_contract.txid_map,
-                        entity_id[1].hash
-                    )?.utxo_models[entity_id[1].nIn] ?? null;
-                break;
-        }
-        if (entity) jump_to_entity(model, engine, entity);
+        if (entity_id[0] === 'TXN')
+            jump_to_entity(
+                model,
+                engine,
+                TXIDAndWTXIDMap.get_by_txid_s(
+                    current_contract.txid_map,
+                    entity_id[1]
+                ) ?? null
+            );
+        else if (entity_id[0] === 'UTXO')
+            jump_to_entity(
+                model,
+                engine,
+                TXIDAndWTXIDMap.get_by_txid_s(
+                    current_contract.txid_map,
+                    entity_id[1].hash
+                )?.utxo_models[entity_id[1].nIn] ?? null
+            );
     }, [entity_id]);
     React.useEffect(() => {
         dag.redistribute(props.model);
@@ -188,12 +188,11 @@ function AppInner(props: {
      * TODO: Can these be unified?
      */
     /* Bitcoin Node State */
-    let bitcoin_node_manager = new BitcoinNodeManager({
-        model: model,
-        current_contract: current_contract,
-    });
-    const entityViewer = !details ? null : (
-        <CurrentlyViewedEntity current_contract={current_contract} />
+    const bitcoin_node_manager = React.useRef(
+        new BitcoinNodeManager({
+            model: model,
+            current_contract: current_contract,
+        })
     );
 
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -216,17 +215,10 @@ function AppInner(props: {
     return (
         <ThemeProvider theme={theme}>
             <div className="App">
-                <BitcoinNodeManager
-                    current_contract={current_contract}
-                    model={model}
-                    ref={(bnm) =>
-                        (bitcoin_node_manager = bnm || bitcoin_node_manager)
-                    }
-                />
                 <div className="area">
                     <div>
                         <AppNavbar
-                            bitcoin_node_manager={bitcoin_node_manager}
+                            bitcoin_node_manager={bitcoin_node_manager.current}
                             contract={current_contract}
                             toggle_timing_simulator={() =>
                                 set_timing_simulator_enabled(
@@ -249,7 +241,11 @@ function AppInner(props: {
                                 />
                             </DemoCanvasWidget>
                         </div>
-                        <div>{entityViewer}</div>
+                        <Collapse in={details}>
+                            <CurrentlyViewedEntity
+                                current_contract={current_contract}
+                            />
+                        </Collapse>
                     </div>
                     <div className="area-overlays">
                         <Collapse in={timing_simulator_enabled}>
@@ -262,7 +258,7 @@ function AppInner(props: {
                         <Collapse in={bitcoin_node_bar}>
                             <div>
                                 <BitcoinStatusBar
-                                    api={bitcoin_node_manager}
+                                    api={bitcoin_node_manager.current}
                                 ></BitcoinStatusBar>
                             </div>
                         </Collapse>
