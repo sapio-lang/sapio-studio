@@ -96,7 +96,6 @@ export type SigningDataStore = {
 function process_txn_models(
     psbts: Array<Bitcoin.Psbt>,
     txns: Array<Bitcoin.Transaction>,
-    update: (s: SelectedEvent) => void,
     txn_labels: Array<string>,
     txn_colors: Array<NodeColorT>,
     utxo_labels: Array<Array<UTXOFormatData | null>>
@@ -162,7 +161,6 @@ function process_txn_models(
                 const txn_model = new TransactionModel(
                     base_txn,
                     all_witnesses,
-                    update,
                     label,
                     color,
                     utxo_label
@@ -208,7 +206,6 @@ function process_txn_models(
             txid,
             mock_txn,
             { witnesses: [], psbts: [] },
-            update,
             'Unknown Inputs',
             color,
             utxo_metadata
@@ -301,15 +298,11 @@ function process_utxo_models(
     }
     return to_add;
 }
-function process_data(
-    update: (e: SelectedEvent) => void,
-    obj: PreProcessedData
-): ProcessedData {
+function process_data(obj: PreProcessedData): ProcessedData {
     let { psbts, txns, txn_colors, txn_labels, utxo_labels } = obj;
     let [txid_map, txn_models] = process_txn_models(
         psbts,
         txns,
-        update,
         txn_labels,
         txn_colors,
         utxo_labels
@@ -608,14 +601,13 @@ export class ContractBase {
 export class ContractModel extends ContractBase {
     checkable: boolean = false;
     constructor();
-    constructor(update_viewer: (e: SelectedEvent) => void, obj: Data);
-    constructor(update_viewer?: any, obj?: Data) {
+    constructor(obj: Data);
+    constructor(obj?: Data) {
         super();
         this.checkable = true;
-        if (update_viewer === undefined || obj === undefined) return;
+        if (obj === undefined) return;
         let new_obj = preprocess_data(obj);
         let { inputs_map, utxo_models, txn_models, txid_map } = process_data(
-            update_viewer,
             new_obj
         );
         this.utxo_models = utxo_models;

@@ -19,6 +19,7 @@ export interface UTXONodeModelOptions extends BasePositionModelOptions {
     confirmed: boolean;
     reachable: boolean;
     txid: TXID;
+    index: number;
     confirmed_callback: (b: boolean) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
@@ -33,6 +34,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     constructor(
         options: any = {},
         txid?: TXID,
+        index?: number,
         name?: string,
         color?: string,
         amount?: number,
@@ -42,6 +44,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         super({
             name,
             txid,
+            index,
             color,
             amount,
             confirmed,

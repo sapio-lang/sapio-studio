@@ -5,6 +5,8 @@ import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import { TransactionModel } from './Transaction';
 import { is_mock_outpoint, txid_buf_to_string } from '../util';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
+import { store } from '../Store/store';
+import { select_utxo } from '../UX/Entity/EntitySlice';
 export class UTXOMetaData {
     index: number;
     script: Buffer;
@@ -31,7 +33,6 @@ export class UTXOModel
     utxo: UTXOMetaData;
     constructor(
         utxo: UTXOMetaData,
-        update: any,
         name: string,
         color: NodeColorT,
         txn: TransactionModel
@@ -43,12 +44,19 @@ export class UTXOModel
                 amount: utxo.amount,
                 confirmed: false,
             },
-            txn.get_txid()
+            txn.get_txid(),
+            utxo.index
         );
         this.utxo = utxo;
         this.txn = txn;
         this.registerListener({
-            selectionChanged: update,
+            selectionChanged: (event: any) => {
+                // TODO: get store the right way?
+                if (event.isSelected)
+                    store.dispatch(
+                        select_utxo({ hash: utxo.txid, nIn: utxo.index })
+                    );
+            },
         });
     }
     getAmount(): number {

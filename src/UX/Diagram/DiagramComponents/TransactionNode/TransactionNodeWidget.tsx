@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { useTheme } from '@mui/material';
+import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
@@ -112,6 +113,7 @@ interface IState {
  * for both all the input ports on the left, and the output ports on the right.
  */
 export function TransactionNodeWidget(props: DefaultNodeProps) {
+    const selected_entity_id: EntityType = useSelector(selectEntityToView);
     const [is_confirmed, setConfirmed] = React.useState(
         props.node.isConfirmed()
     );
@@ -160,6 +162,11 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
             UNCONFIRMED
         </div>
     );
+
+    const is_selected =
+        selected_entity_id[0] === 'TXN' &&
+        selected_entity_id[1] === props.node.getOptions().txn.getId();
+
     return (
         <>
             <PortsTop
@@ -173,7 +180,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
             </PortsTop>
             <Node
                 data-default-node-name={opts.name}
-                selected={props.node.isSelected()}
+                selected={is_selected}
                 confirmed={is_confirmed}
                 background={opts.color}
                 className={

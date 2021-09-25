@@ -15,6 +15,7 @@ import { UTXOModel } from '../../../../Data/UTXO';
 import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import { useTheme } from '@mui/material';
+import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
 const white = Color('white').toString();
 const black = Color('black').toString();
 const yellow = Color('yellow').fade(0.2).toString();
@@ -120,6 +121,7 @@ interface IState {
 //node: HTMLDivElement | null;
 //callback: () => any;
 export function UTXONodeWidget(props: DefaultNodeProps) {
+    const selected_entity_id: EntityType = useSelector(selectEntityToView);
     const [id, setID] = React.useState(Math.random());
     const is_reachable = useSelector(selectIsReachable)(
         props.node.getOptions().txid
@@ -187,6 +189,11 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
     const reachable_cl = is_reachable ? 'reachable' : 'unreachable';
     let colorObj = Color(props.node.getOptions().color);
     let color = colorObj.alpha(0.2).toString();
+    const opts = props.node.getOptions();
+    const is_selected =
+        selected_entity_id[0] === 'UTXO' &&
+        selected_entity_id[1].hash === opts.txid &&
+        selected_entity_id[1].nIn === opts.index;
     return (
         <div>
             {ports_top}
@@ -194,7 +201,7 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                 <UTXONode
                     data-default-utxonode-name={props.node.getOptions().name}
                     key={id}
-                    selected={props.node.isSelected()}
+                    selected={is_selected}
                     confirmed={is_confirmed}
                     className={reachable_cl}
                 >

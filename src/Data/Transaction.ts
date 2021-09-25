@@ -18,6 +18,9 @@ import {
 import './Transaction.css';
 import { UTXOMetaData, UTXOModel } from './UTXO';
 import { TransactionData } from './ContractManager';
+import { select_txn } from '../UX/Entity/EntitySlice';
+import { store } from '../Store/store';
+import { SelectedEvent } from '../App';
 
 export class TransactionModel
     extends TransactionNodeModel
@@ -32,7 +35,6 @@ export class TransactionModel
     constructor(
         tx: Bitcoin.Transaction,
         all_witnesses: SigningDataStore,
-        update: any,
         name: string,
         color: NodeColorT,
         utxo_labels: Array<UTXOFormatData | null>
@@ -56,7 +58,6 @@ export class TransactionModel
             const out: Bitcoin.TxOutput = tx.outs[y] as Bitcoin.TxOutput;
             let utxo = new UTXOModel(
                 new UTXOMetaData(out.script, out.value, tx, y),
-                update,
                 metadata.label,
                 NodeColor.new(metadata.color),
                 this
@@ -71,7 +72,9 @@ export class TransactionModel
             );
         }
         this.registerListener({
-            selectionChanged: update,
+            selectionChanged: (event: any): void => {
+                if (event.isSelected) store.dispatch(select_txn(tx.getId()));
+            },
         });
     }
 
@@ -153,12 +156,11 @@ export class PhantomTransactionModel extends TransactionModel {
         override_txid: TXID,
         tx: Bitcoin.Transaction,
         all_witnesses: SigningDataStore,
-        update: any,
         name: string,
         color: NodeColorT,
         utxo_labels: Array<UTXOFormatData | null>
     ) {
-        super(tx, all_witnesses, update, name, color, utxo_labels);
+        super(tx, all_witnesses, name, color, utxo_labels);
         this.override_txid = override_txid;
     }
     get_txid(): TXID {
