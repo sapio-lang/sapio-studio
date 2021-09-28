@@ -37,11 +37,11 @@ export interface TransactionData {
         color?: string;
         label?: string;
     };
-    utxo_metadata?: Array<UTXOFormatData | null>;
+    output_metadata?: Array<UTXOFormatData | null>;
 }
 
 export interface Data {
-    program: Array<TransactionData>;
+    program: Array<{ linked_psbt: TransactionData }>;
 }
 
 type PreProcessedData = {
@@ -60,14 +60,22 @@ type ProcessedData = {
 
 function preprocess_data(data: Data): PreProcessedData {
     console.log(data);
-    let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt));
-    let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
-    let txn_labels = data.program.map((k) => k.metadata.label ?? 'unlabeled');
+    let psbts = data.program.map((k) =>
+        Bitcoin.Psbt.fromBase64(k.linked_psbt.psbt)
+    );
+    let txns = data.program.map((k) =>
+        Bitcoin.Transaction.fromHex(k.linked_psbt.hex)
+    );
+    let txn_labels = data.program.map(
+        (k) => k.linked_psbt.metadata.label ?? 'unlabeled'
+    );
     let txn_colors = data.program.map((k) =>
-        NodeColor.new(k.metadata.color ?? 'orange')
+        NodeColor.new(k.linked_psbt.metadata.color ?? 'orange')
     );
     let utxo_labels = data.program.map(
-        (k, i) => k.utxo_metadata ?? new Array(txns[i]?.outs.length ?? 0)
+        (k, i) =>
+            k.linked_psbt.output_metadata ??
+            new Array(txns[i]?.outs.length ?? 0)
     );
 
     return {

@@ -101,8 +101,10 @@ export const create = (
         .then((funded) => {
             tx = funded;
             update_utxomodel(entity);
-            const data = {
-                program: contract.txn_models.map((t) => t.get_json()),
+            const data: Data = {
+                program: contract.txn_models.map((t) => {
+                    return { linked_psbt: t.get_json() };
+                }),
             };
             dispatch(load_new_model(data));
         })

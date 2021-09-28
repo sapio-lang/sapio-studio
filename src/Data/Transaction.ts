@@ -86,7 +86,7 @@ export class TransactionModel
                 label: this.getOptions().name,
                 color: this.getOptions().color,
             },
-            utxo_metadata: this.utxo_models.map((u) => {
+            output_metadata: this.utxo_models.map((u) => {
                 return {
                     color: u.getOptions().color,
                     label: u.getOptions().name,
