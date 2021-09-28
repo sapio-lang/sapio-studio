@@ -82,8 +82,10 @@ export class TransactionModel
         return {
             psbt: this.witness_set.psbts[0]!.toBase64(),
             hex: this.tx.toHex(),
-            label: this.getOptions().name,
-            color: this.getOptions().color,
+            metadata: {
+                label: this.getOptions().name,
+                color: this.getOptions().color,
+            },
             utxo_metadata: this.utxo_models.map((u) => {
                 return {
                     color: u.getOptions().color,

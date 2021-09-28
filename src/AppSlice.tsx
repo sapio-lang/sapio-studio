@@ -39,7 +39,7 @@ export const create_contract_of_type = (
         contract
     );
     if (compiled_contract)
-        dispatch(load_new_model(JSON.parse(compiled_contract)));
+        dispatch(load_new_model({ program: JSON.parse(compiled_contract) }));
 };
 export const recreate_contract = () => async (
     dispatch: AppDispatch,
@@ -47,7 +47,7 @@ export const recreate_contract = () => async (
 ) => {
     const compiled_contract = await window.electron.recreate_contract();
     if (compiled_contract)
-        dispatch(load_new_model(JSON.parse(compiled_contract)));
+        dispatch(load_new_model({ program: JSON.parse(compiled_contract) }));
 };
 export const create_contract_from_file = () => async (
     dispatch: AppDispatch,

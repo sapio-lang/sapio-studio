@@ -88,7 +88,7 @@ function App() {
     // TODO: This should go somewhere else :(
     React.useEffect(() => {
         return window.electron.register('load_contract', (data: string) => {
-            dispatch(load_new_model(JSON.parse(data)));
+            dispatch(load_new_model({ program: JSON.parse(data) }));
         });
     });
 
@@ -106,7 +106,7 @@ function App() {
         .registerFactory(new TransactionNodeFactory() as any);
     engine.getLinkFactories().registerFactory(new SpendLinkFactory() as any);
     // model is the system of nodes
-    model.current.setGridSize(50);
+    model.current.setGridSize(1);
     model.current.setLocked(true);
     const model_manager = React.useRef(new ModelManager(model.current));
     engine.setModel(model.current);

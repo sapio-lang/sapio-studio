@@ -31,10 +31,12 @@ export interface UTXOFormatData {
     label: string;
 }
 export interface TransactionData {
-    hex: string;
     psbt: string;
-    color?: string;
-    label?: string;
+    hex: string;
+    metadata: {
+        color?: string;
+        label?: string;
+    };
     utxo_metadata?: Array<UTXOFormatData | null>;
 }
 
@@ -57,11 +59,12 @@ type ProcessedData = {
 };
 
 function preprocess_data(data: Data): PreProcessedData {
-    let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
+    console.log(data);
     let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt));
-    let txn_labels = data.program.map((k) => k.label ?? 'unlabeled');
+    let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
+    let txn_labels = data.program.map((k) => k.metadata.label ?? 'unlabeled');
     let txn_colors = data.program.map((k) =>
-        NodeColor.new(k.color ?? 'orange')
+        NodeColor.new(k.metadata.color ?? 'orange')
     );
     let utxo_labels = data.program.map(
         (k, i) => k.utxo_metadata ?? new Array(txns[i]?.outs.length ?? 0)

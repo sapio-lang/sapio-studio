@@ -161,27 +161,15 @@ class SapioCompiler {
             const bind = await SapioCompiler.command([
                 'contract',
                 'bind',
+                '--base64_psbt',
                 created,
             ]);
             bound = bind.toString();
+            console.debug(bound);
+            return bound;
         } catch (e: any) {
             console.debug(created);
             console.log('Failed to bind', e.toString());
-            return null;
-        }
-        try {
-            const for_tux = await SapioCompiler.command([
-                'contract',
-                'for_tux',
-                '--psbt',
-                bound,
-            ]);
-            const for_tuxed = for_tux.toString();
-            console.debug(for_tuxed);
-            return for_tuxed;
-        } catch (e: any) {
-            console.debug(bound);
-            console.log('Failed to convert for tux', e.toString());
             return null;
         }
     }
