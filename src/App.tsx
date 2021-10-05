@@ -116,7 +116,7 @@ function App() {
                 return contract.current[0];
             }
         }
-        const new_contract = new ContractModel(data ?? { program: [] });
+        const new_contract = new ContractModel(data ?? { program: {} });
         update_broadcastable(new_contract, new Set());
         if (contract.current) model_manager.current.unload(contract.current[0]);
         contract.current = [new_contract, counter];

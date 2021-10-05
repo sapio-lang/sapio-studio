@@ -101,12 +101,15 @@ export const create = (
         .then((funded) => {
             tx = funded;
             update_utxomodel(entity);
-            const data: Data = {
-                program: contract.txn_models.map((t) => {
-                    return { linked_psbt: t.get_json() };
-                }),
-            };
-            dispatch(load_new_model(data));
+            // TODO: Fix continue APIs, maybe add a Data merge operation
+            //          const data: Data = {
+            //              program: [{
+            //                    txs: contract.txn_models.map((t) => {
+            //                        return { linked_psbt: t.get_json() };
+            //                    }), continue_apis: {}
+            //                }],
+            //          };
+            //        dispatch(load_new_model(data));
         })
         .catch((error) => {
             dispatch(__flash(error.message));

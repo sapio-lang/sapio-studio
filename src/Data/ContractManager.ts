@@ -3,6 +3,7 @@ import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
 import _, { Collection, ObjectIterator } from 'lodash';
 import { SelectedEvent } from '../App';
+import { JSONSchema7 } from 'json-schema';
 import {
     InputMapT,
     InputMap,
@@ -40,8 +41,17 @@ export interface TransactionData {
     output_metadata?: Array<UTXOFormatData | null>;
 }
 
+type APIPath = string;
+interface Continuation {
+    schema: JSONSchema7;
+    path: APIPath;
+}
+interface DataItem {
+    txs: Array<{ linked_psbt: TransactionData }>;
+    continue_apis: Record<APIPath, Continuation>;
+}
 export interface Data {
-    program: Array<{ linked_psbt: TransactionData }>;
+    program: Record<APIPath, DataItem>;
 }
 
 type PreProcessedData = {
@@ -50,33 +60,52 @@ type PreProcessedData = {
     txn_colors: Array<NodeColorT>;
     txn_labels: Array<string>;
     utxo_labels: Array<Array<UTXOFormatData | null>>;
+    continuations: Record<string, Record<string, Continuation>>;
 };
 type ProcessedData = {
     inputs_map: InputMapT<TransactionModel>;
     txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     txn_models: Array<TransactionModel>;
     utxo_models: Array<UTXOModel>;
+    continuations: Record<string, Record<string, Continuation>>;
 };
 
 function preprocess_data(data: Data): PreProcessedData {
-    console.log(data);
-    let psbts = data.program.map((k) =>
-        Bitcoin.Psbt.fromBase64(k.linked_psbt.psbt)
-    );
-    let txns = data.program.map((k) =>
-        Bitcoin.Transaction.fromHex(k.linked_psbt.hex)
-    );
-    let txn_labels = data.program.map(
-        (k) => k.linked_psbt.metadata.label ?? 'unlabeled'
-    );
-    let txn_colors = data.program.map((k) =>
-        NodeColor.new(k.linked_psbt.metadata.color ?? 'orange')
-    );
-    let utxo_labels = data.program.map(
-        (k, i) =>
-            k.linked_psbt.output_metadata ??
-            new Array(txns[i]?.outs.length ?? 0)
-    );
+    let psbts = [];
+    let txns = [];
+    let txn_labels = [];
+    let txn_colors = [];
+    let utxo_labels = [];
+    let continuations: Record<string, Record<string, Continuation>> = {};
+    for (const [path, entry] of Object.entries(data.program)) {
+        let txid: null | TXID = null;
+        let idx: number = 0;
+        for (const [j, tx] of entry.txs.entries()) {
+            psbts.push(Bitcoin.Psbt.fromBase64(tx.linked_psbt.psbt));
+            let txn = Bitcoin.Transaction.fromHex(tx.linked_psbt.hex);
+            if (txid === null) {
+                txid = txid_buf_to_string(txn.ins[0]!.hash);
+                idx = txn.ins[0]!.index;
+            } else {
+                let c_txid = txid_buf_to_string(txn.ins[0]!.hash);
+                let c_idx = txn.ins[0]!.index;
+                if (c_txid !== txid || c_idx !== idx) {
+                    throw 'Sapio Invariant Error: All txs in a group should spend the same coin';
+                }
+            }
+
+            txns.push(txn);
+            txn_labels.push(tx.linked_psbt.metadata.label ?? 'unlabeled');
+            txn_colors.push(
+                NodeColor.new(tx.linked_psbt.metadata.color ?? 'orange')
+            );
+            utxo_labels.push(
+                tx.linked_psbt.output_metadata ?? new Array(txn.outs.length)
+            );
+        }
+        let k: string = `${txid}:${idx}`;
+        continuations[k] = entry.continue_apis;
+    }
 
     return {
         psbts,
@@ -84,6 +113,7 @@ function preprocess_data(data: Data): PreProcessedData {
         txn_colors,
         txn_labels,
         utxo_labels,
+        continuations,
     };
 }
 
@@ -310,7 +340,14 @@ function process_utxo_models(
     return to_add;
 }
 function process_data(obj: PreProcessedData): ProcessedData {
-    let { psbts, txns, txn_colors, txn_labels, utxo_labels } = obj;
+    let {
+        psbts,
+        txns,
+        txn_colors,
+        txn_labels,
+        utxo_labels,
+        continuations,
+    } = obj;
     let [txid_map, txn_models] = process_txn_models(
         psbts,
         txns,
@@ -326,6 +363,7 @@ function process_data(obj: PreProcessedData): ProcessedData {
         utxo_models: to_add,
         txn_models: txn_models,
         txid_map: txid_map,
+        continuations,
     };
 }
 
