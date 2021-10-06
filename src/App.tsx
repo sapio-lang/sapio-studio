@@ -31,6 +31,7 @@ import { UTXOModel } from './Data/UTXO';
 import './Glyphs.css';
 import { TXIDAndWTXIDMap } from './util';
 import { AppNavbar } from './UX/AppNavbar';
+import { set_continuations } from './UX/ContractCreator/ContractCreatorSlice';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
 import { SpendLinkFactory } from './UX/Diagram/DiagramComponents/SpendLink/SpendLinkFactory';
 import { TransactionNodeFactory } from './UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeFactory';
@@ -111,7 +112,7 @@ function App() {
     const model_manager = React.useRef(new ModelManager(model.current));
     engine.setModel(model.current);
     const load_new_contract = (data: Data | null, counter: number) => {
-        if (contract.current && data) {
+        if (contract.current !== null) {
             if (contract.current[1] === counter) {
                 return contract.current[0];
             }
@@ -121,6 +122,7 @@ function App() {
         if (contract.current) model_manager.current.unload(contract.current[0]);
         contract.current = [new_contract, counter];
         model_manager.current.load(new_contract);
+        dispatch(set_continuations(new_contract.continuations));
         return new_contract;
     };
     return (

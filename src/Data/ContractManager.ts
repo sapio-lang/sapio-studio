@@ -14,6 +14,8 @@ import {
 } from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
+import { store } from '../Store/store';
+import { set_continuations } from '../UX/ContractCreator/ContractCreatorSlice';
 export type NodeColorT = ['NodeColor', string];
 export const NodeColor = {
     new(c: string): NodeColorT {
@@ -40,13 +42,14 @@ export interface TransactionData {
     };
     output_metadata?: Array<UTXOFormatData | null>;
 }
+export type ContinuationTable = Record<string, Record<APIPath, Continuation>>;
 
-type APIPath = string;
-interface Continuation {
+export type APIPath = string;
+export interface Continuation {
     schema: JSONSchema7;
     path: APIPath;
 }
-interface DataItem {
+export interface DataItem {
     txs: Array<{ linked_psbt: TransactionData }>;
     continue_apis: Record<APIPath, Continuation>;
 }
@@ -60,14 +63,14 @@ type PreProcessedData = {
     txn_colors: Array<NodeColorT>;
     txn_labels: Array<string>;
     utxo_labels: Array<Array<UTXOFormatData | null>>;
-    continuations: Record<string, Record<string, Continuation>>;
+    continuations: ContinuationTable;
 };
 type ProcessedData = {
     inputs_map: InputMapT<TransactionModel>;
     txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     txn_models: Array<TransactionModel>;
     utxo_models: Array<UTXOModel>;
-    continuations: Record<string, Record<string, Continuation>>;
+    continuations: ContinuationTable;
 };
 
 function preprocess_data(data: Data): PreProcessedData {
@@ -627,11 +630,13 @@ export class ContractBase {
     txn_models: Array<TransactionModel>;
     inputs_map: InputMapT<TransactionModel>;
     txid_map: TXIDAndWTXIDMapT<TransactionModel>;
+    continuations: ContinuationTable;
     constructor() {
         this.utxo_models = [];
         this.inputs_map = InputMap.new();
         this.txn_models = [];
         this.txid_map = TXIDAndWTXIDMap.new();
+        this.continuations = {};
     }
     process_finality(is_final: Array<string>, model: any) {
         console.log('called empty');
@@ -645,6 +650,9 @@ export class ContractBase {
     should_update() {
         return false;
     }
+    get_continuations(): typeof ContractBase.prototype.continuations {
+        return this.continuations;
+    }
 }
 
 export class ContractModel extends ContractBase {
@@ -656,13 +664,18 @@ export class ContractModel extends ContractBase {
         this.checkable = true;
         if (obj === undefined) return;
         let new_obj = preprocess_data(obj);
-        let { inputs_map, utxo_models, txn_models, txid_map } = process_data(
-            new_obj
-        );
+        let {
+            inputs_map,
+            utxo_models,
+            txn_models,
+            txid_map,
+            continuations,
+        } = process_data(new_obj);
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
         this.txid_map = txid_map;
+        this.continuations = continuations;
     }
     should_update() {
         return this.checkable;

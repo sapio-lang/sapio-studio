@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import { useTheme } from '@mui/material';
 import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
+import { selectContinuation } from '../../../ContractCreator/ContractCreatorSlice';
 const white = Color('white').toString();
 const black = Color('black').toString();
 const yellow = Color('yellow').fade(0.2).toString();
@@ -122,6 +123,14 @@ interface IState {
 //callback: () => any;
 export function UTXONodeWidget(props: DefaultNodeProps) {
     const selected_entity_id: EntityType = useSelector(selectEntityToView);
+    const has_continuations =
+        Object.keys(
+            useSelector(selectContinuation)(
+                `${props.node.getOptions().txid}:${
+                    props.node.getOptions().index
+                }`
+            ) ?? {}
+        ).length > 0;
     const [id, setID] = React.useState(Math.random());
     const is_reachable = useSelector(selectIsReachable)(
         props.node.getOptions().txid
@@ -185,6 +194,17 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
             UNCONFIRMED
         </div>
     );
+    const is_continuable = !has_continuations ? null : (
+        <div
+            style={{
+                background: theme.palette.info.light,
+                color: theme.palette.info.contrastText,
+                textAlign: 'center',
+            }}
+        >
+            UPDATABLE
+        </div>
+    );
 
     const reachable_cl = is_reachable ? 'reachable' : 'unreachable';
     let colorObj = Color(props.node.getOptions().color);
@@ -208,6 +228,7 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                     <Title color={color} textColor={textColor}>
                         <TitleName>{props.node.getOptions().name}</TitleName>
                     </Title>
+                    {is_continuable}
                     {is_conf}
                     <Title color={color} textColor={textColor}>
                         <TitleName>{PrettyAmount(amount)}</TitleName>
