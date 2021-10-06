@@ -89,18 +89,10 @@ function App() {
     // TODO: This should go somewhere else :(
     React.useEffect(() => {
         return window.electron.register('load_contract', (data: string) => {
-            dispatch(load_new_model({ program: JSON.parse(data) }));
+            dispatch(load_new_model(JSON.parse(data)));
         });
     });
 
-    React.useEffect(() => {
-        window.electron.register(
-            'create_contract_from_cache',
-            async ([which, args]: [string, string]) => {
-                dispatch(create_contract_of_type(which, args));
-            }
-        );
-    });
     engine.getNodeFactories().registerFactory(new UTXONodeFactory() as any);
     engine
         .getNodeFactories()

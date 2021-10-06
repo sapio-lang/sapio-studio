@@ -1,12 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { BitcoinNodeManager, QueriedUTXO } from '../../Data/BitcoinNode';
 import * as Bitcoin from 'bitcoinjs-lib';
+import { BitcoinNodeManager, QueriedUTXO } from '../../Data/BitcoinNode';
+import { ContractModel } from '../../Data/ContractManager';
 import { update_utxomodel, UTXOModel } from '../../Data/UTXO';
-import { ContractModel, Data } from '../../Data/ContractManager';
 import { AppDispatch, RootState } from '../../Store/store';
-import { load_new_model } from '../../AppSlice';
-import { OutpointInterface, TXID } from '../../util';
-import { TransactionModel } from '../../Data/Transaction';
+import { TXID } from '../../util';
 export type EntityType = ['TXN', TXID] | ['UTXO', Outpoint] | ['NULL', null];
 type StateType = {
     utxos: Record<string, QueriedUTXO>;

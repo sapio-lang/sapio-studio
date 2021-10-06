@@ -31,8 +31,7 @@ export function LoadHexModal(props: { hide: () => void; show: boolean }) {
 
             <DialogContent>
                 <DialogContentText>
-                    <p>The data pasted should be of format:</p>
-                    <p>{` Array<{ psbt: string, hex: string, color?: string, label?: string, utxo_metadata?: Array<{color: string, label:string} | null>>`}</p>
+                    <p>The data pasted must be output through Sapio Studio.</p>
                 </DialogContentText>
                 <form ref={formRef}>
                     <TextField name={FIELD_NAME} multiline fullWidth />

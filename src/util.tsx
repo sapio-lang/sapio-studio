@@ -14,8 +14,7 @@ type Callback =
     | 'save_hex'
     | 'create_contracts'
     | 'load_contract'
-    | 'bitcoin-node-bar'
-    | 'create_contract_from_cache';
+    | 'bitcoin-node-bar';
 declare global {
     interface Window {
         electron: {
@@ -33,7 +32,6 @@ declare global {
                 which: string,
                 args: string
             ) => Promise<string | null>;
-            recreate_contract: () => Promise<string | null>;
             preferences_redux: (listener: (preferences: any) => void) => void;
             get_preferences_sync: () => any;
             save_psbt: (psbt: string) => Promise<null>;
