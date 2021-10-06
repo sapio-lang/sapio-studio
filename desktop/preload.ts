@@ -9,9 +9,6 @@ function create_contract(which: string, args: string): Promise<string> {
     return ipcRenderer.invoke('create_contract', [which, args]);
 }
 
-function recreate_contract(): Promise<string> {
-    return ipcRenderer.invoke('recreate_contract');
-}
 function open_contract_from_file(): Promise<string> {
     return ipcRenderer.invoke('open_contract_from_file');
 }
@@ -35,7 +32,6 @@ const callbacks = {
     create_contracts: 0,
     load_contract: 0,
     'bitcoin-node-bar': 0,
-    create_contract_from_cache: 0,
 };
 
 type Callback = keyof typeof callbacks;
@@ -77,7 +73,6 @@ const api = {
     save_psbt,
     save_contract,
     fetch_psbt,
-    recreate_contract,
     load_wasm_plugin,
     open_contract_from_file,
     show_preferences,

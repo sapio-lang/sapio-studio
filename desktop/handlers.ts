@@ -20,9 +20,6 @@ export default function (window: BrowserWindow, client: typeof Client) {
         clipboard.writeText(s);
     });
 
-    ipcMain.handle('recreate_contract', async (event) => {
-        return sapio.recreate_contract(window);
-    });
     ipcMain.handle('load_wasm_plugin', (event) => {
         const plugin = dialog.showOpenDialogSync({
             properties: ['openFile'],

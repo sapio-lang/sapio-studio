@@ -31,6 +31,7 @@ import { UTXOModel } from './Data/UTXO';
 import './Glyphs.css';
 import { TXIDAndWTXIDMap } from './util';
 import { AppNavbar } from './UX/AppNavbar';
+import { set_continuations } from './UX/ContractCreator/ContractCreatorSlice';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
 import { SpendLinkFactory } from './UX/Diagram/DiagramComponents/SpendLink/SpendLinkFactory';
 import { TransactionNodeFactory } from './UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeFactory';
@@ -92,35 +93,28 @@ function App() {
         });
     });
 
-    React.useEffect(() => {
-        window.electron.register(
-            'create_contract_from_cache',
-            async ([which, args]: [string, string]) => {
-                dispatch(create_contract_of_type(which, args));
-            }
-        );
-    });
     engine.getNodeFactories().registerFactory(new UTXONodeFactory() as any);
     engine
         .getNodeFactories()
         .registerFactory(new TransactionNodeFactory() as any);
     engine.getLinkFactories().registerFactory(new SpendLinkFactory() as any);
     // model is the system of nodes
-    model.current.setGridSize(50);
+    model.current.setGridSize(1);
     model.current.setLocked(true);
     const model_manager = React.useRef(new ModelManager(model.current));
     engine.setModel(model.current);
     const load_new_contract = (data: Data | null, counter: number) => {
-        if (contract.current && data) {
+        if (contract.current !== null) {
             if (contract.current[1] === counter) {
                 return contract.current[0];
             }
         }
-        const new_contract = new ContractModel(data ?? { program: [] });
+        const new_contract = new ContractModel(data ?? { program: {} });
         update_broadcastable(new_contract, new Set());
         if (contract.current) model_manager.current.unload(contract.current[0]);
         contract.current = [new_contract, counter];
         model_manager.current.load(new_contract);
+        dispatch(set_continuations(new_contract.continuations));
         return new_contract;
     };
     return (

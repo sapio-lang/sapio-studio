@@ -22,11 +22,7 @@ export function CreateContractModal() {
         );
 
     return (
-        <Dialog
-            open={show}
-            onClose={() => dispatch(show_apis(false))}
-            fullScreen
-        >
+        <Dialog open={show} onClose={() => dispatch(show_apis(false))}>
             <DialogTitle>Applications</DialogTitle>
             <DialogContent>
                 <PluginSelector />

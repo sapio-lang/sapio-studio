@@ -3,6 +3,7 @@ import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
 import _, { Collection, ObjectIterator } from 'lodash';
 import { SelectedEvent } from '../App';
+import { JSONSchema7 } from 'json-schema';
 import {
     InputMapT,
     InputMap,
@@ -13,6 +14,8 @@ import {
 } from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
+import { store } from '../Store/store';
+import { set_continuations } from '../UX/ContractCreator/ContractCreatorSlice';
 export type NodeColorT = ['NodeColor', string];
 export const NodeColor = {
     new(c: string): NodeColorT {
@@ -31,15 +34,27 @@ export interface UTXOFormatData {
     label: string;
 }
 export interface TransactionData {
-    hex: string;
     psbt: string;
-    color?: string;
-    label?: string;
-    utxo_metadata?: Array<UTXOFormatData | null>;
+    hex: string;
+    metadata: {
+        color?: string;
+        label?: string;
+    };
+    output_metadata?: Array<UTXOFormatData | null>;
 }
+export type ContinuationTable = Record<string, Record<APIPath, Continuation>>;
 
+export type APIPath = string;
+export interface Continuation {
+    schema: JSONSchema7;
+    path: APIPath;
+}
+export interface DataItem {
+    txs: Array<{ linked_psbt: TransactionData }>;
+    continue_apis: Record<APIPath, Continuation>;
+}
 export interface Data {
-    program: Array<TransactionData>;
+    program: Record<APIPath, DataItem>;
 }
 
 type PreProcessedData = {
@@ -48,24 +63,52 @@ type PreProcessedData = {
     txn_colors: Array<NodeColorT>;
     txn_labels: Array<string>;
     utxo_labels: Array<Array<UTXOFormatData | null>>;
+    continuations: ContinuationTable;
 };
 type ProcessedData = {
     inputs_map: InputMapT<TransactionModel>;
     txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     txn_models: Array<TransactionModel>;
     utxo_models: Array<UTXOModel>;
+    continuations: ContinuationTable;
 };
 
 function preprocess_data(data: Data): PreProcessedData {
-    let txns = data.program.map((k) => Bitcoin.Transaction.fromHex(k.hex));
-    let psbts = data.program.map((k) => Bitcoin.Psbt.fromBase64(k.psbt));
-    let txn_labels = data.program.map((k) => k.label ?? 'unlabeled');
-    let txn_colors = data.program.map((k) =>
-        NodeColor.new(k.color ?? 'orange')
-    );
-    let utxo_labels = data.program.map(
-        (k, i) => k.utxo_metadata ?? new Array(txns[i]?.outs.length ?? 0)
-    );
+    let psbts = [];
+    let txns = [];
+    let txn_labels = [];
+    let txn_colors = [];
+    let utxo_labels = [];
+    let continuations: Record<string, Record<string, Continuation>> = {};
+    for (const [path, entry] of Object.entries(data.program)) {
+        let txid: null | TXID = null;
+        let idx: number = 0;
+        for (const [j, tx] of entry.txs.entries()) {
+            psbts.push(Bitcoin.Psbt.fromBase64(tx.linked_psbt.psbt));
+            let txn = Bitcoin.Transaction.fromHex(tx.linked_psbt.hex);
+            if (txid === null) {
+                txid = txid_buf_to_string(txn.ins[0]!.hash);
+                idx = txn.ins[0]!.index;
+            } else {
+                let c_txid = txid_buf_to_string(txn.ins[0]!.hash);
+                let c_idx = txn.ins[0]!.index;
+                if (c_txid !== txid || c_idx !== idx) {
+                    throw 'Sapio Invariant Error: All txs in a group should spend the same coin';
+                }
+            }
+
+            txns.push(txn);
+            txn_labels.push(tx.linked_psbt.metadata.label ?? 'unlabeled');
+            txn_colors.push(
+                NodeColor.new(tx.linked_psbt.metadata.color ?? 'orange')
+            );
+            utxo_labels.push(
+                tx.linked_psbt.output_metadata ?? new Array(txn.outs.length)
+            );
+        }
+        let k: string = `${txid}:${idx}`;
+        continuations[k] = entry.continue_apis;
+    }
 
     return {
         psbts,
@@ -73,6 +116,7 @@ function preprocess_data(data: Data): PreProcessedData {
         txn_colors,
         txn_labels,
         utxo_labels,
+        continuations,
     };
 }
 
@@ -299,7 +343,14 @@ function process_utxo_models(
     return to_add;
 }
 function process_data(obj: PreProcessedData): ProcessedData {
-    let { psbts, txns, txn_colors, txn_labels, utxo_labels } = obj;
+    let {
+        psbts,
+        txns,
+        txn_colors,
+        txn_labels,
+        utxo_labels,
+        continuations,
+    } = obj;
     let [txid_map, txn_models] = process_txn_models(
         psbts,
         txns,
@@ -315,6 +366,7 @@ function process_data(obj: PreProcessedData): ProcessedData {
         utxo_models: to_add,
         txn_models: txn_models,
         txid_map: txid_map,
+        continuations,
     };
 }
 
@@ -578,11 +630,13 @@ export class ContractBase {
     txn_models: Array<TransactionModel>;
     inputs_map: InputMapT<TransactionModel>;
     txid_map: TXIDAndWTXIDMapT<TransactionModel>;
+    continuations: ContinuationTable;
     constructor() {
         this.utxo_models = [];
         this.inputs_map = InputMap.new();
         this.txn_models = [];
         this.txid_map = TXIDAndWTXIDMap.new();
+        this.continuations = {};
     }
     process_finality(is_final: Array<string>, model: any) {
         console.log('called empty');
@@ -596,6 +650,9 @@ export class ContractBase {
     should_update() {
         return false;
     }
+    get_continuations(): typeof ContractBase.prototype.continuations {
+        return this.continuations;
+    }
 }
 
 export class ContractModel extends ContractBase {
@@ -607,13 +664,18 @@ export class ContractModel extends ContractBase {
         this.checkable = true;
         if (obj === undefined) return;
         let new_obj = preprocess_data(obj);
-        let { inputs_map, utxo_models, txn_models, txid_map } = process_data(
-            new_obj
-        );
+        let {
+            inputs_map,
+            utxo_models,
+            txn_models,
+            txid_map,
+            continuations,
+        } = process_data(new_obj);
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
         this.txid_map = txid_map;
+        this.continuations = continuations;
     }
     should_update() {
         return this.checkable;

@@ -14,10 +14,7 @@ const memo_apis = new Map();
 const memo_logos = new Map();
 
 class SapioCompiler {
-    #contract_cache: [string, string] | null;
-    constructor() {
-        this.#contract_cache = null;
-    }
+    constructor() {}
     static async command(args: string[]): Promise<string> {
         const binary = settings.value('sapio.binary');
         const source = settings.value('sapio.configsource');
@@ -132,17 +129,7 @@ class SapioCompiler {
         console.log(`child stdout:\n${child.toString()}`);
     }
 
-    async recreate_contract(window: BrowserWindow): Promise<string | null> {
-        if (this.#contract_cache)
-            return this.create_contract(
-                this.#contract_cache[0],
-                this.#contract_cache[1]
-            );
-        return null;
-    }
     async create_contract(which: string, args: string): Promise<string | null> {
-        this.#contract_cache = [which, args];
-        update_menu('file-contract-recreate', true);
         let created, bound;
         try {
             const create = await SapioCompiler.command([
@@ -161,37 +148,20 @@ class SapioCompiler {
             const bind = await SapioCompiler.command([
                 'contract',
                 'bind',
+                '--base64_psbt',
                 created,
             ]);
             bound = bind.toString();
+            console.debug(bound);
+            return bound;
         } catch (e: any) {
             console.debug(created);
             console.log('Failed to bind', e.toString());
             return null;
         }
-        try {
-            const for_tux = await SapioCompiler.command([
-                'contract',
-                'for_tux',
-                '--psbt',
-                bound,
-            ]);
-            const for_tuxed = for_tux.toString();
-            console.debug(for_tuxed);
-            return for_tuxed;
-        } catch (e: any) {
-            console.debug(bound);
-            console.log('Failed to convert for tux', e.toString());
-            return null;
-        }
     }
 }
 
-function update_menu(id: string, enabled: boolean) {
-    const menu = Menu.getApplicationMenu()!;
-    const item = menu.getMenuItemById(id);
-    if (item) item.enabled = enabled;
-}
 export const sapio = new SapioCompiler();
 
 export function start_sapio_oracle(): ChildProcessWithoutNullStreams | null {
