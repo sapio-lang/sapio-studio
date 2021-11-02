@@ -14,11 +14,23 @@ export const settings = new ElectronPreferences({
      */
     dataStore: path.resolve(app.getPath('userData'), 'preferences.json'),
     /**
-     * Default values.
+     * Default values. Reads environment on first setup.
      */
     defaults: {
+        'bitcoin-config': {
+            rpcuser: process.env.SAPIO_BITCOIN_RPC_USER ?? 'rpcuser',
+            rpcpassword: process.env.SAPIO_BITCOIN_RPC_PASSWORD,
+            rpcport: process.env.SAPIO_BITCOIN_RPC_PORT ?? '18443',
+            rpchost: process.env.SAPIO_BITCOIN_HOST ?? '0.0.0.0',
+            network: process.env.SAPIO_BITCOIN_NETWORK ?? 'regtest',
+        },
         sapio: {
-            binary: path.resolve(os.homedir(), 'sapio/target/debug/sapio-cli'),
+            'oracle-seed-file': process.env.SAPIO_ORACLE_SEED_FILE ?? '',
+            'oracle-netinterface':
+                process.env.SAPIO_ORACLE_NET ?? '0.0.0.0:8010',
+            binary:
+                process.env.SAPIO_CLI_BINARY ??
+                path.resolve(os.homedir(), 'sapio/target/debug/sapio-cli'),
             'oracle-local-enabled': false,
             'oracle-remote-enabled': false,
             'oracle-remote-oracles-list': [],
