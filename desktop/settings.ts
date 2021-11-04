@@ -36,12 +36,12 @@ export const settings = new ElectronPreferences({
             'oracle-remote-oracles-list': [],
             'oracle-remote-threshold': 0,
             plugin_map: [],
-            configsource: 'default',
+            configsource: process.env.SAPIO_CLI_CONFIGURED_BY ?? 'default',
         },
         display: {
             'sats-bound': DEFAULT_MAX_SATS_DISPLAY,
             'animate-flow': DEFAULT_ANIMATION,
-            'poll-node-freq': 60,
+            'poll-node-freq': 5,
         },
     },
     /**
