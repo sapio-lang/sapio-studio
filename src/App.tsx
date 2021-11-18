@@ -253,16 +253,17 @@ function AppInner(props: {
                                     }
                                 />
                             </Collapse>
-                            <Collapse in={bitcoin_node_bar}>
-                                <div>
-                                    <BitcoinStatusBar
-                                        api={bitcoin_node_manager.current}
-                                    ></BitcoinStatusBar>
-                                </div>
-                            </Collapse>
                         </div>
                     </div>
                 </div>
+
+                <Collapse in={bitcoin_node_bar}>
+                    <div>
+                        <BitcoinStatusBar
+                            api={bitcoin_node_manager.current}
+                        ></BitcoinStatusBar>
+                    </div>
+                </Collapse>
             </div>
         </ThemeProvider>
     );
