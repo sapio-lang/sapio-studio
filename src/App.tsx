@@ -212,8 +212,8 @@ function AppInner(props: {
     return (
         <ThemeProvider theme={theme}>
             <div className="App">
-                <div className="area">
-                    <div>
+                <div className="App-area">
+                    <div className="area-nav">
                         <AppNavbar
                             bitcoin_node_manager={bitcoin_node_manager.current}
                             contract={current_contract}
@@ -243,22 +243,24 @@ function AppInner(props: {
                                 current_contract={current_contract}
                             />
                         </Collapse>
-                    </div>
-                    <div className="area-overlays">
-                        <Collapse in={timing_simulator_enabled}>
-                            <SimulationController
-                                contract={current_contract}
-                                engine={engine}
-                                hide={() => set_timing_simulator_enabled(false)}
-                            />
-                        </Collapse>
-                        <Collapse in={bitcoin_node_bar}>
-                            <div>
-                                <BitcoinStatusBar
-                                    api={bitcoin_node_manager.current}
-                                ></BitcoinStatusBar>
-                            </div>
-                        </Collapse>
+                        <div className="area-overlays">
+                            <Collapse in={timing_simulator_enabled}>
+                                <SimulationController
+                                    contract={current_contract}
+                                    engine={engine}
+                                    hide={() =>
+                                        set_timing_simulator_enabled(false)
+                                    }
+                                />
+                            </Collapse>
+                            <Collapse in={bitcoin_node_bar}>
+                                <div>
+                                    <BitcoinStatusBar
+                                        api={bitcoin_node_manager.current}
+                                    ></BitcoinStatusBar>
+                                </div>
+                            </Collapse>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -2,7 +2,7 @@ import { clamp } from 'lodash';
 import React from 'react';
 import { BitcoinNodeManager } from './BitcoinNode';
 import './BitcoinStatusBar.css';
-import { useTheme } from '@mui/material';
+import { AppBar, Toolbar, Typography, useTheme } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectNodePollFreq } from '../Settings/SettingsSlice';
 interface BitcoinStatusBarProps {
@@ -37,18 +37,32 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
     const headers = blockchaininfo?.headers ?? '?';
     const blocks = blockchaininfo?.headers ?? '?';
     return (
-        <div
+        <AppBar
+            position="fixed"
+            sx={{
+                top: 'auto',
+                bottom: 0,
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+            }}
             className="BitcoinStatusBar"
             style={{
                 background: theme.palette.background.default,
                 color: theme.palette.info.main,
             }}
         >
-            <div>chain: {network}</div>
-            <div>balance: {balance} BTC</div>
-            <div>
-                processed: {blocks}/{headers}
-            </div>
-        </div>
+            <Toolbar variant="dense">
+                <Typography variant="h6" color="inherit" component="div">
+                    <div>chain: {network}</div>
+                </Typography>
+                <Typography variant="h6" color="inherit" component="div">
+                    <div>balance: {balance} BTC</div>
+                </Typography>
+                <Typography variant="h6" color="inherit" component="div">
+                    <div>
+                        processed: {blocks}/{headers}
+                    </div>
+                </Typography>
+            </Toolbar>
+        </AppBar>
     );
 }
