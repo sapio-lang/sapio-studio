@@ -1,0 +1,20 @@
+.WalletTransactionList {
+    height: 75%;
+    padding-bottom: 30px;
+    display: grid;
+    grid-template-columns: 10% 80% 10%;
+}
+
+.Wallet {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}
+
+.WalletSpend {
+    width: 100%;
+    padding-top: 3em;
+    display: grid;
+    grid-template-columns: 10% 80% 10%;
+}
