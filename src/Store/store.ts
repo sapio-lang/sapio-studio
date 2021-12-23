@@ -2,6 +2,7 @@ import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import thunk from 'redux-thunk';
 import entityReducer from '../UX/Entity/EntitySlice';
 import appReducer from '../AppSlice';
+import modalReducer from '../UX/ModalSlice';
 import { load_settings, settingsReducer } from '../Settings/SettingsSlice';
 import {
     contractCreatorReducer,
@@ -16,6 +17,7 @@ export const store = configureStore({
         contractCreatorReducer,
         simulationReducer,
         settingsReducer,
+        modalReducer,
     },
     middleware: [thunk],
     devTools: true,

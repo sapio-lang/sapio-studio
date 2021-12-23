@@ -2,6 +2,7 @@
     display: grid;
     grid-template-columns: 20px 1fr 20px;
 }
+
 .PluginSelectorGrid > div {
     display: grid;
     grid-template-columns: auto auto auto;
@@ -9,10 +10,13 @@
     justify-content: center;
     text-align: center;
 }
+
 .back {
 }
+
 .middle {
 }
+
 .forward {
 }
 

@@ -67,6 +67,7 @@ License: MIT
     min-width: 3px;
     position: absolute;
     right: 0px;
+    top: 0px;
     background-blend-mode: screen;
     border-bottom: 1px solid grey;
     max-height: 50vh;

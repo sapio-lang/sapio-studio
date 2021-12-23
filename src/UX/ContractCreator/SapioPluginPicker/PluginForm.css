@@ -1,0 +1,6 @@
+.PluginForm {
+    display: grid;
+    grid-template-columns: 10% 1fr 10%;
+    padding-bottom: 100px;
+    padding-top: 20;
+}

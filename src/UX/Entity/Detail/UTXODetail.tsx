@@ -10,6 +10,7 @@ import {
     TextField,
     Tooltip,
     Typography,
+    useTheme,
 } from '@mui/material';
 import { green, purple } from '@mui/material/colors';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -37,8 +38,7 @@ import Hex, { ASM } from './Hex';
 import { OutpointDetail } from './OutpointDetail';
 import './UTXODetail.css';
 import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
-import { useTheme } from '@material-ui/core';
-import Form from '@rjsf/material-ui';
+import Form from '@rjsf/core';
 import { FormProps, FormValidation, ISubmitEvent } from '@rjsf/core';
 import {
     add_effect_to_contract,
