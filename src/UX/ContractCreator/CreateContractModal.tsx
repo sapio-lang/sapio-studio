@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Button, Paper, Typography } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -11,9 +11,8 @@ import {
     show_apis,
 } from './ContractCreatorSlice';
 import { PluginSelector } from './SapioPluginPicker/PluginSelector';
-
+import './CreateContractModal.css';
 export function CreateContractModal() {
-    const show = useSelector(showAPIs);
     const dispatch = useDispatch();
     const selected = useSelector(selectSelectedAPI);
     const unselect =
@@ -22,17 +21,12 @@ export function CreateContractModal() {
         );
 
     return (
-        <Dialog open={show} onClose={() => dispatch(show_apis(false))}>
-            <DialogTitle>Applications</DialogTitle>
-            <DialogContent>
-                <PluginSelector />
-            </DialogContent>
-            <DialogActions>
+        <Paper square={true} className="PluginPage">
+            <div>
                 {unselect}
-                <Button onClick={() => dispatch(show_apis(false))}>
-                    Close
-                </Button>
-            </DialogActions>
-        </Dialog>
+                <Typography variant="h3">Applications</Typography>
+                <PluginSelector />
+            </div>
+        </Paper>
     );
 }

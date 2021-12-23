@@ -155,6 +155,22 @@ export class BitcoinNodeManager {
             ])
         )[0];
     }
+
+    async send_to_address(amount: number, address: string): Promise<void> {
+        return (
+            await window.electron.bitcoin_command([
+                { method: 'sendtoaddress', parameters: [address, amount] },
+            ])
+        )[0];
+    }
+
+    async list_transactions(count: number): Promise<any> {
+        return (
+            await window.electron.bitcoin_command([
+                { method: 'listtransactions', parameters: ['*', count] },
+            ])
+        )[0];
+    }
     async generate_blocks(n: number): Promise<void> {
         const addr = await this.get_new_address();
         await window.electron.bitcoin_command([

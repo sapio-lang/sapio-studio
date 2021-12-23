@@ -4,15 +4,17 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import React from 'react';
+import { useDispatch } from 'react-redux';
 import { BitcoinNodeManager } from '../../Data/BitcoinNode';
+import { close_modal } from '../ModalSlice';
 
 export function ViewContractModal(props: {
     show: boolean;
-    hide: () => void;
     bitcoin_node_manager: BitcoinNodeManager;
 }) {
+    const dispatch = useDispatch();
     return (
-        <Dialog open={props.show} onClose={props.hide}>
+        <Dialog open={props.show} onClose={() => dispatch(close_modal())}>
             <DialogTitle>View Existing Contract</DialogTitle>
             <DialogContent>
                 <form>
@@ -24,7 +26,7 @@ export function ViewContractModal(props: {
                 </form>
             </DialogContent>
             <DialogActions>
-                <Button onClick={props.hide}>Close</Button>
+                <Button onClick={() => dispatch(close_modal())}>Close</Button>
             </DialogActions>
         </Dialog>
     );

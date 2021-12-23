@@ -94,10 +94,7 @@ export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
             width: 130,
             type: 'number',
             valueGetter: (params: GridValueGetterParams) => {
-                const d: number = params.getValue(
-                    params.id,
-                    'blocktime'
-                ) as number;
+                const d: number = params.row.blocktime;
                 return d ? new Date(d * 1000).toUTCString() : 'None';
             },
         },

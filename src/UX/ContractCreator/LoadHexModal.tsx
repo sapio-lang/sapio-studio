@@ -8,9 +8,10 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Button, TextField, Typography } from '@mui/material';
+import { close_modal } from '../ModalSlice';
 
 const FIELD_NAME = 'data';
-export function LoadHexModal(props: { hide: () => void; show: boolean }) {
+export function LoadHexModal(props: { show: boolean }) {
     const formRef = React.useRef<null | HTMLFormElement>(null);
     const dispatch = useDispatch();
     function handleSubmit() {
@@ -23,10 +24,10 @@ export function LoadHexModal(props: { hide: () => void; show: boolean }) {
                 }
             }
         }
-        props.hide();
+        dispatch(close_modal());
     }
     return (
-        <Dialog open={props.show} onClose={props.hide}>
+        <Dialog open={props.show} onClose={() => dispatch(close_modal())}>
             <DialogTitle>Paste Hex JSON</DialogTitle>
 
             <DialogContent>
@@ -39,7 +40,7 @@ export function LoadHexModal(props: { hide: () => void; show: boolean }) {
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleSubmit}>Load</Button>
-                <Button onClick={() => props.hide()}>Close</Button>
+                <Button onClick={() => dispatch(close_modal())}>Close</Button>
             </DialogActions>
         </Dialog>
     );

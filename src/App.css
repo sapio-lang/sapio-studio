@@ -68,7 +68,7 @@ body {
 
 .App-area {
     display: grid;
-    grid-template-columns: max-content 1fr;
+    grid-template-columns: 200px 1fr;
 }
 
 .area-nav {
@@ -97,5 +97,10 @@ body {
 }
 
 .row {
+    width: 100%;
+}
+
+.wallet-container {
+    height: 100%;
     width: 100%;
 }
