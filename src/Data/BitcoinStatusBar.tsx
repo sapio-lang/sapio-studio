@@ -44,7 +44,7 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
                 bottom: 0,
                 zIndex: (theme) => theme.zIndex.drawer + 1,
             }}
-            className="BitcoinStatusBar"
+            className="BitcoinStatusBar Draggable"
             style={{
                 background: theme.palette.background.default,
                 color: theme.palette.info.main,
