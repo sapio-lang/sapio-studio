@@ -31,7 +31,7 @@ export function AppNavbar(props: {
     const dispatch = useDispatch();
 
     return (
-        <Paper className="AppNavBar Draggable" square={true}>
+        <Paper className="AppNavBar" square={true}>
             <List>
                 <MainScreens></MainScreens>
             </List>
