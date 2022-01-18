@@ -44,25 +44,43 @@ export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
     const [amount, setAmount] = React.useState(0);
     const [address, setAddress] = React.useState<string | null>(null);
     const [transactions, setTransactions] = React.useState<TxInfo[]>([]);
+
     React.useEffect(() => {
         let cancel = false;
         const update = async () => {
             if (cancel) return;
-            const amt = await props.bitcoin_node_manager.check_balance();
-            setAmount(amt);
+            try {
+                const amt = await props.bitcoin_node_manager.check_balance();
+                setAmount(amt);
+            } catch (err: any) {
+                console.error(err);
+                setAmount(0);
+            }
 
-            const txns = await props.bitcoin_node_manager.list_transactions(10);
-            setTransactions(txns);
+            try {
+                const txns = await props.bitcoin_node_manager.list_transactions(10);
+                setTransactions(txns);
+            } catch (err) {
+                console.error(err);
+                setTransactions([]);
+            }
             setTimeout(update, 5000);
         };
+
         update();
         return () => {
             cancel = true;
         };
-    });
+    }, []);
+
     const get_address = async () => {
-        const address = await props.bitcoin_node_manager.get_new_address();
-        setAddress(address);
+        try {
+            const address = await props.bitcoin_node_manager.get_new_address();
+            setAddress(address);
+        } catch (err) {
+            // console.error(err);
+            setAddress(null);
+        }
     };
     const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (
         event

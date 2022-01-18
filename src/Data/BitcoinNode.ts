@@ -136,24 +136,31 @@ export class BitcoinNodeManager {
         };
     }
     async check_balance(): Promise<number> {
-        let results = await window.electron.bitcoin_command([
+        const [result] = await window.electron.bitcoin_command([
             { method: 'getbalance', parameters: [] },
         ]);
-        return results[0];
+        if (result.name === 'RpcError') {
+            throw result;
+        }
+        return result;
     }
     async blockchaininfo(): Promise<any> {
-        return (
-            await window.electron.bitcoin_command([
-                { method: 'getblockchaininfo', parameters: [] },
-            ])
-        )[0];
+        const [result] = await window.electron.bitcoin_command([
+            { method: 'getblockchaininfo', parameters: [] },
+        ]);
+        if (result.name === 'RpcError') {
+            throw result;
+        }
+        return result;
     }
     async get_new_address(): Promise<string> {
-        return (
-            await window.electron.bitcoin_command([
-                { method: 'getnewaddress', parameters: [] },
-            ])
-        )[0];
+        const [result] = await window.electron.bitcoin_command([
+            { method: 'getnewaddress', parameters: [] },
+        ]);
+        if (result.name === 'RpcError') {
+            throw result;
+        }
+        return result;
     }
 
     async send_to_address(amount: number, address: string): Promise<void> {
@@ -165,17 +172,24 @@ export class BitcoinNodeManager {
     }
 
     async list_transactions(count: number): Promise<any> {
-        return (
-            await window.electron.bitcoin_command([
-                { method: 'listtransactions', parameters: ['*', count] },
-            ])
-        )[0];
+        const [result] = await window.electron.bitcoin_command([
+            { method: 'listtransactions', parameters: ['*', count] },
+        ]);
+        if (result.name === 'RpcError') {
+            throw result;
+        }
+        return result
     }
     async generate_blocks(n: number): Promise<void> {
         const addr = await this.get_new_address();
-        await window.electron.bitcoin_command([
-            { method: 'generatetoaddress', parameters: [10, addr] },
+        console.log(addr);
+        const [result] = await window.electron.bitcoin_command([
+            { method: 'generatetoaddress', parameters: [n, addr] },
         ]);
+        if (result.name === 'RpcError') {
+            throw result;
+        }
+        return result;
     }
     // get info about transactions
     async get_confirmed_transactions(

@@ -263,7 +263,8 @@ function NodeMenu(props: { bitcoin_node_manager: BitcoinNodeManager }) {
                 <MenuItem
                     onClick={() => {
                         close();
-                        props.bitcoin_node_manager.generate_blocks(10);
+                        props.bitcoin_node_manager.generate_blocks(10)
+                            .catch(err => console.error(err));
                     }}
                 >
                     Generate 10 Blocks
