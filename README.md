@@ -14,7 +14,7 @@ via `bitcoin-cli`.
 
 ### Run Sapio
 
-In one terminal run bellow code: `yarn start-react`
+In one terminal run below code: `yarn start-react`
 
 After previous command finishes compiling run: `yarn start-electron`
 
