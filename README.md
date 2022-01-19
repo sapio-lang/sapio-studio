@@ -3,13 +3,22 @@ contract trees built with [Sapio](https://learn.sapio-lang.org).
 
 ## Getting Started
 
-```
-yarn install
-yarn start-react
-# in a new tab
-yarn start-electron
-```
+### Make sure you have a Bitcoin node running
 
+Before starting Sapio make sure you have a Bitcoin node running and that you've loaded your wallet
+via `bitcoin-cli`.
+
+### Install dependencies
+
+`yarn install`
+
+### Run Sapio
+
+In one terminal run below code: `yarn start-react`
+
+After previous command finishes compiling run: `yarn start-electron`
+
+If `start-electron` command doesn't work you can try: `yarn start-electron --disable-seccomp-filter-sandbox`
 
 ## Connecting With Sapio & Bitcoin
 
