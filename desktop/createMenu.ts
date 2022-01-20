@@ -1,12 +1,14 @@
-import { app, BrowserWindow, clipboard, Menu, shell } from 'electron';
-import { settings } from './settings';
-import { dialog } from 'electron';
-import { sapio } from './sapio';
-import Client from 'bitcoin-core';
-import { readFileSync } from 'fs';
+import { app, Menu, shell } from 'electron';
+import open from 'open';
 
-export function createMenu(window: BrowserWindow, client: typeof Client) {
+export function createMenu() {
     const template = [
+        {
+            label: 'File',
+            submenu: [
+                { role: 'quit' },
+            ],
+        },
         {
             label: 'Edit',
             submenu: [
@@ -16,7 +18,6 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
                 { role: 'cut' },
                 { role: 'copy' },
                 { role: 'paste' },
-                { role: 'pasteandmatchstyle' },
                 { role: 'delete' },
                 { role: 'selectall' },
             ],
@@ -36,16 +37,12 @@ export function createMenu(window: BrowserWindow, client: typeof Client) {
             ],
         },
         {
-            role: 'window',
-            submenu: [{ role: 'minimize' }, { role: 'close' }],
-        },
-        {
             role: 'help',
             submenu: [
                 {
                     label: 'Learn More',
                     click() {
-                        shell.openExternal('https://electronjs.org');
+                        open('https://learn.sapio-lang.org/');
                     },
                 },
             ],

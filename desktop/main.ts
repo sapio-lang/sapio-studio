@@ -44,7 +44,7 @@ function createWindow() {
         width: 800,
         height: 600,
         show: false,
-        frame: false,
+        frame: true,
         backgroundColor: 'black',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -62,7 +62,7 @@ function createWindow() {
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
-    createMenu(mainWindow, client);
+    createMenu();
     register_handlers(mainWindow, client);
     custom_sapio_config();
     let emulator = start_sapio_oracle();
