@@ -1,4 +1,4 @@
-import { app, Menu, shell } from 'electron';
+import { app, Menu } from 'electron';
 import open from 'open';
 
 export function createMenu() {
