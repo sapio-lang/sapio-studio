@@ -14,11 +14,9 @@ via `bitcoin-cli`.
 
 ### Run Sapio
 
-In one terminal run below code: `yarn start-react`
+In one terminal run code: `yarn start-react`
 
 After previous command finishes compiling run: `yarn start-electron`
-
-If `start-electron` command doesn't work you can try: `yarn start-electron --disable-seccomp-filter-sandbox`
 
 ## Connecting With Sapio & Bitcoin
 
