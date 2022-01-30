@@ -53,6 +53,11 @@ export function update_broadcastable(
     });
 }
 
+interface ICommand { 
+    method: string;
+    parameters: any[];
+}
+
 /*
 Currently non-functional, needs a server to be running somewhere.
 
@@ -75,6 +80,32 @@ export class BitcoinNodeManager {
         if (this.next_periodic_check != null)
             clearTimeout(this.next_periodic_check);
     }
+
+    /**
+     * Execute a Bitcoin rpc call
+     * @param command { method: string, parameters: any[] }
+     * @returns result of the command or throws an error
+     */
+    async execute(command: ICommand) {
+        const [result] = await window.electron.bitcoin_command([command]);
+        if (result === undefined) {
+            throw new Error('Unexpected result returned');
+        }
+        if (result?.name === 'RpcError') {
+            throw result;
+        }
+        return result;
+    }
+
+    /**
+     * Execute a batched Bitcoin rpc call
+     * @param commands [{ method: string, parameters: any[] },...]
+     * @returns returns an array of results, results can include error objects
+     */
+    async executeBatch(commands: ICommand[]) {
+        return window.electron.bitcoin_command(commands);
+    }
+
     async periodic_check() {
         const contract = this.props.current_contract;
         console.info('PERIODIC CONTRACT CHECK');
@@ -108,6 +139,7 @@ export class BitcoinNodeManager {
         }
     }
 
+    // TODO: make this not static so we can use `execute` directly instead of `bitcoin_command`
     static async fund_out(tx: Transaction): Promise<Transaction> {
         const result = await window.electron.bitcoin_command([
             { method: 'fundrawtransaction', parameters: [tx.toHex()] },
@@ -119,6 +151,7 @@ export class BitcoinNodeManager {
         return Transaction.fromHex(hex);
     }
 
+    // TODO: make this not static so we can use `execute` directly instead of `bitcoin_command`
     static async fetch_utxo(t: TXID, n: number): Promise<QueriedUTXO | null> {
         const txout = (
             await window.electron.bitcoin_command([
@@ -136,46 +169,25 @@ export class BitcoinNodeManager {
         };
     }
     async check_balance(): Promise<number> {
-        let results = await window.electron.bitcoin_command([
-            { method: 'getbalance', parameters: [] },
-        ]);
-        return results[0];
+        return this.execute({ method: 'getbalance', parameters: [] });
     }
     async blockchaininfo(): Promise<any> {
-        return (
-            await window.electron.bitcoin_command([
-                { method: 'getblockchaininfo', parameters: [] },
-            ])
-        )[0];
+        return this.execute({ method: 'getblockchaininfo', parameters: [] });
     }
     async get_new_address(): Promise<string> {
-        return (
-            await window.electron.bitcoin_command([
-                { method: 'getnewaddress', parameters: [] },
-            ])
-        )[0];
+        return this.execute({ method: 'getnewaddress', parameters: [] });
     }
 
     async send_to_address(amount: number, address: string): Promise<void> {
-        return (
-            await window.electron.bitcoin_command([
-                { method: 'sendtoaddress', parameters: [address, amount] },
-            ])
-        )[0];
+        return this.execute({ method: 'sendtoaddress', parameters: [address, amount] });
     }
 
     async list_transactions(count: number): Promise<any> {
-        return (
-            await window.electron.bitcoin_command([
-                { method: 'listtransactions', parameters: ['*', count] },
-            ])
-        )[0];
+        return this.execute({ method: 'listtransactions', parameters: ['*', count] });
     }
     async generate_blocks(n: number): Promise<void> {
         const addr = await this.get_new_address();
-        await window.electron.bitcoin_command([
-            { method: 'generatetoaddress', parameters: [10, addr] },
-        ]);
+        return this.execute({ method: 'generatetoaddress', parameters: [n, addr] });
     }
     // get info about transactions
     async get_confirmed_transactions(
@@ -191,7 +203,7 @@ export class BitcoinNodeManager {
                 };
             });
         if (txids.length > 0) {
-            let results = await window.electron.bitcoin_command(txids);
+            let results = await this.executeBatch(txids);
             // TODO: Configure Threshold
             results = results
                 .filter((txdata: any) => txdata.confirmations ?? 0 > 1)

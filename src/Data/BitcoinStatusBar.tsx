@@ -9,6 +9,7 @@ interface BitcoinStatusBarProps {
     api: BitcoinNodeManager;
 }
 export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
+    const theme = useTheme();
     const freq = useSelector(selectNodePollFreq);
     const [balance, setBalance] = React.useState<number>(0);
     const [blockchaininfo, setBlockchaininfo] = React.useState<any>(null);
@@ -17,11 +18,23 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
         let mounted = true;
         const periodic_update_stats = async () => {
             next = null;
-            const balance: number = await props.api.check_balance();
-            const info = await props.api.blockchaininfo();
-            console.log(balance);
-            setBalance(balance);
-            setBlockchaininfo(info);
+            try {
+                const balance = await props.api.check_balance();
+                setBalance(balance);
+            } catch (err) {
+                console.error(err);
+                setBalance(0);
+            }
+
+            try {
+                const info = await props.api.blockchaininfo();
+                console.log(balance);
+                setBlockchaininfo(info);
+            } catch (err) {
+                console.error(err);
+                setBlockchaininfo(null);
+            }
+
             let prefs = freq;
             prefs = clamp(prefs, 5, 5 * 60);
             if (mounted) next = setTimeout(periodic_update_stats, prefs * 1000);
@@ -32,7 +45,7 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
             if (next !== null) clearTimeout(next);
         };
     }, []);
-    const theme = useTheme();
+
     const network = blockchaininfo?.chain ?? 'disconnected';
     const headers = blockchaininfo?.headers ?? '?';
     const blocks = blockchaininfo?.headers ?? '?';
@@ -55,10 +68,10 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
                     <div>chain: {network}</div>
                 </Typography>
                 <Typography variant="h6" color="inherit" component="div">
-                    <div>balance: {balance} BTC</div>
+                    <div style={{ marginLeft: '0.5em' }}>balance: {balance} BTC</div>
                 </Typography>
                 <Typography variant="h6" color="inherit" component="div">
-                    <div>
+                    <div style={{ marginLeft: '0.5em' }}>
                         processed: {blocks}/{headers}
                     </div>
                 </Typography>
