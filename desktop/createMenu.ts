@@ -1,5 +1,4 @@
 import { app, BrowserWindow, clipboard, Menu, shell } from 'electron';
-import { settings } from './settings';
 import { dialog } from 'electron';
 import { sapio } from './sapio';
 import Client from 'bitcoin-core';

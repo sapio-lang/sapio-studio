@@ -3,22 +3,24 @@
 use sapio_bitcoin::secp256k1::PublicKey;
 use schemars::schema::SchemaObject;
 use schemars::JsonSchema;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::net::SocketAddrV4;
 use std::path::Path;
 use std::path::PathBuf;
-
+#[derive(Serialize)]
 struct FilePicker(PathBuf);
 impl JsonSchema for FilePicker {
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
         let mut schema: SchemaObject = <Path>::json_schema(gen).into();
-        schema.format = Some("data-url".to_owned());
+        schema.format = Some("file".to_owned());
         schema.into()
     }
     fn schema_name() -> std::string::String {
         "File".into()
     }
 }
+#[derive(Serialize)]
 struct Password(String);
 impl JsonSchema for Password {
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -33,26 +35,26 @@ impl JsonSchema for Password {
 
 /// # Human Readable Nickname
 /// e.g., my_hot_wallet
-#[derive(JsonSchema)]
+#[derive(Serialize, JsonSchema)]
 struct Nickname(String);
 
 /// # Module Hash
 /// (64 char hex)
-#[derive(JsonSchema)]
+#[derive(Serialize, JsonSchema)]
 struct ModuleHash(String);
 
 /// # Public Key
 /// e.g. xpubD6...
-#[derive(JsonSchema)]
+#[derive(Serialize, JsonSchema)]
 struct PK(String);
 
 /// # Network Interface
 /// e.g., hello.com:1010, 0.0.0.0:8080
-#[derive(JsonSchema)]
+#[derive(Serialize, JsonSchema)]
 struct IFace(String);
 
 /// # Configuration Source
-#[derive(JsonSchema)]
+#[derive(Serialize, JsonSchema)]
 enum Preferences {
     /// # Here
     /// From Sapio-Studio,
@@ -79,12 +81,12 @@ enum Preferences {
     },
     /// # Default
     /// Use sapio-cli's default settings configuration
-    Default(()),
+    Default,
 }
 
 /// # Local Oracle
 /// If Sapio Studio should run a local oracle, what seed file and interface to use.
-#[derive(JsonSchema)]
+#[derive(Serialize, JsonSchema)]
 enum LocalOracle {
     /// # Enabled
     /// An oracle will be run & managed by Sapio Studio
@@ -98,11 +100,11 @@ enum LocalOracle {
 
     /// # Disabled
     /// No oracle will be run.
-    Disabled(()),
+    Disabled,
 }
 
 /// # sapio-cli Studio Configuration
-#[derive(JsonSchema)]
+#[derive(JsonSchema, Serialize)]
 struct SapioCliConfig {
     /// # Binary
     /// sapio-cli Binary Location
@@ -113,16 +115,16 @@ struct SapioCliConfig {
 }
 
 /// # Animation Speed
-#[derive(JsonSchema)]
+#[derive(JsonSchema, Serialize)]
 enum AnimationSpeed {
+    /// # Disable Animation
+    Disabled,
     /// # Enable Animation (ms)
     Enabled(#[schemars(range(min = 50, max = 5000))] u64),
-    /// # Disable Animation
-    Disabled(()),
 }
 
 /// # To Show Sats or Bitcoin
-#[derive(JsonSchema)]
+#[derive(JsonSchema, Serialize)]
 enum SatsOrBitcoin {
     /// # After Threshold
     /// min = 0, max = 100000000 (1 btc)
@@ -133,7 +135,7 @@ enum SatsOrBitcoin {
     AlwaysBitcoin(()),
 }
 /// # Display Settings
-#[derive(JsonSchema)]
+#[derive(JsonSchema, Serialize)]
 struct DisplaySettings {
     /// # Threshold at which to display Bitcoin () or Sats ()
     satoshis: SatsOrBitcoin,
@@ -145,7 +147,7 @@ struct DisplaySettings {
 }
 
 /// # Bitcoin Settings
-#[derive(JsonSchema)]
+#[derive(JsonSchema, Serialize)]
 struct Bitcoin {
     /// # Which Network
     network: Network,
@@ -157,7 +159,7 @@ struct Bitcoin {
     /// # Credentials
     auth: Auth,
 }
-#[derive(JsonSchema)]
+#[derive(JsonSchema, Serialize)]
 pub enum Network {
     /// # Classic Bitcoin
     Bitcoin,
@@ -171,16 +173,58 @@ pub enum Network {
 
 // note: remote type matched
 /// # Auth File
-#[derive(JsonSchema)]
+#[derive(JsonSchema, Serialize)]
 enum Auth {
     /// # No Authentication
-    None(()),
+    None,
     /// # Username / Password
     UserPass(String, Password),
     /// # Cookie File
     CookieFile(FilePicker),
 }
 
+impl Default for LocalOracle {
+    fn default() -> Self {
+        LocalOracle::Disabled
+    }
+}
+
+impl Default for SapioCliConfig {
+    fn default() -> Self {
+        SapioCliConfig {
+            preferences: Preferences::Here {
+                plugin_map: Default::default(),
+                use_emulation: false,
+                threshold: 1,
+                emulators: Default::default(),
+            },
+            sapio_cli: FilePicker(Default::default()),
+        }
+    }
+}
+impl Default for DisplaySettings {
+    fn default() -> Self {
+        DisplaySettings {
+            animation_speed: AnimationSpeed::Enabled(500),
+            node_polling_freq: 10,
+            satoshis: SatsOrBitcoin::BitcoinAfter(100_000),
+        }
+    }
+}
+
+impl Default for Bitcoin {
+    fn default() -> Self {
+        Bitcoin {
+            auth: Auth::UserPass(
+                "Put Your Username".into(),
+                Password("Put Your Password".into()),
+            ),
+            network: Network::Signet,
+            host: "0.0.0.0".into(),
+            port: 38332,
+        }
+    }
+}
 use schemars::schema_for;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("import {{ JSONSchema7 }} from 'json-schema';");
@@ -201,5 +245,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let js = serde_json::to_string_pretty(&j)?;
     println!("export const schemas : schema_t = {};", js);
+
+    let def = serde_json::json! {{
+        "sapio_cli":    SapioCliConfig::default(),
+        "local_oracle": LocalOracle::default(),
+        "display":      DisplaySettings::default(),
+        "bitcoin":      Bitcoin::default(),
+    }};
+    println!(
+        "export const default_settings = {};",
+        serde_json::to_string_pretty(&def)?
+    );
+
     Ok(())
 }

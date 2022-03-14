@@ -32,7 +32,3 @@ export type AppThunk<ReturnType = void> = ThunkAction<
     unknown,
     Action<string>
 >;
-
-window.electron.preferences_redux((preferences: any) => {
-    store.dispatch(load_settings(preferences));
-});

@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 sapio-bitcoin = "0.28.0-rc.3"
 serde_json = "1.0.79"
+serde = "1.0.136"
 
 
 [dependencies.schemars]

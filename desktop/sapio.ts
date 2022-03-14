@@ -8,7 +8,7 @@ import { JSONSchema7 } from 'json-schema';
 
 import { BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { sys } from 'typescript';
-import { sapio_config_file, settings } from './settings';
+import { preferences, sapio_config_file } from './settings';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
@@ -16,25 +16,20 @@ const memo_logos = new Map();
 class SapioCompiler {
     constructor() {}
     static async command(args: string[]): Promise<string> {
-        const binary = settings.value('sapio.binary');
-        const source = settings.value('sapio.configsource');
+        const binary = preferences.data.sapio_cli.sapio_cli;
+        const source = preferences.data.sapio_cli.preferences;
         console.log(source);
         let new_args: string[] = [];
-        switch (source) {
-            case 'default':
-                new_args = args;
-                break;
-            case 'file':
-                const config = settings.value('sapio.configfile');
-                new_args = ['--config', config, ...args];
-                break;
-            case 'here':
-                console.log(sapio_config_file);
-                new_args = ['--config', sapio_config_file, ...args];
-                break;
-            default:
-                dialog.showErrorBox('Improper Source', '');
-                sys.exit(1);
+        if (source === 'Default') {
+            new_args = args;
+        } else if ('File' in source) {
+            new_args = ['--config', source.File, ...args];
+        } else if ('Here' in source) {
+            console.log(sapio_config_file);
+            new_args = ['--config', sapio_config_file, ...args];
+        } else {
+            dialog.showErrorBox('Improper Source', '');
+            sys.exit(1);
         }
         console.debug('Callling', binary, new_args);
         return spawn(binary, new_args);
@@ -58,45 +53,41 @@ class SapioCompiler {
             });
 
         const apis_p = Promise.all(
-            lines.map(
-                ([name, key]: [string, string]): Promise<JSONSchema7> => {
-                    if (memo_apis.has(key)) {
-                        return Promise.resolve(memo_apis.get(key));
-                    } else {
-                        return SapioCompiler.command([
-                            'contract',
-                            'api',
-                            '--key',
-                            key,
-                        ]).then((v) => {
-                            const api = JSON.parse(v.toString());
-                            memo_apis.set(key, api);
-                            return api;
-                        });
-                    }
+            lines.map(([name, key]: [string, string]): Promise<JSONSchema7> => {
+                if (memo_apis.has(key)) {
+                    return Promise.resolve(memo_apis.get(key));
+                } else {
+                    return SapioCompiler.command([
+                        'contract',
+                        'api',
+                        '--key',
+                        key,
+                    ]).then((v) => {
+                        const api = JSON.parse(v.toString());
+                        memo_apis.set(key, api);
+                        return api;
+                    });
                 }
-            )
+            })
         );
         const logos_p = Promise.all(
-            lines.map(
-                ([name, key]: [string, string]): Promise<string> => {
-                    if (memo_logos.has(key)) {
-                        return Promise.resolve(memo_logos.get(key));
-                    } else {
-                        return SapioCompiler.command([
-                            'contract',
-                            'logo',
-                            '--key',
-                            key,
-                        ])
-                            .then((logo: any) => logo.toString().trim())
-                            .then((logo: string) => {
-                                memo_logos.set(key, logo);
-                                return logo;
-                            });
-                    }
+            lines.map(([name, key]: [string, string]): Promise<string> => {
+                if (memo_logos.has(key)) {
+                    return Promise.resolve(memo_logos.get(key));
+                } else {
+                    return SapioCompiler.command([
+                        'contract',
+                        'logo',
+                        '--key',
+                        key,
+                    ])
+                        .then((logo: any) => logo.toString().trim())
+                        .then((logo: string) => {
+                            memo_logos.set(key, logo);
+                            return logo;
+                        });
                 }
-            )
+            })
         );
         const [apis, logos] = await Promise.all([apis_p, logos_p]);
 
@@ -165,11 +156,11 @@ class SapioCompiler {
 export const sapio = new SapioCompiler();
 
 export function start_sapio_oracle(): ChildProcessWithoutNullStreams | null {
-    const enabled = settings.value('sapio.oracle-local-enabled');
-    if (enabled) {
-        const binary = settings.value('sapio.binary');
-        const seed = settings.value('sapio.oracle-seed-file');
-        const iface = settings.value('sapio.oracle-netinterface');
+    const oracle = preferences.data.local_oracle;
+    if (oracle !== 'Disabled' && 'Enabled' in oracle) {
+        const binary = preferences.data.sapio_cli.sapio_cli;
+        const seed = oracle.Enabled.file;
+        const iface = oracle.Enabled.interface;
         return spawnSync(binary, ['emulator', 'server', seed, iface]);
     }
     return null;

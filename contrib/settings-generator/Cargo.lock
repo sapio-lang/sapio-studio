@@ -181,6 +181,7 @@ version = "0.1.0"
 dependencies = [
  "sapio-bitcoin",
  "schemars",
+ "serde",
  "serde_json",
 ]
 

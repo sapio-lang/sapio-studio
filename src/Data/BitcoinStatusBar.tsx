@@ -35,11 +35,17 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
                 setBlockchaininfo(null);
             }
 
-            let prefs = freq;
-            prefs = clamp(prefs, 5, 5 * 60);
-            if (mounted) next = setTimeout(periodic_update_stats, prefs * 1000);
+            if (mounted) {
+                let prefs = freq;
+                prefs = clamp(prefs ?? 0, 5, 5 * 60);
+                console.log('StatusBar', 'NEXT PERIODIC CHECK IN ', prefs);
+                next = setTimeout(periodic_update_stats, prefs * 1000);
+            }
         };
-        next = setTimeout(periodic_update_stats, freq * 1000);
+
+        let prefs = freq;
+        prefs = clamp(prefs ?? 0, 5, 5 * 60);
+        next = setTimeout(periodic_update_stats, prefs * 1000);
         return () => {
             mounted = false;
             if (next !== null) clearTimeout(next);
@@ -68,7 +74,9 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
                     <div>chain: {network}</div>
                 </Typography>
                 <Typography variant="h6" color="inherit" component="div">
-                    <div style={{ marginLeft: '0.5em' }}>balance: {balance} BTC</div>
+                    <div style={{ marginLeft: '0.5em' }}>
+                        balance: {balance} BTC
+                    </div>
                 </Typography>
                 <Typography variant="h6" color="inherit" component="div">
                     <div style={{ marginLeft: '0.5em' }}>

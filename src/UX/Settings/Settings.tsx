@@ -1,18 +1,47 @@
 import { schemas } from './Schemas';
-import { Tabs, Tab, Box } from '@mui/material';
+import { Tabs, Tab, Box, Button } from '@mui/material';
 import React from 'react';
 import { MuiForm5 as Form } from '@rjsf/material-ui';
+import { ISubmitEvent } from '@rjsf/core';
 
 function SettingPane(props: {
     name: keyof typeof schemas;
     idx: number;
     value: number;
 }) {
+    const handlesubmit = async (
+        data: ISubmitEvent<any>,
+        nativeEvent: React.FormEvent<HTMLFormElement>
+    ) => {
+        window.electron.save_settings(
+            props.name,
+            JSON.stringify(data.formData)
+        );
+    };
+
+    const [data, set_data] = React.useState(null);
+    React.useEffect(() => {
+        async function get_args() {
+            let args = await window.electron.load_settings_sync(props.name);
+            if (data !== args) {
+                set_data(args);
+            }
+        }
+        get_args();
+    }, []);
     return (
         <div hidden={props.idx !== props.value}>
             {props.idx === props.value && (
                 <Box>
-                    <Form schema={schemas[props.name]}></Form>
+                    <Form
+                        schema={schemas[props.name]}
+                        onSubmit={handlesubmit}
+                        formData={data}
+                    >
+                        <div>
+                            <Button type="submit">Save</Button>
+                        </div>
+                    </Form>
                 </Box>
             )}
         </div>
