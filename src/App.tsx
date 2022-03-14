@@ -45,6 +45,7 @@ import {
 } from './UX/Entity/EntitySlice';
 import { CurrentlyViewedEntity } from './UX/Entity/EntityViewer';
 import { Modals } from './UX/Modals';
+import { Settings } from './UX/Settings/Settings';
 import { Wallet } from './Wallet/Wallet';
 
 export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
@@ -216,6 +217,13 @@ function AppInner(props: {
     );
     let showing = null;
     switch (is_showing) {
+        case 'Settings':
+            showing = (
+                <Paper className="settings-container" square={true}>
+                    <Settings></Settings>
+                </Paper>
+            );
+            break;
         case 'Wallet':
             showing = (
                 <Paper className="wallet-container" square={true}>
@@ -259,6 +267,7 @@ function AppInner(props: {
             );
             break;
     }
+    console.log(showing);
     return (
         <ThemeProvider theme={theme}>
             <div className="App">

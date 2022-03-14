@@ -45,22 +45,21 @@ export function AppNavbar(props: {
             </List>
             <Divider />
             <List>
-                <Settings />
+                <SettingsMenuItem />
             </List>
             <Divider />
         </Paper>
     );
 }
 
-function Settings() {
+function SettingsMenuItem() {
+    const dispatch = useDispatch();
     return (
         <ListItem
             disableGutters
             button={false}
             key={'settings'}
-            onClick={() => {
-                window.electron.show_preferences();
-            }}
+            onClick={() => dispatch(switch_showing('Settings'))}
         >
             <ListItemIcon>
                 <SettingsIcon />
@@ -263,8 +262,9 @@ function NodeMenu(props: { bitcoin_node_manager: BitcoinNodeManager }) {
                 <MenuItem
                     onClick={() => {
                         close();
-                        props.bitcoin_node_manager.generate_blocks(10)
-                            .catch(err => console.error(err));
+                        props.bitcoin_node_manager
+                            .generate_blocks(10)
+                            .catch((err) => console.error(err));
                     }}
                 >
                     Generate 10 Blocks
