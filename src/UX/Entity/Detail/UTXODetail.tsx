@@ -38,7 +38,7 @@ import Hex, { ASM } from './Hex';
 import { OutpointDetail } from './OutpointDetail';
 import './UTXODetail.css';
 import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
-import Form from '@rjsf/core';
+import { MuiForm5 as Form } from '@rjsf/material-ui';
 import { FormProps, FormValidation, ISubmitEvent } from '@rjsf/core';
 import {
     add_effect_to_contract,
