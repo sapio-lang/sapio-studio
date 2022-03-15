@@ -58,7 +58,9 @@ export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
             }
 
             try {
-                const txns = await props.bitcoin_node_manager.list_transactions(10);
+                const txns = await props.bitcoin_node_manager.list_transactions(
+                    10
+                );
                 setTransactions(txns);
             } catch (err) {
                 console.error(err);

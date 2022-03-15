@@ -91,4 +91,11 @@ export default function (window: BrowserWindow, client: typeof Client) {
     ipcMain.handle('load_settings_sync', (event, which: Prefs) => {
         return preferences.data[which];
     });
+    ipcMain.handle('select_filename', async (event) => {
+        let path = await dialog.showOpenDialog(window);
+        if (path && path.filePaths.length == 1) {
+            return path.filePaths[0]!;
+        }
+        return null;
+    });
 }

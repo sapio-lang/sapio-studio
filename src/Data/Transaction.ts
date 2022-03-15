@@ -24,7 +24,8 @@ import { SelectedEvent } from '../App';
 
 export class TransactionModel
     extends TransactionNodeModel
-    implements ViewableEntityInterface, HasKeys {
+    implements ViewableEntityInterface, HasKeys
+{
     broadcastable: boolean;
     broadcastable_hook: (b: boolean) => void;
     tx: Bitcoin.Transaction;
@@ -101,14 +102,14 @@ export class TransactionModel
     remove_from_model(model: DiagramModel) {
         if (!(this instanceof PhantomTransactionModel)) {
             // TODO: is this a valid cast
-            model.removeNode((this as unknown) as NodeModel);
+            model.removeNode(this as unknown as NodeModel);
             this.utxo_links.map((x) =>
-                model.removeLink((x as unknown) as LinkModel)
+                model.removeLink(x as unknown as LinkModel)
             );
         }
         this.utxo_models.map((x) => model.removeNode(x));
         this.input_links.map((x) =>
-            model.removeLink((x as unknown) as LinkModel)
+            model.removeLink(x as unknown as LinkModel)
         );
     }
     is_broadcastable() {

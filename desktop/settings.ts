@@ -60,7 +60,7 @@ function fill_in_default(): Data {
 
 type Data = {
     bitcoin: {
-        auth: { None: null } | { UserPass: string[] } | { Cookie: string };
+        auth: { None: null } | { UserPass: string[] } | { CookieFile: string };
         host: string;
         network: 'Signet' | 'Bitcoin' | 'Regtest' | 'Testnet';
         port: number;

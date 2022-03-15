@@ -45,6 +45,7 @@ declare global {
                 data: string
             ) => Promise<boolean>;
             load_settings_sync: (which: keyof typeof schemas) => Promise<any>;
+            select_filename: () => Promise<string | null>;
         };
     }
 }

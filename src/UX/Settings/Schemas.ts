@@ -51,7 +51,7 @@ export const schemas: schema_t = {
                 title: 'Auth File',
             },
             File: {
-                format: 'file',
+                format: 'custom::filename',
                 type: 'string',
             },
             Network: {
@@ -198,7 +198,7 @@ export const schemas: schema_t = {
         $schema: 'http://json-schema.org/draft-07/schema#',
         definitions: {
             File: {
-                format: 'file',
+                format: 'custom::filename',
                 type: 'string',
             },
         },
@@ -244,7 +244,7 @@ export const schemas: schema_t = {
         $schema: 'http://json-schema.org/draft-07/schema#',
         definitions: {
             File: {
-                format: 'file',
+                format: 'custom::filename',
                 type: 'string',
             },
             IFace: {

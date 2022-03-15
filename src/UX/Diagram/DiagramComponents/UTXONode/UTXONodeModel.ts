@@ -94,20 +94,18 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         switch (port.constructor) {
             case OutputPortModel:
                 if (
-                    this.portsIn.indexOf(
-                        (port as unknown) as OutputPortModel
-                    ) === -1
+                    this.portsIn.indexOf(port as unknown as OutputPortModel) ===
+                    -1
                 ) {
-                    this.portsIn.push((port as unknown) as OutputPortModel);
+                    this.portsIn.push(port as unknown as OutputPortModel);
                 }
                 break;
             case SpendPortModel:
                 if (
-                    this.portsOut.indexOf(
-                        (port as unknown) as SpendPortModel
-                    ) === -1
+                    this.portsOut.indexOf(port as unknown as SpendPortModel) ===
+                    -1
                 ) {
-                    this.portsOut.push((port as unknown) as SpendPortModel);
+                    this.portsOut.push(port as unknown as SpendPortModel);
                 }
                 break;
             default:
@@ -126,7 +124,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         if (!after) {
             this.portsIn.splice(0, 0, p);
         }
-        this.addPort((p as unknown) as PortModel);
+        this.addPort(p as unknown as PortModel);
         return p;
     }
 
@@ -141,7 +139,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         if (!after) {
             this.portsOut.splice(0, 0, p);
         }
-        this.addPort((p as unknown) as PortModel);
+        this.addPort(p as unknown as PortModel);
         return p;
     }
 

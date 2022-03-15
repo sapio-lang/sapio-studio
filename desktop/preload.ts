@@ -62,6 +62,10 @@ function write_clipboard(s: string) {
     ipcRenderer.invoke('write_clipboard', s);
 }
 
+function select_filename() {
+    return ipcRenderer.invoke('select_filename');
+}
+
 const api = {
     bitcoin_command,
     register,
@@ -75,5 +79,6 @@ const api = {
     write_clipboard,
     save_settings,
     load_settings_sync,
+    select_filename,
 };
 contextBridge.exposeInMainWorld('electron', api);

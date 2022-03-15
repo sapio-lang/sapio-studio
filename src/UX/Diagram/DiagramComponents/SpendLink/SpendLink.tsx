@@ -28,8 +28,8 @@ export class SpendPortModel extends DefaultPortModel {
     spend_link(x: SpendPortModel, to: TransactionModel, factory: any) {
         let link = this.createLinkModel(factory);
         // TODO: fix?
-        link.setSourcePort((this as unknown) as PortModel);
-        link.setTargetPort((x as unknown) as PortModel);
+        link.setSourcePort(this as unknown as PortModel);
+        link.setTargetPort(x as unknown as PortModel);
         link.linked_to = to;
         return link;
     }

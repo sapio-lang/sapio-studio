@@ -310,14 +310,17 @@ function process_utxo_models(
                                         ),
                                     0
                                 );
-                                (utxo_model.txn.tx.outs[
-                                    utxo_model.utxo.index
-                                ] as Output).value = max_amount;
+                                (
+                                    utxo_model.txn.tx.outs[
+                                        utxo_model.utxo.index
+                                    ] as Output
+                                ).value = max_amount;
                                 utxo_model.utxo.amount = max_amount;
-                                const _address = Bitcoin.address.fromOutputScript(
-                                    script,
-                                    Bitcoin.networks.regtest
-                                );
+                                const _address =
+                                    Bitcoin.address.fromOutputScript(
+                                        script,
+                                        Bitcoin.networks.regtest
+                                    );
                             }
                         }
                     }
@@ -343,14 +346,8 @@ function process_utxo_models(
     return to_add;
 }
 function process_data(obj: PreProcessedData): ProcessedData {
-    let {
-        psbts,
-        txns,
-        txn_colors,
-        txn_labels,
-        utxo_labels,
-        continuations,
-    } = obj;
+    let { psbts, txns, txn_colors, txn_labels, utxo_labels, continuations } =
+        obj;
     let [txid_map, txn_models] = process_txn_models(
         psbts,
         txns,
@@ -542,10 +539,9 @@ function compute_timing_of_children(
 ): Collection<TimingData> {
     const spenders: Record<number, TransactionModel[]> =
         InputMap.get_txid_s_group(map, txn.get_txid()) ?? {};
-    return _(
-        Array.from(Object.values(spenders))
-    ).flatMap((output_spender: TransactionModel[]) =>
-        output_spender.map(compute_timing)
+    return _(Array.from(Object.values(spenders))).flatMap(
+        (output_spender: TransactionModel[]) =>
+            output_spender.map(compute_timing)
     );
 }
 
@@ -664,13 +660,8 @@ export class ContractModel extends ContractBase {
         this.checkable = true;
         if (obj === undefined) return;
         let new_obj = preprocess_data(obj);
-        let {
-            inputs_map,
-            utxo_models,
-            txn_models,
-            txid_map,
-            continuations,
-        } = process_data(new_obj);
+        let { inputs_map, utxo_models, txn_models, txid_map, continuations } =
+            process_data(new_obj);
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
@@ -692,12 +683,8 @@ export class ContractModel extends ContractBase {
     process_finality(is_final: Array<string>, model: any) {
         // TODO: Reimplement in terms of WTXID
         is_final.forEach((txid) => {
-            const m:
-                | TransactionModel
-                | undefined = TXIDAndWTXIDMap.get_by_txid_s(
-                this.txid_map,
-                txid
-            );
+            const m: TransactionModel | undefined =
+                TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid);
             if (m) {
                 m.setConfirmed(true);
                 m.utxo_models.forEach((m) => m.setConfirmed(true));

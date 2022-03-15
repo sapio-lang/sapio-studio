@@ -3,6 +3,7 @@ import { Tabs, Tab, Box, Button } from '@mui/material';
 import React from 'react';
 import { MuiForm5 as Form } from '@rjsf/material-ui';
 import { ISubmitEvent } from '@rjsf/core';
+import { custom_fields, PathOnly } from '../CustomForms/Widgets';
 
 function SettingPane(props: {
     name: keyof typeof schemas;
@@ -36,6 +37,22 @@ function SettingPane(props: {
                     <Form
                         schema={schemas[props.name]}
                         onSubmit={handlesubmit}
+                        fields={custom_fields}
+                        uiSchema={{
+                            sapio_cli: {
+                                'ui:widget': PathOnly,
+                            },
+                            auth: {
+                                CookieFile: {
+                                    'ui:widget': PathOnly,
+                                },
+                            },
+                            Enabled: {
+                                file: {
+                                    'ui:widget': PathOnly,
+                                },
+                            },
+                        }}
                         formData={data}
                     >
                         <div>

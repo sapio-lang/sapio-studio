@@ -13,7 +13,7 @@ struct FilePicker(PathBuf);
 impl JsonSchema for FilePicker {
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
         let mut schema: SchemaObject = <Path>::json_schema(gen).into();
-        schema.format = Some("file".to_owned());
+        schema.format = Some("custom::filename".to_owned());
         schema.into()
     }
     fn schema_name() -> std::string::String {

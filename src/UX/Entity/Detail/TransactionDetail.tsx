@@ -53,12 +53,11 @@ export function TransactionDetail(props: TransactionDetailProps) {
         <OutputDetail txoutput={o} />
     ));
     const ins = props.entity.tx.ins.map((inp, i) => {
-        const witnesses: Buffer[][] = props.entity.witness_set.witnesses.flatMap(
-            (w) => {
+        const witnesses: Buffer[][] =
+            props.entity.witness_set.witnesses.flatMap((w) => {
                 let b: Buffer[] | undefined = w[i];
                 return b ? [b] : [];
-            }
-        );
+            });
         return <InputDetail txinput={inp} witnesses={witnesses} />;
     });
 

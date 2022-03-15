@@ -23,8 +23,8 @@ async function load_settings() {
     const port = preferences.data.bitcoin.port;
     const host = preferences.data.bitcoin.host;
     let split: string[];
-    if ('Cookie' in preferences.data.bitcoin.auth) {
-        const cookie = preferences.data.bitcoin.auth.Cookie;
+    if ('CookieFile' in preferences.data.bitcoin.auth) {
+        const cookie = preferences.data.bitcoin.auth.CookieFile;
         let upw = await readFile(cookie, { encoding: 'utf-8' });
         split = upw.split(':');
     } else if ('UserPass' in preferences.data.bitcoin.auth) {
