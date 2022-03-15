@@ -44,7 +44,7 @@ export function SimulationController(props: {
     const [current_time_ms, setCurrentTxTime] = React.useState(
         pct_to_value(50, max_time_ms, min_time_ms)
     );
-    const is_regtest = network === 'regtest';
+    const is_regtest = network === 'Regtest' || network === 'Signet';
     const current_year = Math.round(
         (new Date().getFullYear() - 2008) * 144 * 365 - (144 * 365) / 2
     );
@@ -63,12 +63,11 @@ export function SimulationController(props: {
     const clear = () => {
         dispatch(set_unreachable({}));
     };
-    const wrapper = (f: (input: HTMLInputElement) => void) => (
-        e: FormEvent
-    ) => {
-        const input = e.currentTarget as HTMLInputElement;
-        f(input);
-    };
+    const wrapper =
+        (f: (input: HTMLInputElement) => void) => (e: FormEvent) => {
+            const input = e.currentTarget as HTMLInputElement;
+            f(input);
+        };
 
     const updateMinTime = (e: ChangeEvent<HTMLInputElement>) => {
         setMinTimeMs(Date.parse(e.currentTarget.value) ?? max_time_ms);
@@ -212,10 +211,7 @@ export function SimulationController(props: {
         `${t.getUTCFullYear()}-${t
             .getUTCMonth()
             .toString()
-            .padStart(2, '0')}-${t
-            .getUTCDay()
-            .toString()
-            .padStart(2, '0')}T${t
+            .padStart(2, '0')}-${t.getUTCDay().toString().padStart(2, '0')}T${t
             .getUTCHours()
             .toString()
             .padStart(2, '0')}:${t

@@ -19,7 +19,7 @@ type CreatedContract = {
     data: Data;
 };
 
-type Pages = 'ContractCreator' | 'ContractViewer' | 'Wallet';
+type Pages = 'ContractCreator' | 'ContractViewer' | 'Wallet' | 'Settings';
 type StateType = {
     data: CreatedContract | null;
     counter: number;

@@ -28,7 +28,8 @@ export class UTXOMetaData {
 }
 export class UTXOModel
     extends UTXONodeModel
-    implements ViewableEntityInterface {
+    implements ViewableEntityInterface
+{
     txn: TransactionModel;
     utxo: UTXOMetaData;
     constructor(

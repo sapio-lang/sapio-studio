@@ -22,8 +22,8 @@ export class OutputPortModel extends SpendPortModel {
     create_link(x: OutputPortModel, to: TransactionModel, factory: any) {
         let link = this.createLinkModel(factory);
         // TODO: fix?
-        link.setSourcePort((this as unknown) as PortModel);
-        link.setTargetPort((x as unknown) as PortModel);
+        link.setSourcePort(this as unknown as PortModel);
+        link.setTargetPort(x as unknown as PortModel);
         link.linked_to = to;
         return link;
     }

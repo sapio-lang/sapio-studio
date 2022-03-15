@@ -1,5 +1,5 @@
 import React from 'react';
-import Form from '@rjsf/core';
+import { MuiForm5 as Form } from '@rjsf/material-ui';
 
 import { ISubmitEvent } from '@rjsf/core';
 import { logo_image, Plugin } from './PluginTile';

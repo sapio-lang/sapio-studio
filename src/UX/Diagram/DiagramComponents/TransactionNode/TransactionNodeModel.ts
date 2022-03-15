@@ -93,12 +93,12 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         switch (port.constructor) {
             case SpendPortModel:
                 this.portsIn.splice(
-                    this.portsIn.indexOf((port as unknown) as SpendPortModel)
+                    this.portsIn.indexOf(port as unknown as SpendPortModel)
                 );
                 break;
             case OutputPortModel:
                 this.portsOut.splice(
-                    this.portsOut.indexOf((port as unknown) as OutputPortModel)
+                    this.portsOut.indexOf(port as unknown as OutputPortModel)
                 );
                 break;
             default:
@@ -111,20 +111,19 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         switch (port.constructor) {
             case SpendPortModel:
                 if (
-                    this.portsIn.indexOf(
-                        (port as unknown) as SpendPortModel
-                    ) === -1
+                    this.portsIn.indexOf(port as unknown as SpendPortModel) ===
+                    -1
                 ) {
-                    this.portsIn.push((port as unknown) as SpendPortModel);
+                    this.portsIn.push(port as unknown as SpendPortModel);
                 }
                 break;
             case OutputPortModel:
                 if (
                     this.portsOut.indexOf(
-                        (port as unknown) as OutputPortModel
+                        port as unknown as OutputPortModel
                     ) === -1
                 ) {
-                    this.portsOut.push((port as unknown) as OutputPortModel);
+                    this.portsOut.push(port as unknown as OutputPortModel);
                 }
                 break;
         }
@@ -141,9 +140,9 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         if (!after) {
             this.portsIn.splice(0, 0, p);
         }
-        return (this.addPort(
-            (p as unknown) as PortModel
-        ) as unknown) as SpendPortModel;
+        return this.addPort(
+            p as unknown as PortModel
+        ) as unknown as SpendPortModel;
     }
 
     addOutPort(label: string, after: boolean): OutputPortModel {
@@ -157,9 +156,9 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         if (!after) {
             this.portsOut.splice(0, 0, p);
         }
-        return (this.addPort(
-            (p as unknown) as PortModel
-        ) as unknown) as OutputPortModel;
+        return this.addPort(
+            p as unknown as PortModel
+        ) as unknown as OutputPortModel;
     }
 
     getInPorts(): DefaultPortModel[] {

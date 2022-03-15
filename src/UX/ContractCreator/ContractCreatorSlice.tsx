@@ -46,12 +46,8 @@ export const contractCreatorSlice = createSlice({
         },
     },
 });
-export const {
-    show_apis,
-    set_apis,
-    select_api,
-    set_continuations,
-} = contractCreatorSlice.actions;
+export const { show_apis, set_apis, select_api, set_continuations } =
+    contractCreatorSlice.actions;
 
 export const register = (dispatch: Dispatch) => {
     window.electron.register('create_contracts', (apis: APIs) => {

@@ -71,51 +71,47 @@ function to_id(args: Outpoint): OutpointString {
 }
 /// private API
 const { __load_utxo, __flash } = entitySlice.actions;
-export const {
-    deselect_entity,
-    select_txn,
-    select_utxo,
-    clear_utxos,
-} = entitySlice.actions;
-export const fetch_utxo = (args: Outpoint) => async (
-    dispatch: AppDispatch,
-    getState: () => RootState
-) => {
-    if (getState().entityReducer.utxos.hasOwnProperty(to_id(args))) {
-    } else {
-        const utxo = await BitcoinNodeManager.fetch_utxo(args.hash, args.nIn);
-        if (utxo) {
-            dispatch(__load_utxo([args, utxo]));
+export const { deselect_entity, select_txn, select_utxo, clear_utxos } =
+    entitySlice.actions;
+export const fetch_utxo =
+    (args: Outpoint) =>
+    async (dispatch: AppDispatch, getState: () => RootState) => {
+        if (getState().entityReducer.utxos.hasOwnProperty(to_id(args))) {
+        } else {
+            const utxo = await BitcoinNodeManager.fetch_utxo(
+                args.hash,
+                args.nIn
+            );
+            if (utxo) {
+                dispatch(__load_utxo([args, utxo]));
+            }
         }
-    }
-};
+    };
 
-export const create = (
-    tx: Bitcoin.Transaction,
-    entity: UTXOModel,
-    contract: ContractModel
-) => async (dispatch: AppDispatch, getState: () => RootState) => {
-    await BitcoinNodeManager.fund_out(tx)
-        .then((funded) => {
-            tx = funded;
-            update_utxomodel(entity);
-            // TODO: Fix continue APIs, maybe add a Data merge operation
-            //          const data: Data = {
-            //              program: [{
-            //                    txs: contract.txn_models.map((t) => {
-            //                        return { linked_psbt: t.get_json() };
-            //                    }), continue_apis: {}
-            //                }],
-            //          };
-            //        dispatch(load_new_model(data));
-        })
-        .catch((error) => {
-            dispatch(__flash(error.message));
-            setTimeout(() => {
-                dispatch(__flash(null));
-            }, 3000);
-        });
-};
+export const create =
+    (tx: Bitcoin.Transaction, entity: UTXOModel, contract: ContractModel) =>
+    async (dispatch: AppDispatch, getState: () => RootState) => {
+        await BitcoinNodeManager.fund_out(tx)
+            .then((funded) => {
+                tx = funded;
+                update_utxomodel(entity);
+                // TODO: Fix continue APIs, maybe add a Data merge operation
+                //          const data: Data = {
+                //              program: [{
+                //                    txs: contract.txn_models.map((t) => {
+                //                        return { linked_psbt: t.get_json() };
+                //                    }), continue_apis: {}
+                //                }],
+                //          };
+                //        dispatch(load_new_model(data));
+            })
+            .catch((error) => {
+                dispatch(__flash(error.message));
+                setTimeout(() => {
+                    dispatch(__flash(null));
+                }, 3000);
+            });
+    };
 
 export const selectUTXO = (
     state: RootState

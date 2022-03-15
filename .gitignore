@@ -27,3 +27,6 @@ tags
 **/node_modules
 .vscode
 .eslintcache
+
+# artifacts
+contrib/settings-generator/target/

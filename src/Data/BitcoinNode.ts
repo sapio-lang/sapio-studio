@@ -53,7 +53,7 @@ export function update_broadcastable(
     });
 }
 
-interface ICommand { 
+interface ICommand {
     method: string;
     parameters: any[];
 }
@@ -129,7 +129,7 @@ export class BitcoinNodeManager {
         }
         if (this.mounted) {
             const freq = selectNodePollFreq(store.getState());
-            const period = clamp(freq, 5, 60 * 5);
+            const period = clamp(freq ?? 0, 5, 60 * 5);
 
             console.info('NEXT PERIODIC CONTRACT CHECK ', period, ' SECONDS');
             this.next_periodic_check = setTimeout(
@@ -179,15 +179,24 @@ export class BitcoinNodeManager {
     }
 
     async send_to_address(amount: number, address: string): Promise<void> {
-        return this.execute({ method: 'sendtoaddress', parameters: [address, amount] });
+        return this.execute({
+            method: 'sendtoaddress',
+            parameters: [address, amount],
+        });
     }
 
     async list_transactions(count: number): Promise<any> {
-        return this.execute({ method: 'listtransactions', parameters: ['*', count] });
+        return this.execute({
+            method: 'listtransactions',
+            parameters: ['*', count],
+        });
     }
     async generate_blocks(n: number): Promise<void> {
         const addr = await this.get_new_address();
-        return this.execute({ method: 'generatetoaddress', parameters: [n, addr] });
+        return this.execute({
+            method: 'generatetoaddress',
+            parameters: [n, addr],
+        });
     }
     // get info about transactions
     async get_confirmed_transactions(

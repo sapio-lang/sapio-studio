@@ -72,13 +72,13 @@ body {
 }
 
 .area-nav {
-    width: 100%;
+    width: 200px;
     height: 100vh;
 }
 
 .area-inner {
-    height: 100%;
-    width: 100%;
+    height: 100vh;
+    width: calc(100vw - 200px);
 }
 
 .area-overlays {
@@ -103,4 +103,11 @@ body {
 .wallet-container {
     height: 100%;
     width: 100%;
+}
+
+.settings-container {
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-bottom: 20px;
+    height: 100%;
 }

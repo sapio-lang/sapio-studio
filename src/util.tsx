@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { selectMaxSats } from './Settings/SettingsSlice';
 import { JSONSchema7 } from 'json-schema';
 import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
+import { schemas } from './UX/Settings/Schemas';
 // must manually copy from preload
 type Callback =
     | 'simulate'
@@ -32,16 +33,19 @@ declare global {
                 which: string,
                 args: string
             ) => Promise<string | null>;
-            preferences_redux: (listener: (preferences: any) => void) => void;
-            get_preferences_sync: () => any;
             save_psbt: (psbt: string) => Promise<null>;
             save_contract: (contract: string) => Promise<null>;
             fetch_psbt: () => Promise<string>;
             load_wasm_plugin: () => Promise<void>;
             open_contract_from_file: () => Promise<string>;
-            show_preferences: () => void;
             load_contract_list: () => Promise<APIs>;
             write_clipboard: (s: string) => void;
+            save_settings: (
+                which: keyof typeof schemas,
+                data: string
+            ) => Promise<boolean>;
+            load_settings_sync: (which: keyof typeof schemas) => Promise<any>;
+            select_filename: () => Promise<string | null>;
         };
     }
 }
@@ -215,9 +219,10 @@ export const TXIDAndWTXIDMap = {
     },
 };
 
-export function sequence_convert(
-    sequence: number
-): { relative_time: number; relative_height: number } {
+export function sequence_convert(sequence: number): {
+    relative_time: number;
+    relative_height: number;
+} {
     const ret = { relative_time: 0, relative_height: 0 };
     if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) return ret;
     if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE - 1) return ret;

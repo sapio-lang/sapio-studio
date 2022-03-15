@@ -3,6 +3,7 @@ import { sapio } from './sapio';
 import Client from 'bitcoin-core';
 import { readFile, writeFile } from 'fs/promises';
 import { readFileSync } from 'fs';
+import { preferences, Prefs } from './settings';
 export default function (window: BrowserWindow, client: typeof Client) {
     ipcMain.handle('bitcoin-command', async (event, arg) => {
         let result = await client.command(arg);
@@ -78,5 +79,23 @@ export default function (window: BrowserWindow, client: typeof Client) {
         if (path.filePath) {
             await writeFile(path.filePath, psbt);
         }
+    });
+
+    ipcMain.handle(
+        'save_settings',
+        async (event, which: Prefs, data: string) => {
+            return preferences.save(which, JSON.parse(data));
+        }
+    );
+
+    ipcMain.handle('load_settings_sync', (event, which: Prefs) => {
+        return preferences.data[which];
+    });
+    ipcMain.handle('select_filename', async (event) => {
+        let path = await dialog.showOpenDialog(window);
+        if (path && path.filePaths.length == 1) {
+            return path.filePaths[0]!;
+        }
+        return null;
     });
 }
