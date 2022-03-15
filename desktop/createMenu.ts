@@ -1,10 +1,10 @@
 import { app, BrowserWindow, clipboard, Menu, shell } from 'electron';
 import { dialog } from 'electron';
 import { sapio } from './sapio';
-import Client from 'bitcoin-core';
+import Client from 'bitcoin-core-ts';
 import { readFileSync } from 'fs';
 
-export function createMenu(window: BrowserWindow, client: typeof Client) {
+export function createMenu(window: BrowserWindow, client: Client) {
     const template = [
         {
             label: 'Edit',
