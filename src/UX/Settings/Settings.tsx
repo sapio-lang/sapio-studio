@@ -4,6 +4,8 @@ import React from 'react';
 import { MuiForm5 as Form } from '@rjsf/material-ui';
 import { ISubmitEvent } from '@rjsf/core';
 import { custom_fields, PathOnly } from '../CustomForms/Widgets';
+import SaveIcon from '@mui/icons-material/Save';
+import { Cancel } from '@mui/icons-material';
 
 function SettingPane(props: {
     name: keyof typeof schemas;
@@ -21,13 +23,13 @@ function SettingPane(props: {
     };
 
     const [data, set_data] = React.useState(null);
-    React.useEffect(() => {
-        async function get_args() {
-            let args = await window.electron.load_settings_sync(props.name);
-            if (data !== args) {
-                set_data(args);
-            }
+    async function get_args() {
+        let args = await window.electron.load_settings_sync(props.name);
+        if (data !== args) {
+            set_data(args);
         }
+    }
+    React.useEffect(() => {
         get_args();
     }, []);
     return (
@@ -56,7 +58,24 @@ function SettingPane(props: {
                         formData={data}
                     >
                         <div>
-                            <Button type="submit">Save</Button>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                type="submit"
+                                size="large"
+                                endIcon={<SaveIcon />}
+                            >
+                                Save Settings
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="warning"
+                                size="large"
+                                endIcon={<Cancel />}
+                                onClick={get_args}
+                            >
+                                Reset{' '}
+                            </Button>
                         </div>
                     </Form>
                 </Box>
