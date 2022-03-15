@@ -3,7 +3,7 @@ import path from 'path';
 import url from 'url';
 import { custom_sapio_config, preferences } from './settings';
 
-import Client from 'bitcoin-core';
+import Client from 'bitcoin-core-ts';
 
 import { createMenu } from './createMenu';
 import register_handlers from './handlers';
@@ -13,10 +13,10 @@ import { sys } from 'typescript';
 import { register_devtools } from './devtools';
 import { readFile } from 'fs/promises';
 
-export let client = null;
+export let g_client: null | Client = null;
 let mainWindow: BrowserWindow | null = null;
 
-async function load_settings() {
+async function load_settings(): Promise<Client> {
     await preferences.initialize();
     let network = preferences.data.bitcoin.network.toLowerCase();
     if (network === 'bitcoin') network = 'mainnet';
@@ -31,30 +31,31 @@ async function load_settings() {
         split = preferences.data.bitcoin.auth.UserPass;
     } else {
         console.log('BROKEN');
-        client = new Client({
+        g_client = new Client({
             network,
             port,
             host,
         });
-        return;
+        return g_client;
     }
     if (split.length === 2) {
         let username = split[0] ?? '';
         let password = split[1] ?? '';
-        client = new Client({
+        g_client = new Client({
             network,
             username,
             password,
             port,
             host,
         });
+        return g_client;
     } else {
         throw Error('Malformed Cookie File');
     }
 }
 
 async function createWindow() {
-    await load_settings();
+    let client = await load_settings();
     const startUrl =
         process.env.ELECTRON_START_URL ||
         url.format({
