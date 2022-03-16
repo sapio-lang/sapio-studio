@@ -1,5 +1,10 @@
 import { BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
-import { sapio } from './sapio';
+import {
+    get_emulator_log,
+    kill_emulator,
+    sapio,
+    start_sapio_oracle,
+} from './sapio';
 import { readFile, writeFile } from 'fs/promises';
 import { readFileSync } from 'fs';
 import { preferences, Prefs } from './settings';
@@ -20,6 +25,17 @@ export default function (window: BrowserWindow) {
             }
         }
     });
+
+    ipcMain.handle('emulator::kill', (event) => {
+        kill_emulator();
+    });
+    ipcMain.handle('emulator::start', (event) => {
+        start_sapio_oracle();
+    });
+    ipcMain.handle('emulator::read_log', (event) => {
+        return get_emulator_log();
+    });
+
     ipcMain.handle('sapio::load_contract_list', async (event) => {
         const contracts = await sapio.list_contracts();
         return contracts;

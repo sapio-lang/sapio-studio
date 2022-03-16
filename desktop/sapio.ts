@@ -179,13 +179,45 @@ class SapioCompiler {
 
 export const sapio = new SapioCompiler();
 
+let g_emulator: null | ChildProcessWithoutNullStreams = null;
+let g_emulator_log: string = '';
+
+export function get_emulator_log(): string {
+    return g_emulator_log;
+}
 export function start_sapio_oracle(): ChildProcessWithoutNullStreams | null {
+    if (g_emulator !== null) return g_emulator;
     const oracle = preferences.data.local_oracle;
     if (oracle !== 'Disabled' && 'Enabled' in oracle) {
         const binary = preferences.data.sapio_cli.sapio_cli;
         const seed = oracle.Enabled.file;
         const iface = oracle.Enabled.interface;
-        return spawnSync(binary, ['emulator', 'server', seed, iface]);
+        let emulator = spawnSync(binary, ['emulator', 'server', seed, iface]);
+        if (emulator) {
+            let quit = '';
+            emulator.stderr.on('data', (data) => {
+                quit += `${data}`;
+            });
+            emulator.on('exit', (code) => {
+                if (quit !== '') {
+                    console.error('Emulator Oracle Error', quit);
+                    sys.exit();
+                }
+            });
+            emulator.stdout.on('data', (data) => {
+                g_emulator_log += `${data}`;
+                console.log(`stdout: ${data}`);
+            });
+        }
+        g_emulator = emulator;
+        return g_emulator;
     }
     return null;
+}
+
+export function kill_emulator() {
+    console.log('Killing Emulator');
+    g_emulator_log = '';
+    g_emulator?.kill();
+    g_emulator = null;
 }

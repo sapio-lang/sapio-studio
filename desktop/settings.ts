@@ -7,6 +7,7 @@ import { open, writeFileSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import { default_settings } from './settings_gen';
 import { deinit_bitcoin_node, get_bitcoin_node } from './bitcoin_rpc';
+import { kill_emulator, start_sapio_oracle } from './sapio';
 
 export type Prefs = 'bitcoin' | 'display' | 'local_oracle' | 'sapio_cli';
 const pref_array: Array<Prefs> = [
@@ -117,6 +118,10 @@ export const preferences: {
             case 'bitcoin':
                 deinit_bitcoin_node();
                 get_bitcoin_node();
+                break;
+            case 'local_oracle':
+                kill_emulator();
+                start_sapio_oracle();
                 break;
         }
         return true;

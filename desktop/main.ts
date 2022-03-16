@@ -47,22 +47,7 @@ async function createWindow() {
     createMenu(mainWindow);
     register_handlers(mainWindow);
     custom_sapio_config();
-    let emulator = start_sapio_oracle();
-    if (emulator) {
-        let quit = '';
-        emulator.stderr.on('data', (data) => {
-            quit += `${data}`;
-        });
-        emulator.on('exit', (code) => {
-            if (quit !== '') {
-                console.error('Emulator Oracle Error', quit);
-                sys.exit();
-            }
-        });
-        emulator.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
-        });
-    }
+    start_sapio_oracle();
 }
 register_devtools();
 

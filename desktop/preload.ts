@@ -29,6 +29,10 @@ function show_config(): Promise<Result<string>> {
     return ipcRenderer.invoke('sapio::show_config');
 }
 
+function load_contract_list() {
+    return ipcRenderer.invoke('sapio::load_contract_list');
+}
+
 function save_psbt(psbt: string): Promise<null> {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
@@ -69,16 +73,23 @@ function register(msg: Callback, action: (args: any) => void): () => void {
     throw 'Unregistered Callback';
 }
 
-function load_contract_list() {
-    return ipcRenderer.invoke('load_contract_list');
-}
-
 function write_clipboard(s: string) {
     ipcRenderer.invoke('write_clipboard', s);
 }
 
 function select_filename() {
     return ipcRenderer.invoke('select_filename');
+}
+
+function emulator_kill() {
+    console.log('Killing');
+    return ipcRenderer.invoke('emulator::kill');
+}
+function emulator_start() {
+    return ipcRenderer.invoke('emulator::start');
+}
+function emulator_read_log(): Promise<string> {
+    return ipcRenderer.invoke('emulator::read_log');
 }
 
 const api = {
@@ -97,6 +108,11 @@ const api = {
         load_wasm_plugin,
         open_contract_from_file,
         load_contract_list,
+    },
+    emulator: {
+        kill: emulator_kill,
+        start: emulator_start,
+        read_log: emulator_read_log,
     },
 };
 contextBridge.exposeInMainWorld('electron', api);

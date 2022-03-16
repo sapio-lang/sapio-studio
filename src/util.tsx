@@ -50,6 +50,11 @@ declare global {
                     args: string
                 ) => Promise<Result<string | null>>;
             };
+            emulator: {
+                kill: () => Promise<void>;
+                start: () => Promise<void>;
+                read_log: () => Promise<string>;
+            };
         };
     }
 }
