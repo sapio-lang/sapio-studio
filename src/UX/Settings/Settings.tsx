@@ -49,49 +49,54 @@ function SettingPane(props: {
         <div hidden={props.idx !== props.value}>
             {props.idx === props.value && (
                 <Box>
-                    {props.children}
-                    <Form
-                        schema={schemas[props.name]}
-                        onSubmit={handlesubmit}
-                        fields={custom_fields}
-                        uiSchema={{
-                            sapio_cli: {
-                                'ui:widget': PathOnly,
-                            },
-                            auth: {
-                                CookieFile: {
+                    <Box sx={{ paddingTop: '20px' }}>
+                        <Form
+                            schema={schemas[props.name]}
+                            onSubmit={handlesubmit}
+                            fields={custom_fields}
+                            uiSchema={{
+                                sapio_cli: {
                                     'ui:widget': PathOnly,
                                 },
-                            },
-                            Enabled: {
-                                file: {
-                                    'ui:widget': PathOnly,
+                                auth: {
+                                    CookieFile: {
+                                        'ui:widget': PathOnly,
+                                    },
                                 },
-                            },
-                        }}
-                        formData={data}
-                    >
-                        <div>
-                            <Button
-                                variant="contained"
-                                color="success"
-                                type="submit"
-                                size="large"
-                                endIcon={<SaveIcon />}
-                            >
-                                Save Settings
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="warning"
-                                size="large"
-                                endIcon={<Cancel />}
-                                onClick={get_args}
-                            >
-                                Reset{' '}
-                            </Button>
-                        </div>
-                    </Form>
+                                Enabled: {
+                                    file: {
+                                        'ui:widget': PathOnly,
+                                    },
+                                },
+                            }}
+                            formData={data}
+                        >
+                            <Box sx={{ paddingTop: '20px' }}>
+                                <Button
+                                    variant="contained"
+                                    color="success"
+                                    type="submit"
+                                    size="large"
+                                    endIcon={<SaveIcon />}
+                                >
+                                    Save Settings
+                                </Button>
+                                <Button
+                                    sx={{ marginLeft: '20px' }}
+                                    variant="contained"
+                                    color="warning"
+                                    size="large"
+                                    endIcon={<Cancel />}
+                                    onClick={get_args}
+                                >
+                                    Reset{' '}
+                                </Button>
+                            </Box>
+                            <Box sx={{ paddingTop: '20px' }}>
+                                {props.children}
+                            </Box>
+                        </Form>
+                    </Box>
                 </Box>
             )}
         </div>
@@ -251,14 +256,16 @@ export function Settings() {
                             Start
                         </Button>
                         <Button
+                            sx={{ marginLeft: '20px' }}
                             variant="contained"
-                            color="warning"
+                            color="error"
                             size="large"
                             onClick={window.electron.emulator.kill}
                         >
                             Kill
                         </Button>
                         <Button
+                            sx={{ marginLeft: '20px' }}
                             variant="contained"
                             color="info"
                             size="large"
@@ -303,9 +310,9 @@ function Guide(props: { idx: number; my_idx: number }) {
                                 Display: options for Sapio Studio's rendering
                             </li>
                         </ol>
-                        At the top of each of these tabs you may see a set of
-                        buttons that will allow you to test the configuration
-                        you have currently saved.
+                        At the bottom of each of these tabs you will see a set
+                        of buttons that will allow you to save and test the
+                        configuration you have currently saved.
                     </Typography>
                     <Typography variant="h3">
                         You must save settings before they will be used.
