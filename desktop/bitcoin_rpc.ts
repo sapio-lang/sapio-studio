@@ -6,9 +6,8 @@ import { setTimeout } from "timers/promises";
 
 
 let current_node: Client | null = null;
-let initializing = true;
+let initializing = false;
 async function load_node_from_prefs(): Promise<Client> {
-
     await preferences.initialize();
     let network = preferences.data.bitcoin.network.toLowerCase();
     if (network === 'bitcoin') network = 'mainnet';
@@ -54,10 +53,13 @@ export async function get_bitcoin_node(): Promise<Client> {
     if (current_node) return current_node;
     // only allow one initializer at a time...
     if (!initializing) {
+        console.log("initializing");
         initializing = true;
         current_node = await load_node_from_prefs();
         initializing = false;
+        console.log("initialized");
     } else while (initializing) await setTimeout(10);
 
+    console.log("returning");
     return get_bitcoin_node();
 }

@@ -6,11 +6,13 @@ import { ISubmitEvent } from '@rjsf/core';
 import { custom_fields, PathOnly } from '../CustomForms/Widgets';
 import SaveIcon from '@mui/icons-material/Save';
 import { Cancel } from '@mui/icons-material';
+import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
 
 function SettingPane(props: {
     name: keyof typeof schemas;
     idx: number;
     value: number;
+    children?: React.ReactNode;
 }) {
     const handlesubmit = async (
         data: ISubmitEvent<any>,
@@ -36,6 +38,7 @@ function SettingPane(props: {
         <div hidden={props.idx !== props.value}>
             {props.idx === props.value && (
                 <Box>
+                    {props.children}
                     <Form
                         schema={schemas[props.name]}
                         onSubmit={handlesubmit}
@@ -88,6 +91,37 @@ export function Settings() {
     const handleChange = (_: any, idx: number) => {
         set_idx(idx);
     };
+
+    const test_bitcoind = async () => {
+        window.electron.bitcoin_command([{ method: "getbestblockhash", parameters: [] }])
+            .then((h) =>
+                alert(`Connection Seems OK:\n\nBest Hash ${h[0]}`)
+            ).catch((e) => {
+                console.log("GOT", JSON.stringify(e));
+                let r = e.message;
+                if (typeof e.message === "string") {
+                    let err = JSON.parse(r);
+                    if (err instanceof Object && "code" in err && "name" in err && "message" in err) {
+                        alert(` ¡Connection Not Working!
+
+                                Name: ${err.name}
+                                Message: ${err.message}
+                                Error Code: ${err.code}
+                                `)
+                        return;
+                    } else if (typeof err === "string") {
+                        alert(` ¡Connection Not Working!
+
+                                ${err}
+                                `)
+                        return;
+
+                    }
+                }
+                alert(r);
+
+            });
+    };
     return (
         <div style={{ height: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -105,11 +139,15 @@ export function Settings() {
             <Box sx={{ overflowY: 'scroll', height: '100%' }}>
                 <div style={{ marginBottom: '200px' }}>
                     <SettingPane name={'sapio_cli'} value={idx} idx={0} />
-                    <SettingPane name={'bitcoin'} value={idx} idx={1} />
+                    <SettingPane name={'bitcoin'} value={idx} idx={1} >
+                        <Button onClick={test_bitcoind}>
+                            Test Connection
+                        </Button>
+                    </SettingPane>
                     <SettingPane name={'local_oracle'} value={idx} idx={2} />
                     <SettingPane name={'display'} value={idx} idx={3} />
                 </div>
-            </Box>
-        </div>
+            </Box >
+        </div >
     );
 }

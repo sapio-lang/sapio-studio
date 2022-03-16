@@ -1,8 +1,16 @@
 import { ipcRenderer, contextBridge } from 'electron';
 import { IpcRendererEvent } from 'electron/main';
 
-function bitcoin_command(command: { method: string; parameters: any[] }[]) {
-    return ipcRenderer.invoke('bitcoin-command', command);
+function bitcoin_command(command: { method: string; parameters: any[] }[]): Promise<any> {
+    return ipcRenderer.invoke('bitcoin-command', command).then(
+        (msg) => {
+            if ("ok" in msg) {
+                return msg.ok;
+            } else if ("err" in msg) {
+                throw new Error(JSON.stringify(msg.err));
+            }
+        }
+    );
 }
 
 function create_contract(which: string, args: string): Promise<string> {

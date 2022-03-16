@@ -4,10 +4,20 @@ import { readFile, writeFile } from 'fs/promises';
 import { readFileSync } from 'fs';
 import { preferences, Prefs } from './settings';
 import { get_bitcoin_node } from './bitcoin_rpc';
+import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
 export default function (window: BrowserWindow) {
     ipcMain.handle('bitcoin-command', async (event, arg) => {
-        let result = await (await get_bitcoin_node()).command(arg) ?? null;
-        return result;
+        let node = await get_bitcoin_node();
+        try {
+            return { ok: await node.command(arg) };
+        } catch (r: any) {
+            if (r instanceof RpcError) {
+                return { err: { code: r.code, message: r.message, name: r.name } };
+            } else if (r instanceof Error) {
+                return { err: r.toString() };
+            }
+
+        }
     });
     ipcMain.handle('load_contract_list', async (event) => {
         const contracts = await sapio.list_contracts();

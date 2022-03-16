@@ -11,11 +11,13 @@ import { ChildProcessWithoutNullStreams } from 'child_process';
 import { sys } from 'typescript';
 import { register_devtools } from './devtools';
 import { readFile } from 'fs/promises';
+import { get_bitcoin_node } from './bitcoin_rpc';
 
 let mainWindow: BrowserWindow | null = null;
 
 
 async function createWindow() {
+    await get_bitcoin_node();
     const startUrl =
         process.env.ELECTRON_START_URL ||
         url.format({
