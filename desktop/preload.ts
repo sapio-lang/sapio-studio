@@ -2,7 +2,7 @@ import { ipcRenderer, contextBridge } from 'electron';
 import { IpcRendererEvent } from 'electron/main';
 
 function bitcoin_command(command: { method: string; parameters: any[] }[]): Promise<any> {
-    return ipcRenderer.invoke('bitcoin-command', command).then(
+    return ipcRenderer.invoke('bitcoin::command', command).then(
         (msg) => {
             if ("ok" in msg) {
                 return msg.ok;
@@ -13,19 +13,26 @@ function bitcoin_command(command: { method: string; parameters: any[] }[]): Prom
     );
 }
 
-function create_contract(which: string, args: string): Promise<string> {
-    return ipcRenderer.invoke('create_contract', [which, args]);
+type Result<T> = { ok: T } | { err: string };
+function create_contract(which: string, args: string): Promise<Result<string>> {
+    return ipcRenderer.invoke('sapio::create_contract', [which, args]);
 }
 
-function open_contract_from_file(): Promise<string> {
-    return ipcRenderer.invoke('open_contract_from_file');
+function open_contract_from_file(): Promise<Result<string>> {
+    return ipcRenderer.invoke('sapio::open_contract_from_file');
 }
-function load_wasm_plugin() {
-    return ipcRenderer.invoke('load_wasm_plugin');
+function load_wasm_plugin(): Promise<Result<null>> {
+    return ipcRenderer.invoke('sapio::load_wasm_plugin');
 }
+
+function show_config(): Promise<Result<string>> {
+    return ipcRenderer.invoke("sapio::show_config");
+}
+
 function save_psbt(psbt: string): Promise<null> {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
+
 function fetch_psbt(): Promise<null> {
     return ipcRenderer.invoke('fetch_psbt');
 }
@@ -39,6 +46,7 @@ function save_settings(which: string, data: string): Promise<boolean> {
 function load_settings_sync(which: string): any {
     return ipcRenderer.invoke('load_settings_sync', which);
 }
+
 
 const callbacks = {
     simulate: 0,
@@ -77,16 +85,19 @@ function select_filename() {
 const api = {
     bitcoin_command,
     register,
-    create_contract,
     save_psbt,
     save_contract,
     fetch_psbt,
-    load_wasm_plugin,
-    open_contract_from_file,
-    load_contract_list,
     write_clipboard,
     save_settings,
     load_settings_sync,
     select_filename,
+    sapio: {
+        create_contract,
+        show_config,
+        load_wasm_plugin,
+        open_contract_from_file,
+        load_contract_list,
+    }
 };
 contextBridge.exposeInMainWorld('electron', api);

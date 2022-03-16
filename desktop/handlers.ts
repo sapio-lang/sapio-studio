@@ -6,7 +6,7 @@ import { preferences, Prefs } from './settings';
 import { get_bitcoin_node } from './bitcoin_rpc';
 import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
 export default function (window: BrowserWindow) {
-    ipcMain.handle('bitcoin-command', async (event, arg) => {
+    ipcMain.handle('bitcoin::command', async (event, arg) => {
         let node = await get_bitcoin_node();
         try {
             return { ok: await node.command(arg) };
@@ -19,27 +19,30 @@ export default function (window: BrowserWindow) {
 
         }
     });
-    ipcMain.handle('load_contract_list', async (event) => {
+    ipcMain.handle('sapio::load_contract_list', async (event) => {
         const contracts = await sapio.list_contracts();
         return contracts;
     });
-    ipcMain.handle('create_contract', async (event, [which, args]) => {
+    ipcMain.handle('sapio::create_contract', async (event, [which, args]) => {
         let result = await sapio.create_contract(which, args);
         return result;
     });
-    ipcMain.handle('write_clipboard', (event, s: string) => {
-        clipboard.writeText(s);
+
+    ipcMain.handle('sapio::show_config', async (event) => {
+        return await sapio.show_config();
     });
 
-    ipcMain.handle('load_wasm_plugin', (event) => {
+
+    ipcMain.handle('sapio::load_wasm_plugin', (event) => {
         const plugin = dialog.showOpenDialogSync({
             properties: ['openFile'],
             filters: [{ extensions: ['wasm'], name: 'WASM' }],
         });
-        if (plugin && plugin.length) sapio.load_contract_file_name(plugin[0]!);
+        if (plugin && plugin.length) return sapio.load_contract_file_name(plugin[0]!);
+        return { err: "No Plugin Selected" }
     });
 
-    ipcMain.handle('open_contract_from_file', (event) => {
+    ipcMain.handle('sapio::open_contract_from_file', (event) => {
         const file = dialog.showOpenDialogSync(window, {
             properties: ['openFile'],
             filters: [
@@ -53,9 +56,14 @@ export default function (window: BrowserWindow) {
             const data = readFileSync(file[0]!, {
                 encoding: 'utf-8',
             });
-            return data;
+            return { ok: data };
         }
     });
+
+    ipcMain.handle('write_clipboard', (event, s: string) => {
+        clipboard.writeText(s);
+    });
+
     ipcMain.handle('save_psbt', async (event, psbt) => {
         let path = await dialog.showSaveDialog(window, {
             filters: [

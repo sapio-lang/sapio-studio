@@ -185,7 +185,7 @@ function ContractMenu(props: { relayout: () => void }) {
                 <MenuItem
                     onClick={() => {
                         setContractsOpen(false);
-                        window.electron.load_wasm_plugin();
+                        window.electron.sapio.load_wasm_plugin();
                     }}
                 >
                     Load WASM Plugin
@@ -193,8 +193,10 @@ function ContractMenu(props: { relayout: () => void }) {
                 <MenuItem
                     onClick={async () => {
                         setContractsOpen(false);
+                        const apis = await window.electron.sapio.load_contract_list();
+                        if ("err" in apis) return;
                         dispatch(
-                            set_apis(await window.electron.load_contract_list())
+                            set_apis(apis.ok)
                         );
                         dispatch(switch_showing('ContractCreator'));
                     }}

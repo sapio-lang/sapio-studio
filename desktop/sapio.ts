@@ -14,36 +14,44 @@ import { preferences, sapio_config_file } from './settings';
 const memo_apis = new Map();
 const memo_logos = new Map();
 
+type Result = { ok: string } | { err: string };
 class SapioCompiler {
     constructor() { }
-    static async command(args: string[]): Promise<BufferList> {
+    static async command(args: string[]): Promise<Result> {
         const binary = preferences.data.sapio_cli.sapio_cli;
         const source = preferences.data.sapio_cli.preferences;
-        console.log(source);
         let new_args: string[] = [];
         if (source === 'Default') {
             new_args = args;
         } else if ('File' in source) {
             new_args = ['--config', source.File, ...args];
         } else if ('Here' in source) {
-            console.log(sapio_config_file);
             new_args = ['--config', sapio_config_file, ...args];
         } else {
-            dialog.showErrorBox('Improper Source', '');
+            dialog.showErrorBox('Improper Source', 'This means your config file is corrupt, shutting down.');
             sys.exit(1);
         }
-        console.debug('Callling', binary, new_args);
-        return spawn(binary, new_args);
+        console.debug('[sapio]: ', binary, new_args);
+        try {
+            return { ok: (await spawn(binary, new_args)).toString() };
+        } catch (e: any) {
+            return { err: e.toString() };
+        }
+    }
+    async show_config(): Promise<Result> {
+        return (await SapioCompiler.command(['configure', 'show']));
     }
     async list_contracts(): Promise<
-        Record<
-            string,
-            { name: string; key: string; api: JSONSchema7; logo: string }
-        >
+        {
+            ok: Record<
+                string,
+                { name: string; key: string; api: JSONSchema7; logo: string }
+            >
+        } | { err: string }
     > {
-        const contracts = (
-            await SapioCompiler.command(['contract', 'list'])
-        ).toString();
+        const res = await SapioCompiler.command(['contract', 'list']);
+        if ("err" in res) return res;
+        const contracts = res.ok;
         let lines: Array<[string, string]> = contracts
             .trim()
             .split(/\r?\n/)
@@ -64,7 +72,8 @@ class SapioCompiler {
                         '--key',
                         key,
                     ]).then((v) => {
-                        const api = JSON.parse(v.toString());
+                        if ("err" in v) return v;
+                        const api = JSON.parse(v.ok);
                         memo_apis.set(key, api);
                         return api;
                     });
@@ -72,7 +81,7 @@ class SapioCompiler {
             })
         );
         const logos_p = Promise.all(
-            lines.map(([name, key]: [string, string]): Promise<string> => {
+            lines.map(([name, key]: [string, string]): Promise<Result> => {
                 if (memo_logos.has(key)) {
                     return Promise.resolve(memo_logos.get(key));
                 } else {
@@ -82,9 +91,10 @@ class SapioCompiler {
                         '--key',
                         key,
                     ])
-                        .then((logo: any) => logo.toString().trim())
-                        .then((logo: string) => {
-                            memo_logos.set(key, logo);
+                        .then((logo: Result) => "ok" in logo ? { ok: logo.ok.trim() } : logo)
+                        .then((logo: Result) => {
+                            if ("err" in logo) return logo;
+                            memo_logos.set(key, logo.ok);
                             return logo;
                         });
                 }
@@ -102,55 +112,59 @@ class SapioCompiler {
             const [name, key] = lines[i]!;
             const api = apis[i]!;
             const logo = logos[i]!;
+            if ("err" in logo) return logo;
             results[key] = {
                 name,
                 key,
                 api,
-                logo,
+                logo: logo.ok,
             };
         }
-        return results;
+        return { ok: results };
     }
-    async load_contract_file_name(file: string) {
+    async load_contract_file_name(file: string): Promise<{ ok: null }> {
         const child = await SapioCompiler.command([
             'contract',
             'load',
             '--file',
             file,
         ]);
-        console.log(`child stdout:\n${child.toString()}`);
+        console.log(`child stdout:\n${child}`);
+        return { ok: null };
     }
 
-    async create_contract(which: string, args: string): Promise<string | null> {
-        let created, bound;
+    async create_contract(which: string, args: string): Promise<{ ok: string | null } | { err: string }> {
+        let create, created, bound;
         try {
-            const create = await SapioCompiler.command([
+            create = await SapioCompiler.command([
                 'contract',
                 'create',
                 '--key',
                 which,
                 args,
             ]);
-            created = create.toString();
         } catch (e) {
             console.debug('Failed to Create', which, args);
-            return null;
+            return { ok: null };
         }
+        if ("err" in create) return create;
+        created = create.ok;
+        let bind;
         try {
-            const bind = await SapioCompiler.command([
+            bind = await SapioCompiler.command([
                 'contract',
                 'bind',
                 '--base64_psbt',
                 created,
             ]);
-            bound = bind.toString();
-            console.debug(bound);
-            return bound;
         } catch (e: any) {
             console.debug(created);
             console.log('Failed to bind', e.toString());
-            return null;
+            return { ok: null };
         }
+        if ("err" in bind) return bind;
+        console.debug(bound);
+        return bind;
     }
 }
 

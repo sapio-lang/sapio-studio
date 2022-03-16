@@ -122,6 +122,18 @@ export function Settings() {
 
             });
     };
+
+    const test_sapio = async () => {
+        window.electron.sapio.show_config()
+            .then((conf) => {
+                if ("ok" in conf) alert(`Current Configuration:\n\n${conf.ok} `);
+                else
+                    alert(`¡Configuration Error!\n\n  ${conf.err}`);
+            }
+            ).catch((e) =>
+                alert(`¡Configuration Error! \n\n ${e.toString()}`)
+            )
+    };
     return (
         <div style={{ height: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -138,7 +150,11 @@ export function Settings() {
             </Box>
             <Box sx={{ overflowY: 'scroll', height: '100%' }}>
                 <div style={{ marginBottom: '200px' }}>
-                    <SettingPane name={'sapio_cli'} value={idx} idx={0} />
+                    <SettingPane name={'sapio_cli'} value={idx} idx={0}>
+                        <Button onClick={test_sapio}>
+                            Test Sapio-Cli
+                        </Button>
+                    </SettingPane>
                     <SettingPane name={'bitcoin'} value={idx} idx={1} >
                         <Button onClick={test_bitcoind}>
                             Test Connection
