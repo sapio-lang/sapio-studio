@@ -1,12 +1,12 @@
 import { BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
 import { sapio } from './sapio';
-import Client from 'bitcoin-core-ts';
 import { readFile, writeFile } from 'fs/promises';
 import { readFileSync } from 'fs';
 import { preferences, Prefs } from './settings';
-export default function (window: BrowserWindow, client: Client) {
+import { get_bitcoin_node } from './bitcoin_rpc';
+export default function (window: BrowserWindow) {
     ipcMain.handle('bitcoin-command', async (event, arg) => {
-        let result = await client?.command(arg) ?? null;
+        let result = await (await get_bitcoin_node()).command(arg) ?? null;
         return result;
     });
     ipcMain.handle('load_contract_list', async (event) => {

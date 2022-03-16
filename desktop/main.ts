@@ -3,7 +3,6 @@ import path from 'path';
 import url from 'url';
 import { custom_sapio_config, preferences } from './settings';
 
-import Client from 'bitcoin-core-ts';
 
 import { createMenu } from './createMenu';
 import register_handlers from './handlers';
@@ -13,49 +12,10 @@ import { sys } from 'typescript';
 import { register_devtools } from './devtools';
 import { readFile } from 'fs/promises';
 
-export let g_client: null | Client = null;
 let mainWindow: BrowserWindow | null = null;
 
-async function load_settings(): Promise<Client> {
-    await preferences.initialize();
-    let network = preferences.data.bitcoin.network.toLowerCase();
-    if (network === 'bitcoin') network = 'mainnet';
-    const port = preferences.data.bitcoin.port;
-    const host = preferences.data.bitcoin.host;
-    let split: string[];
-    if ('CookieFile' in preferences.data.bitcoin.auth) {
-        const cookie = preferences.data.bitcoin.auth.CookieFile;
-        let upw = await readFile(cookie, { encoding: 'utf-8' });
-        split = upw.split(':');
-    } else if ('UserPass' in preferences.data.bitcoin.auth) {
-        split = preferences.data.bitcoin.auth.UserPass;
-    } else {
-        console.log('BROKEN');
-        g_client = new Client({
-            network,
-            port,
-            host,
-        });
-        return g_client;
-    }
-    if (split.length === 2) {
-        let username = split[0] ?? '';
-        let password = split[1] ?? '';
-        g_client = new Client({
-            network,
-            username,
-            password,
-            port,
-            host,
-        });
-        return g_client;
-    } else {
-        throw Error('Malformed Cookie File');
-    }
-}
 
 async function createWindow() {
-    let client = await load_settings();
     const startUrl =
         process.env.ELECTRON_START_URL ||
         url.format({
@@ -73,7 +33,6 @@ async function createWindow() {
             preload: path.join(__dirname, 'preload.js'),
             allowRunningInsecureContent: false,
             contextIsolation: true,
-            enableRemoteModule: false,
             nodeIntegration: false,
             sandbox: true,
         },
@@ -85,8 +44,8 @@ async function createWindow() {
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
-    createMenu(mainWindow, client);
-    register_handlers(mainWindow, client);
+    createMenu(mainWindow);
+    register_handlers(mainWindow);
     custom_sapio_config();
     let emulator = start_sapio_oracle();
     if (emulator) {
