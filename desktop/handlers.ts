@@ -12,11 +12,12 @@ export default function (window: BrowserWindow) {
             return { ok: await node.command(arg) };
         } catch (r: any) {
             if (r instanceof RpcError) {
-                return { err: { code: r.code, message: r.message, name: r.name } };
+                return {
+                    err: { code: r.code, message: r.message, name: r.name },
+                };
             } else if (r instanceof Error) {
                 return { err: r.toString() };
             }
-
         }
     });
     ipcMain.handle('sapio::load_contract_list', async (event) => {
@@ -32,14 +33,14 @@ export default function (window: BrowserWindow) {
         return await sapio.show_config();
     });
 
-
     ipcMain.handle('sapio::load_wasm_plugin', (event) => {
         const plugin = dialog.showOpenDialogSync({
             properties: ['openFile'],
             filters: [{ extensions: ['wasm'], name: 'WASM' }],
         });
-        if (plugin && plugin.length) return sapio.load_contract_file_name(plugin[0]!);
-        return { err: "No Plugin Selected" }
+        if (plugin && plugin.length)
+            return sapio.load_contract_file_name(plugin[0]!);
+        return { err: 'No Plugin Selected' };
     });
 
     ipcMain.handle('sapio::open_contract_from_file', (event) => {

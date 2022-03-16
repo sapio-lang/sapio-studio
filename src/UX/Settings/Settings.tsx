@@ -93,46 +93,48 @@ export function Settings() {
     };
 
     const test_bitcoind = async () => {
-        window.electron.bitcoin_command([{ method: "getbestblockhash", parameters: [] }])
-            .then((h) =>
-                alert(`Connection Seems OK:\n\nBest Hash ${h[0]}`)
-            ).catch((e) => {
-                console.log("GOT", JSON.stringify(e));
+        window.electron
+            .bitcoin_command([{ method: 'getbestblockhash', parameters: [] }])
+            .then((h) => alert(`Connection Seems OK:\n\nBest Hash ${h[0]}`))
+            .catch((e) => {
+                console.log('GOT', JSON.stringify(e));
                 let r = e.message;
-                if (typeof e.message === "string") {
+                if (typeof e.message === 'string') {
                     let err = JSON.parse(r);
-                    if (err instanceof Object && "code" in err && "name" in err && "message" in err) {
+                    if (
+                        err instanceof Object &&
+                        'code' in err &&
+                        'name' in err &&
+                        'message' in err
+                    ) {
                         alert(` ¡Connection Not Working!
 
                                 Name: ${err.name}
                                 Message: ${err.message}
                                 Error Code: ${err.code}
-                                `)
+                                `);
                         return;
-                    } else if (typeof err === "string") {
+                    } else if (typeof err === 'string') {
                         alert(` ¡Connection Not Working!
 
                                 ${err}
-                                `)
+                                `);
                         return;
-
                     }
                 }
                 alert(r);
-
             });
     };
 
     const test_sapio = async () => {
-        window.electron.sapio.show_config()
+        window.electron.sapio
+            .show_config()
             .then((conf) => {
-                if ("ok" in conf) alert(`Current Configuration:\n\n${conf.ok} `);
-                else
-                    alert(`¡Configuration Error!\n\n  ${conf.err}`);
-            }
-            ).catch((e) =>
-                alert(`¡Configuration Error! \n\n ${e.toString()}`)
-            )
+                if ('ok' in conf)
+                    alert(`Current Configuration:\n\n${conf.ok} `);
+                else alert(`¡Configuration Error!\n\n  ${conf.err}`);
+            })
+            .catch((e) => alert(`¡Configuration Error! \n\n ${e.toString()}`));
     };
     return (
         <div style={{ height: '100%' }}>
@@ -151,19 +153,15 @@ export function Settings() {
             <Box sx={{ overflowY: 'scroll', height: '100%' }}>
                 <div style={{ marginBottom: '200px' }}>
                     <SettingPane name={'sapio_cli'} value={idx} idx={0}>
-                        <Button onClick={test_sapio}>
-                            Test Sapio-Cli
-                        </Button>
+                        <Button onClick={test_sapio}>Test Sapio-Cli</Button>
                     </SettingPane>
-                    <SettingPane name={'bitcoin'} value={idx} idx={1} >
-                        <Button onClick={test_bitcoind}>
-                            Test Connection
-                        </Button>
+                    <SettingPane name={'bitcoin'} value={idx} idx={1}>
+                        <Button onClick={test_bitcoind}>Test Connection</Button>
                     </SettingPane>
                     <SettingPane name={'local_oracle'} value={idx} idx={2} />
                     <SettingPane name={'display'} value={idx} idx={3} />
                 </div>
-            </Box >
-        </div >
+            </Box>
+        </div>
     );
 }

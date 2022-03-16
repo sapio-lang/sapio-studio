@@ -20,9 +20,9 @@ type DisplaySettings = {
     animation_speed: 'Disabled' | { Enabled: number };
     node_polling_freq: number;
     satoshis:
-    | { BitcoinAfter: number }
-    | { AlwaysSats: null }
-    | { AlwaysBitcoin: null };
+        | { BitcoinAfter: number }
+        | { AlwaysSats: null }
+        | { AlwaysBitcoin: null };
 };
 
 function fill_in_default(): Data {
@@ -67,16 +67,16 @@ type Data = {
     };
     sapio_cli: {
         preferences:
-        | {
-            Here: {
-                emulators: [string, string][];
-                plugin_map: [string, string][];
-                threshold: number;
-                use_emulation: boolean;
-            };
-        }
-        | { File: string }
-        | 'Default';
+            | {
+                  Here: {
+                      emulators: [string, string][];
+                      plugin_map: [string, string][];
+                      threshold: number;
+                      use_emulation: boolean;
+                  };
+              }
+            | { File: string }
+            | 'Default';
         sapio_cli: string;
     };
     display: DisplaySettings;
@@ -93,7 +93,7 @@ export const preferences: {
         for (const key of pref_array)
             try {
                 await preferences.load_preferences(key);
-            } catch { }
+            } catch {}
     },
     save: async (which: Prefs, data: object) => {
         const conf = path.resolve(
@@ -115,8 +115,8 @@ export const preferences: {
 
         switch (which) {
             case 'bitcoin':
-                deinit_bitcoin_node()
-                get_bitcoin_node()
+                deinit_bitcoin_node();
+                get_bitcoin_node();
                 break;
         }
         return true;

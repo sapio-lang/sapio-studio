@@ -49,7 +49,7 @@ declare global {
                     which: string,
                     args: string
                 ) => Promise<Result<string | null>>;
-            }
+            };
         };
     }
 }

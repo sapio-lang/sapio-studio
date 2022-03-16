@@ -193,11 +193,10 @@ function ContractMenu(props: { relayout: () => void }) {
                 <MenuItem
                     onClick={async () => {
                         setContractsOpen(false);
-                        const apis = await window.electron.sapio.load_contract_list();
-                        if ("err" in apis) return;
-                        dispatch(
-                            set_apis(apis.ok)
-                        );
+                        const apis =
+                            await window.electron.sapio.load_contract_list();
+                        if ('err' in apis) return;
+                        dispatch(set_apis(apis.ok));
                         dispatch(switch_showing('ContractCreator'));
                     }}
                 >

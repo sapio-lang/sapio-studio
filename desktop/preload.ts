@@ -1,16 +1,16 @@
 import { ipcRenderer, contextBridge } from 'electron';
 import { IpcRendererEvent } from 'electron/main';
 
-function bitcoin_command(command: { method: string; parameters: any[] }[]): Promise<any> {
-    return ipcRenderer.invoke('bitcoin::command', command).then(
-        (msg) => {
-            if ("ok" in msg) {
-                return msg.ok;
-            } else if ("err" in msg) {
-                throw new Error(JSON.stringify(msg.err));
-            }
+function bitcoin_command(
+    command: { method: string; parameters: any[] }[]
+): Promise<any> {
+    return ipcRenderer.invoke('bitcoin::command', command).then((msg) => {
+        if ('ok' in msg) {
+            return msg.ok;
+        } else if ('err' in msg) {
+            throw new Error(JSON.stringify(msg.err));
         }
-    );
+    });
 }
 
 type Result<T> = { ok: T } | { err: string };
@@ -26,7 +26,7 @@ function load_wasm_plugin(): Promise<Result<null>> {
 }
 
 function show_config(): Promise<Result<string>> {
-    return ipcRenderer.invoke("sapio::show_config");
+    return ipcRenderer.invoke('sapio::show_config');
 }
 
 function save_psbt(psbt: string): Promise<null> {
@@ -46,7 +46,6 @@ function save_settings(which: string, data: string): Promise<boolean> {
 function load_settings_sync(which: string): any {
     return ipcRenderer.invoke('load_settings_sync', which);
 }
-
 
 const callbacks = {
     simulate: 0,
@@ -98,6 +97,6 @@ const api = {
         load_wasm_plugin,
         open_contract_from_file,
         load_contract_list,
-    }
+    },
 };
 contextBridge.exposeInMainWorld('electron', api);

@@ -76,20 +76,20 @@ export const {
 
 export const create_contract_of_type =
     (type_arg: string, contract: any) =>
-        async (dispatch: AppDispatch, getState: () => RootState) => {
-            const compiled_contract = await window.electron.sapio.create_contract(
-                type_arg,
-                contract
+    async (dispatch: AppDispatch, getState: () => RootState) => {
+        const compiled_contract = await window.electron.sapio.create_contract(
+            type_arg,
+            contract
+        );
+        if ('ok' in compiled_contract && compiled_contract.ok)
+            dispatch(
+                load_new_model({
+                    args: JSON.parse(contract),
+                    name: type_arg,
+                    data: JSON.parse(compiled_contract.ok),
+                })
             );
-            if ("ok" in compiled_contract && compiled_contract.ok)
-                dispatch(
-                    load_new_model({
-                        args: JSON.parse(contract),
-                        name: type_arg,
-                        data: JSON.parse(compiled_contract.ok),
-                    })
-                );
-        };
+    };
 export const recreate_contract =
     () => async (dispatch: AppDispatch, getState: () => RootState) => {
         let s = getState();
@@ -102,10 +102,11 @@ export const recreate_contract =
 
 export const create_contract_from_file =
     () => async (dispatch: AppDispatch, getState: () => RootState) => {
-        window.electron
-            .sapio
+        window.electron.sapio
             .open_contract_from_file()
-            .then((v) => "ok" in v && dispatch(load_new_model(JSON.parse(v.ok))));
+            .then(
+                (v) => 'ok' in v && dispatch(load_new_model(JSON.parse(v.ok)))
+            );
     };
 
 export const selectContract: (state: RootState) => [Data | null, number] = (

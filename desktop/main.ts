@@ -3,7 +3,6 @@ import path from 'path';
 import url from 'url';
 import { custom_sapio_config, preferences } from './settings';
 
-
 import { createMenu } from './createMenu';
 import register_handlers from './handlers';
 import { start_sapio_oracle } from './sapio';
@@ -14,7 +13,6 @@ import { readFile } from 'fs/promises';
 import { get_bitcoin_node } from './bitcoin_rpc';
 
 let mainWindow: BrowserWindow | null = null;
-
 
 async function createWindow() {
     await get_bitcoin_node();

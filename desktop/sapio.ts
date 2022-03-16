@@ -1,6 +1,6 @@
 import { equal } from 'assert';
 import spawn from 'await-spawn';
-import BufferList from "bl";
+import BufferList from 'bl';
 import {
     ChildProcessWithoutNullStreams,
     spawn as spawnSync,
@@ -16,7 +16,7 @@ const memo_logos = new Map();
 
 type Result = { ok: string } | { err: string };
 class SapioCompiler {
-    constructor() { }
+    constructor() {}
     static async command(args: string[]): Promise<Result> {
         const binary = preferences.data.sapio_cli.sapio_cli;
         const source = preferences.data.sapio_cli.preferences;
@@ -28,7 +28,10 @@ class SapioCompiler {
         } else if ('Here' in source) {
             new_args = ['--config', sapio_config_file, ...args];
         } else {
-            dialog.showErrorBox('Improper Source', 'This means your config file is corrupt, shutting down.');
+            dialog.showErrorBox(
+                'Improper Source',
+                'This means your config file is corrupt, shutting down.'
+            );
             sys.exit(1);
         }
         console.debug('[sapio]: ', binary, new_args);
@@ -39,18 +42,19 @@ class SapioCompiler {
         }
     }
     async show_config(): Promise<Result> {
-        return (await SapioCompiler.command(['configure', 'show']));
+        return await SapioCompiler.command(['configure', 'show']);
     }
     async list_contracts(): Promise<
-        {
-            ok: Record<
-                string,
-                { name: string; key: string; api: JSONSchema7; logo: string }
-            >
-        } | { err: string }
+        | {
+              ok: Record<
+                  string,
+                  { name: string; key: string; api: JSONSchema7; logo: string }
+              >;
+          }
+        | { err: string }
     > {
         const res = await SapioCompiler.command(['contract', 'list']);
-        if ("err" in res) return res;
+        if ('err' in res) return res;
         const contracts = res.ok;
         let lines: Array<[string, string]> = contracts
             .trim()
@@ -72,7 +76,7 @@ class SapioCompiler {
                         '--key',
                         key,
                     ]).then((v) => {
-                        if ("err" in v) return v;
+                        if ('err' in v) return v;
                         const api = JSON.parse(v.ok);
                         memo_apis.set(key, api);
                         return api;
@@ -91,9 +95,11 @@ class SapioCompiler {
                         '--key',
                         key,
                     ])
-                        .then((logo: Result) => "ok" in logo ? { ok: logo.ok.trim() } : logo)
+                        .then((logo: Result) =>
+                            'ok' in logo ? { ok: logo.ok.trim() } : logo
+                        )
                         .then((logo: Result) => {
-                            if ("err" in logo) return logo;
+                            if ('err' in logo) return logo;
                             memo_logos.set(key, logo.ok);
                             return logo;
                         });
@@ -112,7 +118,7 @@ class SapioCompiler {
             const [name, key] = lines[i]!;
             const api = apis[i]!;
             const logo = logos[i]!;
-            if ("err" in logo) return logo;
+            if ('err' in logo) return logo;
             results[key] = {
                 name,
                 key,
@@ -133,7 +139,10 @@ class SapioCompiler {
         return { ok: null };
     }
 
-    async create_contract(which: string, args: string): Promise<{ ok: string | null } | { err: string }> {
+    async create_contract(
+        which: string,
+        args: string
+    ): Promise<{ ok: string | null } | { err: string }> {
         let create, created, bound;
         try {
             create = await SapioCompiler.command([
@@ -147,7 +156,7 @@ class SapioCompiler {
             console.debug('Failed to Create', which, args);
             return { ok: null };
         }
-        if ("err" in create) return create;
+        if ('err' in create) return create;
         created = create.ok;
         let bind;
         try {
@@ -162,7 +171,7 @@ class SapioCompiler {
             console.log('Failed to bind', e.toString());
             return { ok: null };
         }
-        if ("err" in bind) return bind;
+        if ('err' in bind) return bind;
         console.debug(bound);
         return bind;
     }
