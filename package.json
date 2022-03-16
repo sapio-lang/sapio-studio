@@ -26,13 +26,14 @@
         "@types/color": "^3.0.1",
         "@types/jest": "^27.0.1",
         "@types/lodash": "^4.14.150",
-        "@types/node": "^16.6.1",
+        "@types/node": "^17.0.21",
         "@types/react": "^17.0.18",
         "@types/react-dom": "^17.0.9",
         "@types/react-redux": "^7.1.18",
         "await-spawn": "^4.0.2",
         "bitcoin-core-ts": "^3.0.3",
         "bitcoinjs-lib": "^5.1.6",
+        "bl": "^5.0.0",
         "closest": "^0.0.1",
         "color": "^3.1.2",
         "dagre": "^0.8.5",
@@ -77,6 +78,7 @@
         ]
     },
     "devDependencies": {
+        "@types/bl": "^5.0.2",
         "babel-eslint": "^10.1.0",
         "electron": "13.5.2",
         "electron-devtools-installer": "^3.2.0",

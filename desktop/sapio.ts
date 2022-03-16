@@ -1,5 +1,6 @@
 import { equal } from 'assert';
 import spawn from 'await-spawn';
+import BufferList from "bl";
 import {
     ChildProcessWithoutNullStreams,
     spawn as spawnSync,
@@ -14,8 +15,8 @@ const memo_apis = new Map();
 const memo_logos = new Map();
 
 class SapioCompiler {
-    constructor() {}
-    static async command(args: string[]): Promise<string> {
+    constructor() { }
+    static async command(args: string[]): Promise<BufferList> {
         const binary = preferences.data.sapio_cli.sapio_cli;
         const source = preferences.data.sapio_cli.preferences;
         console.log(source);

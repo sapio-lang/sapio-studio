@@ -2,7 +2,6 @@ import electron, { dialog } from 'electron';
 const app = electron.app;
 import path from 'path';
 import os from 'os';
-import ElectronPreferences from 'electron-preferences';
 import { Menu } from 'electron';
 import { open, writeFileSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
