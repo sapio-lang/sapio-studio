@@ -18,6 +18,8 @@ import { custom_fields, PathOnly } from '../CustomForms/Widgets';
 import SaveIcon from '@mui/icons-material/Save';
 import { Cancel, HorizontalRule } from '@mui/icons-material';
 import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
+import { poll_settings } from '../../Settings/SettingsSlice';
+import { useDispatch } from 'react-redux';
 
 function SettingPane(props: {
     name: keyof typeof schemas;
@@ -25,14 +27,18 @@ function SettingPane(props: {
     value: number;
     children?: React.ReactNode;
 }) {
+    let dispatch = useDispatch();
     const handlesubmit = async (
         data: ISubmitEvent<any>,
         nativeEvent: React.FormEvent<HTMLFormElement>
     ) => {
-        window.electron.save_settings(
-            props.name,
-            JSON.stringify(data.formData)
-        );
+        if (
+            await window.electron.save_settings(
+                props.name,
+                JSON.stringify(data.formData)
+            )
+        )
+            poll_settings(dispatch);
     };
 
     const [data, set_data] = React.useState(null);

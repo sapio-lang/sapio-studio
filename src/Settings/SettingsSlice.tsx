@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import { RootState } from '../Store/store';
+import { Dispatch } from '@reduxjs/toolkit';
 type Networks = 'Bitcoin' | 'Regtest' | 'Testnet' | 'Signet';
 type Settings = {
     display: DisplaySettings;
@@ -15,23 +16,11 @@ type DisplaySettings = {
         | { AlwaysSats: null }
         | { AlwaysBitcoin: null };
 };
-type StateType = {
+export type SettingsStateType = {
     settings: Settings;
 };
 
-async function poll_settings(): Promise<StateType> {
-    return {
-        settings: {
-            display: (await window.electron.load_settings_sync(
-                'display'
-            )) as unknown as DisplaySettings,
-            bitcoin: (await window.electron.load_settings_sync(
-                'bitcoin'
-            )) as unknown as any,
-        },
-    };
-}
-function default_state(): StateType {
+function default_state(): SettingsStateType {
     return {
         settings: {
             display: {
@@ -46,11 +35,25 @@ function default_state(): StateType {
     };
 }
 
+export async function poll_settings(dispatch: Dispatch) {
+    dispatch(
+        load_settings({
+            settings: {
+                display: (await window.electron.load_settings_sync(
+                    'display'
+                )) as unknown as any,
+                bitcoin: (await window.electron.load_settings_sync(
+                    'bitcoin'
+                )) as unknown as any,
+            },
+        })
+    );
+}
 export const settingsSlice = createSlice({
     name: 'Settings',
     initialState: default_state(),
     reducers: {
-        load_settings: (state, action: PayloadAction<StateType>) => {
+        load_settings: (state, action: PayloadAction<SettingsStateType>) => {
             state = _.merge(state, action.payload);
         },
     },
