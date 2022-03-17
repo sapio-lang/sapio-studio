@@ -91,7 +91,6 @@ function WalletSendForm(props: {
     bitcoin_node_manager: BitcoinNodeManager;
     set_params: (a: number, b: string) => void;
 }) {
-    const [amount, setAmount] = React.useState(0);
     const [address, setAddress] = React.useState<string | null>(null);
 
     const get_address = async () => {
@@ -112,38 +111,15 @@ function WalletSendForm(props: {
         props.set_params(amt, to);
         event.currentTarget.reset();
     };
-    const show_address = address ? (
-        <Typography>New Address: {address}</Typography>
-    ) : (
-        <Typography></Typography>
-    );
-
-    React.useEffect(() => {
-        let cancel = false;
-        const update = async () => {
-            if (cancel) return;
-            try {
-                const amt = await props.bitcoin_node_manager.check_balance();
-                setAmount(amt);
-            } catch (err: any) {
-                console.error(err);
-                setAmount(0);
-            }
-            setTimeout(update, 5000);
-        };
-
-        update();
-        return () => {
-            cancel = true;
-        };
-    }, []);
 
     return (
         <div className="WalletSpendInner">
             <div></div>
             <div>
-                <Typography>Amount: {amount}</Typography>
-                {show_address}
+                <AvailableBalance
+                    bitcoin_node_manager={props.bitcoin_node_manager}
+                />
+                <Typography>{address && `New Address: ${address}`}</Typography>
                 <Button onClick={() => get_address()}>Get Address</Button>
                 <Box
                     component="form"
@@ -171,6 +147,29 @@ function WalletSendForm(props: {
             <div></div>
         </div>
     );
+}
+function AvailableBalance(props: { bitcoin_node_manager: BitcoinNodeManager }) {
+    const [amount, setAmount] = React.useState(0);
+    React.useEffect(() => {
+        let cancel = false;
+        const update = async () => {
+            if (cancel) return;
+            try {
+                const amt = await props.bitcoin_node_manager.check_balance();
+                setAmount(amt);
+            } catch (err: any) {
+                console.error(err);
+                setAmount(0);
+            }
+            setTimeout(update, 5000);
+        };
+
+        update();
+        return () => {
+            cancel = true;
+        };
+    }, []);
+    return <Typography>Amount: {amount}</Typography>;
 }
 function WalletSend(props: {
     bitcoin_node_manager: BitcoinNodeManager;
