@@ -34,9 +34,10 @@ class SapioCompiler {
             );
             sys.exit(1);
         }
-        console.debug('[sapio]: ', binary, new_args);
+        console.debug(['sapio'], binary, new_args);
         try {
-            return { ok: (await spawn(binary, new_args)).toString() };
+            const ok = (await spawn(binary, new_args)).toString();
+            return { ok };
         } catch (e: any) {
             return { err: e.toString() };
         }
@@ -95,12 +96,12 @@ class SapioCompiler {
                         '--key',
                         key,
                     ])
-                        .then((logo: Result) =>
-                            'ok' in logo ? { ok: logo.ok.trim() } : logo
-                        )
+                        .then((logo: Result) => {
+                            return 'ok' in logo ? { ok: logo.ok.trim() } : logo;
+                        })
                         .then((logo: Result) => {
                             if ('err' in logo) return logo;
-                            memo_logos.set(key, logo.ok);
+                            memo_logos.set(key, logo);
                             return logo;
                         });
                 }
