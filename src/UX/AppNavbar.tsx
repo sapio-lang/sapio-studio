@@ -195,7 +195,10 @@ function ContractMenu(props: { relayout: () => void }) {
                         setContractsOpen(false);
                         const apis =
                             await window.electron.sapio.load_contract_list();
-                        if ('err' in apis) return;
+                        if ('err' in apis) {
+                            alert(apis.err);
+                            return;
+                        }
                         dispatch(set_apis(apis.ok));
                         dispatch(switch_showing('ContractCreator'));
                     }}
