@@ -8,13 +8,14 @@
 .Wallet {
     width: 100%;
     height: 100%;
-    display: grid;
-    grid-template-rows: 1fr 1fr;
 }
 
-.WalletSpend {
-    width: 100%;
-    padding-top: 3em;
+.WalletSpendInner {
     display: grid;
     grid-template-columns: 10% 80% 10%;
+}
+
+.WalletSpendOuter {
+    width: 100%;
+    padding-top: 3em;
 }
