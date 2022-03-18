@@ -7,9 +7,12 @@ import {
 } from 'child_process';
 import { JSONSchema7 } from 'json-schema';
 
-import { BrowserWindow, dialog, ipcMain, Menu } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { sys } from 'typescript';
 import { preferences, sapio_config_file } from './settings';
+import path from 'path';
+import * as Bitcoin from 'bitcoinjs-lib';
+import { mkdir, writeFile } from 'fs/promises';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
@@ -145,6 +148,29 @@ class SapioCompiler {
         args: string
     ): Promise<{ ok: string | null } | { err: string }> {
         let create, created, bound;
+        let args_h = Bitcoin.crypto.sha256(Buffer.from(args)).toString('hex');
+        // Unique File Name of Time + Args + Module
+        let fname = `${which.substring(0, 16)}-${args_h.substring(
+            0,
+            16
+        )}-${new Date().getTime()}`;
+        let file = path.join(
+            app.getPath('userData'),
+            'compiled_contracts',
+            fname
+        );
+        // technically a race condition
+        await mkdir(file, { recursive: true });
+        const write_str = (to: string, data: string) =>
+            writeFile(path.join(file, to), data, { encoding: 'utf-8' });
+        let w_arg = write_str('args.json', args);
+        let w_mod = write_str('module.json', JSON.stringify({ module: which }));
+        let sc = await sapio.show_config();
+        if ('err' in sc) return Promise.reject('Error getting config');
+        let w_settings = write_str('settings.json', sc.ok);
+
+        Promise.all([w_arg, w_mod, w_settings]);
+
         try {
             create = await SapioCompiler.command([
                 'contract',
@@ -157,8 +183,13 @@ class SapioCompiler {
             console.debug('Failed to Create', which, args);
             return { ok: null };
         }
-        if ('err' in create) return create;
+        if ('err' in create) {
+            write_str('create_error.json', JSON.stringify(create));
+            return create;
+        }
         created = create.ok;
+        let w_create = write_str('create.json', create.ok);
+        Promise.all([w_create]);
         let bind;
         try {
             bind = await SapioCompiler.command([
@@ -172,7 +203,12 @@ class SapioCompiler {
             console.log('Failed to bind', e.toString());
             return { ok: null };
         }
-        if ('err' in bind) return bind;
+        if ('err' in bind) {
+            write_str('bind_error.json', JSON.stringify(create));
+            return bind;
+        }
+        let w_bound = write_str('bound.json', bind.ok);
+        await w_bound;
         console.debug(bound);
         return bind;
     }
