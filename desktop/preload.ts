@@ -33,6 +33,18 @@ function load_contract_list() {
     return ipcRenderer.invoke('sapio::load_contract_list');
 }
 
+const compiled_contracts = {
+    list: () => {
+        return ipcRenderer.invoke('sapio::compiled_contracts::list');
+    },
+    trash: (file_name: string) => {
+        return ipcRenderer.invoke(
+            'sapio::compiled_contracts::trash',
+            file_name
+        );
+    },
+};
+
 function save_psbt(psbt: string): Promise<null> {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
@@ -108,6 +120,7 @@ const api = {
         load_wasm_plugin,
         open_contract_from_file,
         load_contract_list,
+        compiled_contracts,
     },
     emulator: {
         kill: emulator_kill,

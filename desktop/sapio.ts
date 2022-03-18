@@ -7,12 +7,12 @@ import {
 } from 'child_process';
 import { JSONSchema7 } from 'json-schema';
 
-import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron';
 import { sys } from 'typescript';
 import { preferences, sapio_config_file } from './settings';
 import path from 'path';
 import * as Bitcoin from 'bitcoinjs-lib';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, readdir, writeFile } from 'fs/promises';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
@@ -141,6 +141,16 @@ class SapioCompiler {
         ]);
         console.log(`child stdout:\n${child}`);
         return { ok: null };
+    }
+
+    async list_compiled_contracts(): Promise<string[]> {
+        let file = path.join(app.getPath('userData'), 'compiled_contracts');
+        let contracts = await readdir(file, { encoding: 'ascii' });
+        return contracts;
+    }
+    async trash_compiled_contract(s: string): Promise<void> {
+        let file = path.join(app.getPath('userData'), 'compiled_contracts', s);
+        return shell.trashItem(file);
     }
 
     async create_contract(

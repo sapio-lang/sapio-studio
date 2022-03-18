@@ -76,6 +76,12 @@ export default function (window: BrowserWindow) {
             return { ok: data };
         }
     });
+    ipcMain.handle('sapio::compiled_contracts::list', (event) => {
+        return sapio.list_compiled_contracts();
+    });
+    ipcMain.handle('sapio::compiled_contracts::trash', (event, file_name) => {
+        return sapio.trash_compiled_contract(file_name);
+    });
 
     ipcMain.handle('write_clipboard', (event, s: string) => {
         clipboard.writeText(s);

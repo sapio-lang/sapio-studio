@@ -10,13 +10,21 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import { Delete } from '@mui/icons-material';
 import { Box } from '@mui/system';
-import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import {
+    DataGrid,
+    GridActionsCellItem,
+    GridColDef,
+    GridColumns,
+    GridValueGetterParams,
+} from '@mui/x-data-grid';
 import { number } from 'bitcoinjs-lib/types/script';
 import React from 'react';
 import { BitcoinNodeManager } from '../Data/BitcoinNode';
 import { PrettyAmount } from '../util';
 import './Wallet.css';
+import _ from 'lodash';
 
 export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
     const [idx, set_idx] = React.useState(0);
@@ -33,12 +41,120 @@ export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
                 >
                     <Tab label="Send"></Tab>
                     <Tab label="Send History"></Tab>
+                    <Tab label="Contracts"></Tab>
                 </Tabs>
             </Box>
             <Box sx={{ overflowY: 'scroll', height: '100%' }}>
                 <WalletSend value={0} idx={idx} {...props}></WalletSend>
                 <WalletHistory value={1} idx={idx} {...props}></WalletHistory>
+                <ContractList value={2} idx={idx}></ContractList>
             </Box>
+        </div>
+    );
+}
+
+function ContractList(props: { idx: number; value: number }) {
+    const [contracts, set_contracts] = React.useState<string[]>([]);
+    const [to_delete, set_to_delete] = React.useState<string | null>(null);
+    const [trigger_now, set_trigger_now] = React.useState(0);
+    React.useEffect(() => {
+        let cancel = false;
+        const update = async () => {
+            if (cancel) return;
+
+            try {
+                const list =
+                    await window.electron.sapio.compiled_contracts.list();
+                set_contracts(list);
+            } catch (err) {
+                console.error(err);
+                set_contracts([]);
+            }
+            setTimeout(update, 5000);
+        };
+
+        update();
+        return () => {
+            cancel = true;
+        };
+    }, [trigger_now]);
+    let contract_rows = contracts.map((id) => {
+        let [mod, args, time] = id.split('-');
+        return {
+            id,
+            module,
+            args,
+            time: new Date(parseInt(time!)),
+        };
+    });
+    const delete_contract = (fname: string | number) => {
+        if (typeof fname === 'number') return;
+        set_to_delete(fname);
+    };
+
+    const columns: GridColumns = [
+        { field: 'mod', headerName: 'Module', width: 130, type: 'text' },
+        { field: 'args', headerName: 'Args Hash', width: 130 },
+        { field: 'time', headerName: 'Time', width: 130, type: 'date' },
+        {
+            field: 'actions',
+            type: 'actions',
+            width: 80,
+            getActions: (params) => [
+                <GridActionsCellItem
+                    icon={<Delete />}
+                    label="Delete"
+                    onClick={() => delete_contract(params.id)}
+                />,
+            ],
+        },
+    ];
+    return (
+        <div hidden={props.idx !== props.value} className="ContractList">
+            <Dialog
+                onClose={() => set_to_delete(null)}
+                open={to_delete !== null}
+            >
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Confirm deletion of "{to_delete}"? File will be in your
+                        trash folder.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        color="warning"
+                        onClick={(ev) => {
+                            to_delete &&
+                                window.electron.sapio.compiled_contracts.trash(
+                                    to_delete
+                                );
+                            set_to_delete(null);
+                            set_trigger_now(trigger_now + 1);
+                        }}
+                    >
+                        Delete
+                    </Button>
+                    <Button onClick={() => set_to_delete(null)}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+            {props.idx === props.value && (
+                <div className="ContractListInner">
+                    <div></div>
+                    <div>
+                        <DataGrid
+                            rows={contract_rows}
+                            columns={columns}
+                            pageSize={10}
+                            rowsPerPageOptions={[5]}
+                            disableColumnSelector
+                            disableSelectionOnClick
+                        />
+                    </div>
+                    <div></div>
+                </div>
+            )}
         </div>
     );
 }
@@ -291,7 +407,7 @@ function WalletHistory(props: {
             hidden={props.idx !== props.value}
         >
             {props.idx === props.value && (
-                <>
+                <div className="WalletTransactionListInner">
                     <div></div>
                     <div>
                         <DataGrid
@@ -304,7 +420,7 @@ function WalletHistory(props: {
                         />
                     </div>
                     <div></div>
-                </>
+                </div>
             )}
         </div>
     );

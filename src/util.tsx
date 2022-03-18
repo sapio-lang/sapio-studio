@@ -49,6 +49,10 @@ declare global {
                     which: string,
                     args: string
                 ) => Promise<Result<string | null>>;
+                compiled_contracts: {
+                    list: () => Promise<string[]>;
+                    trash: (file_name: string) => Promise<void>;
+                };
             };
             emulator: {
                 kill: () => Promise<void>;
