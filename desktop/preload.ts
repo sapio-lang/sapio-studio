@@ -43,6 +43,9 @@ const compiled_contracts = {
             file_name
         );
     },
+    open: (file_name: string) => {
+        return ipcRenderer.invoke('sapio::compiled_contracts::open', file_name);
+    },
 };
 
 function save_psbt(psbt: string): Promise<null> {

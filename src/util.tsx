@@ -8,6 +8,7 @@ import { selectMaxSats } from './Settings/SettingsSlice';
 import { JSONSchema7 } from 'json-schema';
 import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
 import { schemas } from './UX/Settings/Schemas';
+import { CreatedContract } from './AppSlice';
 // must manually copy from preload
 type Callback =
     | 'simulate'
@@ -52,6 +53,9 @@ declare global {
                 compiled_contracts: {
                     list: () => Promise<string[]>;
                     trash: (file_name: string) => Promise<void>;
+                    open: (
+                        file_name: string
+                    ) => Promise<Result<CreatedContract>>;
                 };
             };
             emulator: {

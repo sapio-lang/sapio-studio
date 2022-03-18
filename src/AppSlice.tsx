@@ -13,7 +13,7 @@ type ContractArgs = {
     };
 };
 
-type CreatedContract = {
+export type CreatedContract = {
     name: string;
     args: ContractArgs;
     data: Data;
@@ -98,6 +98,15 @@ export const recreate_contract =
             s.appReducer.data.name,
             JSON.stringify(s.appReducer.data.args)
         )(dispatch, getState);
+    };
+
+export const open_contract_directory =
+    (file_name: string) =>
+    async (dispatch: AppDispatch, getState: () => RootState) => {
+        window.electron.sapio.compiled_contracts.open(file_name).then((v) => {
+            if ('err' in v) return;
+            return 'ok' in v && dispatch(load_new_model(v.ok));
+        });
     };
 
 export const create_contract_from_file =

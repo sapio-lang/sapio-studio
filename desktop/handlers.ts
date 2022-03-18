@@ -1,4 +1,4 @@
-import { BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
 import {
     get_emulator_log,
     kill_emulator,
@@ -10,6 +10,7 @@ import { readFileSync } from 'fs';
 import { preferences, Prefs } from './settings';
 import { get_bitcoin_node } from './bitcoin_rpc';
 import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
+import path from 'path';
 export default function (window: BrowserWindow) {
     ipcMain.handle('bitcoin::command', async (event, arg) => {
         let node = await get_bitcoin_node();
@@ -83,6 +84,52 @@ export default function (window: BrowserWindow) {
         return sapio.trash_compiled_contract(file_name);
     });
 
+    ipcMain.handle(
+        'sapio::compiled_contracts::open',
+        async (event, file_name) => {
+            const data = JSON.parse(
+                await readFile(
+                    path.join(
+                        app.getPath('userData'),
+                        'compiled_contracts',
+                        file_name,
+                        'bound.json'
+                    ),
+                    {
+                        encoding: 'utf-8',
+                    }
+                )
+            );
+            const args = JSON.parse(
+                await readFile(
+                    path.join(
+                        app.getPath('userData'),
+                        'compiled_contracts',
+                        file_name,
+                        'args.json'
+                    ),
+                    {
+                        encoding: 'utf-8',
+                    }
+                )
+            );
+            const mod = await readFile(
+                path.join(
+                    app.getPath('userData'),
+                    'compiled_contracts',
+                    file_name,
+                    'module.json'
+                ),
+                {
+                    encoding: 'utf-8',
+                }
+            );
+
+            let name = JSON.parse(mod).which;
+
+            return { ok: { data, name, args } };
+        }
+    );
     ipcMain.handle('write_clipboard', (event, s: string) => {
         clipboard.writeText(s);
     });

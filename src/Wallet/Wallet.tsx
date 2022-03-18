@@ -10,6 +10,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Delete } from '@mui/icons-material';
 import { Box } from '@mui/system';
 import {
@@ -25,6 +26,8 @@ import { BitcoinNodeManager } from '../Data/BitcoinNode';
 import { PrettyAmount } from '../util';
 import './Wallet.css';
 import _ from 'lodash';
+import { useDispatch } from 'react-redux';
+import { open_contract_directory, switch_showing } from '../AppSlice';
 
 export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
     const [idx, set_idx] = React.useState(0);
@@ -54,6 +57,7 @@ export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
 }
 
 function ContractList(props: { idx: number; value: number }) {
+    const dispatch = useDispatch();
     const [contracts, set_contracts] = React.useState<string[]>([]);
     const [to_delete, set_to_delete] = React.useState<string | null>(null);
     const [trigger_now, set_trigger_now] = React.useState(0);
@@ -105,6 +109,18 @@ function ContractList(props: { idx: number; value: number }) {
                     icon={<Delete />}
                     label="Delete"
                     onClick={() => delete_contract(params.id)}
+                />,
+                <GridActionsCellItem
+                    icon={<VisibilityIcon />}
+                    label="Open"
+                    onClick={() => {
+                        dispatch(switch_showing('ContractViewer'));
+                        dispatch(
+                            open_contract_directory(
+                                typeof params.id === 'number' ? '' : params.id
+                            )
+                        );
+                    }}
                 />,
             ],
         },
