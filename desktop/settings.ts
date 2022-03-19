@@ -2,11 +2,12 @@ import electron, { dialog } from 'electron';
 const app = electron.app;
 import path from 'path';
 import os from 'os';
-import ElectronPreferences from 'electron-preferences';
 import { Menu } from 'electron';
 import { open, writeFileSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import { default_settings } from './settings_gen';
+import { deinit_bitcoin_node, get_bitcoin_node } from './bitcoin_rpc';
+import { kill_emulator, start_sapio_oracle } from './sapio';
 
 export type Prefs = 'bitcoin' | 'display' | 'local_oracle' | 'sapio_cli';
 const pref_array: Array<Prefs> = [
@@ -108,10 +109,22 @@ export const preferences: {
                 await writeFile(conf, JSON.stringify(data));
                 await preferences.load_preferences(which);
                 await custom_sapio_config();
-                return true;
+                break;
             default:
                 return Promise.reject('Bad Request');
         }
+
+        switch (which) {
+            case 'bitcoin':
+                deinit_bitcoin_node();
+                get_bitcoin_node();
+                break;
+            case 'local_oracle':
+                kill_emulator();
+                start_sapio_oracle();
+                break;
+        }
+        return true;
     },
     load_preferences: async (which: Prefs) => {
         const conf = path.resolve(

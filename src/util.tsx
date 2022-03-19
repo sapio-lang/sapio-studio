@@ -8,6 +8,7 @@ import { selectMaxSats } from './Settings/SettingsSlice';
 import { JSONSchema7 } from 'json-schema';
 import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
 import { schemas } from './UX/Settings/Schemas';
+import { CreatedContract } from './AppSlice';
 // must manually copy from preload
 type Callback =
     | 'simulate'
@@ -16,6 +17,7 @@ type Callback =
     | 'create_contracts'
     | 'load_contract'
     | 'bitcoin-node-bar';
+type Result<T, E = string> = { ok: T } | { err: E };
 declare global {
     interface Window {
         electron: {
@@ -29,16 +31,9 @@ declare global {
                 msg: Callback,
                 action: (args: any) => void
             ) => () => void;
-            create_contract: (
-                which: string,
-                args: string
-            ) => Promise<string | null>;
             save_psbt: (psbt: string) => Promise<null>;
             save_contract: (contract: string) => Promise<null>;
             fetch_psbt: () => Promise<string>;
-            load_wasm_plugin: () => Promise<void>;
-            open_contract_from_file: () => Promise<string>;
-            load_contract_list: () => Promise<APIs>;
             write_clipboard: (s: string) => void;
             save_settings: (
                 which: keyof typeof schemas,
@@ -46,6 +41,28 @@ declare global {
             ) => Promise<boolean>;
             load_settings_sync: (which: keyof typeof schemas) => Promise<any>;
             select_filename: () => Promise<string | null>;
+            sapio: {
+                show_config: () => Promise<Result<string>>;
+                load_wasm_plugin: () => Promise<Result<null>>;
+                open_contract_from_file: () => Promise<Result<string>>;
+                load_contract_list: () => Promise<Result<APIs>>;
+                create_contract: (
+                    which: string,
+                    args: string
+                ) => Promise<Result<string | null>>;
+                compiled_contracts: {
+                    list: () => Promise<string[]>;
+                    trash: (file_name: string) => Promise<void>;
+                    open: (
+                        file_name: string
+                    ) => Promise<Result<CreatedContract>>;
+                };
+            };
+            emulator: {
+                kill: () => Promise<void>;
+                start: () => Promise<void>;
+                read_log: () => Promise<string>;
+            };
         };
     }
 }

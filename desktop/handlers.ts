@@ -1,35 +1,66 @@
-import { BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
-import { sapio } from './sapio';
-import Client from 'bitcoin-core-ts';
+import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
+import {
+    get_emulator_log,
+    kill_emulator,
+    sapio,
+    start_sapio_oracle,
+} from './sapio';
 import { readFile, writeFile } from 'fs/promises';
 import { readFileSync } from 'fs';
 import { preferences, Prefs } from './settings';
-export default function (window: BrowserWindow, client: Client) {
-    ipcMain.handle('bitcoin-command', async (event, arg) => {
-        let result = await client?.command(arg) ?? null;
-        return result;
+import { get_bitcoin_node } from './bitcoin_rpc';
+import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
+import path from 'path';
+export default function (window: BrowserWindow) {
+    ipcMain.handle('bitcoin::command', async (event, arg) => {
+        let node = await get_bitcoin_node();
+        try {
+            return { ok: await node.command(arg) };
+        } catch (r: any) {
+            if (r instanceof RpcError) {
+                return {
+                    err: { code: r.code, message: r.message, name: r.name },
+                };
+            } else if (r instanceof Error) {
+                return { err: r.toString() };
+            }
+        }
     });
-    ipcMain.handle('load_contract_list', async (event) => {
+
+    ipcMain.handle('emulator::kill', (event) => {
+        kill_emulator();
+    });
+    ipcMain.handle('emulator::start', (event) => {
+        start_sapio_oracle();
+    });
+    ipcMain.handle('emulator::read_log', (event) => {
+        return get_emulator_log();
+    });
+
+    ipcMain.handle('sapio::load_contract_list', async (event) => {
         const contracts = await sapio.list_contracts();
         return contracts;
     });
-    ipcMain.handle('create_contract', async (event, [which, args]) => {
+    ipcMain.handle('sapio::create_contract', async (event, [which, args]) => {
         let result = await sapio.create_contract(which, args);
         return result;
     });
-    ipcMain.handle('write_clipboard', (event, s: string) => {
-        clipboard.writeText(s);
+
+    ipcMain.handle('sapio::show_config', async (event) => {
+        return await sapio.show_config();
     });
 
-    ipcMain.handle('load_wasm_plugin', (event) => {
+    ipcMain.handle('sapio::load_wasm_plugin', (event) => {
         const plugin = dialog.showOpenDialogSync({
             properties: ['openFile'],
             filters: [{ extensions: ['wasm'], name: 'WASM' }],
         });
-        if (plugin && plugin.length) sapio.load_contract_file_name(plugin[0]!);
+        if (plugin && plugin.length)
+            return sapio.load_contract_file_name(plugin[0]!);
+        return { err: 'No Plugin Selected' };
     });
 
-    ipcMain.handle('open_contract_from_file', (event) => {
+    ipcMain.handle('sapio::open_contract_from_file', (event) => {
         const file = dialog.showOpenDialogSync(window, {
             properties: ['openFile'],
             filters: [
@@ -43,9 +74,66 @@ export default function (window: BrowserWindow, client: Client) {
             const data = readFileSync(file[0]!, {
                 encoding: 'utf-8',
             });
-            return data;
+            return { ok: data };
         }
     });
+    ipcMain.handle('sapio::compiled_contracts::list', (event) => {
+        return sapio.list_compiled_contracts();
+    });
+    ipcMain.handle('sapio::compiled_contracts::trash', (event, file_name) => {
+        return sapio.trash_compiled_contract(file_name);
+    });
+
+    ipcMain.handle(
+        'sapio::compiled_contracts::open',
+        async (event, file_name) => {
+            const data = JSON.parse(
+                await readFile(
+                    path.join(
+                        app.getPath('userData'),
+                        'compiled_contracts',
+                        file_name,
+                        'bound.json'
+                    ),
+                    {
+                        encoding: 'utf-8',
+                    }
+                )
+            );
+            const args = JSON.parse(
+                await readFile(
+                    path.join(
+                        app.getPath('userData'),
+                        'compiled_contracts',
+                        file_name,
+                        'args.json'
+                    ),
+                    {
+                        encoding: 'utf-8',
+                    }
+                )
+            );
+            const mod = await readFile(
+                path.join(
+                    app.getPath('userData'),
+                    'compiled_contracts',
+                    file_name,
+                    'module.json'
+                ),
+                {
+                    encoding: 'utf-8',
+                }
+            );
+
+            let name = JSON.parse(mod).which;
+
+            return { ok: { data, name, args } };
+        }
+    );
+    ipcMain.handle('write_clipboard', (event, s: string) => {
+        clipboard.writeText(s);
+    });
+
     ipcMain.handle('save_psbt', async (event, psbt) => {
         let path = await dialog.showSaveDialog(window, {
             filters: [

@@ -4,7 +4,7 @@ import { sapio } from './sapio';
 import Client from 'bitcoin-core-ts';
 import { readFileSync } from 'fs';
 
-export function createMenu(window: BrowserWindow, client: Client) {
+export function createMenu(window: BrowserWindow) {
     const template = [
         {
             label: 'Edit',

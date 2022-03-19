@@ -1,6 +1,11 @@
 .WalletTransactionList {
     height: 75%;
+}
+
+.WalletTransactionListInner {
+    padding-top: 3em;
     padding-bottom: 30px;
+    height: 100%;
     display: grid;
     grid-template-columns: 10% 80% 10%;
 }
@@ -8,13 +13,26 @@
 .Wallet {
     width: 100%;
     height: 100%;
-    display: grid;
-    grid-template-rows: 1fr 1fr;
 }
 
-.WalletSpend {
+.WalletSpendInner {
+    display: grid;
+    grid-template-columns: 10% 80% 10%;
+}
+
+.WalletSpendOuter {
     width: 100%;
     padding-top: 3em;
+}
+
+.ContractList {
+    height: 75%;
+}
+
+.ContractListInner {
+    padding-top: 3em;
+    padding-bottom: 30px;
+    height: 100%;
     display: grid;
     grid-template-columns: 10% 80% 10%;
 }

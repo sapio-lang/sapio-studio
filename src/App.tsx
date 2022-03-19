@@ -30,6 +30,11 @@ import { SimulationController } from './Data/Simulation';
 import { TransactionModel } from './Data/Transaction';
 import { UTXOModel } from './Data/UTXO';
 import './Glyphs.css';
+import {
+    load_settings,
+    poll_settings,
+    SettingsStateType,
+} from './Settings/SettingsSlice';
 import { TXIDAndWTXIDMap } from './util';
 import { AppNavbar } from './UX/AppNavbar';
 import { set_continuations } from './UX/ContractCreator/ContractCreatorSlice';
@@ -96,6 +101,11 @@ function App() {
         return window.electron.register('load_contract', (data: string) => {
             dispatch(load_new_model(JSON.parse(data)));
         });
+    });
+    React.useEffect(() => {
+        setTimeout(() => {
+            poll_settings(dispatch);
+        }, 10);
     });
 
     engine.getNodeFactories().registerFactory(new UTXONodeFactory() as any);
