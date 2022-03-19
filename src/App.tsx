@@ -300,14 +300,13 @@ function AppInner(props: {
                     </div>
                     <div className="area-inner">{showing}</div>
                 </div>
-
-                <Collapse in={bitcoin_node_bar}>
-                    <div>
+                <div hidden={!bitcoin_node_bar}>
+                    {bitcoin_node_bar && (
                         <BitcoinStatusBar
                             api={bitcoin_node_manager.current}
                         ></BitcoinStatusBar>
-                    </div>
-                </Collapse>
+                    )}
+                </div>
             </div>
             <Modals
                 bitcoin_node_manager={bitcoin_node_manager.current}
