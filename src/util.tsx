@@ -17,7 +17,7 @@ type Callback =
     | 'create_contracts'
     | 'load_contract'
     | 'bitcoin-node-bar';
-type Result<T, E = string> = { ok: T } | { err: E };
+export type Result<T, E = string> = { ok: T } | { err: E };
 declare global {
     interface Window {
         electron: {
@@ -56,6 +56,9 @@ declare global {
                     open: (
                         file_name: string
                     ) => Promise<Result<CreatedContract>>;
+                };
+                psbt: {
+                    finalize: (psbt: string) => Promise<Result<string>>;
                 };
             };
             emulator: {

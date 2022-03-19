@@ -45,6 +45,16 @@ class SapioCompiler {
             return { err: e.toString() };
         }
     }
+
+    async psbt_finalize(psbt: string): Promise<Result> {
+        return await SapioCompiler.command([
+            'psbt',
+            'finalize',
+            '--psbt',
+            psbt,
+        ]);
+    }
+
     async show_config(): Promise<Result> {
         return await SapioCompiler.command(['configure', 'show']);
     }

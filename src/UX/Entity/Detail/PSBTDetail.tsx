@@ -14,6 +14,7 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import Hex from './Hex';
 import './PSBTDetail.css';
+import { Result } from '../../../util';
 interface IProps {
     psbts: Bitcoin.Psbt[];
 }
@@ -62,17 +63,45 @@ class PSBTHandler {
         return as_psbt;
     }
     async finalize_psbt(psbt: string) {
+        let hex: string;
         const command = [{ method: 'finalizepsbt', parameters: [psbt] }];
         const result = (await window.electron.bitcoin_command(command))[0];
-        if (!result.complete || !result.hex) {
-            this.show_flash('PSBT Not Complete', 'red');
+        if (
+            (!result.hex && result.complete) ||
+            (result.hex && !result.complete)
+        ) {
+            this.show_flash('PSBT Signing Error :(', 'red');
             return;
         }
+        if (result.complete) {
+            hex = result.hex;
+        } else {
+            const new_psbt = result.psbt ?? psbt;
+            const sapio_finalized = await window.electron.sapio.psbt.finalize(
+                new_psbt
+            );
+            if ('err' in sapio_finalized) {
+                this.show_flash('PSBT Signing Error :(', 'red');
+                return;
+            }
+            const sapio_result:
+                | { completed: true; hex: string }
+                | {
+                      completed: false;
+                      psbt: string;
+                      error: string;
+                      errors: string[];
+                  } = JSON.parse(sapio_finalized.ok);
+            if (sapio_result.completed) {
+                hex = sapio_result.hex;
+            } else {
+                this.show_flash('PSBT Not Complete', 'red');
+                return;
+            }
+        }
         try {
-            const hex_tx = Bitcoin.Transaction.fromHex(result.hex);
-            const send = [
-                { method: 'sendrawtransaction', parameters: [result.hex] },
-            ];
+            const hex_tx = Bitcoin.Transaction.fromHex(hex);
+            const send = [{ method: 'sendrawtransaction', parameters: [hex] }];
 
             const sent = (await window.electron.bitcoin_command(send))[0];
             if (sent !== hex_tx.getId()) {

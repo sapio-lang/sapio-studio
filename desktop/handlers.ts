@@ -83,6 +83,9 @@ export default function (window: BrowserWindow) {
     ipcMain.handle('sapio::compiled_contracts::trash', (event, file_name) => {
         return sapio.trash_compiled_contract(file_name);
     });
+    ipcMain.handle('sapio::psbt::finalize', (event, psbt) => {
+        return sapio.psbt_finalize(psbt);
+    });
 
     ipcMain.handle(
         'sapio::compiled_contracts::open',
