@@ -49,7 +49,7 @@ const all_nodes: Map<typeof unique_key, PathSettings> = new Map();
 
 const transparent = Color('transparent').toString();
 function update_loop(percent_idx: number) {
-    let seconds = selectAnimateFlow(store.getState());
+    let seconds = selectAnimateFlow(store.getState()) / 1000.0;
     let frames_per_second = 60;
     let increment = 100 / frames_per_second / seconds;
     if (seconds < 0.001) {
