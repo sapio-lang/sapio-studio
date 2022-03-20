@@ -14,7 +14,7 @@ interface IProps {
 }
 export function SaveHexModal(props: IProps) {
     const dispatch = useDispatch();
-    let non_phantoms = props.contract.txn_models.filter((item) => {
+    const non_phantoms = props.contract.txn_models.filter((item) => {
         return (
             -1 !==
             item.tx.ins.findIndex((inp) =>

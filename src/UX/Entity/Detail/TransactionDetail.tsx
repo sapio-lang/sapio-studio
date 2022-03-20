@@ -43,7 +43,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
     const ins = props.entity.tx.ins.map((inp, i) => {
         const witnesses: Buffer[][] =
             props.entity.witness_set.witnesses.flatMap((w) => {
-                let b: Buffer[] | undefined = w[i];
+                const b: Buffer[] | undefined = w[i];
                 return b ? [b] : [];
             });
         return <InputDetail txinput={inp} witnesses={witnesses} />;
@@ -68,7 +68,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
             : as_date.toUTCString() + ' MTP';
     // note missing horizontal
     const onchange_color = (e: string) => {
-        let color = new Color(e);
+        const color = new Color(e);
         dispatch(set_custom_color([txid, color.hex()]));
     };
     const onchange_purpose = (e: string) => {
@@ -135,7 +135,7 @@ function compute_relative_timelocks(tx: Transaction) {
     for (const sequence of sequences) {
         if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) continue;
         locktime_enable = true;
-        let { relative_time, relative_height } = sequence_convert(sequence);
+        const { relative_time, relative_height } = sequence_convert(sequence);
         greatest_relative_time = Math.max(
             relative_time,
             greatest_relative_time

@@ -58,7 +58,7 @@ export const appSlice = createSlice({
                 state.data.args.context.effects = {};
             if (state.data.args.context.effects.effects === undefined)
                 state.data.args.context.effects.effects = {};
-            let data =
+            const data =
                 state.data.args.context.effects.effects[action.payload[0]] ??
                 {};
             data[action.payload[1]] = action.payload[2];
@@ -92,7 +92,7 @@ export const create_contract_of_type =
     };
 export const recreate_contract =
     () => async (dispatch: AppDispatch, getState: () => RootState) => {
-        let s = getState();
+        const s = getState();
         if (s.appReducer.data === null) return;
         return create_contract_of_type(
             s.appReducer.data.name,

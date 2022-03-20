@@ -112,7 +112,7 @@ export function SimulationController(props: {
             first_tx_time_ms / 1000,
             first_tx_block
         );
-        let r: Record<TXID, null> = {};
+        const r: Record<TXID, null> = {};
         for (const model of unreachable) {
             r[model.get_txid()] = null;
         }
@@ -140,7 +140,7 @@ export function SimulationController(props: {
             new_current_block,
             new_start + 144
         );
-        let delta = Math.abs(new_current_block - new_first_tx_block);
+        const delta = Math.abs(new_current_block - new_first_tx_block);
         new_start = Math.max(new_start - delta, 0);
         new_end += delta;
 
@@ -174,7 +174,7 @@ export function SimulationController(props: {
             new_current_time,
             new_start + 24 * 60 * 60
         );
-        let delta = Math.abs(new_current_time - new_first_tx_time);
+        const delta = Math.abs(new_current_time - new_first_tx_time);
         new_start -= delta;
         new_end += delta;
 

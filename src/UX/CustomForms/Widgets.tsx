@@ -12,7 +12,7 @@ export function PathOnly(
           }
         | any
 ) {
-    let [val, set_val] = React.useState(props.value);
+    const [val, set_val] = React.useState(props.value);
     React.useEffect(() => {
         props.onChange(val);
     }, [val]);

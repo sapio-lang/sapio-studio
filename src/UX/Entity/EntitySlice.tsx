@@ -10,7 +10,7 @@ import { Outpoint, outpoint_to_id, TXID } from '../../util';
 export type EntityType = ['TXN', TXID] | ['UTXO', Outpoint] | ['NULL', null];
 type StateType = {
     utxos: Record<string, QueriedUTXO>;
-    flash: String | null;
+    flash: string | null;
     last_selected: EntityType;
     show_entity_viewer: boolean;
     colors: Record<string, string>;
@@ -54,7 +54,7 @@ export const entitySlice = createSlice({
         deselect_entity: (state) => {
             state.show_entity_viewer = false;
         },
-        __flash: (state, action: { type: string; payload: String | null }) => {
+        __flash: (state, action: { type: string; payload: string | null }) => {
             if (action.payload) state.flash = action.payload;
         },
         __load_utxo: (
@@ -150,7 +150,7 @@ export const selectTXNPurpose: (
 ) => (state: RootState) => string | null = (id) => (state) =>
     state.entityReducer.purpose[id] ?? null;
 
-export const selectUTXOFlash = (state: RootState): String | null =>
+export const selectUTXOFlash = (state: RootState): string | null =>
     state.entityReducer.flash;
 
 export const selectEntityToView = (state: RootState): EntityType =>

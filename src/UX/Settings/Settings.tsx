@@ -27,7 +27,7 @@ function SettingPane(props: {
     value: number;
     children?: React.ReactNode;
 }) {
-    let dispatch = useDispatch();
+    const dispatch = useDispatch();
     const handlesubmit = async (
         data: ISubmitEvent<any>,
         nativeEvent: React.FormEvent<HTMLFormElement>
@@ -43,7 +43,7 @@ function SettingPane(props: {
 
     const [data, set_data] = React.useState(null);
     async function get_args() {
-        let args = await window.electron.load_settings_sync(props.name);
+        const args = await window.electron.load_settings_sync(props.name);
         if (data !== args) {
             set_data(args);
         }
@@ -125,9 +125,9 @@ export function Settings() {
             )
             .catch((e) => {
                 console.log('GOT', JSON.stringify(e));
-                let r = e.message;
+                const r = e.message;
                 if (typeof e.message === 'string') {
-                    let err = JSON.parse(r);
+                    const err = JSON.parse(r);
                     if (
                         err instanceof Object &&
                         'code' in err &&
@@ -174,7 +174,7 @@ export function Settings() {
     const check_emulator = async () => {
         window.electron.emulator.read_log().then((log) => {
             if (log.length) {
-                let json = JSON.parse(log);
+                const json = JSON.parse(log);
                 set_dialog_node([
                     'Emulator Status:',
                     [

@@ -214,10 +214,10 @@ function AppInner(props: {
      * TODO: Can these be unified?
      */
     /* Bitcoin Node State */
-    let dest_ref = React.useRef<BitcoinNodeManager | null>(null);
+    const dest_ref = React.useRef<BitcoinNodeManager | null>(null);
     const bitcoin_node_manager = React.useMemo(() => {
         if (dest_ref.current) dest_ref.current.destroy();
-        let n = new BitcoinNodeManager({
+        const n = new BitcoinNodeManager({
             model: model,
             current_contract: current_contract,
         });

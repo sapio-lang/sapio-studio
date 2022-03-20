@@ -132,7 +132,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
         );
     };
 
-    let color_render = color.alpha(0.2).toString();
+    const color_render = color.alpha(0.2).toString();
     const theme = useTheme();
     const text_color = theme.palette.text.primary;
 

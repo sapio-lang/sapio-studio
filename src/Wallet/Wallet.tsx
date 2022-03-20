@@ -82,8 +82,8 @@ function ContractList(props: { idx: number; value: number }) {
             cancel = true;
         };
     }, [trigger_now]);
-    let contract_rows = contracts.map((id) => {
-        let [mod, args, time] = id.split('-');
+    const contract_rows = contracts.map((id) => {
+        const [mod, args, time] = id.split('-');
         return {
             id,
             module,

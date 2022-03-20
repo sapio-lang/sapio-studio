@@ -71,7 +71,7 @@ declare global {
 
 /// txid_buf_to_string converts a buffer into a reverse encoded hex format.
 export function txid_buf_to_string(txid: Buffer): TXID {
-    let copy = Buffer.alloc(txid.length);
+    const copy = Buffer.alloc(txid.length);
     txid.forEach((v, i) => {
         copy[txid.length - 1 - i] = v;
     });
@@ -290,7 +290,7 @@ export function is_mock_outpoint(args: Outpoint): boolean {
 }
 
 export type Outpoint = { hash: string; nIn: number };
-interface OutpointStringDifferentiator extends String {}
+type OutpointStringDifferentiator = string;
 export type OutpointString = OutpointStringDifferentiator & string;
 
 export const ValidateOutpointString = (out: string): out is OutpointString => {

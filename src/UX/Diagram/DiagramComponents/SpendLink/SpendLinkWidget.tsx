@@ -12,7 +12,7 @@ export class SpendLinkWidget extends DefaultLinkWidget {
         id: string | number
     ): JSX.Element {
         const link: SpendLinkModel = this.props.link as SpendLinkModel;
-        var Bottom = React.cloneElement(
+        const Bottom = React.cloneElement(
             new SpendLinkFactory().generateLinkSegment(
                 link,
                 this.state.selected || this.props.link.isSelected(),
@@ -24,7 +24,7 @@ export class SpendLinkWidget extends DefaultLinkWidget {
             }
         );
 
-        var _Top = React.cloneElement(Bottom, {
+        const _Top = React.cloneElement(Bottom, {
             ...extraProps,
             strokeLinecap: 'round',
             onMouseLeave: () => {
@@ -44,8 +44,8 @@ export class SpendLinkWidget extends DefaultLinkWidget {
     }
     render() {
         //ensure id is present for all points on the path
-        var points = this.props.link.getPoints();
-        var paths = [];
+        const points = this.props.link.getPoints();
+        const paths = [];
         this.refPaths = [];
 
         if (points.length === 2) {

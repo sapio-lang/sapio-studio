@@ -188,8 +188,8 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
     );
 
     const reachable_cl = is_reachable ? 'reachable' : 'unreachable';
-    let colorObj = Color(props.node.getOptions().color);
-    let color = colorObj.alpha(0.2).toString();
+    const colorObj = Color(props.node.getOptions().color);
+    const color = colorObj.alpha(0.2).toString();
     const opts = props.node.getOptions();
     const is_selected =
         selected_entity_id[0] === 'UTXO' &&

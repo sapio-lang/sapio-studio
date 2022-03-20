@@ -136,7 +136,7 @@ export function UTXODetail(props: UTXODetailProps) {
         ) : (
             <PrettyAmountField amount={props.entity.utxo.amount} />
         );
-    let obj = select_continuations(`${txid}:${idx}`);
+    const obj = select_continuations(`${txid}:${idx}`);
     const continuations = obj
         ? Object.entries(obj).map(([k, v]) => {
               return <ContinuationOption k={k} v={v}></ContinuationOption>;
@@ -185,7 +185,7 @@ function ContinuationOption(props: { k: string; v: Continuation }) {
     };
     const this_effect_name = React.useRef('');
     const submit = (e: ISubmitEvent<any>) => {
-        let name = this_effect_name.current;
+        const name = this_effect_name.current;
         const data = e.formData;
         dispatch(add_effect_to_contract([props.k, name, data]));
     };

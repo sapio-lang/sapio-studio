@@ -34,7 +34,7 @@ class PSBTHandler {
         this.show_flash = show_flash;
     }
     async combine_psbt(psbt: Bitcoin.Psbt) {
-        let psbt_in = Bitcoin.Psbt.fromBase64(
+        const psbt_in = Bitcoin.Psbt.fromBase64(
             await window.electron.fetch_psbt()
         );
         try {
