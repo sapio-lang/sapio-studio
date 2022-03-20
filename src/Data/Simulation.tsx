@@ -1,7 +1,6 @@
 import React, { FormEvent } from 'react';
 import { ContractModel } from '../Data/ContractManager';
 
-import _ from 'lodash';
 import './Simulation.css';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import { useDispatch, useSelector } from 'react-redux';

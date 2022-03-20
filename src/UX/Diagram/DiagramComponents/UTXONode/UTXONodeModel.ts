@@ -5,14 +5,10 @@ import {
     PortModel,
 } from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
-import { SpendLinkModel } from '../SpendLink/SpendLinkModel';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
-import _ from 'lodash';
-import { TransactionModel } from '../../../../Data/Transaction';
 import { TXID } from '../../../../util';
 import { OutputPortModel } from '../OutputLink';
 import { TransactionState } from '../TransactionNode/TransactionNodeModel';
-import { ContractModel } from '../../../../Data/ContractManager';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
     name: string;

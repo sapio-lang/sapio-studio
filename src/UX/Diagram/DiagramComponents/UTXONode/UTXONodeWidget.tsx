@@ -17,7 +17,6 @@ import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import { useTheme } from '@mui/material';
 import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
 import { selectContinuation } from '../../../ContractCreator/ContractCreatorSlice';
-import { TransactionState } from '../TransactionNode/TransactionNodeModel';
 import { ConfirmationWidget } from '../ConfirmationWidget';
 const white = Color('white').toString();
 const black = Color('black').toString();

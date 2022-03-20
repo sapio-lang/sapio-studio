@@ -1,16 +1,9 @@
 import React from 'react';
 import './PluginSelector.css';
-import { Plugin, PluginTile } from './PluginTile';
+import { PluginTile } from './PluginTile';
 import { PluginForm } from './PluginForm';
-import {
-    APIs,
-    selectAPIs,
-    selectSelectedAPI,
-    select_api,
-} from '../ContractCreatorSlice';
+import { selectAPIs, selectSelectedAPI } from '../ContractCreatorSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import DialogActions from '@mui/material/DialogActions';
-import { Button } from '@mui/material';
 export function PluginSelector() {
     const dispatch = useDispatch();
     const apis = useSelector(selectAPIs);

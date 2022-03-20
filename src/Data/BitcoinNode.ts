@@ -1,15 +1,7 @@
 import { Transaction } from 'bitcoinjs-lib';
-import React from 'react';
-import { ContractBase, ContractModel } from './ContractManager';
-import { Input } from 'bitcoinjs-lib/types/transaction';
-import {
-    hash_to_hex,
-    Outpoint,
-    outpoint_to_id,
-    TXIDAndWTXIDMap,
-} from '../util';
-import * as Bitcoin from 'bitcoinjs-lib';
-import _, { clamp, result } from 'lodash';
+import { ContractModel } from './ContractManager';
+import { hash_to_hex, Outpoint, TXIDAndWTXIDMap } from '../util';
+import { clamp } from 'lodash';
 import { DiagramModel } from '@projectstorm/react-diagrams-core';
 import { selectNodePollFreq } from '../Settings/SettingsSlice';
 import { store } from '../Store/store';

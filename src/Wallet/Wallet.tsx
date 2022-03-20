@@ -20,12 +20,9 @@ import {
     GridColumns,
     GridValueGetterParams,
 } from '@mui/x-data-grid';
-import { number } from 'bitcoinjs-lib/types/script';
 import React from 'react';
 import { BitcoinNodeManager } from '../Data/BitcoinNode';
-import { PrettyAmount } from '../util';
 import './Wallet.css';
-import _ from 'lodash';
 import { useDispatch } from 'react-redux';
 import { open_contract_directory, switch_showing } from '../AppSlice';
 

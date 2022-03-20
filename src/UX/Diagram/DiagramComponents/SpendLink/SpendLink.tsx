@@ -11,10 +11,8 @@ import { useTheme } from '@mui/material';
 import { store } from '../../../../Store/store';
 import { selectAnimateFlow } from '../../../../Settings/SettingsSlice';
 import { TransactionModel } from '../../../../Data/Transaction';
-import { UTXOModel } from '../../../../Data/UTXO';
 import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
-import { UTXONodeModel } from '../UTXONode/UTXONodeModel';
 
 export class SpendPortModel extends DefaultPortModel {
     constructor(options: DefaultPortModelOptions) {

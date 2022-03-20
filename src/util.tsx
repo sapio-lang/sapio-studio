@@ -1,10 +1,9 @@
 import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import { TextField, OutlinedInput, InputAdornment } from '@mui/material';
+import { TextField, InputAdornment } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectMaxSats } from './Settings/SettingsSlice';
-import { JSONSchema7 } from 'json-schema';
 import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
 import { schemas } from './UX/Settings/Schemas';
 import { CreatedContract } from './AppSlice';

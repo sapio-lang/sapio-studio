@@ -2,7 +2,7 @@ import { clamp } from 'lodash';
 import React from 'react';
 import { BitcoinNodeManager } from './BitcoinNode';
 import './BitcoinStatusBar.css';
-import { AppBar, Paper, Toolbar, Typography, useTheme } from '@mui/material';
+import { Paper, Toolbar, Typography, useTheme } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectNodePollFreq } from '../Settings/SettingsSlice';
 interface BitcoinStatusBarProps {

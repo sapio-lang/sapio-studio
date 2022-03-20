@@ -1,4 +1,4 @@
-import { Collapse, Grid, Paper, Typography } from '@mui/material';
+import { Collapse, Paper } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {
@@ -16,13 +16,12 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import './App.css';
 import {
-    create_contract_of_type,
     load_new_model,
     selectContract,
     selectShowing,
     selectStatusBar,
 } from './AppSlice';
-import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
+import { BitcoinNodeManager } from './Data/BitcoinNode';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
 import { ContractModel, Data } from './Data/ContractManager';
 import { ModelManager } from './Data/ModelManager';
@@ -30,11 +29,7 @@ import { SimulationController } from './Data/Simulation';
 import { TransactionModel } from './Data/Transaction';
 import { UTXOModel } from './Data/UTXO';
 import './Glyphs.css';
-import {
-    load_settings,
-    poll_settings,
-    SettingsStateType,
-} from './Settings/SettingsSlice';
+import { poll_settings } from './Settings/SettingsSlice';
 import { TXIDAndWTXIDMap } from './util';
 import { AppNavbar } from './UX/AppNavbar';
 import { set_continuations } from './UX/ContractCreator/ContractCreatorSlice';

@@ -6,11 +6,8 @@ import {
 import * as Bitcoin from 'bitcoinjs-lib';
 import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
-import {
-    TransactionNodeModel,
-    TransactionState,
-} from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
-import { HasKeys, InputMap, InputMapT, TXID } from '../util';
+import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
+import { HasKeys, TXID } from '../util';
 import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import {
     NodeColorT,
@@ -23,7 +20,6 @@ import { UTXOMetaData, UTXOModel } from './UTXO';
 import { TransactionData } from './ContractManager';
 import { select_txn } from '../UX/Entity/EntitySlice';
 import { store } from '../Store/store';
-import { SelectedEvent } from '../App';
 
 export class TransactionModel
     extends TransactionNodeModel

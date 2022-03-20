@@ -4,7 +4,7 @@ import entityReducer from '../UX/Entity/EntitySlice';
 import appReducer from '../AppSlice';
 import { dataReducer } from '../Data/DataSlice';
 import modalReducer from '../UX/ModalSlice';
-import { load_settings, settingsReducer } from '../Settings/SettingsSlice';
+import { settingsReducer } from '../Settings/SettingsSlice';
 import {
     contractCreatorReducer,
     register,

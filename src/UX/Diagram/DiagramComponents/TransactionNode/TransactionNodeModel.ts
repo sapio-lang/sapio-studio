@@ -9,7 +9,6 @@ import { SpendPortModel } from '../SpendLink/SpendLink';
 import { Transaction } from 'bitcoinjs-lib';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import { DefaultPortModel } from '@projectstorm/react-diagrams';
-import { ContractModel } from '../../../../Data/ContractManager';
 
 export type TransactionState =
     | 'Confirmed'

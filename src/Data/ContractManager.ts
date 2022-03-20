@@ -1,8 +1,7 @@
 import * as Bitcoin from 'bitcoinjs-lib';
 import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
-import _, { Collection, ObjectIterator } from 'lodash';
-import { SelectedEvent } from '../App';
+import _, { Collection } from 'lodash';
 import { JSONSchema7 } from 'json-schema';
 import {
     InputMapT,
@@ -14,9 +13,6 @@ import {
 } from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
-import { store } from '../Store/store';
-import { set_continuations } from '../UX/ContractCreator/ContractCreatorSlice';
-import { TransactionState } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 export type NodeColorT = ['NodeColor', string];
 export const NodeColor = {
     new(c: string): NodeColorT {

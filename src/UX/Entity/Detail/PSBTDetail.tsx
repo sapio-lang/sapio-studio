@@ -14,7 +14,6 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import Hex from './Hex';
 import './PSBTDetail.css';
-import { Result } from '../../../util';
 interface IProps {
     psbts: Bitcoin.Psbt[];
 }

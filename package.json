@@ -37,6 +37,7 @@
         "closest": "^0.0.1",
         "color": "^3.1.2",
         "dagre": "^0.8.5",
+        "eslint-plugin-unused-imports": "^2.0.0",
         "esm": "^3.2.25",
         "lodash": "^4.17.15",
         "mathjs": "^7.5.1",
@@ -80,14 +81,14 @@
     },
     "devDependencies": {
         "@types/bl": "^5.0.2",
+        "@typescript-eslint/eslint-plugin": "^5.15.0",
+        "@typescript-eslint/parser": "^5.15.0",
         "babel-eslint": "^10.1.0",
         "electron": "^17.1.2",
         "electron-devtools-installer": "^3.2.0",
         "eslint": "^8.11.0",
-        "eslint-plugin-react": "^7.29.4",
-        "@typescript-eslint/eslint-plugin": "^5.15.0",
-        "@typescript-eslint/parser": "^5.15.0",
         "eslint-config-react": "^1.1.7",
-        "eslint-config-react-app": "^6.0.0"
+        "eslint-config-react-app": "^6.0.0",
+        "eslint-plugin-react": "^7.29.4"
     }
 }

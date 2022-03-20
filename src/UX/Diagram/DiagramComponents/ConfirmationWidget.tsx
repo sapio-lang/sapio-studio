@@ -1,10 +1,8 @@
 import * as React from 'react';
-import { TransactionState } from './TransactionNode/TransactionNodeModel';
 import { useTheme } from '@mui/material';
 import { TXID } from '../../../util';
 import { selectStatus } from '../../../Data/DataSlice';
 import { useSelector } from 'react-redux';
-import { ContractModel } from '../../../Data/ContractManager';
 
 export function ConfirmationWidget(props: { t: TXID }) {
     const status = useSelector(selectStatus(props.t));

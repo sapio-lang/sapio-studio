@@ -3,7 +3,6 @@ import {
     DefaultLinkModelOptions,
 } from '@projectstorm/react-diagrams';
 import { TransactionModel } from '../../../../Data/Transaction';
-import { UTXOModel } from '../../../../Data/UTXO';
 export class SpendLinkModel extends DefaultLinkModel {
     link_type: 'exclusive' | 'nonexclusive';
     linked_to: TransactionModel | null;

@@ -5,9 +5,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
     IconButton,
-    TextField,
     Tooltip,
     Typography,
     useTheme,
@@ -39,7 +37,7 @@ import { OutpointDetail } from './OutpointDetail';
 import './UTXODetail.css';
 import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
 import { MuiForm5 as Form } from '@rjsf/material-ui';
-import { FormProps, FormValidation, ISubmitEvent } from '@rjsf/core';
+import { FormValidation, ISubmitEvent } from '@rjsf/core';
 import {
     add_effect_to_contract,
     recreate_contract,

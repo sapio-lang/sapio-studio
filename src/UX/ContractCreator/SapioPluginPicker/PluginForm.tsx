@@ -5,7 +5,7 @@ import { ISubmitEvent } from '@rjsf/core';
 import { logo_image, Plugin } from './PluginTile';
 import { create_contract_of_type, switch_showing } from '../../../AppSlice';
 import { useDispatch } from 'react-redux';
-import { showAPIs, show_apis } from '../ContractCreatorSlice';
+import { show_apis } from '../ContractCreatorSlice';
 import './PluginForm.css';
 
 interface PluginFormProps {

@@ -1,6 +1,5 @@
 import { PortModel } from '@projectstorm/react-diagrams-core';
 import { TransactionModel } from '../../../Data/Transaction';
-import { UTXOModel } from '../../../Data/UTXO';
 import { SpendPortModel } from './SpendLink/SpendLink';
 import { SpendLinkModel } from './SpendLink/SpendLinkModel';
 

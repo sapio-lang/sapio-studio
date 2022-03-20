@@ -9,23 +9,17 @@ import { TXIDDetail } from './OutpointDetail';
 import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
 import './TransactionDetail.css';
-import {
-    sequence_convert,
-    time_to_pretty_string,
-    txid_buf_to_string,
-} from '../../../util';
+import { sequence_convert, time_to_pretty_string } from '../../../util';
 import Color from 'color';
 import {
     selectTXNColor,
     selectTXNPurpose,
-    select_utxo,
     set_custom_color,
     set_custom_purpose,
 } from '../EntitySlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { Divider, TextField, Typography } from '@mui/material';
 import { PSBTDetail } from './PSBTDetail';
-import { selectStatus } from '../../../Data/DataSlice';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;

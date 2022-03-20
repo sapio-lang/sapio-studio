@@ -1,4 +1,3 @@
-import { State } from '@projectstorm/react-canvas-core';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import * as Bitcoin from 'bitcoinjs-lib';
 import Color from 'color';

@@ -1,15 +1,6 @@
 import { Button, Paper, Typography } from '@mui/material';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-    selectSelectedAPI,
-    select_api,
-    showAPIs,
-    show_apis,
-} from './ContractCreatorSlice';
+import { selectSelectedAPI, select_api } from './ContractCreatorSlice';
 import { PluginSelector } from './SapioPluginPicker/PluginSelector';
 import './CreateContractModal.css';
 export function CreateContractModal() {

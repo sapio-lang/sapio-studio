@@ -1,13 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import { RootState } from '../Store/store';
-import { Dispatch } from '@reduxjs/toolkit';
 import { Status } from './BitcoinNode';
-import { Transaction } from 'electron';
 import { TransactionState } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
-import { Input } from 'bitcoinjs-lib/types/transaction';
-import { hash_to_hex, TXIDAndWTXIDMap } from '../util';
-import { ContractModel } from './ContractManager';
 type TXID = string;
 export type DataStateType = {
     status: Record<TXID, Status>;

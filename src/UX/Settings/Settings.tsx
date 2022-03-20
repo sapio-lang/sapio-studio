@@ -16,8 +16,7 @@ import { MuiForm5 as Form } from '@rjsf/material-ui';
 import { ISubmitEvent } from '@rjsf/core';
 import { custom_fields, PathOnly } from '../CustomForms/Widgets';
 import SaveIcon from '@mui/icons-material/Save';
-import { Cancel, HorizontalRule } from '@mui/icons-material';
-import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
+import { Cancel } from '@mui/icons-material';
 import { poll_settings } from '../../Settings/SettingsSlice';
 import { useDispatch } from 'react-redux';
 

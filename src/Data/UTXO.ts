@@ -1,5 +1,5 @@
 import { Transaction } from 'bitcoinjs-lib';
-import { ContractBase, NodeColor, NodeColorT } from './ContractManager';
+import { NodeColor, NodeColorT } from './ContractManager';
 import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
 import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import { TransactionModel } from './Transaction';

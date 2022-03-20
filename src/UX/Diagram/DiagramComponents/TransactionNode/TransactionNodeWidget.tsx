@@ -7,9 +7,8 @@ import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import * as _ from 'lodash';
 import * as React from 'react';
 import './Ants.css';
-import { TransactionNodeModel, TransactionState } from './TransactionNodeModel';
+import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
-import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
@@ -21,7 +20,6 @@ import {
     selectTXNPurpose,
 } from '../../../Entity/EntitySlice';
 import { ConfirmationWidget } from '../ConfirmationWidget';
-import { ContractModel } from '../../../../Data/ContractManager';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
