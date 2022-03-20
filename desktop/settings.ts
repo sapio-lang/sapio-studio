@@ -1,9 +1,7 @@
 import electron, { dialog } from 'electron';
 const app = electron.app;
 import path from 'path';
-import os from 'os';
-import { Menu } from 'electron';
-import { open, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import { default_settings } from './settings_gen';
 import { deinit_bitcoin_node, get_bitcoin_node } from './bitcoin_rpc';
@@ -27,12 +25,12 @@ type DisplaySettings = {
 };
 
 function fill_in_default(): Data {
-    let defaults = JSON.parse(JSON.stringify(default_settings));
-    let username = process.env.SAPIO_BITCOIN_RPC_USER;
-    let password = process.env.SAPIO_BITCOIN_RPC_PASSWORD;
-    let port = process.env.SAPIO_BITCOIN_RPC_PORT;
-    let host = process.env.SAPIO_BITCOIN_HOST;
-    let network = process.env.SAPIO_BITCOIN_NETWORK;
+    const defaults = JSON.parse(JSON.stringify(default_settings));
+    const username = process.env.SAPIO_BITCOIN_RPC_USER;
+    const password = process.env.SAPIO_BITCOIN_RPC_PASSWORD;
+    const port = process.env.SAPIO_BITCOIN_RPC_PORT;
+    const host = process.env.SAPIO_BITCOIN_HOST;
+    const network = process.env.SAPIO_BITCOIN_NETWORK;
     if (username && password)
         defaults.bitcoin.auth = { UserPass: [username, password] };
     if (port) defaults.bitcoin.port = port;
@@ -157,7 +155,7 @@ export const custom_sapio_config = () => {
 
     let error = false;
     const oracle_list = conf.emulators;
-    let plugin_map: Record<string, string> = {};
+    const plugin_map: Record<string, string> = {};
     for (const [key, hash] of conf.plugin_map) {
         if (hash.length != 64) {
             dialog.showErrorBox(

@@ -1,8 +1,4 @@
-import { app, BrowserWindow, clipboard, Menu, shell } from 'electron';
-import { dialog } from 'electron';
-import { sapio } from './sapio';
-import Client from 'bitcoin-core-ts';
-import { readFileSync } from 'fs';
+import { app, BrowserWindow, Menu, shell } from 'electron';
 
 export function createMenu(window: BrowserWindow) {
     const template = [
