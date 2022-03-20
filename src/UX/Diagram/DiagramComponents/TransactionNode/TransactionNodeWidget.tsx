@@ -14,7 +14,12 @@ import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { useTheme } from '@mui/material';
-import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
+import {
+    EntityType,
+    selectEntityToView,
+    selectTXNColor,
+    selectTXNPurpose,
+} from '../../../Entity/EntitySlice';
 import { ConfirmationWidget } from '../ConfirmationWidget';
 import { ContractModel } from '../../../../Data/ContractManager';
 //import { css } from '@emotion/core';
@@ -110,24 +115,13 @@ export interface DefaultNodeProps {
 export function TransactionNodeWidget(props: DefaultNodeProps) {
     const selected_entity_id: EntityType = useSelector(selectEntityToView);
     const opts = props.node.getOptions();
-    const [color, setColor] = React.useState(opts.color);
-    const [purpose, setPurpose] = React.useState(opts.purpose);
     const is_reachable = useSelector(selectIsReachable)(
         (opts.txn as Bitcoin.Transaction).getId()
     );
-    React.useEffect(() => {
-        const h = props.node.registerListener({
-            colorChanged: (e: BaseEvent) => {
-                setColor(opts.color);
-            },
-            purposeChanged: (e: BaseEvent) => {
-                setPurpose(opts.purpose);
-            },
-        });
-        return () => {
-            props.node.deregisterListener(h);
-        };
-    });
+    const color =
+        useSelector(selectTXNColor(opts.txn.getId())) ?? Color(opts.color);
+    const purpose =
+        useSelector(selectTXNPurpose(opts.txn.getId())) ?? opts.purpose;
     const generatePort = (port: DefaultPortModel) => {
         return (
             <DefaultPortLabel
@@ -138,7 +132,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
         );
     };
 
-    let color_render = Color(color).alpha(0.2).toString();
+    let color_render = color.alpha(0.2).toString();
     const theme = useTheme();
     const text_color = theme.palette.text.primary;
 

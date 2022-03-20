@@ -56,14 +56,6 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         this.portsOut = [];
         this.portsIn = [];
     }
-    setColor(color: string) {
-        this.options.color = color;
-        this.fireEvent({ color: this.options.color }, 'colorChanged');
-    }
-    setPurpose(purpose: string) {
-        this.options.purpose = purpose;
-        this.fireEvent({ purpose }, 'purposeChanged');
-    }
 
     doClone(lookupTable: {}, clone: any) {
         clone.portsIn = [];

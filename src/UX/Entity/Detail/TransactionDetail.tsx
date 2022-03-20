@@ -15,7 +15,13 @@ import {
     txid_buf_to_string,
 } from '../../../util';
 import Color from 'color';
-import { select_utxo } from '../EntitySlice';
+import {
+    selectTXNColor,
+    selectTXNPurpose,
+    select_utxo,
+    set_custom_color,
+    set_custom_purpose,
+} from '../EntitySlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { Divider, TextField, Typography } from '@mui/material';
 import { PSBTDetail } from './PSBTDetail';
@@ -25,19 +31,12 @@ interface TransactionDetailProps {
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
 }
 export function TransactionDetail(props: TransactionDetailProps) {
-    const [color, setColor] = React.useState(
-        Color(props.entity.getOptions().color)
-    );
-
-    const onchange_color = (e: ChangeEvent<HTMLInputElement>) => {
-        let color = new Color(e.target.value);
-        props.entity.setColor(color.hex());
-        setColor(color);
-    };
-    const onchange_purpose = (e: ChangeEvent<HTMLInputElement>) => {
-        props.entity.setPurpose(e.target.value);
-    };
     const dispatch = useDispatch();
+    const opts = props.entity.getOptions();
+    const txid = opts.txn.getId();
+    const color = useSelector(selectTXNColor(txid)) ?? Color(opts.color);
+    const purpose = useSelector(selectTXNPurpose(txid)) ?? opts.purpose;
+
     const outs = props.entity.utxo_models.map((o, i) => (
         <OutputDetail txoutput={o} />
     ));
@@ -68,15 +67,20 @@ export function TransactionDetail(props: TransactionDetailProps) {
             ? 'Block #' + locktime.toString()
             : as_date.toUTCString() + ' MTP';
     // note missing horizontal
+    const onchange_color = (e: string) => {
+        let color = new Color(e);
+        dispatch(set_custom_color([txid, color.hex()]));
+    };
+    const onchange_purpose = (e: string) => {
+        dispatch(set_custom_purpose([txid, e]));
+    };
     const inner_debounce_color = _.debounce(onchange_color, 30);
     const debounce_color = (e: ChangeEvent<HTMLInputElement>) => {
-        e.persist();
-        inner_debounce_color(e);
+        inner_debounce_color(e.target.value);
     };
     const inner_debounce_purpose = _.debounce(onchange_purpose, 30);
     const debounce_purpose = (e: ChangeEvent<HTMLInputElement>) => {
-        e.persist();
-        inner_debounce_purpose(e);
+        inner_debounce_purpose(e.target.value);
     };
     const absolute_lock_jsx =
         !locktime_enable || locktime === 0 ? null : (
@@ -89,7 +93,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
         <div className="TransactionDetail">
             <TextField
                 label="Purpose"
-                defaultValue={props.entity.getOptions().purpose}
+                defaultValue={purpose}
                 onChange={debounce_purpose}
             />
             <TextField
