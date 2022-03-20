@@ -57,6 +57,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         return this.getOptions().amount;
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
     doClone(lookupTable: {}, clone: any) {
         clone.portsIn = [];
         clone.portsOut = [];

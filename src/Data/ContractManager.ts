@@ -21,7 +21,6 @@ export const NodeColor = {
     get(c: NodeColorT): string {
         return c[1];
     },
-    fade(c: NodeColorT) {},
     clone(c: NodeColorT) {
         return NodeColor.new(c[1].slice());
     },

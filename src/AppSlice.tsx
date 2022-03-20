@@ -1,14 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Data } from './Data/ContractManager';
 import { AppDispatch, RootState } from './Store/store';
+import { hasOwn } from './util';
 
 type ContractArgs = {
-    arguments: Object;
+    arguments: Record<string | number, unknown>;
     context: {
         amount: number;
         network: 'Regtest' | 'Signet' | 'Testnet' | 'Bitcoin';
         effects?: {
-            effects?: Record<string, Record<string, Object>>;
+            effects?: Record<
+                string,
+                Record<string, Record<string | number, unknown>>
+            >;
         };
     };
 };
@@ -51,7 +55,9 @@ export const appSlice = createSlice({
         },
         add_effect_to_contract: (
             state,
-            action: PayloadAction<[string, string, Object]>
+            action: PayloadAction<
+                [string, string, Record<string | number, unknown>]
+            >
         ) => {
             if (state.data === null) return;
             if (state.data.args.context.effects === undefined)
@@ -137,7 +143,7 @@ export const selectHasEffect: (
 ) => (s: string, key: string) => boolean = (state: RootState) => {
     return (s, key) => {
         const d = state.appReducer.data?.args.context.effects?.effects ?? {};
-        return d.hasOwnProperty(s) && d[s]!.hasOwnProperty(key);
+        return hasOwn(d, s) && hasOwn(d[s]!, key);
     };
 };
 

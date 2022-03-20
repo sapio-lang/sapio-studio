@@ -2,6 +2,7 @@ import { Button, Paper, Typography } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectSelectedAPI, select_api } from './ContractCreatorSlice';
 import { PluginSelector } from './SapioPluginPicker/PluginSelector';
+import * as React from 'react';
 import './CreateContractModal.css';
 export function CreateContractModal() {
     const dispatch = useDispatch();

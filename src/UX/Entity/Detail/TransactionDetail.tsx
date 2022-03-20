@@ -9,7 +9,12 @@ import { TXIDDetail } from './OutpointDetail';
 import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
 import './TransactionDetail.css';
-import { sequence_convert, time_to_pretty_string } from '../../../util';
+import {
+    hash_to_hex,
+    outpoint_to_id,
+    sequence_convert,
+    time_to_pretty_string,
+} from '../../../util';
 import Color from 'color';
 import {
     selectTXNColor,
@@ -32,7 +37,10 @@ export function TransactionDetail(props: TransactionDetailProps) {
     const purpose = useSelector(selectTXNPurpose(txid)) ?? opts.purpose;
 
     const outs = props.entity.utxo_models.map((o, i) => (
-        <OutputDetail txoutput={o} />
+        <OutputDetail
+            key={`${o.getOptions().txid}:${o.getOptions().index}`}
+            txoutput={o}
+        />
     ));
     const ins = props.entity.tx.ins.map((inp, i) => {
         const witnesses: Buffer[][] =
@@ -40,7 +48,16 @@ export function TransactionDetail(props: TransactionDetailProps) {
                 const b: Buffer[] | undefined = w[i];
                 return b ? [b] : [];
             });
-        return <InputDetail txinput={inp} witnesses={witnesses} />;
+        return (
+            <InputDetail
+                key={outpoint_to_id({
+                    hash: hash_to_hex(inp.hash),
+                    nIn: inp.index,
+                })}
+                txinput={inp}
+                witnesses={witnesses}
+            />
+        );
     });
 
     const {

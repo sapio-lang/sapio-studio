@@ -110,7 +110,7 @@ function SettingPane(props: {
 export function Settings() {
     const [idx, set_idx] = React.useState<number>(0);
     const [dialog_node, set_dialog_node] = React.useState<
-        [React.ReactNode, React.ReactNode[]]
+        [string | null, string[]]
     >([null, []]);
     const handleChange = (_: any, idx: number) => {
         set_idx(idx);
@@ -219,7 +219,9 @@ export function Settings() {
                     <DialogContent>
                         <div id="alert-dialog-description">
                             {dialog_node[1].map((txt) => (
-                                <DialogContentText>{txt}</DialogContentText>
+                                <DialogContentText key={txt}>
+                                    {txt}
+                                </DialogContentText>
                             ))}
                         </div>
                     </DialogContent>
@@ -297,10 +299,9 @@ function Guide(props: { idx: number; my_idx: number }) {
                     </Typography>
                     <Typography variant="h4">Getting Started</Typography>
                     <Typography variant="body1">
-                        To get started, you're going to want to configure a few
-                        things.
+                        To get started, you need to configure a few things.
                         <br />
-                        On this page, you'll find tabs for:
+                        On this page, you will find tabs for:
                         <br />
                         <ol>
                             <li>Sapio Cli: options for the sapio compiler</li>
@@ -312,7 +313,8 @@ function Guide(props: { idx: number; my_idx: number }) {
                                 Emulator: options for running an emulator daemon
                             </li>
                             <li>
-                                Display: options for Sapio Studio's rendering
+                                Display: options for Sapio Studio&lsquo;s
+                                rendering
                             </li>
                         </ol>
                         At the bottom of each of these tabs you will see a set

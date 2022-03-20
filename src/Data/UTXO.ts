@@ -1,7 +1,6 @@
 import { Transaction } from 'bitcoinjs-lib';
 import { NodeColor, NodeColorT } from './ContractManager';
 import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
-import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import { TransactionModel } from './Transaction';
 import { is_mock_outpoint, txid_buf_to_string } from '../util';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
@@ -26,10 +25,7 @@ export class UTXOMetaData {
         this.spends = [];
     }
 }
-export class UTXOModel
-    extends UTXONodeModel
-    implements ViewableEntityInterface
-{
+export class UTXOModel extends UTXONodeModel {
     txn: TransactionModel;
     utxo: UTXOMetaData;
     constructor(

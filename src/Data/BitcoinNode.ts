@@ -1,6 +1,6 @@
 import { Transaction } from 'bitcoinjs-lib';
 import { ContractModel } from './ContractManager';
-import { hash_to_hex, Outpoint, TXIDAndWTXIDMap } from '../util';
+import { hash_to_hex, hasOwn, Outpoint, TXIDAndWTXIDMap } from '../util';
 import { clamp } from 'lodash';
 import { DiagramModel } from '@projectstorm/react-diagrams-core';
 import { selectNodePollFreq } from '../Settings/SettingsSlice';
@@ -48,8 +48,6 @@ function swap(arr: any[], i: number, j: number) {
     arr[j] = x;
 }
 
-const hasOwn = (a: Object, b: string | number) =>
-    Object.prototype.hasOwnProperty.call(a, b);
 function compute_impossible(
     state: Record<TXID, TransactionState>,
     cm: ContractModel

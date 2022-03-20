@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { ContractModel } from '../../Data/ContractManager';
 import { TXIDAndWTXIDMap, txid_buf_to_string } from '../../util';
 import { close_modal } from '../ModalSlice';
+import * as React from 'react';
 
 interface IProps {
     contract: ContractModel;

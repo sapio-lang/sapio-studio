@@ -236,7 +236,7 @@ export const TXIDAndWTXIDMap = {
         that: TXIDAndWTXIDMapT<K>,
         t: TXID
     ): boolean {
-        return that[txid_map_s].hasOwnProperty(t);
+        return hasOwn(that[txid_map_s], t);
     },
 };
 
@@ -301,3 +301,8 @@ export function outpoint_to_id(args: Outpoint): OutpointString {
     if (ValidateOutpointString(s)) return s;
     throw 'ERR: ID not valid';
 }
+
+export const hasOwn = (
+    a: Record<string | number, unknown>,
+    b: string | number
+) => Object.prototype.hasOwnProperty.call(a, b);

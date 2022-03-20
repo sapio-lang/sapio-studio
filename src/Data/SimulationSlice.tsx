@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../Store/store';
-import { TXID } from '../util';
+import { hasOwn, TXID } from '../util';
 type SimulationState = {
     unreachable_models: Record<TXID, null>;
 };
@@ -24,6 +24,6 @@ export const { set_unreachable } = simulationSlice.actions;
 
 export const selectIsReachable: (state: RootState) => (t: TXID) => boolean =
     (state: RootState) => (t: TXID) =>
-        !state.simulationReducer.unreachable_models.hasOwnProperty(t);
+        !hasOwn(state.simulationReducer.unreachable_models, t);
 
 export const simulationReducer = simulationSlice.reducer;

@@ -8,7 +8,6 @@ import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 import { HasKeys, TXID } from '../util';
-import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import {
     NodeColorT,
     UTXOFormatData,
@@ -21,10 +20,7 @@ import { TransactionData } from './ContractManager';
 import { select_txn } from '../UX/Entity/EntitySlice';
 import { store } from '../Store/store';
 
-export class TransactionModel
-    extends TransactionNodeModel
-    implements ViewableEntityInterface, HasKeys
-{
+export class TransactionModel extends TransactionNodeModel implements HasKeys {
     tx: Bitcoin.Transaction;
     witness_set: SigningDataStore;
     utxo_models: Array<UTXOModel>;
@@ -45,7 +41,6 @@ export class TransactionModel
         this.witness_set = all_witnesses;
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = NodeColor.clone(color);
-            NodeColor.fade(subcolor);
             const metadata = utxo_labels[y] || {
                 color: NodeColor.get(subcolor),
                 label: name,

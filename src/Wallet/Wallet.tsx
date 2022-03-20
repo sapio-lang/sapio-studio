@@ -103,11 +103,13 @@ function ContractList(props: { idx: number; value: number }) {
             width: 80,
             getActions: (params) => [
                 <GridActionsCellItem
+                    key="delete"
                     icon={<Delete />}
                     label="Delete"
                     onClick={() => delete_contract(params.id)}
                 />,
                 <GridActionsCellItem
+                    key="open-folder"
                     icon={<VisibilityIcon />}
                     label="Open"
                     onClick={() => {
@@ -131,8 +133,8 @@ function ContractList(props: { idx: number; value: number }) {
                 <DialogTitle>Confirm Deletion</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Confirm deletion of "{to_delete}"? File will be in your
-                        trash folder.
+                        Confirm deletion of &quot;{to_delete}&quot;? File will
+                        be in your trash folder.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

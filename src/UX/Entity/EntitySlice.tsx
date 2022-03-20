@@ -5,7 +5,7 @@ import { BitcoinNodeManager, QueriedUTXO } from '../../Data/BitcoinNode';
 import { ContractModel } from '../../Data/ContractManager';
 import { update_utxomodel, UTXOModel } from '../../Data/UTXO';
 import { AppDispatch, RootState } from '../../Store/store';
-import { Outpoint, outpoint_to_id, TXID } from '../../util';
+import { hasOwn, Outpoint, outpoint_to_id, TXID } from '../../util';
 export type EntityType = ['TXN', TXID] | ['UTXO', Outpoint] | ['NULL', null];
 type StateType = {
     utxos: Record<string, QueriedUTXO>;
@@ -64,7 +64,7 @@ export const entitySlice = createSlice({
             }
         ) => {
             const id = outpoint_to_id(action.payload[0]);
-            if (state.utxos.hasOwnProperty(id)) return;
+            if (hasOwn(state.utxos, id)) return;
             if (action.payload[1]) state.utxos[id] = action.payload[1];
         },
     },
@@ -83,17 +83,11 @@ export const {
 export const fetch_utxo =
     (args: Outpoint) =>
     async (dispatch: AppDispatch, getState: () => RootState) => {
-        if (
-            getState().entityReducer.utxos.hasOwnProperty(outpoint_to_id(args))
-        ) {
-        } else {
-            const utxo = await BitcoinNodeManager.fetch_utxo(
-                args.hash,
-                args.nIn
-            );
-            if (utxo) {
-                dispatch(__load_utxo([args, utxo]));
-            }
+        if (hasOwn(getState().entityReducer.utxos, outpoint_to_id(args)))
+            return;
+        const utxo = await BitcoinNodeManager.fetch_utxo(args.hash, args.nIn);
+        if (utxo) {
+            dispatch(__load_utxo([args, utxo]));
         }
     };
 

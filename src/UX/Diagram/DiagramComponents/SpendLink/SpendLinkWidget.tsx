@@ -37,6 +37,7 @@ export class SpendLinkWidget extends DefaultLinkWidget {
             'data-linkid': this.props.link.getID(),
             strokeOpacity: this.state.selected ? 0.1 : 0,
             strokeWidth: 20,
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             onContextMenu: (event: Event) => {},
         });
 

@@ -56,6 +56,7 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         this.portsIn = [];
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
     doClone(lookupTable: {}, clone: any) {
         clone.portsIn = [];
         clone.portsOut = [];
