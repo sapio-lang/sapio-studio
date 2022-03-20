@@ -19,10 +19,8 @@ export interface UTXONodeModelOptions extends BasePositionModelOptions {
     color: string;
     amount: number;
     confirmed: TransactionState;
-    reachable: boolean;
     txid: TXID;
     index: number;
-    confirmed_callback: (b: TransactionState) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
@@ -51,7 +49,6 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
             amount,
             confirmed,
             type: 'utxo-node',
-            confirmed_callback: (b: boolean) => null,
             ...options,
         });
         this.portsOut = [];

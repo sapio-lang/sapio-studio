@@ -22,9 +22,6 @@ export interface TransactionNodeModelOptions extends BasePositionModelOptions {
     name: string;
     color: string;
     confirmed: TransactionState;
-    is_reachable: boolean;
-    reachable_cb: (b: boolean) => void;
-    confirmed_cb: (b: TransactionState) => void;
     txn: Transaction;
     purpose: string;
 }
@@ -66,17 +63,6 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
     setPurpose(purpose: string) {
         this.options.purpose = purpose;
         this.fireEvent({ purpose }, 'purposeChanged');
-    }
-
-    setReachable(b: boolean) {
-        this.options.is_reachable = b;
-        this.options.reachable_cb(b);
-    }
-    registerReachable(f: (b: boolean) => void) {
-        this.options.reachable_cb = f;
-    }
-    isReachable(): boolean {
-        return this.options.is_reachable;
     }
 
     doClone(lookupTable: {}, clone: any) {

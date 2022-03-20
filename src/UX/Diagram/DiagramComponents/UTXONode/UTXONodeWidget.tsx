@@ -112,11 +112,6 @@ interface DefaultNodeProps {
     engine: DiagramEngine;
 }
 
-interface IState {
-    is_reachable: boolean;
-    is_confirmed: boolean;
-    amount: number;
-}
 /**
  * Default node that models the UTXONodeModel. It creates two columns
  * for both all the input ports on the left, and the output ports on the right.
