@@ -38,10 +38,9 @@ function fill_in_default(): Data {
     /// TODO: remove, for compat with sapio-pod
     if (network && network.length >= 1)
         defaults.bitcoin.network =
-            network ===
-            ('mainnet'
+            network === 'mainnet'
                 ? 'Bitcoin'
-                : network[0]!.toUpperCase() + network.substring(1));
+                : network[0]!.toUpperCase() + network.substring(1);
 
     const seed = process.env.SAPIO_ORACLE_SEED_FILE;
     const iface = process.env.SAPIO_ORACLE_NET;
