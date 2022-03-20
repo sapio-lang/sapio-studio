@@ -1,7 +1,6 @@
 import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import { Outpoint } from './UX/Entity/EntitySlice';
 import { TextField, OutlinedInput, InputAdornment } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectMaxSats } from './Settings/SettingsSlice';
@@ -82,10 +81,7 @@ export function txid_buf_to_string(txid: Buffer): TXID {
 // hash_to_hex converts a buffer into a reverse encoded hex format
 // TODO: is this the same as txid_buf_to_string?
 export function hash_to_hex(h: Buffer): string {
-    const b = Buffer.alloc(32);
-    h.copy(b);
-    b.reverse();
-    return b.toString('hex');
+    return txid_buf_to_string(h);
 }
 
 export interface OutpointInterface {
@@ -285,4 +281,18 @@ export function time_to_pretty_string(time: number): string {
 export function is_mock_outpoint(args: Outpoint): boolean {
     const hash = Bitcoin.crypto.sha256(Buffer.from('mock:' + args.nIn));
     return txid_buf_to_string(hash) === args.hash;
+}
+
+export type Outpoint = { hash: string; nIn: number };
+interface OutpointStringDifferentiator extends String {}
+export type OutpointString = OutpointStringDifferentiator & string;
+
+export const ValidateOutpointString = (out: string): out is OutpointString => {
+    return out.match(/^[A-Fa-f0-9]{64}:[0-9]+$/) !== null;
+};
+
+export function outpoint_to_id(args: Outpoint): OutpointString {
+    const s = args.hash + ':' + args.nIn.toString();
+    if (ValidateOutpointString(s)) return s;
+    throw 'ERR: ID not valid';
 }

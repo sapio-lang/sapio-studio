@@ -111,35 +111,6 @@ export class TransactionModel
             model.removeLink(x as unknown as LinkModel)
         );
     }
-
-    consume_inputs(inputs_map: InputMapT<TransactionModel>, model: any) {
-        const to_clear: Array<TransactionModel> = [];
-        this.tx.ins.forEach((inp) => {
-            const to_prune = InputMap.get(inputs_map, inp) || [];
-            to_prune.forEach((txn_model) => {
-                if (txn_model.tx !== this.tx) {
-                    txn_model.remove_from_model(model);
-                    to_clear.push(txn_model);
-                }
-            });
-        });
-        while (to_clear.length) {
-            const mtx = to_clear.pop() as TransactionModel;
-            const tx = mtx.tx;
-            // now remove children
-            for (let i = 0; i < tx.outs.length; ++i) {
-                const to_prune: Array<TransactionModel> =
-                    InputMap.get(inputs_map, {
-                        hash: tx.getHash(),
-                        index: i,
-                    }) ?? [];
-                to_prune.forEach((txn_model) =>
-                    txn_model.remove_from_model(model)
-                );
-                to_clear.push(...to_prune);
-            }
-        }
-    }
 }
 
 export class PhantomTransactionModel extends TransactionModel {

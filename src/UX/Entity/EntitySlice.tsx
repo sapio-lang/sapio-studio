@@ -6,7 +6,7 @@ import { BitcoinNodeManager, QueriedUTXO } from '../../Data/BitcoinNode';
 import { ContractModel } from '../../Data/ContractManager';
 import { update_utxomodel, UTXOModel } from '../../Data/UTXO';
 import { AppDispatch, RootState } from '../../Store/store';
-import { TXID } from '../../util';
+import { Outpoint, outpoint_to_id, TXID } from '../../util';
 export type EntityType = ['TXN', TXID] | ['UTXO', Outpoint] | ['NULL', null];
 type StateType = {
     utxos: Record<string, QueriedUTXO>;
@@ -64,26 +64,13 @@ export const entitySlice = createSlice({
                 payload: [Outpoint, QueriedUTXO];
             }
         ) => {
-            const id = to_id(action.payload[0]);
+            const id = outpoint_to_id(action.payload[0]);
             if (state.utxos.hasOwnProperty(id)) return;
             if (action.payload[1]) state.utxos[id] = action.payload[1];
         },
     },
 });
 
-export type Outpoint = { hash: string; nIn: number };
-interface OutpointStringDifferentiator extends String {}
-export type OutpointString = OutpointStringDifferentiator & string;
-
-export const ValidateOutpointString = (out: string): out is OutpointString => {
-    return out.match(/^[A-Fa-f0-9]{64}:[0-9]+$/) !== null;
-};
-
-function to_id(args: Outpoint): OutpointString {
-    const s = args.hash + ':' + args.nIn.toString();
-    if (ValidateOutpointString(s)) return s;
-    throw 'ERR: ID not valid';
-}
 /// private API
 const { __load_utxo, __flash } = entitySlice.actions;
 export const {
@@ -97,7 +84,9 @@ export const {
 export const fetch_utxo =
     (args: Outpoint) =>
     async (dispatch: AppDispatch, getState: () => RootState) => {
-        if (getState().entityReducer.utxos.hasOwnProperty(to_id(args))) {
+        if (
+            getState().entityReducer.utxos.hasOwnProperty(outpoint_to_id(args))
+        ) {
         } else {
             const utxo = await BitcoinNodeManager.fetch_utxo(
                 args.hash,
@@ -138,7 +127,7 @@ export const selectUTXO = (
     state: RootState
 ): ((id: Outpoint) => QueriedUTXO | null) => {
     return (id: Outpoint) => {
-        const id_s = to_id(id);
+        const id_s = outpoint_to_id(id);
         return state.entityReducer.utxos[id_s] ?? null;
     };
 };
@@ -146,7 +135,7 @@ export const selectUTXO = (
 export const selectUTXOColor: (
     id: Outpoint
 ) => (state: RootState) => Color | null = (id) => (state) => {
-    const color = state.entityReducer.colors[to_id(id)];
+    const color = state.entityReducer.colors[outpoint_to_id(id)];
     if (!color) return null;
     return Color(color);
 };

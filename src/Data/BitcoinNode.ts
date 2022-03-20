@@ -2,9 +2,14 @@ import { Transaction } from 'bitcoinjs-lib';
 import React from 'react';
 import { ContractBase, ContractModel } from './ContractManager';
 import { Input } from 'bitcoinjs-lib/types/transaction';
-import { hash_to_hex, TXIDAndWTXIDMap } from '../util';
+import {
+    hash_to_hex,
+    Outpoint,
+    outpoint_to_id,
+    TXIDAndWTXIDMap,
+} from '../util';
 import * as Bitcoin from 'bitcoinjs-lib';
-import _, { clamp } from 'lodash';
+import _, { clamp, result } from 'lodash';
 import { DiagramModel } from '@projectstorm/react-diagrams-core';
 import { selectNodePollFreq } from '../Settings/SettingsSlice';
 import { store } from '../Store/store';
@@ -13,7 +18,7 @@ import { TransactionState } from '../UX/Diagram/DiagramComponents/TransactionNod
 
 type TXID = string;
 
-export type Status = { txid: TXID; confirmations: number };
+export type Status = { txid: TXID; confirmations: number | null };
 
 export function call(method: string, args: any) {
     return fetch(method, {
@@ -50,6 +55,89 @@ function swap(arr: any[], i: number, j: number) {
     arr[i] = arr[j];
     arr[j] = x;
 }
+
+function compute_impossible(
+    state: Record<TXID, TransactionState>,
+    cm: ContractModel
+): Record<TXID, TransactionState> {
+    let unspendable: Record<TXID, Record<number, null>> = {};
+    for (let [txid, status] of Object.entries(state)) {
+        if (status !== 'Confirmed' && status !== 'Impossible') continue;
+        const tmi = TXIDAndWTXIDMap.get_by_txid_s(cm.txid_map, txid)!;
+        if (!tmi) throw new Error('All txns Are Expected to be Present');
+        // If confirmed, all inputs are now unspendable
+        if (status === 'Confirmed') {
+            for (let inp of tmi.getOptions().txn.ins) {
+                const hash = hash_to_hex(inp.hash);
+                if (unspendable.hasOwnProperty(hash))
+                    unspendable[hash]![inp.index] = null;
+                else {
+                    unspendable[hash] = { [inp.index]: null };
+                }
+            }
+        }
+        // If impossible, all outputs are now unspendable
+        if (status === 'Impossible') {
+            const length = tmi.getOptions().txn.outs.length;
+            let obj: Record<number, null> = Object.fromEntries(
+                Array.from({ length }, () => 0).map((v, a) => [a, null])
+            );
+            console.log('OBJ', obj);
+            unspendable[txid] = obj;
+        }
+    }
+    console.log('INITIAL UNSPEND', unspendable);
+    let changed;
+    let mutable_state: Record<TXID, { length: number; inps: Outpoint[] }> =
+        Object.fromEntries(
+            Object.entries(state)
+                .filter(([_, f]) => !(f === 'Confirmed' || f === 'Impossible'))
+                .map(([k, _]) => {
+                    const tmi = TXIDAndWTXIDMap.get_by_txid_s(cm.txid_map, k)!;
+                    if (!tmi)
+                        throw new Error('All txns Are Expected to be Present');
+                    return [
+                        k,
+                        {
+                            length: tmi.getOptions().txn.outs.length,
+                            inps: tmi.getOptions().txn.ins.map((inp) => {
+                                return {
+                                    hash: hash_to_hex(inp.hash),
+                                    nIn: inp.index,
+                                };
+                            }),
+                        },
+                    ];
+                })
+        );
+    do {
+        console.log('FILTERING ', mutable_state);
+        changed = false;
+        for (let [txid, { length, inps }] of Object.entries(mutable_state)) {
+            console.log(txid);
+            for (let { hash, nIn } of inps) {
+                if (unspendable.hasOwnProperty(hash))
+                    if (unspendable[hash]!.hasOwnProperty(nIn)) {
+                        let obj: Record<number, null> = Object.fromEntries(
+                            Array.from({ length }, () => 0).map((v, a) => [
+                                a,
+                                null,
+                            ])
+                        );
+                        unspendable[txid] = obj;
+
+                        changed = true;
+                        state[txid] = 'Impossible';
+                        delete mutable_state[txid];
+                        break;
+                    }
+            }
+        }
+    } while (changed);
+
+    console.log('FINAL UNSPEND', unspendable);
+    return state;
+}
 function derive_state(
     state: Record<TXID, Status | null>,
     cm: ContractModel
@@ -60,7 +148,7 @@ function derive_state(
         if (!status) throw new Error('All Statuses Are Expected to be Present');
         let conf: TransactionState;
         if (!status) conf = 'Unknown';
-        else if (isNaN(status.confirmations)) conf = 'Unknown';
+        else if (status.confirmations === null) conf = 'Unknown';
         else if (status.confirmations > 0) conf = 'Confirmed';
         else if (status.confirmations === 0) conf = 'InMempool';
         else if (status.confirmations < 0) conf = 'Impossible';
@@ -119,6 +207,9 @@ function derive_state(
             }
         }
     } while (any_changed);
+    for (let u of unknown) {
+        memo[u.txid] = 'Unknown';
+    }
     return memo;
 }
 
@@ -187,49 +278,12 @@ export class BitcoinNodeManager {
             return;
         }
         let status = await this.get_transaction_status(contract);
-        let state = derive_state(status, this.props.current_contract);
-        console.log(state);
+        let state = compute_impossible(
+            derive_state(status, this.props.current_contract),
+            this.props.current_contract
+        );
         store.dispatch(load_status({ status, state }));
-        //if (is_tx_confirmed.length > 0) {
-        //    this.props.current_contract.map_contract_model(
-        //        new Set(
-        //            is_tx_confirmed
-        //                .filter((t) => t.confirmations === 0)
-        //                .map((t) => t.txid)
-        //        ),
-        //        this.props.model,
-        //        'InMempool'
-        //    );
-        //    this.props.current_contract.map_contract_model(
-        //        new Set(
-        //            is_tx_confirmed
-        //                .filter((t) => t.confirmations > 0)
-        //                .map((t) => t.txid)
-        //        ),
-        //        this.props.model,
-        //        'Confirmed'
-        //    );
-        //    this.props.current_contract.map_contract_model(
-        //        new Set(
-        //            is_tx_confirmed
-        //                .filter((t) => t.confirmations < 0)
-        //                .map((t) => t.txid)
-        //        ),
-        //        this.props.model,
-        //        'Impossible'
-        //    );
-        //    const limbo_txs: Set<TXID> = new Set(
-        //        is_tx_confirmed.filter((t) => !t.exists).map((t) => t.txid)
-        //    );
-        //    this.props.current_contract.map_contract_model(
-        //        limbo_txs,
-        //        this.props.model,
-        //        'Unknown'
-        //    );
-        //    for (let limbo_tx of limbo_txs) {
-        //        update_broadcastable(contract, limbo_tx);
-        //    }
-        //}
+
         if (this.mounted) {
             const freq = selectNodePollFreq(store.getState());
             const period = clamp(freq ?? 0, 5, 60 * 5);
@@ -331,12 +385,12 @@ export class BitcoinNodeManager {
                     if ('code' in txdata) {
                         s[1] = {
                             txid: txids[idx]!,
-                            confirmations: NaN,
+                            confirmations: null,
                         };
                     } else {
                         s[1] = {
                             txid: txdata.txid,
-                            confirmations: txdata.confirmations,
+                            confirmations: txdata.confirmations ?? null,
                         };
                     }
                     s[0] = s[1].txid;
