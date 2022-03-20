@@ -664,9 +664,6 @@ export class ContractModel extends ContractBase {
         this.txn_models = txn_models;
         this.txid_map = txid_map;
         this.continuations = continuations;
-
-        this.utxo_models.forEach((u) => u.setContractModel(this));
-        this.txn_models.forEach((t) => t.setContractModel(this));
     }
     should_update() {
         return this.checkable;

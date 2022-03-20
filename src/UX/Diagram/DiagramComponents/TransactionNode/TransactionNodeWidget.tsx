@@ -171,10 +171,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                         <TitleName>Transaction</TitleName>
                         <TitleName>{opts.name}</TitleName>
                     </Title>
-                    <ConfirmationWidget
-                        t={opts.txn.getId()}
-                        cm={props.node.getOptions().model}
-                    />
+                    <ConfirmationWidget t={opts.txn.getId()} />
                     <Title color={color_render} textColor={text_color}>
                         <TitleName>{purpose}</TitleName>
                     </Title>

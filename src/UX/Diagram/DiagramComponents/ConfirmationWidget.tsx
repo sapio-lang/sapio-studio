@@ -6,7 +6,7 @@ import { selectStatus } from '../../../Data/DataSlice';
 import { useSelector } from 'react-redux';
 import { ContractModel } from '../../../Data/ContractManager';
 
-export function ConfirmationWidget(props: { t: TXID; cm: ContractModel }) {
+export function ConfirmationWidget(props: { t: TXID }) {
     const status = useSelector(selectStatus(props.t));
     const theme = useTheme();
     switch (status) {

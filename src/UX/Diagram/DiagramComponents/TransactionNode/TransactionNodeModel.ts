@@ -19,7 +19,6 @@ export type TransactionState =
     | 'Unknown'
     | 'Impossible';
 export interface TransactionNodeModelOptions extends BasePositionModelOptions {
-    model: ContractModel;
     name: string;
     color: string;
     confirmed: TransactionState;
@@ -59,11 +58,6 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         });
         this.portsOut = [];
         this.portsIn = [];
-    }
-
-    setContractModel(arg0: ContractModel): void {
-        this.options.model = arg0;
-        this.fireEvent({ model: this.options.color }, 'modelChanged');
     }
     setColor(color: string) {
         this.options.color = color;

@@ -15,7 +15,6 @@ import { TransactionState } from '../TransactionNode/TransactionNodeModel';
 import { ContractModel } from '../../../../Data/ContractManager';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
-    model: ContractModel;
     name: string;
     color: string;
     amount: number;
@@ -57,10 +56,6 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         });
         this.portsOut = [];
         this.portsIn = [];
-    }
-    setContractModel(arg0: ContractModel): void {
-        this.options.model = arg0;
-        this.fireEvent({ model: this.options.color }, 'modelChanged');
     }
     sync() {
         this.fireEvent({}, 'sync');

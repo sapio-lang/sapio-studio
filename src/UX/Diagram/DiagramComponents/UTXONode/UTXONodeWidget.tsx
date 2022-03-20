@@ -214,10 +214,7 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                         <TitleName>{props.node.getOptions().name}</TitleName>
                     </Title>
                     {is_continuable}
-                    <ConfirmationWidget
-                        t={props.node.getOptions().txid}
-                        cm={props.node.getOptions().model}
-                    />
+                    <ConfirmationWidget t={props.node.getOptions().txid} />
                     <Title color={color} textColor={textColor}>
                         <TitleName>{PrettyAmount(amount)}</TitleName>
                     </Title>
