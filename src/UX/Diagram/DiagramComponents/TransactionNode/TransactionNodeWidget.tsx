@@ -7,7 +7,7 @@ import { DiagramEngine } from '@projectstorm/react-diagrams-core';
 import * as _ from 'lodash';
 import * as React from 'react';
 import './Ants.css';
-import { TransactionNodeModel } from './TransactionNodeModel';
+import { TransactionNodeModel, TransactionState } from './TransactionNodeModel';
 import Color from 'color';
 import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
@@ -15,6 +15,7 @@ import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { useTheme } from '@mui/material';
 import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
+import { ConfirmationWidget } from '../ConfirmationWidget';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
@@ -101,12 +102,6 @@ export interface DefaultNodeProps {
     node: TransactionNodeModel;
     engine: DiagramEngine;
 }
-interface IState {
-    is_reachable: boolean;
-    is_confirmed: boolean;
-    color: string;
-    purpose: string;
-}
 
 /**
  * Default node that models the CustomNodeModel. It creates two columns
@@ -114,8 +109,8 @@ interface IState {
  */
 export function TransactionNodeWidget(props: DefaultNodeProps) {
     const selected_entity_id: EntityType = useSelector(selectEntityToView);
-    const [is_confirmed, setConfirmed] = React.useState(
-        props.node.isConfirmed()
+    const [confirmation_state, setConfirmed] = React.useState(
+        props.node.confirmation()
     );
     const opts = props.node.getOptions();
     const [color, setColor] = React.useState(opts.color);
@@ -124,7 +119,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
         (opts.txn as Bitcoin.Transaction).getId()
     );
     React.useEffect(() => {
-        props.node.registerConfirmed((b: boolean) => setConfirmed(b));
+        props.node.registerConfirmed((b: TransactionState) => setConfirmed(b));
         const h = props.node.registerListener({
             colorChanged: (e: BaseEvent) => {
                 setColor(opts.color);
@@ -151,17 +146,6 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
     let color_render = Color(color).alpha(0.2).toString();
     const theme = useTheme();
     const text_color = theme.palette.text.primary;
-    const is_conf = is_confirmed ? null : (
-        <div
-            style={{
-                background: theme.palette.warning.light,
-                color: theme.palette.warning.contrastText,
-                textAlign: 'center',
-            }}
-        >
-            UNCONFIRMED
-        </div>
-    );
 
     const is_selected =
         selected_entity_id[0] === 'TXN' &&
@@ -181,7 +165,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
             <Node
                 data-default-node-name={opts.name}
                 selected={is_selected}
-                confirmed={is_confirmed}
+                confirmed={confirmation_state === 'Confirmed'}
                 background={opts.color}
                 className={
                     (is_reachable ? 'reachable' : 'unreachable') +
@@ -193,7 +177,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                         <TitleName>Transaction</TitleName>
                         <TitleName>{opts.name}</TitleName>
                     </Title>
-                    {is_conf}
+                    <ConfirmationWidget t={confirmation_state} />
                     <Title color={color_render} textColor={text_color}>
                         <TitleName>{purpose}</TitleName>
                     </Title>

@@ -17,6 +17,8 @@ import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import { useTheme } from '@mui/material';
 import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
 import { selectContinuation } from '../../../ContractCreator/ContractCreatorSlice';
+import { TransactionState } from '../TransactionNode/TransactionNodeModel';
+import { ConfirmationWidget } from '../ConfirmationWidget';
 const white = Color('white').toString();
 const black = Color('black').toString();
 const yellow = Color('yellow').fade(0.2).toString();
@@ -135,18 +137,20 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
     const is_reachable = useSelector(selectIsReachable)(
         props.node.getOptions().txid
     );
-    const [is_confirmed, setConfirmed] = React.useState(
-        props.node.isConfirmed()
+    const [confirmation_state, setConfirmed] = React.useState(
+        props.node.confirmation()
     );
     const [amount, setAmount] = React.useState(props.node.getAmount());
     React.useEffect(() => {
-        props.node.registerConfirmedCallback((b: boolean) => setConfirmed(b));
+        props.node.registerConfirmedCallback((b: TransactionState) =>
+            setConfirmed(b)
+        );
         const l = props.node.registerListener({
             sync: (e: BaseEvent) =>
                 setAmount((props.node as UTXOModel).getAmount()),
         });
         return () => {
-            props.node.registerConfirmedCallback((b: boolean) => {});
+            props.node.registerConfirmedCallback((b: TransactionState) => {});
             props.node.deregisterListener(l);
         };
     });
@@ -183,17 +187,6 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
             </PortsBottom>
         );
 
-    const is_conf = is_confirmed ? null : (
-        <div
-            style={{
-                background: theme.palette.warning.light,
-                color: theme.palette.warning.contrastText,
-                textAlign: 'center',
-            }}
-        >
-            UNCONFIRMED
-        </div>
-    );
     const is_continuable = !has_continuations ? null : (
         <div
             style={{
@@ -222,14 +215,14 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                     data-default-utxonode-name={props.node.getOptions().name}
                     key={id}
                     selected={is_selected}
-                    confirmed={is_confirmed}
+                    confirmed={confirmation_state === 'Confirmed'}
                     className={reachable_cl}
                 >
                     <Title color={color} textColor={textColor}>
                         <TitleName>{props.node.getOptions().name}</TitleName>
                     </Title>
                     {is_continuable}
-                    {is_conf}
+                    <ConfirmationWidget t={confirmation_state} />
                     <Title color={color} textColor={textColor}>
                         <TitleName>{PrettyAmount(amount)}</TitleName>
                     </Title>

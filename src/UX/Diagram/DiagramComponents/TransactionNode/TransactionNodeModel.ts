@@ -10,13 +10,20 @@ import { Transaction } from 'bitcoinjs-lib';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import { DefaultPortModel } from '@projectstorm/react-diagrams';
 
+export type TransactionState =
+    | 'Confirmed'
+    | 'InMempool'
+    | 'NotBroadcastable'
+    | 'Broadcastable'
+    | 'Unknown'
+    | 'Impossible';
 export interface TransactionNodeModelOptions extends BasePositionModelOptions {
     name: string;
     color: string;
-    confirmed: boolean;
+    confirmed: TransactionState;
     is_reachable: boolean;
     reachable_cb: (b: boolean) => void;
-    confirmed_cb: (b: boolean) => void;
+    confirmed_cb: (b: TransactionState) => void;
     txn: Transaction;
     purpose: string;
 }
@@ -61,14 +68,17 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         this.fireEvent({ purpose }, 'purposeChanged');
     }
 
-    setConfirmed(opt: boolean) {
+    setConfirmed(opt: TransactionState) {
         this.options.confirmed = opt;
         this.options.confirmed_cb(opt);
     }
-    registerConfirmed(f: (b: boolean) => void) {
+    registerConfirmed(f: (b: TransactionState) => void) {
         this.options.confirmed_cb = f;
     }
     isConfirmed(): boolean {
+        return this.options.confirmed === 'Confirmed';
+    }
+    confirmation(): TransactionState {
         return this.options.confirmed;
     }
     setReachable(b: boolean) {

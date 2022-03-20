@@ -16,6 +16,7 @@ import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
 import { store } from '../Store/store';
 import { set_continuations } from '../UX/ContractCreator/ContractCreatorSlice';
+import { TransactionState } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 export type NodeColorT = ['NodeColor', string];
 export const NodeColor = {
     new(c: string): NodeColorT {
@@ -634,7 +635,11 @@ export class ContractBase {
         this.txid_map = TXIDAndWTXIDMap.new();
         this.continuations = {};
     }
-    process_finality(is_final: Array<string>, model: any) {
+    map_contract_model(
+        set: Iterable<TXID>,
+        model: any,
+        value: TransactionState
+    ): void {
         console.log('called empty');
         throw 'Called Empty';
     }
@@ -680,17 +685,21 @@ export class ContractModel extends ContractBase {
             ] ?? null
         );
     }
-    process_finality(is_final: Array<string>, model: any) {
-        // TODO: Reimplement in terms of WTXID
-        is_final.forEach((txid) => {
+    map_contract_model(
+        set: Iterable<TXID>,
+        model: any,
+        value: TransactionState
+    ): void {
+        for (let txid of set) {
             const m: TransactionModel | undefined =
                 TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid);
             if (m) {
-                m.setConfirmed(true);
-                m.utxo_models.forEach((m) => m.setConfirmed(true));
-                m.consume_inputs(this.inputs_map, model);
+                m.setConfirmed(value);
+                m.utxo_models.forEach((m) => m.setConfirmed(value));
+                if (value === 'Confirmed')
+                    m.consume_inputs(this.inputs_map, model);
             }
-        });
+        }
     }
     reachable_at_time(
         max_time: number,

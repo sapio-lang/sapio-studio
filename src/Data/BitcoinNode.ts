@@ -11,6 +11,8 @@ import { store } from '../Store/store';
 
 type TXID = string;
 
+export type Status = { txid: TXID; confirmations: number; exists: boolean };
+
 export function call(method: string, args: any) {
     return fetch(method, {
         method: 'post',
@@ -27,30 +29,43 @@ interface IProps {
 }
 export function update_broadcastable(
     current_contract: ContractModel,
-    confirmed_txs: Set<TXID>
+    limbo_tx: TXID
 ) {
-    current_contract.txn_models.forEach((tm) => {
-        const already_confirmed = confirmed_txs.has(tm.get_txid());
-        const inputs_not_locals = tm.tx.ins.every(
-            (inp: Input) =>
-                !TXIDAndWTXIDMap.has_by_txid(
-                    current_contract.txid_map,
-                    hash_to_hex(inp.hash)
-                )
+    const tm = TXIDAndWTXIDMap.get_by_txid_s(
+        current_contract.txid_map,
+        limbo_tx
+    );
+    if (!tm) {
+        throw new Error(
+            `Invariant Error: ${limbo_tx} must exist in contract model`
         );
-        const all_inputs_confirmed = tm.tx.ins.every((inp: Input) =>
-            confirmed_txs.has(hash_to_hex(inp.hash))
+    }
+    const is_broadcastable = tm.tx.ins.every((inp: Input) => {
+        const tmi = TXIDAndWTXIDMap.get_by_txid_s(
+            current_contract.txid_map,
+            hash_to_hex(inp.hash)
         );
-        if (already_confirmed) {
-            tm.set_broadcastable(false);
-        } else if (inputs_not_locals) {
-            tm.set_broadcastable(true);
-        } else if (all_inputs_confirmed) {
-            tm.set_broadcastable(true);
-        } else {
-            tm.set_broadcastable(false);
+        switch (tmi?.confirmation()) {
+            // means "external", assumed to be confirmed
+            case undefined:
+            case 'Confirmed':
+            case 'InMempool':
+                return true;
+            // in these cases, something else must be broadcast first.
+            // note: no parent at this phase could go from Unknown -> Confirmed
+            // since that was handled earlier.
+            case 'Impossible':
+            case 'Broadcastable':
+            case 'NotBroadcastable':
+            case 'Unknown':
+                return false;
         }
     });
+    if (is_broadcastable) {
+        tm.setConfirmed('Broadcastable');
+    } else {
+        tm.setConfirmed('NotBroadcastable');
+    }
 }
 
 interface ICommand {
@@ -117,15 +132,46 @@ export class BitcoinNodeManager {
             );
             return;
         }
-        const is_tx_confirmed = await this.get_confirmed_transactions(contract);
-        let confirmed_txs: Set<TXID> = new Set();
-        is_tx_confirmed.forEach((txid: TXID) => confirmed_txs.add(txid));
+        const is_tx_confirmed = await this.get_transaction_status(contract);
         if (is_tx_confirmed.length > 0) {
-            update_broadcastable(contract, confirmed_txs);
-            this.props.current_contract.process_finality(
-                is_tx_confirmed,
-                this.props.model
+            this.props.current_contract.map_contract_model(
+                new Set(
+                    is_tx_confirmed
+                        .filter((t) => t.confirmations === 0)
+                        .map((t) => t.txid)
+                ),
+                this.props.model,
+                'InMempool'
             );
+            this.props.current_contract.map_contract_model(
+                new Set(
+                    is_tx_confirmed
+                        .filter((t) => t.confirmations > 0)
+                        .map((t) => t.txid)
+                ),
+                this.props.model,
+                'Confirmed'
+            );
+            this.props.current_contract.map_contract_model(
+                new Set(
+                    is_tx_confirmed
+                        .filter((t) => t.confirmations < 0)
+                        .map((t) => t.txid)
+                ),
+                this.props.model,
+                'Impossible'
+            );
+            const limbo_txs: Set<TXID> = new Set(
+                is_tx_confirmed.filter((t) => !t.exists).map((t) => t.txid)
+            );
+            this.props.current_contract.map_contract_model(
+                limbo_txs,
+                this.props.model,
+                'Unknown'
+            );
+            for (let limbo_tx of limbo_txs) {
+                update_broadcastable(contract, limbo_tx);
+            }
         }
         if (this.mounted) {
             const freq = selectNodePollFreq(store.getState());
@@ -199,25 +245,39 @@ export class BitcoinNodeManager {
         });
     }
     // get info about transactions
-    async get_confirmed_transactions(
+    async get_transaction_status(
         current_contract: ContractModel
-    ): Promise<Array<TXID>> {
+    ): Promise<Array<Status>> {
         // TODO: SHould query by WTXID
         const txids = current_contract.txn_models
-            .filter((tm) => tm.is_broadcastable())
-            .map((tm) => {
-                return {
-                    method: 'getrawtransaction',
-                    parameters: [tm.get_txid(), true],
-                };
-            });
+            //            .filter((tm) => tm.is_broadcastable())
+            .map((tm) => tm.get_txid());
+        const req = txids.map((txid) => {
+            return {
+                method: 'getrawtransaction',
+                parameters: [txid, true],
+            };
+        });
         if (txids.length > 0) {
-            let results = await this.executeBatch(txids);
+            let results: (
+                | Status
+                | { message: string; code: number; name: string }
+            )[] = await this.executeBatch(req);
+            console.log(results);
             // TODO: Configure Threshold
-            results = results
-                .filter((txdata: any) => txdata.confirmations ?? 0 > 1)
-                .map((txdata: any) => txdata.txid);
-            return results;
+            return results.map((txdata, idx: number) => {
+                let s: Status;
+                if ('code' in txdata) {
+                    s = { txid: txids[idx]!, confirmations: -1, exists: false };
+                } else {
+                    s = {
+                        txid: txdata.txid,
+                        confirmations: txdata.confirmations,
+                        exists: true,
+                    };
+                }
+                return s;
+            });
         }
         return [];
     }

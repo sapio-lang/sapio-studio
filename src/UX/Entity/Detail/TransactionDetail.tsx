@@ -35,7 +35,9 @@ export function TransactionDetail(props: TransactionDetailProps) {
         Color(props.entity.getOptions().color)
     );
     React.useEffect(() => {
-        props.entity.set_broadcastable_hook((b) => setBroadcastable(b));
+        props.entity.set_broadcastable_hook((b) =>
+            setBroadcastable(b === 'Broadcastable')
+        );
 
         return () => props.entity.setSelected(false);
     });

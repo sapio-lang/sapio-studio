@@ -6,7 +6,10 @@ import {
 import * as Bitcoin from 'bitcoinjs-lib';
 import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
-import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
+import {
+    TransactionNodeModel,
+    TransactionState,
+} from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 import { HasKeys, InputMap, InputMapT, TXID } from '../util';
 import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
 import {
@@ -26,8 +29,8 @@ export class TransactionModel
     extends TransactionNodeModel
     implements ViewableEntityInterface, HasKeys
 {
-    broadcastable: boolean;
-    broadcastable_hook: (b: boolean) => void;
+    broadcastable: TransactionState;
+    broadcastable_hook: (b: TransactionState) => void;
     tx: Bitcoin.Transaction;
     witness_set: SigningDataStore;
     utxo_models: Array<UTXOModel>;
@@ -41,7 +44,7 @@ export class TransactionModel
         utxo_labels: Array<UTXOFormatData | null>
     ) {
         super({}, tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
-        this.broadcastable = false;
+        this.broadcastable = 'NotBroadcastable';
         this.broadcastable_hook = (b) => {};
         this.tx = tx;
         this.utxo_models = [];
@@ -112,14 +115,17 @@ export class TransactionModel
             model.removeLink(x as unknown as LinkModel)
         );
     }
-    is_broadcastable() {
+    is_broadcastable(): boolean {
+        return this.broadcastable === 'Broadcastable';
+    }
+    confirmation(): TransactionState {
         return this.broadcastable;
     }
-    set_broadcastable(b = true) {
+    set_broadcastable(b: TransactionState = 'Broadcastable') {
         if (b !== this.broadcastable) this.broadcastable_hook(b);
         this.broadcastable = b;
     }
-    set_broadcastable_hook(hook = (b: boolean) => {}) {
+    set_broadcastable_hook(hook = (b: TransactionState) => {}) {
         this.broadcastable_hook = hook;
     }
 

@@ -11,16 +11,17 @@ import _ from 'lodash';
 import { TransactionModel } from '../../../../Data/Transaction';
 import { TXID } from '../../../../util';
 import { OutputPortModel } from '../OutputLink';
+import { TransactionState } from '../TransactionNode/TransactionNodeModel';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
     name: string;
     color: string;
     amount: number;
-    confirmed: boolean;
+    confirmed: TransactionState;
     reachable: boolean;
     txid: TXID;
     index: number;
-    confirmed_callback: (b: boolean) => void;
+    confirmed_callback: (b: TransactionState) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
@@ -38,7 +39,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         name?: string,
         color?: string,
         amount?: number,
-        confirmed: boolean = false
+        confirmed: TransactionState = 'NotBroadcastable'
     ) {
         color = color || 'red';
         super({
@@ -61,14 +62,17 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     getAmount(): number {
         return this.getOptions().amount;
     }
-    setConfirmed(opt: boolean) {
+    setConfirmed(opt: TransactionState) {
         this.options.confirmed = opt;
         this.options.confirmed_callback(opt);
     }
     isConfirmed(): boolean {
+        return this.options.confirmed === 'Confirmed';
+    }
+    confirmation(): TransactionState {
         return this.options.confirmed;
     }
-    registerConfirmedCallback(f: (b: boolean) => void) {
+    registerConfirmedCallback(f: (b: TransactionState) => void) {
         this.options.confirmed_callback = f;
     }
 
