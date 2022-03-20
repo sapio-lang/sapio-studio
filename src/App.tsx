@@ -118,7 +118,11 @@ function App() {
     model.current.setLocked(true);
     const model_manager = React.useRef(new ModelManager(model.current));
     engine.setModel(model.current);
-    const load_new_contract = (data: Data | null, counter: number) => {
+    const load_new_contract = (
+        data: Data | null,
+        counter: number,
+        trigger_relayout: () => void
+    ) => {
         if (contract.current !== null) {
             if (contract.current[1] === counter) {
                 return contract.current[0];
@@ -129,6 +133,7 @@ function App() {
         contract.current = [new_contract, counter];
         model_manager.current.load(new_contract);
         dispatch(set_continuations(new_contract.continuations));
+        trigger_relayout();
         return new_contract;
     };
     return (
@@ -142,7 +147,11 @@ function App() {
 function AppInner(props: {
     engine: DiagramEngine;
     model: DiagramModel;
-    load_new_contract: (data: Data | null, counter: number) => ContractModel;
+    load_new_contract: (
+        data: Data | null,
+        counter: number,
+        trigger_relayout: () => void
+    ) => ContractModel;
 }) {
     const bitcoin_node_bar = useSelector(selectStatusBar);
     const { engine, model, load_new_contract } = props;
@@ -156,8 +165,16 @@ function AppInner(props: {
     // engine is the processor for graphs, we need to load all our custom factories here
 
     const [contract_data, counter] = useSelector(selectContract);
+    const [read_trigger_relayout, set_trigger_relayout] = React.useState(0);
+    function trigger_relayout() {
+        set_trigger_relayout(read_trigger_relayout + 1);
+    }
     // keep the same contract model around as long as we can...
-    const current_contract = load_new_contract(contract_data, counter);
+    const current_contract = load_new_contract(
+        contract_data,
+        counter,
+        trigger_relayout
+    );
 
     const is_showing = useSelector(selectShowing);
 
@@ -181,12 +198,15 @@ function AppInner(props: {
                 )?.utxo_models[entity_id[1].nIn] ?? null
             );
     }, [entity_id]);
-    React.useEffect(() => {
-        if (is_showing !== 'ContractCreator') return;
+    const relayout = () => {
         dag.redistribute(props.model);
         engine.repaintCanvas();
         setTimeout(() => engine.zoomToFit(), 0);
-    }, [counter]);
+    };
+    React.useEffect(() => {
+        // TODO: Just check that canvas exists
+        if (is_showing === 'ContractViewer') relayout();
+    }, [read_trigger_relayout]);
     /* current_contract is the contract loaded into the
      * backend logic interface */
     /* state.current_contract is the contract loaded into the
@@ -274,18 +294,13 @@ function AppInner(props: {
             );
             break;
     }
-    console.log(showing);
     return (
         <ThemeProvider theme={theme}>
             <div className="App">
                 <div className="App-area">
                     <div className="area-nav">
                         <AppNavbar
-                            relayout={() => {
-                                dag.redistribute(props.model);
-                                engine.repaintCanvas();
-                                setTimeout(() => engine.zoomToFit(), 0);
-                            }}
+                            relayout={relayout}
                             bitcoin_node_manager={bitcoin_node_manager}
                             contract={current_contract}
                             toggle_timing_simulator={() =>
