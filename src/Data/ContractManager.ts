@@ -75,24 +75,24 @@ type ProcessedData = {
 };
 
 function preprocess_data(data: Data): PreProcessedData {
-    let psbts = [];
-    let txns = [];
-    let txn_labels = [];
-    let txn_colors = [];
-    let utxo_labels = [];
-    let continuations: Record<string, Record<string, Continuation>> = {};
+    const psbts = [];
+    const txns = [];
+    const txn_labels = [];
+    const txn_colors = [];
+    const utxo_labels = [];
+    const continuations: Record<string, Record<string, Continuation>> = {};
     for (const [path, entry] of Object.entries(data.program)) {
         let txid: null | TXID = null;
-        let idx: number = 0;
+        let idx = 0;
         for (const [j, tx] of entry.txs.entries()) {
             psbts.push(Bitcoin.Psbt.fromBase64(tx.linked_psbt.psbt));
-            let txn = Bitcoin.Transaction.fromHex(tx.linked_psbt.hex);
+            const txn = Bitcoin.Transaction.fromHex(tx.linked_psbt.hex);
             if (txid === null) {
                 txid = txid_buf_to_string(txn.ins[0]!.hash);
                 idx = txn.ins[0]!.index;
             } else {
-                let c_txid = txid_buf_to_string(txn.ins[0]!.hash);
-                let c_idx = txn.ins[0]!.index;
+                const c_txid = txid_buf_to_string(txn.ins[0]!.hash);
+                const c_idx = txn.ins[0]!.index;
                 if (c_txid !== txid || c_idx !== idx) {
                     throw 'Sapio Invariant Error: All txs in a group should spend the same coin';
                 }
@@ -107,7 +107,7 @@ function preprocess_data(data: Data): PreProcessedData {
                 tx.linked_psbt.output_metadata ?? new Array(txn.outs.length)
             );
         }
-        let k: string = `${txid}:${idx}`;
+        const k = `${txid}:${idx}`;
         continuations[k] = entry.continue_apis;
     }
 
@@ -145,8 +145,8 @@ function process_txn_models(
     txn_colors: Array<NodeColorT>,
     utxo_labels: Array<Array<UTXOFormatData | null>>
 ): [TXIDAndWTXIDMapT<TransactionModel>, Array<TransactionModel>] {
-    let txid_map: TXIDAndWTXIDMapT<TransactionModel> = TXIDAndWTXIDMap.new();
-    let txn_models: Array<TransactionModel> = [];
+    const txid_map: TXIDAndWTXIDMapT<TransactionModel> = TXIDAndWTXIDMap.new();
+    const txn_models: Array<TransactionModel> = [];
     assert.equal(txns.length, psbts.length);
     assert.equal(txns.length, txn_labels.length);
     assert.equal(txns.length, txn_colors.length);
@@ -175,11 +175,11 @@ function process_txn_models(
                 let label = '';
                 let color = NodeColor.new('');
                 let utxo_label: Array<UTXOFormatData | null> = [];
-                let all_witnesses: SigningDataStore = {
+                const all_witnesses: SigningDataStore = {
                     witnesses: [],
                     psbts: [],
                 };
-                for (let {
+                for (const {
                     tx,
                     psbt,
                     txn_label,
@@ -189,8 +189,8 @@ function process_txn_models(
                     utxo_label = utxo_labels;
                     color = txn_color;
                     label = txn_label;
-                    let witnesses: Buffer[][] = [];
-                    for (let input of tx.ins) {
+                    const witnesses: Buffer[][] = [];
+                    for (const input of tx.ins) {
                         witnesses.push(input.witness);
                     }
 
@@ -198,9 +198,9 @@ function process_txn_models(
                     all_witnesses.psbts.push(psbt);
                 }
                 assert.ok(txn_group.length > 0); // because group call must be true
-                let base_txn: Bitcoin.Transaction = txn_group[0]!.tx.clone();
+                const base_txn: Bitcoin.Transaction = txn_group[0]!.tx.clone();
                 // Clear out witness Data
-                for (let input of base_txn.ins) {
+                for (const input of base_txn.ins) {
                     input.witness = [];
                 }
                 const txn_model = new TransactionModel(
@@ -215,7 +215,7 @@ function process_txn_models(
             }
         )
         .value();
-    let to_create: Map<TXID, Array<Bitcoin.TxInput>> = new Map();
+    const to_create: Map<TXID, Array<Bitcoin.TxInput>> = new Map();
     for (const txn_model of txn_models) {
         for (const input of txn_model.tx.ins) {
             const txid = txid_buf_to_string(input.hash);
@@ -224,14 +224,14 @@ function process_txn_models(
             }
             // Doesn't matter if already exists in array!
             // De Duplicated later...
-            let inps = to_create.get(txid) || [];
+            const inps = to_create.get(txid) || [];
             inps.push(input);
             to_create.set(txid, inps);
         }
     }
     to_create.forEach((inps, txid) => {
         const mock_txn = new Bitcoin.Transaction();
-        let n_outputs: number =
+        const n_outputs: number =
             1 +
             _.chain(inps)
                 .map((el) => el.index)
@@ -266,7 +266,7 @@ function process_utxo_models(
     inputs_map: InputMapT<TransactionModel>
 ): Array<UTXOModel> {
     const to_add: Array<UTXOModel> = [];
-    for (let m_txn of txn_models) {
+    for (const m_txn of txn_models) {
         assert.equal(m_txn.utxo_models.length, m_txn.tx.outs.length);
         _.zip(m_txn.utxo_models, m_txn.tx.outs).forEach(
             ([opt_utxo_model, opt_out], output_index) => {
@@ -347,16 +347,16 @@ function process_utxo_models(
     return to_add;
 }
 function process_data(obj: PreProcessedData): ProcessedData {
-    let { psbts, txns, txn_colors, txn_labels, utxo_labels, continuations } =
+    const { psbts, txns, txn_colors, txn_labels, utxo_labels, continuations } =
         obj;
-    let [txid_map, txn_models] = process_txn_models(
+    const [txid_map, txn_models] = process_txn_models(
         psbts,
         txns,
         txn_labels,
         txn_colors,
         utxo_labels
     );
-    let inputs_map = process_inputs_map(txn_models);
+    const inputs_map = process_inputs_map(txn_models);
 
     const to_add = process_utxo_models(txn_models, inputs_map);
     return {
@@ -390,7 +390,7 @@ function get_base_transactions(
     txns: Array<TransactionModel>,
     map: TXIDAndWTXIDMapT<TransactionModel>
 ): Array<TransactionModel> {
-    let phantoms = txns.filter((item) => {
+    const phantoms = txns.filter((item) => {
         return (
             -1 ===
             item.tx.ins.findIndex((inp) =>
@@ -519,8 +519,8 @@ function compute_timing(txn: TransactionModel): TimingData {
     });
     // before 500M, it is a height. After a UNIX time.
     const is_height = locktime < 500_000_000;
-    let unlock_time = locktime_enabled && !is_height ? locktime : 0;
-    let unlock_height = locktime_enabled && is_height ? locktime : 0;
+    const unlock_time = locktime_enabled && !is_height ? locktime : 0;
+    const unlock_height = locktime_enabled && is_height ? locktime : 0;
     cache_entry = [
         {
             unlock_time,
@@ -649,15 +649,15 @@ export class ContractBase {
 }
 
 export class ContractModel extends ContractBase {
-    checkable: boolean = false;
+    checkable = false;
     constructor();
     constructor(obj: Data);
     constructor(obj?: Data) {
         super();
         this.checkable = true;
         if (obj === undefined) return;
-        let new_obj = preprocess_data(obj);
-        let { inputs_map, utxo_models, txn_models, txid_map, continuations } =
+        const new_obj = preprocess_data(obj);
+        const { inputs_map, utxo_models, txn_models, txid_map, continuations } =
             process_data(new_obj);
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
@@ -670,7 +670,7 @@ export class ContractModel extends ContractBase {
     }
     // TODO: Return an Array of UTXOModels
     lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
-        let txid_s = txid_buf_to_string(txid);
+        const txid_s = txid_buf_to_string(txid);
         return (
             TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid_s)?.utxo_models[
                 n

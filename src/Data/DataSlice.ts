@@ -45,8 +45,8 @@ export const settingsSlice = createSlice({
 
 export const { load_status } = settingsSlice.actions;
 
-let memo_number = -1;
-let g_memo: Record<number, Record<TXID, TransactionState>> = {};
+const memo_number = -1;
+const g_memo: Record<number, Record<TXID, TransactionState>> = {};
 
 export const selectStatus: (
     txid: TXID

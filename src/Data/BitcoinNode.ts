@@ -51,7 +51,7 @@ export function update_broadcastable(
 
 function swap(arr: any[], i: number, j: number) {
     if (i === j) return;
-    let x = arr[i];
+    const x = arr[i];
     arr[i] = arr[j];
     arr[j] = x;
 }
@@ -60,14 +60,14 @@ function compute_impossible(
     state: Record<TXID, TransactionState>,
     cm: ContractModel
 ): Record<TXID, TransactionState> {
-    let unspendable: Record<TXID, Record<number, null>> = {};
-    for (let [txid, status] of Object.entries(state)) {
+    const unspendable: Record<TXID, Record<number, null>> = {};
+    for (const [txid, status] of Object.entries(state)) {
         if (status !== 'Confirmed' && status !== 'Impossible') continue;
         const tmi = TXIDAndWTXIDMap.get_by_txid_s(cm.txid_map, txid)!;
         if (!tmi) throw new Error('All txns Are Expected to be Present');
         // If confirmed, all inputs are now unspendable
         if (status === 'Confirmed') {
-            for (let inp of tmi.getOptions().txn.ins) {
+            for (const inp of tmi.getOptions().txn.ins) {
                 const hash = hash_to_hex(inp.hash);
                 if (unspendable.hasOwnProperty(hash))
                     unspendable[hash]![inp.index] = null;
@@ -79,7 +79,7 @@ function compute_impossible(
         // If impossible, all outputs are now unspendable
         if (status === 'Impossible') {
             const length = tmi.getOptions().txn.outs.length;
-            let obj: Record<number, null> = Object.fromEntries(
+            const obj: Record<number, null> = Object.fromEntries(
                 Array.from({ length }, () => 0).map((v, a) => [a, null])
             );
             console.log('OBJ', obj);
@@ -88,7 +88,7 @@ function compute_impossible(
     }
     console.log('INITIAL UNSPEND', unspendable);
     let changed;
-    let mutable_state: Record<TXID, { length: number; inps: Outpoint[] }> =
+    const mutable_state: Record<TXID, { length: number; inps: Outpoint[] }> =
         Object.fromEntries(
             Object.entries(state)
                 .filter(([_, f]) => !(f === 'Confirmed' || f === 'Impossible'))
@@ -113,12 +113,12 @@ function compute_impossible(
     do {
         console.log('FILTERING ', mutable_state);
         changed = false;
-        for (let [txid, { length, inps }] of Object.entries(mutable_state)) {
+        for (const [txid, { length, inps }] of Object.entries(mutable_state)) {
             console.log(txid);
-            for (let { hash, nIn } of inps) {
+            for (const { hash, nIn } of inps) {
                 if (unspendable.hasOwnProperty(hash))
                     if (unspendable[hash]!.hasOwnProperty(nIn)) {
-                        let obj: Record<number, null> = Object.fromEntries(
+                        const obj: Record<number, null> = Object.fromEntries(
                             Array.from({ length }, () => 0).map((v, a) => [
                                 a,
                                 null,
@@ -142,9 +142,9 @@ function derive_state(
     state: Record<TXID, Status | null>,
     cm: ContractModel
 ): Record<TXID, TransactionState> {
-    let memo: Record<TXID, TransactionState> = {};
-    let unknown: Array<Status> = [];
-    for (let [txid, status] of Object.entries(state)) {
+    const memo: Record<TXID, TransactionState> = {};
+    const unknown: Array<Status> = [];
+    for (const [txid, status] of Object.entries(state)) {
         if (!status) throw new Error('All Statuses Are Expected to be Present');
         let conf: TransactionState;
         if (!status) conf = 'Unknown';
@@ -163,14 +163,14 @@ function derive_state(
         any_changed = false;
         const n = unknown.length;
         for (let l = 0; l < n; ++l) {
-            let status = unknown.pop()!;
+            const status = unknown.pop()!;
 
             const tmi = TXIDAndWTXIDMap.get_by_txid_s(
                 cm.txid_map,
                 status.txid
             )!;
             let should_next_tx = false;
-            for (let inp of tmi.tx.ins) {
+            for (const inp of tmi.tx.ins) {
                 switch (memo[hash_to_hex(inp.hash)]) {
                     case undefined: {
                         unknown.push(status);
@@ -207,7 +207,7 @@ function derive_state(
             }
         }
     } while (any_changed);
-    for (let u of unknown) {
+    for (const u of unknown) {
         memo[u.txid] = 'Unknown';
     }
     return memo;
@@ -277,8 +277,8 @@ export class BitcoinNodeManager {
             );
             return;
         }
-        let status = await this.get_transaction_status(contract);
-        let state = compute_impossible(
+        const status = await this.get_transaction_status(contract);
+        const state = compute_impossible(
             derive_state(status, this.props.current_contract),
             this.props.current_contract
         );
@@ -370,7 +370,7 @@ export class BitcoinNodeManager {
             };
         });
         if (txids.length > 0) {
-            let results: (
+            const results: (
                 | Status
                 | { message: string; code: number; name: string }
             )[] = await this.executeBatch(req);
@@ -378,7 +378,7 @@ export class BitcoinNodeManager {
             // TODO: Configure Threshold
             return Object.fromEntries(
                 results.map((txdata, idx: number) => {
-                    let s: [TXID | undefined, Status | undefined] = [
+                    const s: [TXID | undefined, Status | undefined] = [
                         undefined,
                         undefined,
                     ];

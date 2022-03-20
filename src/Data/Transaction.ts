@@ -50,13 +50,13 @@ export class TransactionModel
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = NodeColor.clone(color);
             NodeColor.fade(subcolor);
-            let metadata = utxo_labels[y] || {
+            const metadata = utxo_labels[y] || {
                 color: NodeColor.get(subcolor),
                 label: name,
             };
             // TODO: Get rid of assertion
             const out: Bitcoin.TxOutput = tx.outs[y] as Bitcoin.TxOutput;
-            let utxo = new UTXOModel(
+            const utxo = new UTXOModel(
                 new UTXOMetaData(out.script, out.value, tx, y),
                 metadata.label,
                 NodeColor.new(metadata.color),
