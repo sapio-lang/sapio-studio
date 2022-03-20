@@ -16,13 +16,13 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import { useTheme } from '@mui/material';
 import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
 import { ConfirmationWidget } from '../ConfirmationWidget';
+import { ContractModel } from '../../../../Data/ContractManager';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
 export const Node = styled.div<{
     background: string;
     selected: boolean;
-    confirmed: boolean;
 }>`
     color: white;
     overflow: visible;
@@ -109,9 +109,6 @@ export interface DefaultNodeProps {
  */
 export function TransactionNodeWidget(props: DefaultNodeProps) {
     const selected_entity_id: EntityType = useSelector(selectEntityToView);
-    const [confirmation_state, setConfirmed] = React.useState(
-        props.node.confirmation()
-    );
     const opts = props.node.getOptions();
     const [color, setColor] = React.useState(opts.color);
     const [purpose, setPurpose] = React.useState(opts.purpose);
@@ -119,7 +116,6 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
         (opts.txn as Bitcoin.Transaction).getId()
     );
     React.useEffect(() => {
-        props.node.registerConfirmed((b: TransactionState) => setConfirmed(b));
         const h = props.node.registerListener({
             colorChanged: (e: BaseEvent) => {
                 setColor(opts.color);
@@ -130,7 +126,6 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
         });
         return () => {
             props.node.deregisterListener(h);
-            props.node.registerConfirmed(() => {});
         };
     });
     const generatePort = (port: DefaultPortModel) => {
@@ -149,7 +144,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
 
     const is_selected =
         selected_entity_id[0] === 'TXN' &&
-        selected_entity_id[1] === props.node.getOptions().txn.getId();
+        selected_entity_id[1] === opts.txn.getId();
 
     return (
         <>
@@ -165,7 +160,6 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
             <Node
                 data-default-node-name={opts.name}
                 selected={is_selected}
-                confirmed={confirmation_state === 'Confirmed'}
                 background={opts.color}
                 className={
                     (is_reachable ? 'reachable' : 'unreachable') +
@@ -177,7 +171,10 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                         <TitleName>Transaction</TitleName>
                         <TitleName>{opts.name}</TitleName>
                     </Title>
-                    <ConfirmationWidget t={confirmation_state} />
+                    <ConfirmationWidget
+                        t={opts.txn.getId()}
+                        cm={props.node.getOptions().model}
+                    />
                     <Title color={color_render} textColor={text_color}>
                         <TitleName>{purpose}</TitleName>
                     </Title>

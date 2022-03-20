@@ -16,31 +16,18 @@ import {
 } from '../../../util';
 import Color from 'color';
 import { select_utxo } from '../EntitySlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Divider, TextField, Typography } from '@mui/material';
 import { PSBTDetail } from './PSBTDetail';
+import { selectStatus } from '../../../Data/DataSlice';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
 }
-interface IState {
-    broadcastable: boolean;
-    color: Color;
-}
 export function TransactionDetail(props: TransactionDetailProps) {
-    const [broadcastable, setBroadcastable] = React.useState(
-        props.entity.is_broadcastable()
-    );
     const [color, setColor] = React.useState(
         Color(props.entity.getOptions().color)
     );
-    React.useEffect(() => {
-        props.entity.set_broadcastable_hook((b) =>
-            setBroadcastable(b === 'Broadcastable')
-        );
-
-        return () => props.entity.setSelected(false);
-    });
 
     const onchange_color = (e: ChangeEvent<HTMLInputElement>) => {
         let color = new Color(e.target.value);

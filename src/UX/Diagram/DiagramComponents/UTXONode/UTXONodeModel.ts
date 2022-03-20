@@ -12,8 +12,10 @@ import { TransactionModel } from '../../../../Data/Transaction';
 import { TXID } from '../../../../util';
 import { OutputPortModel } from '../OutputLink';
 import { TransactionState } from '../TransactionNode/TransactionNodeModel';
+import { ContractModel } from '../../../../Data/ContractManager';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
+    model: ContractModel;
     name: string;
     color: string;
     amount: number;
@@ -56,24 +58,15 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         this.portsOut = [];
         this.portsIn = [];
     }
+    setContractModel(arg0: ContractModel): void {
+        this.options.model = arg0;
+        this.fireEvent({ model: this.options.color }, 'modelChanged');
+    }
     sync() {
         this.fireEvent({}, 'sync');
     }
     getAmount(): number {
         return this.getOptions().amount;
-    }
-    setConfirmed(opt: TransactionState) {
-        this.options.confirmed = opt;
-        this.options.confirmed_callback(opt);
-    }
-    isConfirmed(): boolean {
-        return this.options.confirmed === 'Confirmed';
-    }
-    confirmation(): TransactionState {
-        return this.options.confirmed;
-    }
-    registerConfirmedCallback(f: (b: TransactionState) => void) {
-        this.options.confirmed_callback = f;
     }
 
     doClone(lookupTable: {}, clone: any) {

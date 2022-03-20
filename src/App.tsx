@@ -194,18 +194,16 @@ function AppInner(props: {
      * TODO: Can these be unified?
      */
     /* Bitcoin Node State */
-    const bitcoin_node_manager = React.useRef(
-        new BitcoinNodeManager({
+    let dest_ref = React.useRef<BitcoinNodeManager | null>(null);
+    const bitcoin_node_manager = React.useMemo(() => {
+        if (dest_ref.current) dest_ref.current.destroy();
+        let n = new BitcoinNodeManager({
             model: model,
             current_contract: current_contract,
-        })
-    );
-
-    React.useEffect(() => {
-        return () => {
-            bitcoin_node_manager.current.destroy();
-        };
-    });
+        });
+        dest_ref.current = n;
+        return n;
+    }, [current_contract]);
 
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
@@ -237,7 +235,7 @@ function AppInner(props: {
             showing = (
                 <Paper className="wallet-container" square={true}>
                     <Wallet
-                        bitcoin_node_manager={bitcoin_node_manager.current}
+                        bitcoin_node_manager={bitcoin_node_manager}
                     ></Wallet>
                 </Paper>
             );
@@ -288,7 +286,7 @@ function AppInner(props: {
                                 engine.repaintCanvas();
                                 setTimeout(() => engine.zoomToFit(), 0);
                             }}
-                            bitcoin_node_manager={bitcoin_node_manager.current}
+                            bitcoin_node_manager={bitcoin_node_manager}
                             contract={current_contract}
                             toggle_timing_simulator={() =>
                                 set_timing_simulator_enabled(
@@ -302,13 +300,13 @@ function AppInner(props: {
                 <div hidden={!bitcoin_node_bar}>
                     {bitcoin_node_bar && (
                         <BitcoinStatusBar
-                            api={bitcoin_node_manager.current}
+                            api={bitcoin_node_manager}
                         ></BitcoinStatusBar>
                     )}
                 </div>
             </div>
             <Modals
-                bitcoin_node_manager={bitcoin_node_manager.current}
+                bitcoin_node_manager={bitcoin_node_manager}
                 contract={current_contract}
             />
         </ThemeProvider>

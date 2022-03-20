@@ -29,8 +29,6 @@ export class TransactionModel
     extends TransactionNodeModel
     implements ViewableEntityInterface, HasKeys
 {
-    broadcastable: TransactionState;
-    broadcastable_hook: (b: TransactionState) => void;
     tx: Bitcoin.Transaction;
     witness_set: SigningDataStore;
     utxo_models: Array<UTXOModel>;
@@ -44,8 +42,6 @@ export class TransactionModel
         utxo_labels: Array<UTXOFormatData | null>
     ) {
         super({}, tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
-        this.broadcastable = 'NotBroadcastable';
-        this.broadcastable_hook = (b) => {};
         this.tx = tx;
         this.utxo_models = [];
         this.utxo_links = [];
@@ -114,19 +110,6 @@ export class TransactionModel
         this.input_links.map((x) =>
             model.removeLink(x as unknown as LinkModel)
         );
-    }
-    is_broadcastable(): boolean {
-        return this.broadcastable === 'Broadcastable';
-    }
-    confirmation(): TransactionState {
-        return this.broadcastable;
-    }
-    set_broadcastable(b: TransactionState = 'Broadcastable') {
-        if (b !== this.broadcastable) this.broadcastable_hook(b);
-        this.broadcastable = b;
-    }
-    set_broadcastable_hook(hook = (b: TransactionState) => {}) {
-        this.broadcastable_hook = hook;
     }
 
     consume_inputs(inputs_map: InputMapT<TransactionModel>, model: any) {

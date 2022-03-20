@@ -29,7 +29,7 @@ const yellow = Color('yellow').fade(0.2).toString();
 // height: 0;
 // width: 150%;
 // padding-bottom:150%;
-const UTXONode = styled.div<{ selected: boolean; confirmed: boolean }>`
+const UTXONode = styled.div<{ selected: boolean }>`
     color: white;
     overflow: hidden;
     font-size: 11px;
@@ -137,20 +137,13 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
     const is_reachable = useSelector(selectIsReachable)(
         props.node.getOptions().txid
     );
-    const [confirmation_state, setConfirmed] = React.useState(
-        props.node.confirmation()
-    );
     const [amount, setAmount] = React.useState(props.node.getAmount());
     React.useEffect(() => {
-        props.node.registerConfirmedCallback((b: TransactionState) =>
-            setConfirmed(b)
-        );
         const l = props.node.registerListener({
             sync: (e: BaseEvent) =>
                 setAmount((props.node as UTXOModel).getAmount()),
         });
         return () => {
-            props.node.registerConfirmedCallback((b: TransactionState) => {});
             props.node.deregisterListener(l);
         };
     });
@@ -215,14 +208,16 @@ export function UTXONodeWidget(props: DefaultNodeProps) {
                     data-default-utxonode-name={props.node.getOptions().name}
                     key={id}
                     selected={is_selected}
-                    confirmed={confirmation_state === 'Confirmed'}
                     className={reachable_cl}
                 >
                     <Title color={color} textColor={textColor}>
                         <TitleName>{props.node.getOptions().name}</TitleName>
                     </Title>
                     {is_continuable}
-                    <ConfirmationWidget t={confirmation_state} />
+                    <ConfirmationWidget
+                        t={props.node.getOptions().txid}
+                        cm={props.node.getOptions().model}
+                    />
                     <Title color={color} textColor={textColor}>
                         <TitleName>{PrettyAmount(amount)}</TitleName>
                     </Title>

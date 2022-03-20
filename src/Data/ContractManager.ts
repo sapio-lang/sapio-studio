@@ -635,14 +635,6 @@ export class ContractBase {
         this.txid_map = TXIDAndWTXIDMap.new();
         this.continuations = {};
     }
-    map_contract_model(
-        set: Iterable<TXID>,
-        model: any,
-        value: TransactionState
-    ): void {
-        console.log('called empty');
-        throw 'Called Empty';
-    }
 
     lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
         console.log('called empty');
@@ -672,6 +664,9 @@ export class ContractModel extends ContractBase {
         this.txn_models = txn_models;
         this.txid_map = txid_map;
         this.continuations = continuations;
+
+        this.utxo_models.forEach((u) => u.setContractModel(this));
+        this.txn_models.forEach((t) => t.setContractModel(this));
     }
     should_update() {
         return this.checkable;
@@ -684,22 +679,6 @@ export class ContractModel extends ContractBase {
                 n
             ] ?? null
         );
-    }
-    map_contract_model(
-        set: Iterable<TXID>,
-        model: any,
-        value: TransactionState
-    ): void {
-        for (let txid of set) {
-            const m: TransactionModel | undefined =
-                TXIDAndWTXIDMap.get_by_txid_s(this.txid_map, txid);
-            if (m) {
-                m.setConfirmed(value);
-                m.utxo_models.forEach((m) => m.setConfirmed(value));
-                if (value === 'Confirmed')
-                    m.consume_inputs(this.inputs_map, model);
-            }
-        }
     }
     reachable_at_time(
         max_time: number,
