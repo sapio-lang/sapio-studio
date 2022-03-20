@@ -56,6 +56,8 @@ function swap(arr: any[], i: number, j: number) {
     arr[j] = x;
 }
 
+const hasOwn = (a: Object, b: string | number) =>
+    Object.prototype.hasOwnProperty.call(a, b);
 function compute_impossible(
     state: Record<TXID, TransactionState>,
     cm: ContractModel
@@ -69,7 +71,7 @@ function compute_impossible(
         if (status === 'Confirmed') {
             for (const inp of tmi.getOptions().txn.ins) {
                 const hash = hash_to_hex(inp.hash);
-                if (unspendable.hasOwnProperty(hash))
+                if (hasOwn(unspendable, hash))
                     unspendable[hash]![inp.index] = null;
                 else {
                     unspendable[hash] = { [inp.index]: null };
@@ -86,7 +88,6 @@ function compute_impossible(
             unspendable[txid] = obj;
         }
     }
-    console.log('INITIAL UNSPEND', unspendable);
     let changed;
     const mutable_state: Record<TXID, { length: number; inps: Outpoint[] }> =
         Object.fromEntries(
@@ -111,31 +112,25 @@ function compute_impossible(
                 })
         );
     do {
-        console.log('FILTERING ', mutable_state);
         changed = false;
         for (const [txid, { length, inps }] of Object.entries(mutable_state)) {
             console.log(txid);
             for (const { hash, nIn } of inps) {
-                if (unspendable.hasOwnProperty(hash))
-                    if (unspendable[hash]!.hasOwnProperty(nIn)) {
-                        const obj: Record<number, null> = Object.fromEntries(
-                            Array.from({ length }, () => 0).map((v, a) => [
-                                a,
-                                null,
-                            ])
-                        );
-                        unspendable[txid] = obj;
+                if (hasOwn(unspendable[hash] ?? {}, nIn)) {
+                    const obj: Record<number, null> = Object.fromEntries(
+                        Array.from({ length }, () => 0).map((v, a) => [a, null])
+                    );
+                    unspendable[txid] = obj;
 
-                        changed = true;
-                        state[txid] = 'Impossible';
-                        delete mutable_state[txid];
-                        break;
-                    }
+                    changed = true;
+                    state[txid] = 'Impossible';
+                    delete mutable_state[txid];
+                    break;
+                }
             }
         }
     } while (changed);
 
-    console.log('FINAL UNSPEND', unspendable);
     return state;
 }
 function derive_state(
