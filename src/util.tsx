@@ -90,17 +90,20 @@ export interface OutpointInterface {
 }
 type OpaqueKey = string;
 // Maps an Input (TXID) to all Spenders
-export type InputMapT<T> = Record<OpaqueKey, Record<number, Array<T>>>;
+const input_map_s = Symbol('InputMapT');
+export type InputMapT<T> = {
+    [input_map_s]: Record<OpaqueKey, Record<number, Array<T>>>;
+};
 export const InputMap = {
     new<T>(): InputMapT<T> {
-        return {};
+        return { [input_map_s]: {} };
     },
     add<T>(that: InputMapT<T>, t: OutpointInterface, model: T) {
         const key1 = txid_buf_to_string(t.hash);
-        let vals = that[key1];
+        let vals = that[input_map_s][key1];
         if (vals === undefined) {
             vals = {};
-            that[key1] = vals;
+            that[input_map_s][key1] = vals;
         }
 
         let vals2 = vals[t.index];
@@ -114,14 +117,14 @@ export const InputMap = {
         that: InputMapT<T>,
         t: string
     ): Record<number, Array<T>> | null {
-        return that[t] ?? null;
+        return that[input_map_s][t] ?? null;
     },
     get<T>(that: InputMapT<T>, t: OutpointInterface): Array<T> | null {
-        return that[txid_buf_to_string(t.hash)]?.[t.index] ?? null;
+        return that[input_map_s][txid_buf_to_string(t.hash)]?.[t.index] ?? null;
     },
 
     get_txid_s<T>(that: InputMapT<T>, t: string, i: number): Array<T> | null {
-        return that[t]?.[i] ?? null;
+        return that[input_map_s][t]?.[i] ?? null;
     },
 };
 
@@ -204,34 +207,37 @@ export interface HasKeys {
     get_txid: () => TXID;
 }
 // Maps an TXID to a Transaction,
-export type TXIDAndWTXIDMapT<K extends HasKeys> = Record<TXID, K>;
+const txid_map_s = Symbol('TXIDAndWTXIDMapT');
+export type TXIDAndWTXIDMapT<K extends HasKeys> = {
+    [txid_map_s]: Record<TXID, K>;
+};
 export const TXIDAndWTXIDMap = {
     new() {
-        return {};
+        return { [txid_map_s]: {} };
     },
     add<K extends HasKeys>(that: TXIDAndWTXIDMapT<K>, t: K): void {
-        that[t.get_txid()] = t;
+        that[txid_map_s][t.get_txid()] = t;
     },
     get_by_txid<K extends HasKeys>(
         that: TXIDAndWTXIDMapT<K>,
         t: K
     ): K | undefined {
-        return that[t.get_txid()];
+        return that[txid_map_s][t.get_txid()];
     },
     get_by_txid_s<K extends HasKeys>(
         that: TXIDAndWTXIDMapT<K>,
         t: TXID
     ): K | undefined {
-        return that[t];
+        return that[txid_map_s][t];
     },
     delete_by_txid<K extends HasKeys>(that: TXIDAndWTXIDMapT<K>, t: K) {
-        delete that[t.get_txid()];
+        delete that[txid_map_s][t.get_txid()];
     },
     has_by_txid<K extends HasKeys>(
         that: TXIDAndWTXIDMapT<K>,
         t: TXID
     ): boolean {
-        return that.hasOwnProperty(t);
+        return that[txid_map_s].hasOwnProperty(t);
     },
 };
 
