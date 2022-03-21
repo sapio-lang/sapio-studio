@@ -10,55 +10,54 @@ import { OutputDetail } from './OutputDetail';
 import _ from 'lodash';
 import './TransactionDetail.css';
 import {
+    hash_to_hex,
+    outpoint_to_id,
     sequence_convert,
     time_to_pretty_string,
-    txid_buf_to_string,
 } from '../../../util';
 import Color from 'color';
-import { select_utxo } from '../EntitySlice';
-import { useDispatch } from 'react-redux';
+import {
+    selectTXNColor,
+    selectTXNPurpose,
+    set_custom_color,
+    set_custom_purpose,
+} from '../EntitySlice';
+import { useDispatch, useSelector } from 'react-redux';
 import { Divider, TextField, Typography } from '@mui/material';
 import { PSBTDetail } from './PSBTDetail';
 interface TransactionDetailProps {
     entity: TransactionModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
 }
-interface IState {
-    broadcastable: boolean;
-    color: Color;
-}
 export function TransactionDetail(props: TransactionDetailProps) {
-    const [broadcastable, setBroadcastable] = React.useState(
-        props.entity.is_broadcastable()
-    );
-    const [color, setColor] = React.useState(
-        Color(props.entity.getOptions().color)
-    );
-    React.useEffect(() => {
-        props.entity.set_broadcastable_hook((b) => setBroadcastable(b));
-
-        return () => props.entity.setSelected(false);
-    });
-
-    const onchange_color = (e: ChangeEvent<HTMLInputElement>) => {
-        let color = new Color(e.target.value);
-        props.entity.setColor(color.hex());
-        setColor(color);
-    };
-    const onchange_purpose = (e: ChangeEvent<HTMLInputElement>) => {
-        props.entity.setPurpose(e.target.value);
-    };
     const dispatch = useDispatch();
+    const opts = props.entity.getOptions();
+    const txid = opts.txn.getId();
+    const color = useSelector(selectTXNColor(txid)) ?? Color(opts.color);
+    const purpose = useSelector(selectTXNPurpose(txid)) ?? opts.purpose;
+
     const outs = props.entity.utxo_models.map((o, i) => (
-        <OutputDetail txoutput={o} />
+        <OutputDetail
+            key={`${o.getOptions().txid}:${o.getOptions().index}`}
+            txoutput={o}
+        />
     ));
     const ins = props.entity.tx.ins.map((inp, i) => {
         const witnesses: Buffer[][] =
             props.entity.witness_set.witnesses.flatMap((w) => {
-                let b: Buffer[] | undefined = w[i];
+                const b: Buffer[] | undefined = w[i];
                 return b ? [b] : [];
             });
-        return <InputDetail txinput={inp} witnesses={witnesses} />;
+        return (
+            <InputDetail
+                key={outpoint_to_id({
+                    hash: hash_to_hex(inp.hash),
+                    nIn: inp.index,
+                })}
+                txinput={inp}
+                witnesses={witnesses}
+            />
+        );
     });
 
     const {
@@ -79,15 +78,20 @@ export function TransactionDetail(props: TransactionDetailProps) {
             ? 'Block #' + locktime.toString()
             : as_date.toUTCString() + ' MTP';
     // note missing horizontal
+    const onchange_color = (e: string) => {
+        const color = new Color(e);
+        dispatch(set_custom_color([txid, color.hex()]));
+    };
+    const onchange_purpose = (e: string) => {
+        dispatch(set_custom_purpose([txid, e]));
+    };
     const inner_debounce_color = _.debounce(onchange_color, 30);
     const debounce_color = (e: ChangeEvent<HTMLInputElement>) => {
-        e.persist();
-        inner_debounce_color(e);
+        inner_debounce_color(e.target.value);
     };
     const inner_debounce_purpose = _.debounce(onchange_purpose, 30);
     const debounce_purpose = (e: ChangeEvent<HTMLInputElement>) => {
-        e.persist();
-        inner_debounce_purpose(e);
+        inner_debounce_purpose(e.target.value);
     };
     const absolute_lock_jsx =
         !locktime_enable || locktime === 0 ? null : (
@@ -100,7 +104,7 @@ export function TransactionDetail(props: TransactionDetailProps) {
         <div className="TransactionDetail">
             <TextField
                 label="Purpose"
-                defaultValue={props.entity.getOptions().purpose}
+                defaultValue={purpose}
                 onChange={debounce_purpose}
             />
             <TextField
@@ -142,7 +146,7 @@ function compute_relative_timelocks(tx: Transaction) {
     for (const sequence of sequences) {
         if (sequence === Bitcoin.Transaction.DEFAULT_SEQUENCE) continue;
         locktime_enable = true;
-        let { relative_time, relative_height } = sequence_convert(sequence);
+        const { relative_time, relative_height } = sequence_convert(sequence);
         greatest_relative_time = Math.max(
             relative_time,
             greatest_relative_time

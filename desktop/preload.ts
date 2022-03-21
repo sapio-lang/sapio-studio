@@ -33,6 +33,11 @@ function load_contract_list() {
     return ipcRenderer.invoke('sapio::load_contract_list');
 }
 
+const psbt = {
+    finalize: (psbt: string) => {
+        return ipcRenderer.invoke('sapio::psbt::finalize', psbt);
+    },
+};
 const compiled_contracts = {
     list: () => {
         return ipcRenderer.invoke('sapio::compiled_contracts::list');
@@ -124,6 +129,7 @@ const api = {
         open_contract_from_file,
         load_contract_list,
         compiled_contracts,
+        psbt,
     },
     emulator: {
         kill: emulator_kill,

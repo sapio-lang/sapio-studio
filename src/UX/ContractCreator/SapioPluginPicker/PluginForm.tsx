@@ -5,7 +5,7 @@ import { ISubmitEvent } from '@rjsf/core';
 import { logo_image, Plugin } from './PluginTile';
 import { create_contract_of_type, switch_showing } from '../../../AppSlice';
 import { useDispatch } from 'react-redux';
-import { showAPIs, show_apis } from '../ContractCreatorSlice';
+import { show_apis } from '../ContractCreatorSlice';
 import './PluginForm.css';
 
 interface PluginFormProps {
@@ -14,7 +14,7 @@ interface PluginFormProps {
 export function PluginForm(props: PluginFormProps) {
     const dispatch = useDispatch();
     const handleSubmit = async (event: ISubmitEvent<any>, type: string) => {
-        let formData = event.formData;
+        const formData = event.formData;
         dispatch(switch_showing('ContractViewer'));
         await dispatch(create_contract_of_type(type, JSON.stringify(formData)));
         dispatch(show_apis(false));

@@ -2,7 +2,7 @@ import { clamp } from 'lodash';
 import React from 'react';
 import { BitcoinNodeManager } from './BitcoinNode';
 import './BitcoinStatusBar.css';
-import { AppBar, Toolbar, Typography, useTheme } from '@mui/material';
+import { Paper, Toolbar, Typography, useTheme } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectNodePollFreq } from '../Settings/SettingsSlice';
 interface BitcoinStatusBarProps {
@@ -56,12 +56,11 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
     const headers = blockchaininfo?.headers ?? '?';
     const blocks = blockchaininfo?.headers ?? '?';
     return (
-        <AppBar
-            position="fixed"
+        <Paper
+            square={true}
             sx={{
                 top: 'auto',
                 bottom: 0,
-                zIndex: (theme) => theme.zIndex.drawer + 1,
             }}
             className="BitcoinStatusBar Draggable"
             style={{
@@ -84,6 +83,6 @@ export function BitcoinStatusBar(props: BitcoinStatusBarProps) {
                     </div>
                 </Typography>
             </Toolbar>
-        </AppBar>
+        </Paper>
     );
 }

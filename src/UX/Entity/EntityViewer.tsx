@@ -17,7 +17,6 @@ import {
 } from './EntitySlice';
 import './EntityViewer.css';
 import Color from 'color';
-export interface ViewableEntityInterface {}
 
 interface CurrentylViewedEntityProps {
     current_contract: ContractModel;

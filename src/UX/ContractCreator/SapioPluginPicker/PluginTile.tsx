@@ -1,5 +1,4 @@
 import React from 'react';
-import { PluginSelector } from './PluginSelector';
 import { JSONSchema7 } from 'json-schema';
 import { useDispatch } from 'react-redux';
 import { select_api } from '../ContractCreatorSlice';

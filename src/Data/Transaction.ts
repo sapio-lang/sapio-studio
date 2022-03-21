@@ -7,8 +7,7 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
-import { HasKeys, InputMap, InputMapT, TXID } from '../util';
-import { ViewableEntityInterface } from '../UX/Entity/EntityViewer';
+import { HasKeys, TXID } from '../util';
 import {
     NodeColorT,
     UTXOFormatData,
@@ -20,14 +19,8 @@ import { UTXOMetaData, UTXOModel } from './UTXO';
 import { TransactionData } from './ContractManager';
 import { select_txn } from '../UX/Entity/EntitySlice';
 import { store } from '../Store/store';
-import { SelectedEvent } from '../App';
 
-export class TransactionModel
-    extends TransactionNodeModel
-    implements ViewableEntityInterface, HasKeys
-{
-    broadcastable: boolean;
-    broadcastable_hook: (b: boolean) => void;
+export class TransactionModel extends TransactionNodeModel implements HasKeys {
     tx: Bitcoin.Transaction;
     witness_set: SigningDataStore;
     utxo_models: Array<UTXOModel>;
@@ -41,8 +34,6 @@ export class TransactionModel
         utxo_labels: Array<UTXOFormatData | null>
     ) {
         super({}, tx.getId().substr(0, 16), name, NodeColor.get(color), tx);
-        this.broadcastable = false;
-        this.broadcastable_hook = (b) => {};
         this.tx = tx;
         this.utxo_models = [];
         this.utxo_links = [];
@@ -50,14 +41,13 @@ export class TransactionModel
         this.witness_set = all_witnesses;
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = NodeColor.clone(color);
-            NodeColor.fade(subcolor);
-            let metadata = utxo_labels[y] || {
+            const metadata = utxo_labels[y] || {
                 color: NodeColor.get(subcolor),
                 label: name,
             };
             // TODO: Get rid of assertion
             const out: Bitcoin.TxOutput = tx.outs[y] as Bitcoin.TxOutput;
-            let utxo = new UTXOModel(
+            const utxo = new UTXOModel(
                 new UTXOMetaData(out.script, out.value, tx, y),
                 metadata.label,
                 NodeColor.new(metadata.color),
@@ -111,45 +101,6 @@ export class TransactionModel
         this.input_links.map((x) =>
             model.removeLink(x as unknown as LinkModel)
         );
-    }
-    is_broadcastable() {
-        return this.broadcastable;
-    }
-    set_broadcastable(b = true) {
-        if (b !== this.broadcastable) this.broadcastable_hook(b);
-        this.broadcastable = b;
-    }
-    set_broadcastable_hook(hook = (b: boolean) => {}) {
-        this.broadcastable_hook = hook;
-    }
-
-    consume_inputs(inputs_map: InputMapT<TransactionModel>, model: any) {
-        const to_clear: Array<TransactionModel> = [];
-        this.tx.ins.forEach((inp) => {
-            const to_prune = InputMap.get(inputs_map, inp) || [];
-            to_prune.forEach((txn_model) => {
-                if (txn_model.tx !== this.tx) {
-                    txn_model.remove_from_model(model);
-                    to_clear.push(txn_model);
-                }
-            });
-        });
-        while (to_clear.length) {
-            const mtx = to_clear.pop() as TransactionModel;
-            const tx = mtx.tx;
-            // now remove children
-            for (let i = 0; i < tx.outs.length; ++i) {
-                const to_prune: Array<TransactionModel> =
-                    InputMap.get(inputs_map, {
-                        hash: tx.getHash(),
-                        index: i,
-                    }) ?? [];
-                to_prune.forEach((txn_model) =>
-                    txn_model.remove_from_model(model)
-                );
-                to_clear.push(...to_prune);
-            }
-        }
     }
 }
 

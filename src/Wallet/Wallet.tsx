@@ -20,12 +20,9 @@ import {
     GridColumns,
     GridValueGetterParams,
 } from '@mui/x-data-grid';
-import { number } from 'bitcoinjs-lib/types/script';
 import React from 'react';
 import { BitcoinNodeManager } from '../Data/BitcoinNode';
-import { PrettyAmount } from '../util';
 import './Wallet.css';
-import _ from 'lodash';
 import { useDispatch } from 'react-redux';
 import { open_contract_directory, switch_showing } from '../AppSlice';
 
@@ -82,8 +79,8 @@ function ContractList(props: { idx: number; value: number }) {
             cancel = true;
         };
     }, [trigger_now]);
-    let contract_rows = contracts.map((id) => {
-        let [mod, args, time] = id.split('-');
+    const contract_rows = contracts.map((id) => {
+        const [mod, args, time] = id.split('-');
         return {
             id,
             module,
@@ -106,11 +103,13 @@ function ContractList(props: { idx: number; value: number }) {
             width: 80,
             getActions: (params) => [
                 <GridActionsCellItem
+                    key="delete"
                     icon={<Delete />}
                     label="Delete"
                     onClick={() => delete_contract(params.id)}
                 />,
                 <GridActionsCellItem
+                    key="open-folder"
                     icon={<VisibilityIcon />}
                     label="Open"
                     onClick={() => {
@@ -134,8 +133,8 @@ function ContractList(props: { idx: number; value: number }) {
                 <DialogTitle>Confirm Deletion</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Confirm deletion of "{to_delete}"? File will be in your
-                        trash folder.
+                        Confirm deletion of &quot;{to_delete}&quot;? File will
+                        be in your trash folder.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

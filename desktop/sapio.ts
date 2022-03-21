@@ -1,13 +1,12 @@
 import { equal } from 'assert';
 import spawn from 'await-spawn';
-import BufferList from 'bl';
 import {
     ChildProcessWithoutNullStreams,
     spawn as spawnSync,
 } from 'child_process';
 import { JSONSchema7 } from 'json-schema';
 
-import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron';
+import { app, dialog, shell } from 'electron';
 import { sys } from 'typescript';
 import { preferences, sapio_config_file } from './settings';
 import path from 'path';
@@ -45,6 +44,16 @@ class SapioCompiler {
             return { err: e.toString() };
         }
     }
+
+    async psbt_finalize(psbt: string): Promise<Result> {
+        return await SapioCompiler.command([
+            'psbt',
+            'finalize',
+            '--psbt',
+            psbt,
+        ]);
+    }
+
     async show_config(): Promise<Result> {
         return await SapioCompiler.command(['configure', 'show']);
     }
@@ -60,11 +69,11 @@ class SapioCompiler {
         const res = await SapioCompiler.command(['contract', 'list']);
         if ('err' in res) return res;
         const contracts = res.ok;
-        let lines: Array<[string, string]> = contracts
+        const lines: Array<[string, string]> = contracts
             .trim()
             .split(/\r?\n/)
             .map((line: string) => {
-                let v: string[] = line.split(' -- ')!;
+                const v: string[] = line.split(' -- ')!;
                 equal(v.length, 2);
                 return v as [string, string];
             });
@@ -118,7 +127,7 @@ class SapioCompiler {
         > = {};
         equal(lines.length, apis.length);
         equal(lines.length, logos.length);
-        for (var i = 0; i < lines.length; ++i) {
+        for (let i = 0; i < lines.length; ++i) {
             const [name, key] = lines[i]!;
             const api = apis[i]!;
             const logo = logos[i]!;
@@ -144,12 +153,16 @@ class SapioCompiler {
     }
 
     async list_compiled_contracts(): Promise<string[]> {
-        let file = path.join(app.getPath('userData'), 'compiled_contracts');
-        let contracts = await readdir(file, { encoding: 'ascii' });
+        const file = path.join(app.getPath('userData'), 'compiled_contracts');
+        const contracts = await readdir(file, { encoding: 'ascii' });
         return contracts;
     }
     async trash_compiled_contract(s: string): Promise<void> {
-        let file = path.join(app.getPath('userData'), 'compiled_contracts', s);
+        const file = path.join(
+            app.getPath('userData'),
+            'compiled_contracts',
+            s
+        );
         return shell.trashItem(file);
     }
 
@@ -158,13 +171,13 @@ class SapioCompiler {
         args: string
     ): Promise<{ ok: string | null } | { err: string }> {
         let create, created, bound;
-        let args_h = Bitcoin.crypto.sha256(Buffer.from(args)).toString('hex');
+        const args_h = Bitcoin.crypto.sha256(Buffer.from(args)).toString('hex');
         // Unique File Name of Time + Args + Module
-        let fname = `${which.substring(0, 16)}-${args_h.substring(
+        const fname = `${which.substring(0, 16)}-${args_h.substring(
             0,
             16
         )}-${new Date().getTime()}`;
-        let file = path.join(
+        const file = path.join(
             app.getPath('userData'),
             'compiled_contracts',
             fname
@@ -173,11 +186,14 @@ class SapioCompiler {
         await mkdir(file, { recursive: true });
         const write_str = (to: string, data: string) =>
             writeFile(path.join(file, to), data, { encoding: 'utf-8' });
-        let w_arg = write_str('args.json', args);
-        let w_mod = write_str('module.json', JSON.stringify({ module: which }));
-        let sc = await sapio.show_config();
+        const w_arg = write_str('args.json', args);
+        const w_mod = write_str(
+            'module.json',
+            JSON.stringify({ module: which })
+        );
+        const sc = await sapio.show_config();
         if ('err' in sc) return Promise.reject('Error getting config');
-        let w_settings = write_str('settings.json', sc.ok);
+        const w_settings = write_str('settings.json', sc.ok);
 
         Promise.all([w_arg, w_mod, w_settings]);
 
@@ -198,7 +214,7 @@ class SapioCompiler {
             return create;
         }
         created = create.ok;
-        let w_create = write_str('create.json', create.ok);
+        const w_create = write_str('create.json', create.ok);
         Promise.all([w_create]);
         let bind;
         try {
@@ -217,7 +233,7 @@ class SapioCompiler {
             write_str('bind_error.json', JSON.stringify(create));
             return bind;
         }
-        let w_bound = write_str('bound.json', bind.ok);
+        const w_bound = write_str('bound.json', bind.ok);
         await w_bound;
         console.debug(bound);
         return bind;
@@ -227,7 +243,7 @@ class SapioCompiler {
 export const sapio = new SapioCompiler();
 
 let g_emulator: null | ChildProcessWithoutNullStreams = null;
-let g_emulator_log: string = '';
+let g_emulator_log = '';
 
 export function get_emulator_log(): string {
     return g_emulator_log;
@@ -239,7 +255,7 @@ export function start_sapio_oracle(): ChildProcessWithoutNullStreams | null {
         const binary = preferences.data.sapio_cli.sapio_cli;
         const seed = oracle.Enabled.file;
         const iface = oracle.Enabled.interface;
-        let emulator = spawnSync(binary, ['emulator', 'server', seed, iface]);
+        const emulator = spawnSync(binary, ['emulator', 'server', seed, iface]);
         if (emulator) {
             let quit = '';
             emulator.stderr.on('data', (data) => {

@@ -6,7 +6,7 @@ import { LoadHexModal } from './ContractCreator/LoadHexModal';
 import { SapioCompilerModal } from './ContractCreator/SapioCompilerModal';
 import { SaveHexModal } from './ContractCreator/SaveHexModal';
 import { ViewContractModal } from './ContractCreator/ViewContractModal';
-import { close_modal, selectModal } from './ModalSlice';
+import { selectModal } from './ModalSlice';
 
 export function Modals(props: {
     contract: ContractModel;

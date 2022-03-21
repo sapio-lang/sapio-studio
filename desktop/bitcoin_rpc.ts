@@ -14,13 +14,13 @@ async function load_node_from_prefs(): Promise<Client> {
     let split: string[];
     if ('CookieFile' in preferences.data.bitcoin.auth) {
         const cookie = preferences.data.bitcoin.auth.CookieFile;
-        let upw = await readFile(cookie, { encoding: 'utf-8' });
+        const upw = await readFile(cookie, { encoding: 'utf-8' });
         split = upw.split(':');
     } else if ('UserPass' in preferences.data.bitcoin.auth) {
         split = preferences.data.bitcoin.auth.UserPass;
     } else {
         console.log('BROKEN');
-        let client = new Client({
+        const client = new Client({
             network,
             port,
             host,
@@ -28,9 +28,9 @@ async function load_node_from_prefs(): Promise<Client> {
         return client;
     }
     if (split.length === 2) {
-        let username = split[0] ?? '';
-        let password = split[1] ?? '';
-        let client = new Client({
+        const username = split[0] ?? '';
+        const password = split[1] ?? '';
+        const client = new Client({
             network,
             username,
             password,

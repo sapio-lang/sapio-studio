@@ -1,4 +1,4 @@
-import { Collapse, Grid, Paper, Typography } from '@mui/material';
+import { Collapse, Paper } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {
@@ -16,13 +16,12 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import './App.css';
 import {
-    create_contract_of_type,
     load_new_model,
     selectContract,
     selectShowing,
     selectStatusBar,
 } from './AppSlice';
-import { BitcoinNodeManager, update_broadcastable } from './Data/BitcoinNode';
+import { BitcoinNodeManager } from './Data/BitcoinNode';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
 import { ContractModel, Data } from './Data/ContractManager';
 import { ModelManager } from './Data/ModelManager';
@@ -30,11 +29,7 @@ import { SimulationController } from './Data/Simulation';
 import { TransactionModel } from './Data/Transaction';
 import { UTXOModel } from './Data/UTXO';
 import './Glyphs.css';
-import {
-    load_settings,
-    poll_settings,
-    SettingsStateType,
-} from './Settings/SettingsSlice';
+import { poll_settings } from './Settings/SettingsSlice';
 import { TXIDAndWTXIDMap } from './util';
 import { AppNavbar } from './UX/AppNavbar';
 import { set_continuations } from './UX/ContractCreator/ContractCreatorSlice';
@@ -118,18 +113,22 @@ function App() {
     model.current.setLocked(true);
     const model_manager = React.useRef(new ModelManager(model.current));
     engine.setModel(model.current);
-    const load_new_contract = (data: Data | null, counter: number) => {
+    const load_new_contract = (
+        data: Data | null,
+        counter: number,
+        trigger_relayout: () => void
+    ) => {
         if (contract.current !== null) {
             if (contract.current[1] === counter) {
                 return contract.current[0];
             }
         }
         const new_contract = new ContractModel(data ?? { program: {} });
-        update_broadcastable(new_contract, new Set());
         if (contract.current) model_manager.current.unload(contract.current[0]);
         contract.current = [new_contract, counter];
         model_manager.current.load(new_contract);
         dispatch(set_continuations(new_contract.continuations));
+        trigger_relayout();
         return new_contract;
     };
     return (
@@ -143,7 +142,11 @@ function App() {
 function AppInner(props: {
     engine: DiagramEngine;
     model: DiagramModel;
-    load_new_contract: (data: Data | null, counter: number) => ContractModel;
+    load_new_contract: (
+        data: Data | null,
+        counter: number,
+        trigger_relayout: () => void
+    ) => ContractModel;
 }) {
     const bitcoin_node_bar = useSelector(selectStatusBar);
     const { engine, model, load_new_contract } = props;
@@ -157,8 +160,16 @@ function AppInner(props: {
     // engine is the processor for graphs, we need to load all our custom factories here
 
     const [contract_data, counter] = useSelector(selectContract);
+    const [read_trigger_relayout, set_trigger_relayout] = React.useState(0);
+    function trigger_relayout() {
+        set_trigger_relayout(read_trigger_relayout + 1);
+    }
     // keep the same contract model around as long as we can...
-    const current_contract = load_new_contract(contract_data, counter);
+    const current_contract = load_new_contract(
+        contract_data,
+        counter,
+        trigger_relayout
+    );
 
     const is_showing = useSelector(selectShowing);
 
@@ -182,12 +193,15 @@ function AppInner(props: {
                 )?.utxo_models[entity_id[1].nIn] ?? null
             );
     }, [entity_id]);
-    React.useEffect(() => {
-        if (is_showing !== 'ContractCreator') return;
+    const relayout = () => {
         dag.redistribute(props.model);
         engine.repaintCanvas();
         setTimeout(() => engine.zoomToFit(), 0);
-    }, [counter]);
+    };
+    React.useEffect(() => {
+        // TODO: Just check that canvas exists
+        if (is_showing === 'ContractViewer') relayout();
+    }, [read_trigger_relayout]);
     /* current_contract is the contract loaded into the
      * backend logic interface */
     /* state.current_contract is the contract loaded into the
@@ -195,18 +209,16 @@ function AppInner(props: {
      * TODO: Can these be unified?
      */
     /* Bitcoin Node State */
-    const bitcoin_node_manager = React.useRef(
-        new BitcoinNodeManager({
+    const dest_ref = React.useRef<BitcoinNodeManager | null>(null);
+    const bitcoin_node_manager = React.useMemo(() => {
+        if (dest_ref.current) dest_ref.current.destroy();
+        const n = new BitcoinNodeManager({
             model: model,
             current_contract: current_contract,
-        })
-    );
-
-    React.useEffect(() => {
-        return () => {
-            bitcoin_node_manager.current.destroy();
-        };
-    });
+        });
+        dest_ref.current = n;
+        return n;
+    }, [current_contract]);
 
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
@@ -238,7 +250,7 @@ function AppInner(props: {
             showing = (
                 <Paper className="wallet-container" square={true}>
                     <Wallet
-                        bitcoin_node_manager={bitcoin_node_manager.current}
+                        bitcoin_node_manager={bitcoin_node_manager}
                     ></Wallet>
                 </Paper>
             );
@@ -277,19 +289,14 @@ function AppInner(props: {
             );
             break;
     }
-    console.log(showing);
     return (
         <ThemeProvider theme={theme}>
             <div className="App">
                 <div className="App-area">
                     <div className="area-nav">
                         <AppNavbar
-                            relayout={() => {
-                                dag.redistribute(props.model);
-                                engine.repaintCanvas();
-                                setTimeout(() => engine.zoomToFit(), 0);
-                            }}
-                            bitcoin_node_manager={bitcoin_node_manager.current}
+                            relayout={relayout}
+                            bitcoin_node_manager={bitcoin_node_manager}
                             contract={current_contract}
                             toggle_timing_simulator={() =>
                                 set_timing_simulator_enabled(
@@ -300,17 +307,16 @@ function AppInner(props: {
                     </div>
                     <div className="area-inner">{showing}</div>
                 </div>
-
-                <Collapse in={bitcoin_node_bar}>
-                    <div>
+                <div hidden={!bitcoin_node_bar}>
+                    {bitcoin_node_bar && (
                         <BitcoinStatusBar
-                            api={bitcoin_node_manager.current}
+                            api={bitcoin_node_manager}
                         ></BitcoinStatusBar>
-                    </div>
-                </Collapse>
+                    )}
+                </div>
             </div>
             <Modals
-                bitcoin_node_manager={bitcoin_node_manager.current}
+                bitcoin_node_manager={bitcoin_node_manager}
                 contract={current_contract}
             />
         </ThemeProvider>

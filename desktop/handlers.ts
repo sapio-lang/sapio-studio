@@ -13,7 +13,7 @@ import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
 import path from 'path';
 export default function (window: BrowserWindow) {
     ipcMain.handle('bitcoin::command', async (event, arg) => {
-        let node = await get_bitcoin_node();
+        const node = await get_bitcoin_node();
         try {
             return { ok: await node.command(arg) };
         } catch (r: any) {
@@ -42,7 +42,7 @@ export default function (window: BrowserWindow) {
         return contracts;
     });
     ipcMain.handle('sapio::create_contract', async (event, [which, args]) => {
-        let result = await sapio.create_contract(which, args);
+        const result = await sapio.create_contract(which, args);
         return result;
     });
 
@@ -82,6 +82,9 @@ export default function (window: BrowserWindow) {
     });
     ipcMain.handle('sapio::compiled_contracts::trash', (event, file_name) => {
         return sapio.trash_compiled_contract(file_name);
+    });
+    ipcMain.handle('sapio::psbt::finalize', (event, psbt) => {
+        return sapio.psbt_finalize(psbt);
     });
 
     ipcMain.handle(
@@ -125,7 +128,7 @@ export default function (window: BrowserWindow) {
                 }
             );
 
-            let name = JSON.parse(mod).which;
+            const name = JSON.parse(mod).which;
 
             return { ok: { data, name, args } };
         }
@@ -135,7 +138,7 @@ export default function (window: BrowserWindow) {
     });
 
     ipcMain.handle('save_psbt', async (event, psbt) => {
-        let path = await dialog.showSaveDialog(window, {
+        const path = await dialog.showSaveDialog(window, {
             filters: [
                 {
                     extensions: ['psbt'],
@@ -148,7 +151,7 @@ export default function (window: BrowserWindow) {
         }
     });
     ipcMain.handle('fetch_psbt', async (event, psbt) => {
-        let path = await dialog.showOpenDialog(window, {
+        const path = await dialog.showOpenDialog(window, {
             filters: [
                 {
                     extensions: ['psbt'],
@@ -161,7 +164,7 @@ export default function (window: BrowserWindow) {
         }
     });
     ipcMain.handle('save_contract', async (event, psbt) => {
-        let path = await dialog.showSaveDialog(window, {
+        const path = await dialog.showSaveDialog(window, {
             filters: [{ extensions: ['json'], name: 'Sapio Contract Object' }],
         });
         if (path.filePath) {
@@ -180,7 +183,7 @@ export default function (window: BrowserWindow) {
         return preferences.data[which];
     });
     ipcMain.handle('select_filename', async (event) => {
-        let path = await dialog.showOpenDialog(window);
+        const path = await dialog.showOpenDialog(window);
         if (path && path.filePaths.length == 1) {
             return path.filePaths[0]!;
         }

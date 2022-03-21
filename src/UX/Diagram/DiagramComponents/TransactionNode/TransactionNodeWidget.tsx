@@ -9,19 +9,23 @@ import * as React from 'react';
 import './Ants.css';
 import { TransactionNodeModel } from './TransactionNodeModel';
 import Color from 'color';
-import { BaseEvent } from '@projectstorm/react-canvas-core';
 import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { useTheme } from '@mui/material';
-import { EntityType, selectEntityToView } from '../../../Entity/EntitySlice';
+import {
+    EntityType,
+    selectEntityToView,
+    selectTXNColor,
+    selectTXNPurpose,
+} from '../../../Entity/EntitySlice';
+import { ConfirmationWidget } from '../ConfirmationWidget';
 //import { css } from '@emotion/core';
 
 //border: solid 2px ${p => (p.selected ? 'rgb(0,192,255)' : 'white')};
 export const Node = styled.div<{
     background: string;
     selected: boolean;
-    confirmed: boolean;
 }>`
     color: white;
     overflow: visible;
@@ -101,12 +105,6 @@ export interface DefaultNodeProps {
     node: TransactionNodeModel;
     engine: DiagramEngine;
 }
-interface IState {
-    is_reachable: boolean;
-    is_confirmed: boolean;
-    color: string;
-    purpose: string;
-}
 
 /**
  * Default node that models the CustomNodeModel. It creates two columns
@@ -114,30 +112,14 @@ interface IState {
  */
 export function TransactionNodeWidget(props: DefaultNodeProps) {
     const selected_entity_id: EntityType = useSelector(selectEntityToView);
-    const [is_confirmed, setConfirmed] = React.useState(
-        props.node.isConfirmed()
-    );
     const opts = props.node.getOptions();
-    const [color, setColor] = React.useState(opts.color);
-    const [purpose, setPurpose] = React.useState(opts.purpose);
     const is_reachable = useSelector(selectIsReachable)(
         (opts.txn as Bitcoin.Transaction).getId()
     );
-    React.useEffect(() => {
-        props.node.registerConfirmed((b: boolean) => setConfirmed(b));
-        const h = props.node.registerListener({
-            colorChanged: (e: BaseEvent) => {
-                setColor(opts.color);
-            },
-            purposeChanged: (e: BaseEvent) => {
-                setPurpose(opts.purpose);
-            },
-        });
-        return () => {
-            props.node.deregisterListener(h);
-            props.node.registerConfirmed(() => {});
-        };
-    });
+    const color =
+        useSelector(selectTXNColor(opts.txn.getId())) ?? Color(opts.color);
+    const purpose =
+        useSelector(selectTXNPurpose(opts.txn.getId())) ?? opts.purpose;
     const generatePort = (port: DefaultPortModel) => {
         return (
             <DefaultPortLabel
@@ -148,24 +130,13 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
         );
     };
 
-    let color_render = Color(color).alpha(0.2).toString();
+    const color_render = color.alpha(0.2).toString();
     const theme = useTheme();
     const text_color = theme.palette.text.primary;
-    const is_conf = is_confirmed ? null : (
-        <div
-            style={{
-                background: theme.palette.warning.light,
-                color: theme.palette.warning.contrastText,
-                textAlign: 'center',
-            }}
-        >
-            UNCONFIRMED
-        </div>
-    );
 
     const is_selected =
         selected_entity_id[0] === 'TXN' &&
-        selected_entity_id[1] === props.node.getOptions().txn.getId();
+        selected_entity_id[1] === opts.txn.getId();
 
     return (
         <>
@@ -181,7 +152,6 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
             <Node
                 data-default-node-name={opts.name}
                 selected={is_selected}
-                confirmed={is_confirmed}
                 background={opts.color}
                 className={
                     (is_reachable ? 'reachable' : 'unreachable') +
@@ -193,7 +163,7 @@ export function TransactionNodeWidget(props: DefaultNodeProps) {
                         <TitleName>Transaction</TitleName>
                         <TitleName>{opts.name}</TitleName>
                     </Title>
-                    {is_conf}
+                    <ConfirmationWidget t={opts.txn.getId()} />
                     <Title color={color_render} textColor={text_color}>
                         <TitleName>{purpose}</TitleName>
                     </Title>

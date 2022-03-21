@@ -11,10 +11,8 @@ import { useTheme } from '@mui/material';
 import { store } from '../../../../Store/store';
 import { selectAnimateFlow } from '../../../../Settings/SettingsSlice';
 import { TransactionModel } from '../../../../Data/Transaction';
-import { UTXOModel } from '../../../../Data/UTXO';
 import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
-import { UTXONodeModel } from '../UTXONode/UTXONodeModel';
 
 export class SpendPortModel extends DefaultPortModel {
     constructor(options: DefaultPortModelOptions) {
@@ -26,7 +24,7 @@ export class SpendPortModel extends DefaultPortModel {
         return new SpendLinkModel();
     }
     spend_link(x: SpendPortModel, to: TransactionModel, factory: any) {
-        let link = this.createLinkModel(factory);
+        const link = this.createLinkModel(factory);
         // TODO: fix?
         link.setSourcePort(this as unknown as PortModel);
         link.setTargetPort(x as unknown as PortModel);
@@ -49,9 +47,9 @@ const all_nodes: Map<typeof unique_key, PathSettings> = new Map();
 
 const transparent = Color('transparent').toString();
 function update_loop(percent_idx: number) {
-    let seconds = selectAnimateFlow(store.getState());
-    let frames_per_second = 60;
-    let increment = 100 / frames_per_second / seconds;
+    const seconds = selectAnimateFlow(store.getState()) / 1000.0;
+    const frames_per_second = 60;
+    const increment = 100 / frames_per_second / seconds;
     if (seconds < 0.001) {
         for (const [_, node] of all_nodes) {
             if (!node.circle.current || !node.path) {
@@ -124,21 +122,21 @@ export function SpendLinkSegment(props: {
         }
     });
     // TODO: make link appear once, make percent_idx random
-    let mounted = React.useRef(false);
-    let circle = React.useRef(null as null | SVGCircleElement);
-    let text = React.useRef(null as null | SVGTextElement);
-    let path = React.useRef(null as null | SVGPathElement);
-    let x = React.useRef(0);
-    let y = React.useRef(0);
+    const mounted = React.useRef(false);
+    const circle = React.useRef(null as null | SVGCircleElement);
+    const text = React.useRef(null as null | SVGTextElement);
+    const path = React.useRef(null as null | SVGPathElement);
+    const x = React.useRef(0);
+    const y = React.useRef(0);
     const theme = useTheme();
     const stroke =
         props.model.link_type === 'exclusive'
             ? theme.palette.secondary.light
             : theme.palette.primary.light;
-    let color = React.useRef('none');
-    let white = React.useRef('white');
-    let key = unique_key++;
-    let show = React.useRef(true);
+    const color = React.useRef('none');
+    const white = React.useRef('white');
+    const key = unique_key++;
+    const show = React.useRef(true);
     all_nodes.set(key, { circle, path, text, x, y, color, white, show });
     const faded_stroke = Color(stroke).fade(0.8).toString();
     React.useEffect(() => {

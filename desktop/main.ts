@@ -1,15 +1,12 @@
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import url from 'url';
-import { custom_sapio_config, preferences } from './settings';
+import { custom_sapio_config } from './settings';
 
 import { createMenu } from './createMenu';
 import register_handlers from './handlers';
 import { start_sapio_oracle } from './sapio';
-import { ChildProcessWithoutNullStreams } from 'child_process';
-import { sys } from 'typescript';
 import { register_devtools } from './devtools';
-import { readFile } from 'fs/promises';
 import { get_bitcoin_node } from './bitcoin_rpc';
 
 let mainWindow: BrowserWindow | null = null;

@@ -1,14 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Data } from './Data/ContractManager';
 import { AppDispatch, RootState } from './Store/store';
+import { hasOwn } from './util';
 
 type ContractArgs = {
-    arguments: Object;
+    arguments: Record<string | number, unknown>;
     context: {
         amount: number;
         network: 'Regtest' | 'Signet' | 'Testnet' | 'Bitcoin';
         effects?: {
-            effects?: Record<string, Record<string, Object>>;
+            effects?: Record<
+                string,
+                Record<string, Record<string | number, unknown>>
+            >;
         };
     };
 };
@@ -51,14 +55,16 @@ export const appSlice = createSlice({
         },
         add_effect_to_contract: (
             state,
-            action: PayloadAction<[string, string, Object]>
+            action: PayloadAction<
+                [string, string, Record<string | number, unknown>]
+            >
         ) => {
             if (state.data === null) return;
             if (state.data.args.context.effects === undefined)
                 state.data.args.context.effects = {};
             if (state.data.args.context.effects.effects === undefined)
                 state.data.args.context.effects.effects = {};
-            let data =
+            const data =
                 state.data.args.context.effects.effects[action.payload[0]] ??
                 {};
             data[action.payload[1]] = action.payload[2];
@@ -92,7 +98,7 @@ export const create_contract_of_type =
     };
 export const recreate_contract =
     () => async (dispatch: AppDispatch, getState: () => RootState) => {
-        let s = getState();
+        const s = getState();
         if (s.appReducer.data === null) return;
         return create_contract_of_type(
             s.appReducer.data.name,
@@ -137,7 +143,7 @@ export const selectHasEffect: (
 ) => (s: string, key: string) => boolean = (state: RootState) => {
     return (s, key) => {
         const d = state.appReducer.data?.args.context.effects?.effects ?? {};
-        return d.hasOwnProperty(s) && d[s]!.hasOwnProperty(key);
+        return hasOwn(d, s) && hasOwn(d[s]!, key);
     };
 };
 

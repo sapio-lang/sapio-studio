@@ -16,8 +16,7 @@ import { MuiForm5 as Form } from '@rjsf/material-ui';
 import { ISubmitEvent } from '@rjsf/core';
 import { custom_fields, PathOnly } from '../CustomForms/Widgets';
 import SaveIcon from '@mui/icons-material/Save';
-import { Cancel, HorizontalRule } from '@mui/icons-material';
-import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
+import { Cancel } from '@mui/icons-material';
 import { poll_settings } from '../../Settings/SettingsSlice';
 import { useDispatch } from 'react-redux';
 
@@ -27,7 +26,7 @@ function SettingPane(props: {
     value: number;
     children?: React.ReactNode;
 }) {
-    let dispatch = useDispatch();
+    const dispatch = useDispatch();
     const handlesubmit = async (
         data: ISubmitEvent<any>,
         nativeEvent: React.FormEvent<HTMLFormElement>
@@ -43,7 +42,7 @@ function SettingPane(props: {
 
     const [data, set_data] = React.useState(null);
     async function get_args() {
-        let args = await window.electron.load_settings_sync(props.name);
+        const args = await window.electron.load_settings_sync(props.name);
         if (data !== args) {
             set_data(args);
         }
@@ -111,7 +110,7 @@ function SettingPane(props: {
 export function Settings() {
     const [idx, set_idx] = React.useState<number>(0);
     const [dialog_node, set_dialog_node] = React.useState<
-        [React.ReactNode, React.ReactNode[]]
+        [string | null, string[]]
     >([null, []]);
     const handleChange = (_: any, idx: number) => {
         set_idx(idx);
@@ -125,9 +124,9 @@ export function Settings() {
             )
             .catch((e) => {
                 console.log('GOT', JSON.stringify(e));
-                let r = e.message;
+                const r = e.message;
                 if (typeof e.message === 'string') {
-                    let err = JSON.parse(r);
+                    const err = JSON.parse(r);
                     if (
                         err instanceof Object &&
                         'code' in err &&
@@ -174,7 +173,7 @@ export function Settings() {
     const check_emulator = async () => {
         window.electron.emulator.read_log().then((log) => {
             if (log.length) {
-                let json = JSON.parse(log);
+                const json = JSON.parse(log);
                 set_dialog_node([
                     'Emulator Status:',
                     [
@@ -220,7 +219,9 @@ export function Settings() {
                     <DialogContent>
                         <div id="alert-dialog-description">
                             {dialog_node[1].map((txt) => (
-                                <DialogContentText>{txt}</DialogContentText>
+                                <DialogContentText key={txt}>
+                                    {txt}
+                                </DialogContentText>
                             ))}
                         </div>
                     </DialogContent>
@@ -298,10 +299,9 @@ function Guide(props: { idx: number; my_idx: number }) {
                     </Typography>
                     <Typography variant="h4">Getting Started</Typography>
                     <Typography variant="body1">
-                        To get started, you're going to want to configure a few
-                        things.
+                        To get started, you need to configure a few things.
                         <br />
-                        On this page, you'll find tabs for:
+                        On this page, you will find tabs for:
                         <br />
                         <ol>
                             <li>Sapio Cli: options for the sapio compiler</li>
@@ -313,7 +313,8 @@ function Guide(props: { idx: number; my_idx: number }) {
                                 Emulator: options for running an emulator daemon
                             </li>
                             <li>
-                                Display: options for Sapio Studio's rendering
+                                Display: options for Sapio Studio&lsquo;s
+                                rendering
                             </li>
                         </ol>
                         At the bottom of each of these tabs you will see a set

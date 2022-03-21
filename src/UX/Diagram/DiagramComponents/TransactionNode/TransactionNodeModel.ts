@@ -10,13 +10,17 @@ import { Transaction } from 'bitcoinjs-lib';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import { DefaultPortModel } from '@projectstorm/react-diagrams';
 
+export type TransactionState =
+    | 'Confirmed'
+    | 'InMempool'
+    | 'NotBroadcastable'
+    | 'Broadcastable'
+    | 'Unknown'
+    | 'Impossible';
 export interface TransactionNodeModelOptions extends BasePositionModelOptions {
     name: string;
     color: string;
-    confirmed: boolean;
-    is_reachable: boolean;
-    reachable_cb: (b: boolean) => void;
-    confirmed_cb: (b: boolean) => void;
+    confirmed: TransactionState;
     txn: Transaction;
     purpose: string;
 }
@@ -52,36 +56,7 @@ export class TransactionNodeModel extends NodeModel<TransactionNodeModelGenerics
         this.portsIn = [];
     }
 
-    setColor(color: string) {
-        this.options.color = color;
-        this.fireEvent({ color: this.options.color }, 'colorChanged');
-    }
-    setPurpose(purpose: string) {
-        this.options.purpose = purpose;
-        this.fireEvent({ purpose }, 'purposeChanged');
-    }
-
-    setConfirmed(opt: boolean) {
-        this.options.confirmed = opt;
-        this.options.confirmed_cb(opt);
-    }
-    registerConfirmed(f: (b: boolean) => void) {
-        this.options.confirmed_cb = f;
-    }
-    isConfirmed(): boolean {
-        return this.options.confirmed;
-    }
-    setReachable(b: boolean) {
-        this.options.is_reachable = b;
-        this.options.reachable_cb(b);
-    }
-    registerReachable(f: (b: boolean) => void) {
-        this.options.reachable_cb = f;
-    }
-    isReachable(): boolean {
-        return this.options.is_reachable;
-    }
-
+    // eslint-disable-next-line @typescript-eslint/ban-types
     doClone(lookupTable: {}, clone: any) {
         clone.portsIn = [];
         clone.portsOut = [];

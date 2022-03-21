@@ -1,11 +1,9 @@
 import { Transaction } from 'bitcoinjs-lib';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
-import { Outpoint } from './UX/Entity/EntitySlice';
-import { TextField, OutlinedInput, InputAdornment } from '@mui/material';
+import { TextField, InputAdornment } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectMaxSats } from './Settings/SettingsSlice';
-import { JSONSchema7 } from 'json-schema';
 import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
 import { schemas } from './UX/Settings/Schemas';
 import { CreatedContract } from './AppSlice';
@@ -17,7 +15,7 @@ type Callback =
     | 'create_contracts'
     | 'load_contract'
     | 'bitcoin-node-bar';
-type Result<T, E = string> = { ok: T } | { err: E };
+export type Result<T, E = string> = { ok: T } | { err: E };
 declare global {
     interface Window {
         electron: {
@@ -57,6 +55,9 @@ declare global {
                         file_name: string
                     ) => Promise<Result<CreatedContract>>;
                 };
+                psbt: {
+                    finalize: (psbt: string) => Promise<Result<string>>;
+                };
             };
             emulator: {
                 kill: () => Promise<void>;
@@ -69,7 +70,7 @@ declare global {
 
 /// txid_buf_to_string converts a buffer into a reverse encoded hex format.
 export function txid_buf_to_string(txid: Buffer): TXID {
-    let copy = Buffer.alloc(txid.length);
+    const copy = Buffer.alloc(txid.length);
     txid.forEach((v, i) => {
         copy[txid.length - 1 - i] = v;
     });
@@ -79,10 +80,7 @@ export function txid_buf_to_string(txid: Buffer): TXID {
 // hash_to_hex converts a buffer into a reverse encoded hex format
 // TODO: is this the same as txid_buf_to_string?
 export function hash_to_hex(h: Buffer): string {
-    const b = Buffer.alloc(32);
-    h.copy(b);
-    b.reverse();
-    return b.toString('hex');
+    return txid_buf_to_string(h);
 }
 
 export interface OutpointInterface {
@@ -91,17 +89,20 @@ export interface OutpointInterface {
 }
 type OpaqueKey = string;
 // Maps an Input (TXID) to all Spenders
-export type InputMapT<T> = Record<OpaqueKey, Record<number, Array<T>>>;
+const input_map_s = Symbol('InputMapT');
+export type InputMapT<T> = {
+    [input_map_s]: Record<OpaqueKey, Record<number, Array<T>>>;
+};
 export const InputMap = {
     new<T>(): InputMapT<T> {
-        return {};
+        return { [input_map_s]: {} };
     },
     add<T>(that: InputMapT<T>, t: OutpointInterface, model: T) {
         const key1 = txid_buf_to_string(t.hash);
-        let vals = that[key1];
+        let vals = that[input_map_s][key1];
         if (vals === undefined) {
             vals = {};
-            that[key1] = vals;
+            that[input_map_s][key1] = vals;
         }
 
         let vals2 = vals[t.index];
@@ -115,14 +116,14 @@ export const InputMap = {
         that: InputMapT<T>,
         t: string
     ): Record<number, Array<T>> | null {
-        return that[t] ?? null;
+        return that[input_map_s][t] ?? null;
     },
     get<T>(that: InputMapT<T>, t: OutpointInterface): Array<T> | null {
-        return that[txid_buf_to_string(t.hash)]?.[t.index] ?? null;
+        return that[input_map_s][txid_buf_to_string(t.hash)]?.[t.index] ?? null;
     },
 
     get_txid_s<T>(that: InputMapT<T>, t: string, i: number): Array<T> | null {
-        return that[t]?.[i] ?? null;
+        return that[input_map_s][t]?.[i] ?? null;
     },
 };
 
@@ -205,34 +206,37 @@ export interface HasKeys {
     get_txid: () => TXID;
 }
 // Maps an TXID to a Transaction,
-export type TXIDAndWTXIDMapT<K extends HasKeys> = Record<TXID, K>;
+const txid_map_s = Symbol('TXIDAndWTXIDMapT');
+export type TXIDAndWTXIDMapT<K extends HasKeys> = {
+    [txid_map_s]: Record<TXID, K>;
+};
 export const TXIDAndWTXIDMap = {
     new() {
-        return {};
+        return { [txid_map_s]: {} };
     },
     add<K extends HasKeys>(that: TXIDAndWTXIDMapT<K>, t: K): void {
-        that[t.get_txid()] = t;
+        that[txid_map_s][t.get_txid()] = t;
     },
     get_by_txid<K extends HasKeys>(
         that: TXIDAndWTXIDMapT<K>,
         t: K
     ): K | undefined {
-        return that[t.get_txid()];
+        return that[txid_map_s][t.get_txid()];
     },
     get_by_txid_s<K extends HasKeys>(
         that: TXIDAndWTXIDMapT<K>,
         t: TXID
     ): K | undefined {
-        return that[t];
+        return that[txid_map_s][t];
     },
     delete_by_txid<K extends HasKeys>(that: TXIDAndWTXIDMapT<K>, t: K) {
-        delete that[t.get_txid()];
+        delete that[txid_map_s][t.get_txid()];
     },
     has_by_txid<K extends HasKeys>(
         that: TXIDAndWTXIDMapT<K>,
         t: TXID
     ): boolean {
-        return that.hasOwnProperty(t);
+        return hasOwn(that[txid_map_s], t);
     },
 };
 
@@ -283,3 +287,22 @@ export function is_mock_outpoint(args: Outpoint): boolean {
     const hash = Bitcoin.crypto.sha256(Buffer.from('mock:' + args.nIn));
     return txid_buf_to_string(hash) === args.hash;
 }
+
+export type Outpoint = { hash: string; nIn: number };
+type OutpointStringDifferentiator = string;
+export type OutpointString = OutpointStringDifferentiator & string;
+
+export const ValidateOutpointString = (out: string): out is OutpointString => {
+    return out.match(/^[A-Fa-f0-9]{64}:[0-9]+$/) !== null;
+};
+
+export function outpoint_to_id(args: Outpoint): OutpointString {
+    const s = args.hash + ':' + args.nIn.toString();
+    if (ValidateOutpointString(s)) return s;
+    throw 'ERR: ID not valid';
+}
+
+export const hasOwn = (
+    a: Record<string | number, unknown>,
+    b: string | number
+) => Object.prototype.hasOwnProperty.call(a, b);

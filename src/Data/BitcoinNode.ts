@@ -1,15 +1,16 @@
 import { Transaction } from 'bitcoinjs-lib';
-import React from 'react';
-import { ContractBase, ContractModel } from './ContractManager';
-import { Input } from 'bitcoinjs-lib/types/transaction';
-import { hash_to_hex, TXIDAndWTXIDMap } from '../util';
-import * as Bitcoin from 'bitcoinjs-lib';
+import { ContractModel } from './ContractManager';
+import { hash_to_hex, hasOwn, Outpoint, TXIDAndWTXIDMap } from '../util';
 import { clamp } from 'lodash';
 import { DiagramModel } from '@projectstorm/react-diagrams-core';
 import { selectNodePollFreq } from '../Settings/SettingsSlice';
 import { store } from '../Store/store';
+import { load_status } from './DataSlice';
+import { TransactionState } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 
 type TXID = string;
+
+export type Status = { txid: TXID; confirmations: number | null };
 
 export function call(method: string, args: any) {
     return fetch(method, {
@@ -27,30 +28,174 @@ interface IProps {
 }
 export function update_broadcastable(
     current_contract: ContractModel,
-    confirmed_txs: Set<TXID>
+    limbo_tx: TXID
 ) {
-    current_contract.txn_models.forEach((tm) => {
-        const already_confirmed = confirmed_txs.has(tm.get_txid());
-        const inputs_not_locals = tm.tx.ins.every(
-            (inp: Input) =>
-                !TXIDAndWTXIDMap.has_by_txid(
-                    current_contract.txid_map,
-                    hash_to_hex(inp.hash)
-                )
+    const tm = TXIDAndWTXIDMap.get_by_txid_s(
+        current_contract.txid_map,
+        limbo_tx
+    );
+    if (!tm) {
+        throw new Error(
+            `Invariant Error: ${limbo_tx} must exist in contract model`
         );
-        const all_inputs_confirmed = tm.tx.ins.every((inp: Input) =>
-            confirmed_txs.has(hash_to_hex(inp.hash))
-        );
-        if (already_confirmed) {
-            tm.set_broadcastable(false);
-        } else if (inputs_not_locals) {
-            tm.set_broadcastable(true);
-        } else if (all_inputs_confirmed) {
-            tm.set_broadcastable(true);
-        } else {
-            tm.set_broadcastable(false);
+    }
+}
+
+function swap(arr: any[], i: number, j: number) {
+    if (i === j) return;
+    const x = arr[i];
+    arr[i] = arr[j];
+    arr[j] = x;
+}
+
+function compute_impossible(
+    state: Record<TXID, TransactionState>,
+    cm: ContractModel
+): Record<TXID, TransactionState> {
+    const unspendable: Record<TXID, Record<number, null>> = {};
+    for (const [txid, status] of Object.entries(state)) {
+        if (status !== 'Confirmed' && status !== 'Impossible') continue;
+        const tmi = TXIDAndWTXIDMap.get_by_txid_s(cm.txid_map, txid)!;
+        if (!tmi) throw new Error('All txns Are Expected to be Present');
+        // If confirmed, all inputs are now unspendable
+        if (status === 'Confirmed') {
+            for (const inp of tmi.getOptions().txn.ins) {
+                const hash = hash_to_hex(inp.hash);
+                if (hasOwn(unspendable, hash))
+                    unspendable[hash]![inp.index] = null;
+                else {
+                    unspendable[hash] = { [inp.index]: null };
+                }
+            }
         }
-    });
+        // If impossible, all outputs are now unspendable
+        if (status === 'Impossible') {
+            const length = tmi.getOptions().txn.outs.length;
+            const obj: Record<number, null> = Object.fromEntries(
+                Array.from({ length }, () => 0).map((v, a) => [a, null])
+            );
+            console.log('OBJ', obj);
+            unspendable[txid] = obj;
+        }
+    }
+    let changed;
+    const mutable_state: Record<TXID, { length: number; inps: Outpoint[] }> =
+        Object.fromEntries(
+            Object.entries(state)
+                .filter(([_, f]) => !(f === 'Confirmed' || f === 'Impossible'))
+                .map(([k, _]) => {
+                    const tmi = TXIDAndWTXIDMap.get_by_txid_s(cm.txid_map, k)!;
+                    if (!tmi)
+                        throw new Error('All txns Are Expected to be Present');
+                    return [
+                        k,
+                        {
+                            length: tmi.getOptions().txn.outs.length,
+                            inps: tmi.getOptions().txn.ins.map((inp) => {
+                                return {
+                                    hash: hash_to_hex(inp.hash),
+                                    nIn: inp.index,
+                                };
+                            }),
+                        },
+                    ];
+                })
+        );
+    do {
+        changed = false;
+        for (const [txid, { length, inps }] of Object.entries(mutable_state)) {
+            console.log(txid);
+            for (const { hash, nIn } of inps) {
+                if (hasOwn(unspendable[hash] ?? {}, nIn)) {
+                    const obj: Record<number, null> = Object.fromEntries(
+                        Array.from({ length }, () => 0).map((v, a) => [a, null])
+                    );
+                    unspendable[txid] = obj;
+
+                    changed = true;
+                    state[txid] = 'Impossible';
+                    delete mutable_state[txid];
+                    break;
+                }
+            }
+        }
+    } while (changed);
+
+    return state;
+}
+function derive_state(
+    state: Record<TXID, Status | null>,
+    cm: ContractModel
+): Record<TXID, TransactionState> {
+    const memo: Record<TXID, TransactionState> = {};
+    const unknown: Array<Status> = [];
+    for (const [txid, status] of Object.entries(state)) {
+        if (!status) throw new Error('All Statuses Are Expected to be Present');
+        let conf: TransactionState;
+        if (!status) conf = 'Unknown';
+        else if (status.confirmations === null) conf = 'Unknown';
+        else if (status.confirmations > 0) conf = 'Confirmed';
+        else if (status.confirmations === 0) conf = 'InMempool';
+        else if (status.confirmations < 0) conf = 'Impossible';
+        else conf = 'Unknown';
+        if (conf === 'Unknown') unknown.push(status);
+        else memo[txid] = conf;
+    }
+    /// this should usually be good!
+    unknown.reverse();
+    let any_changed;
+    do {
+        any_changed = false;
+        const n = unknown.length;
+        for (let l = 0; l < n; ++l) {
+            const status = unknown.pop()!;
+
+            const tmi = TXIDAndWTXIDMap.get_by_txid_s(
+                cm.txid_map,
+                status.txid
+            )!;
+            let should_next_tx = false;
+            for (const inp of tmi.tx.ins) {
+                switch (memo[hash_to_hex(inp.hash)]) {
+                    case undefined: {
+                        unknown.push(status);
+                        swap(unknown, 0, unknown.length - 1);
+                        should_next_tx = true;
+                        break;
+                    }
+                    case 'Confirmed':
+                    case 'InMempool':
+                        break;
+                    case 'Impossible': {
+                        memo[status.txid] = 'Impossible';
+                        any_changed = true;
+                        should_next_tx = true;
+                        break;
+                    }
+                    // in these cases, something else must be broadcast first.
+                    // note: no parent at this phase could go from Unknown -> Confirmed
+                    // since that was handled earlier.
+                    case 'Broadcastable':
+                    case 'NotBroadcastable':
+                        memo[status.txid] = 'NotBroadcastable';
+                        any_changed = true;
+                        break;
+                    case 'Unknown':
+                        throw new Error('Logically, cannot be Unknown');
+                }
+                if (should_next_tx) break;
+            }
+            // Absent any other value, this should now be broadcastable
+            if (!should_next_tx) {
+                memo[status.txid] = memo[status.txid] ?? 'Broadcastable';
+                any_changed = true;
+            }
+        }
+    } while (any_changed);
+    for (const u of unknown) {
+        memo[u.txid] = 'Unknown';
+    }
+    return memo;
 }
 
 interface ICommand {
@@ -117,16 +262,13 @@ export class BitcoinNodeManager {
             );
             return;
         }
-        const is_tx_confirmed = await this.get_confirmed_transactions(contract);
-        let confirmed_txs: Set<TXID> = new Set();
-        is_tx_confirmed.forEach((txid: TXID) => confirmed_txs.add(txid));
-        if (is_tx_confirmed.length > 0) {
-            update_broadcastable(contract, confirmed_txs);
-            this.props.current_contract.process_finality(
-                is_tx_confirmed,
-                this.props.model
-            );
-        }
+        const status = await this.get_transaction_status(contract);
+        const state = compute_impossible(
+            derive_state(status, this.props.current_contract),
+            this.props.current_contract
+        );
+        store.dispatch(load_status({ status, state }));
+
         if (this.mounted) {
             const freq = selectNodePollFreq(store.getState());
             const period = clamp(freq ?? 0, 5, 60 * 5);
@@ -199,27 +341,56 @@ export class BitcoinNodeManager {
         });
     }
     // get info about transactions
-    async get_confirmed_transactions(
+    async get_transaction_status(
         current_contract: ContractModel
-    ): Promise<Array<TXID>> {
+    ): Promise<Record<TXID, Status>> {
         // TODO: SHould query by WTXID
         const txids = current_contract.txn_models
-            .filter((tm) => tm.is_broadcastable())
-            .map((tm) => {
-                return {
-                    method: 'getrawtransaction',
-                    parameters: [tm.get_txid(), true],
-                };
-            });
+            //            .filter((tm) => tm.is_broadcastable())
+            .map((tm) => tm.get_txid());
+        const req = txids.map((txid) => {
+            return {
+                method: 'gettransaction',
+                parameters: [txid, true],
+            };
+        });
         if (txids.length > 0) {
-            let results = await this.executeBatch(txids);
+            const results: (
+                | Status
+                | { message: string; code: number; name: string }
+            )[] = await this.executeBatch(req);
+            console.log(results);
             // TODO: Configure Threshold
-            results = results
-                .filter((txdata: any) => txdata.confirmations ?? 0 > 1)
-                .map((txdata: any) => txdata.txid);
-            return results;
+            return Object.fromEntries(
+                results.map((txdata, idx: number) => {
+                    const s: [TXID | undefined, Status | undefined] = [
+                        undefined,
+                        undefined,
+                    ];
+                    if ('code' in txdata) {
+                        s[1] = {
+                            txid: txids[idx]!,
+                            confirmations: null,
+                        };
+                    } else {
+                        s[1] = {
+                            txid: txdata.txid,
+                            confirmations: txdata.confirmations ?? null,
+                        };
+                    }
+                    s[0] = s[1].txid;
+                    return s;
+                })
+            );
         }
-        return [];
+        return {};
+    }
+
+    async get_output_status(
+        current_contract: ContractModel,
+        txns: Record<TXID, Status | null>
+    ): Promise<Record<OutpointS, string>> {
+        return {};
     }
 
     render() {
@@ -233,3 +404,5 @@ export interface QueriedUTXO {
     scriptPubKey: { asm: string; hex: string; address: string; type: string };
     value: number;
 }
+
+type OutpointS = string;

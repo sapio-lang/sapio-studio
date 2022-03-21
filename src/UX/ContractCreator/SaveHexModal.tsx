@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { ContractModel } from '../../Data/ContractManager';
 import { TXIDAndWTXIDMap, txid_buf_to_string } from '../../util';
 import { close_modal } from '../ModalSlice';
+import * as React from 'react';
 
 interface IProps {
     contract: ContractModel;
@@ -14,7 +15,7 @@ interface IProps {
 }
 export function SaveHexModal(props: IProps) {
     const dispatch = useDispatch();
-    let non_phantoms = props.contract.txn_models.filter((item) => {
+    const non_phantoms = props.contract.txn_models.filter((item) => {
         return (
             -1 !==
             item.tx.ins.findIndex((inp) =>

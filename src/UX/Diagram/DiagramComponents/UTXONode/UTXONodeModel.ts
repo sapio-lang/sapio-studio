@@ -5,22 +5,18 @@ import {
     PortModel,
 } from '@projectstorm/react-diagrams-core';
 import { SpendPortModel } from '../SpendLink/SpendLink';
-import { SpendLinkModel } from '../SpendLink/SpendLinkModel';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
-import _ from 'lodash';
-import { TransactionModel } from '../../../../Data/Transaction';
 import { TXID } from '../../../../util';
 import { OutputPortModel } from '../OutputLink';
+import { TransactionState } from '../TransactionNode/TransactionNodeModel';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
     name: string;
     color: string;
     amount: number;
-    confirmed: boolean;
-    reachable: boolean;
+    confirmed: TransactionState;
     txid: TXID;
     index: number;
-    confirmed_callback: (b: boolean) => void;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
@@ -38,7 +34,7 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
         name?: string,
         color?: string,
         amount?: number,
-        confirmed: boolean = false
+        confirmed: TransactionState = 'NotBroadcastable'
     ) {
         color = color || 'red';
         super({
@@ -49,7 +45,6 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
             amount,
             confirmed,
             type: 'utxo-node',
-            confirmed_callback: (b: boolean) => null,
             ...options,
         });
         this.portsOut = [];
@@ -61,17 +56,8 @@ export class UTXONodeModel extends NodeModel<UTXONodeModelGenerics> {
     getAmount(): number {
         return this.getOptions().amount;
     }
-    setConfirmed(opt: boolean) {
-        this.options.confirmed = opt;
-        this.options.confirmed_callback(opt);
-    }
-    isConfirmed(): boolean {
-        return this.options.confirmed;
-    }
-    registerConfirmedCallback(f: (b: boolean) => void) {
-        this.options.confirmed_callback = f;
-    }
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
     doClone(lookupTable: {}, clone: any) {
         clone.portsIn = [];
         clone.portsOut = [];

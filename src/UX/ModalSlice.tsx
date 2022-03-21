@@ -1,6 +1,5 @@
-import { State } from '@projectstorm/react-canvas-core';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppDispatch, RootState } from '../Store/store';
+import { RootState } from '../Store/store';
 
 type Modals = 'ViewContract' | 'LoadHex' | 'SaveHex' | 'SapioServer';
 type StateType = {

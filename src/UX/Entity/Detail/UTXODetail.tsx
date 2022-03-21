@@ -5,9 +5,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
     IconButton,
-    TextField,
     Tooltip,
     Typography,
     useTheme,
@@ -39,7 +37,7 @@ import { OutpointDetail } from './OutpointDetail';
 import './UTXODetail.css';
 import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
 import { MuiForm5 as Form } from '@rjsf/material-ui';
-import { FormProps, FormValidation, ISubmitEvent } from '@rjsf/core';
+import { FormValidation, ISubmitEvent } from '@rjsf/core';
 import {
     add_effect_to_contract,
     recreate_contract,
@@ -55,9 +53,6 @@ export function UTXODetail(props: UTXODetailProps) {
     const theme = useTheme();
     const dispatch = useDispatch();
     const select_continuations = useSelector(selectContinuation);
-    React.useEffect(() => {
-        return () => {};
-    });
     const txid = props.entity.txn.get_txid();
     const idx = props.entity.utxo.index;
     const outpoint = { hash: txid, nIn: idx };
@@ -85,7 +80,9 @@ export function UTXODetail(props: UTXODetailProps) {
                 /// TODO: Read from preferences?
                 Bitcoin.networks.regtest
             );
-        } catch {}
+        } catch {
+            // TODO: Recovery?
+        }
     }
     const spends = props.entity.utxo.spends.map((elt, i) => (
         <div key={get_wtxid_backwards(elt.tx)} className="Spend">
@@ -136,10 +133,12 @@ export function UTXODetail(props: UTXODetailProps) {
         ) : (
             <PrettyAmountField amount={props.entity.utxo.amount} />
         );
-    let obj = select_continuations(`${txid}:${idx}`);
+    const obj = select_continuations(`${txid}:${idx}`);
     const continuations = obj
         ? Object.entries(obj).map(([k, v]) => {
-              return <ContinuationOption k={k} v={v}></ContinuationOption>;
+              return (
+                  <ContinuationOption key={k} k={k} v={v}></ContinuationOption>
+              );
           })
         : null;
     const cont = continuations ? (
@@ -185,7 +184,7 @@ function ContinuationOption(props: { k: string; v: Continuation }) {
     };
     const this_effect_name = React.useRef('');
     const submit = (e: ISubmitEvent<any>) => {
-        let name = this_effect_name.current;
+        const name = this_effect_name.current;
         const data = e.formData;
         dispatch(add_effect_to_contract([props.k, name, data]));
     };
@@ -216,6 +215,7 @@ function ContinuationOption(props: { k: string; v: Continuation }) {
                         liveValidate
                         // NOTE: This is a bug documented here
                         // https://github.com/rjsf-team/react-jsonschema-form/issues/2135
+                        // eslint-disable-next-line
                         // @ts-ignore
                         ref={name_form}
                     >
@@ -228,6 +228,7 @@ function ContinuationOption(props: { k: string; v: Continuation }) {
                         onSubmit={submit}
                         // NOTE: This is a bug documented here
                         // https://github.com/rjsf-team/react-jsonschema-form/issues/2135
+                        // eslint-disable-next-line
                         // @ts-ignore
                         ref={form}
                     ></Form>
