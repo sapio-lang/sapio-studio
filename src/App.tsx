@@ -1,5 +1,5 @@
 import { Collapse, Paper } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {
     BaseEntityEvent,
@@ -26,6 +26,7 @@ import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
 import { ContractModel, Data } from './Data/ContractManager';
 import { ModelManager } from './Data/ModelManager';
 import { SimulationController } from './Data/Simulation';
+import { selectSimIsShowing, toggle_showing } from './Data/SimulationSlice';
 import { TransactionModel } from './Data/Transaction';
 import { UTXOModel } from './Data/UTXO';
 import './Glyphs.css';
@@ -150,13 +151,7 @@ function AppInner(props: {
 }) {
     const bitcoin_node_bar = useSelector(selectStatusBar);
     const { engine, model, load_new_contract } = props;
-    const entity_id: EntityType = useSelector(selectEntityToView);
 
-    const show = useSelector(selectShouldViewEntity);
-    const details = entity_id[0] !== 'NULL' && show;
-
-    const [timing_simulator_enabled, set_timing_simulator_enabled] =
-        React.useState(false);
     // engine is the processor for graphs, we need to load all our custom factories here
 
     const [contract_data, counter] = useSelector(selectContract);
@@ -173,26 +168,6 @@ function AppInner(props: {
 
     const is_showing = useSelector(selectShowing);
 
-    React.useEffect(() => {
-        if (entity_id[0] === 'TXN')
-            jump_to_entity(
-                model,
-                engine,
-                TXIDAndWTXIDMap.get_by_txid_s(
-                    current_contract.txid_map,
-                    entity_id[1]
-                ) ?? null
-            );
-        else if (entity_id[0] === 'UTXO')
-            jump_to_entity(
-                model,
-                engine,
-                TXIDAndWTXIDMap.get_by_txid_s(
-                    current_contract.txid_map,
-                    entity_id[1].hash
-                )?.utxo_models[entity_id[1].nIn] ?? null
-            );
-    }, [entity_id]);
     const relayout = () => {
         dag.redistribute(props.model);
         engine.repaintCanvas();
@@ -237,58 +212,6 @@ function AppInner(props: {
             }),
         [prefersDarkMode]
     );
-    let showing = null;
-    switch (is_showing) {
-        case 'Settings':
-            showing = (
-                <Paper className="settings-container" square={true}>
-                    <Settings></Settings>
-                </Paper>
-            );
-            break;
-        case 'Wallet':
-            showing = (
-                <Paper className="wallet-container" square={true}>
-                    <Wallet
-                        bitcoin_node_manager={bitcoin_node_manager}
-                    ></Wallet>
-                </Paper>
-            );
-            break;
-        case 'ContractCreator':
-            showing = <CreateContractModal />;
-            break;
-        case 'ContractViewer':
-            showing = (
-                <>
-                    <div className="main-container">
-                        <DemoCanvasWidget
-                            engine={engine}
-                            model={model}
-                            background={theme.palette.background.paper}
-                            color={theme.palette.divider}
-                        >
-                            <CanvasWidget engine={engine as any} key={'main'} />
-                        </DemoCanvasWidget>
-                    </div>
-                    <Collapse in={details}>
-                        <CurrentlyViewedEntity
-                            current_contract={current_contract}
-                        />
-                    </Collapse>
-                    <div className="area-overlays">
-                        <Collapse in={timing_simulator_enabled}>
-                            <SimulationController
-                                contract={current_contract}
-                                engine={engine}
-                                hide={() => set_timing_simulator_enabled(false)}
-                            />
-                        </Collapse>
-                    </div>
-                </>
-            );
-            break;
-    }
     return (
         <ThemeProvider theme={theme}>
             <div className="App">
@@ -298,14 +221,16 @@ function AppInner(props: {
                             relayout={relayout}
                             bitcoin_node_manager={bitcoin_node_manager}
                             contract={current_contract}
-                            toggle_timing_simulator={() =>
-                                set_timing_simulator_enabled(
-                                    !timing_simulator_enabled
-                                )
-                            }
                         />
                     </div>
-                    <div className="area-inner">{showing}</div>
+                    <div className="area-inner">
+                        <Viewing
+                            bitcoin_node_manager={bitcoin_node_manager}
+                            model={model}
+                            engine={engine}
+                            current_contract={current_contract}
+                        />
+                    </div>
                 </div>
                 <div hidden={!bitcoin_node_bar}>
                     {bitcoin_node_bar && (
@@ -323,4 +248,92 @@ function AppInner(props: {
     );
 }
 
+function Viewing(props: {
+    model: DiagramModel;
+    engine: DiagramEngine;
+    current_contract: ContractModel;
+    bitcoin_node_manager: BitcoinNodeManager;
+}) {
+    const is_showing = useSelector(selectShowing);
+    switch (is_showing) {
+        case 'Settings':
+            return (
+                <Paper className="settings-container" square={true}>
+                    <Settings></Settings>
+                </Paper>
+            );
+        case 'Wallet':
+            return (
+                <Paper className="wallet-container" square={true}>
+                    <Wallet
+                        bitcoin_node_manager={props.bitcoin_node_manager}
+                    ></Wallet>
+                </Paper>
+            );
+        case 'ContractCreator':
+            return <CreateContractModal />;
+        case 'ContractViewer':
+            return <ContractViewer {...props} />;
+    }
+}
+function ContractViewer(props: {
+    model: DiagramModel;
+    engine: DiagramEngine;
+    current_contract: ContractModel;
+}) {
+    const dispatch = useDispatch();
+    const entity_id: EntityType = useSelector(selectEntityToView);
+    const show = useSelector(selectShouldViewEntity);
+    const theme = useTheme();
+    const timing_simulator_enabled = useSelector(selectSimIsShowing);
+    const details = entity_id[0] !== 'NULL' && show;
+    const { model, engine, current_contract } = props;
+    React.useEffect(() => {
+        if (entity_id[0] === 'TXN')
+            jump_to_entity(
+                model,
+                engine,
+                TXIDAndWTXIDMap.get_by_txid_s(
+                    current_contract.txid_map,
+                    entity_id[1]
+                ) ?? null
+            );
+        else if (entity_id[0] === 'UTXO')
+            jump_to_entity(
+                model,
+                engine,
+                TXIDAndWTXIDMap.get_by_txid_s(
+                    current_contract.txid_map,
+                    entity_id[1].hash
+                )?.utxo_models[entity_id[1].nIn] ?? null
+            );
+    }, [entity_id]);
+
+    return (
+        <>
+            <div className="main-container">
+                <DemoCanvasWidget
+                    engine={engine}
+                    model={model}
+                    background={theme.palette.background.paper}
+                    color={theme.palette.divider}
+                >
+                    <CanvasWidget engine={engine as any} key={'main'} />
+                </DemoCanvasWidget>
+            </div>
+            <Collapse in={details}>
+                <CurrentlyViewedEntity current_contract={current_contract} />
+            </Collapse>
+            <div className="area-overlays">
+                <Collapse in={timing_simulator_enabled}>
+                    <SimulationController
+                        contract={current_contract}
+                        engine={engine}
+                        hide={() => dispatch(toggle_showing())}
+                    />
+                </Collapse>
+            </div>
+        </>
+    );
+}
 export default App;

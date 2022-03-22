@@ -19,12 +19,12 @@ import {
 } from '../AppSlice';
 import { BitcoinNodeManager } from '../Data/BitcoinNode';
 import { ContractModel } from '../Data/ContractManager';
+import { toggle_showing } from '../Data/SimulationSlice';
 import './AppNavbar.css';
 import { set_apis } from './ContractCreator/ContractCreatorSlice';
 import { open_modal } from './ModalSlice';
 export function AppNavbar(props: {
     relayout: () => void;
-    toggle_timing_simulator: () => void;
     contract: ContractModel;
     bitcoin_node_manager: BitcoinNodeManager;
 }): JSX.Element {
@@ -39,9 +39,7 @@ export function AppNavbar(props: {
             <List>
                 <ContractMenu relayout={props.relayout} />
                 <NodeMenu bitcoin_node_manager={props.bitcoin_node_manager} />
-                <Simulator
-                    toggle_timing_simulator={props.toggle_timing_simulator}
-                />
+                <Simulator />
             </List>
             <Divider />
             <List>
@@ -68,7 +66,8 @@ function SettingsMenuItem() {
         </ListItem>
     );
 }
-function Simulator(props: { toggle_timing_simulator: () => void }) {
+function Simulator() {
+    const dispatch = useDispatch();
     const simulateRef = React.useRef<HTMLLIElement>(null);
     const [sim_open, setSimOpen] = React.useState(false);
     return (
@@ -96,7 +95,7 @@ function Simulator(props: { toggle_timing_simulator: () => void }) {
                 <MenuItem
                     onClick={() => {
                         setSimOpen(false);
-                        props.toggle_timing_simulator();
+                        dispatch(toggle_showing());
                     }}
                 >
                     Timing
