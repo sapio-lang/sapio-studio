@@ -22,6 +22,7 @@ import { PhantomTransactionModel } from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
 import {
     get_wtxid_backwards,
+    hasOwn,
     is_mock_outpoint,
     PrettyAmountField,
 } from '../../../util';
@@ -43,13 +44,23 @@ import {
     recreate_contract,
     selectHasEffect,
 } from '../../../AppSlice';
+import { RootState } from '../../../Store/store';
 
 interface UTXODetailProps {
     entity: UTXOModel;
     contract: ContractModel;
 }
 
+const C = React.memo(UTXODetailInner, (prev, next) => {
+    const b = prev.entity == next.entity && prev.contract == next.contract;
+    console.log('NEWCHECK?', b);
+    return b;
+});
 export function UTXODetail(props: UTXODetailProps) {
+    return <C {...props}></C>;
+}
+
+export function UTXODetailInner(props: UTXODetailProps) {
     const theme = useTheme();
     const dispatch = useDispatch();
     const select_continuations = useSelector(selectContinuation);
@@ -136,9 +147,7 @@ export function UTXODetail(props: UTXODetailProps) {
     const obj = select_continuations(`${txid}:${idx}`);
     const continuations = obj
         ? Object.entries(obj).map(([k, v]) => {
-              return (
-                  <ContinuationOption key={k} k={k} v={v}></ContinuationOption>
-              );
+              return <ContinuationOption key={k} v={v} />;
           })
         : null;
     const cont = continuations ? (
@@ -171,33 +180,11 @@ export function UTXODetail(props: UTXODetailProps) {
     );
 }
 
-function ContinuationOption(props: { k: string; v: Continuation }) {
+function ContinuationOption(props: { v: Continuation }) {
     const [is_open, setOpen] = React.useState(false);
-    const select_effect = useSelector(selectHasEffect);
-    const name = props.k.substr(props.k.lastIndexOf('/') + 1);
+    const name = props.v.path.substr(props.v.path.lastIndexOf('/') + 1);
     const dispatch = useDispatch();
-    const form = React.useRef<any | null>(null);
-    const name_form = React.useRef<any | null>(null);
-    const name_schema: JSONSchema7 = {
-        title: 'Name for this Update',
-        type: 'string',
-    };
-    const this_effect_name = React.useRef('');
-    const submit = (e: ISubmitEvent<any>) => {
-        const name = this_effect_name.current;
-        const data = e.formData;
-        dispatch(add_effect_to_contract([props.k, name, data]));
-    };
 
-    const validate_name_unique = (
-        data: string,
-        errors: FormValidation
-    ): FormValidation => {
-        if (data === '') errors.addError('Name Required');
-        if (select_effect(props.k, data)) errors.addError('Name Already Used');
-        this_effect_name.current = data;
-        return errors;
-    };
     return (
         <div>
             <Button onClick={() => setOpen(true)} variant="contained">
@@ -206,32 +193,14 @@ function ContinuationOption(props: { k: string; v: Continuation }) {
             <Dialog open={is_open} onClose={() => setOpen(false)}>
                 <DialogTitle>
                     <Typography variant="h5">{name}</Typography>
-                    <ASM className="txhex" value={props.k} label="Full Path" />
+                    <ASM
+                        className="txhex"
+                        value={props.v.path}
+                        label="Full Path"
+                    />
                 </DialogTitle>
                 <DialogContent>
-                    <Form
-                        schema={name_schema}
-                        validate={validate_name_unique}
-                        liveValidate
-                        // NOTE: This is a bug documented here
-                        // https://github.com/rjsf-team/react-jsonschema-form/issues/2135
-                        // eslint-disable-next-line
-                        // @ts-ignore
-                        ref={name_form}
-                    >
-                        <div
-                        // Cancels native submit button
-                        ></div>
-                    </Form>
-                    <Form
-                        schema={props.v.schema}
-                        onSubmit={submit}
-                        // NOTE: This is a bug documented here
-                        // https://github.com/rjsf-team/react-jsonschema-form/issues/2135
-                        // eslint-disable-next-line
-                        // @ts-ignore
-                        ref={form}
-                    ></Form>
+                    <MemoizeContForm {...props} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => dispatch(recreate_contract())}>
@@ -240,6 +209,64 @@ function ContinuationOption(props: { k: string; v: Continuation }) {
                     <Button onClick={() => setOpen(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
+        </div>
+    );
+}
+
+const name_schema: JSONSchema7 = {
+    title: 'Name for this Update',
+    type: 'string',
+};
+const MemoizeContForm = React.memo(ContForm, (prev, next) => {
+    return prev.v.path === next.v.path;
+});
+function ContForm(props: { v: Continuation }) {
+    const dispatch = useDispatch();
+    const form = React.useRef<any | null>(null);
+    const name_form = React.useRef<any | null>(null);
+    const this_effect_name = React.useRef('');
+    const submit = (e: ISubmitEvent<any>) => {
+        const name = this_effect_name.current;
+        const data = e.formData;
+        dispatch(add_effect_to_contract([props.v.path, name, data]));
+    };
+    const has_effect = useSelector((s: RootState) =>
+        selectHasEffect(s, props.v.path)
+    );
+    const validate_name_unique = (
+        data: string,
+        errors: FormValidation
+    ): FormValidation => {
+        if (data === '') errors.addError('Name Required');
+        if (hasOwn(has_effect, data)) errors.addError('Name Already Used');
+        this_effect_name.current = data;
+        return errors;
+    };
+    return (
+        <div>
+            <Form
+                schema={name_schema}
+                validate={validate_name_unique}
+                liveValidate
+                // NOTE: This is a bug documented here
+                // https://github.com/rjsf-team/react-jsonschema-form/issues/2135
+                // eslint-disable-next-line
+                // @ts-ignore
+                ref={name_form}
+            >
+                <div
+                // Cancels native submit button
+                ></div>
+            </Form>
+            <Form
+                schema={props.v.schema}
+                onSubmit={submit}
+                // NOTE: This is a bug documented here
+                // https://github.com/rjsf-team/react-jsonschema-form/issues/2135
+                // eslint-disable-next-line
+                // @ts-ignore
+                ref={form}
+            ></Form>
         </div>
     );
 }
