@@ -19,6 +19,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { Cancel } from '@mui/icons-material';
 import { poll_settings } from '../../Settings/SettingsSlice';
 import { useDispatch } from 'react-redux';
+import './Settings.css';
 
 function SettingPane(props: {
     name: keyof typeof schemas;
@@ -51,58 +52,53 @@ function SettingPane(props: {
         get_args();
     }, []);
     return (
-        <div hidden={props.idx !== props.value}>
+        <div hidden={props.idx !== props.value} className="SettingPane">
             {props.idx === props.value && (
-                <Box>
+                <Form
+                    className="SettingForm"
+                    schema={schemas[props.name]}
+                    onSubmit={handlesubmit}
+                    fields={custom_fields}
+                    uiSchema={{
+                        sapio_cli: {
+                            'ui:widget': PathOnly,
+                        },
+                        auth: {
+                            CookieFile: {
+                                'ui:widget': PathOnly,
+                            },
+                        },
+                        Enabled: {
+                            file: {
+                                'ui:widget': PathOnly,
+                            },
+                        },
+                    }}
+                    formData={data}
+                >
                     <Box sx={{ paddingTop: '20px' }}>
-                        <Form
-                            schema={schemas[props.name]}
-                            onSubmit={handlesubmit}
-                            fields={custom_fields}
-                            uiSchema={{
-                                sapio_cli: {
-                                    'ui:widget': PathOnly,
-                                },
-                                auth: {
-                                    CookieFile: {
-                                        'ui:widget': PathOnly,
-                                    },
-                                },
-                                Enabled: {
-                                    file: {
-                                        'ui:widget': PathOnly,
-                                    },
-                                },
-                            }}
-                            formData={data}
+                        <Button
+                            variant="contained"
+                            color="success"
+                            type="submit"
+                            size="large"
+                            endIcon={<SaveIcon />}
                         >
-                            <Box sx={{ paddingTop: '20px' }}>
-                                <Button
-                                    variant="contained"
-                                    color="success"
-                                    type="submit"
-                                    size="large"
-                                    endIcon={<SaveIcon />}
-                                >
-                                    Save Settings
-                                </Button>
-                                <Button
-                                    sx={{ marginLeft: '20px' }}
-                                    variant="contained"
-                                    color="warning"
-                                    size="large"
-                                    endIcon={<Cancel />}
-                                    onClick={get_args}
-                                >
-                                    Reset{' '}
-                                </Button>
-                            </Box>
-                            <Box sx={{ paddingTop: '20px' }}>
-                                {props.children}
-                            </Box>
-                        </Form>
+                            Save Settings
+                        </Button>
+                        <Button
+                            sx={{ marginLeft: '20px' }}
+                            variant="contained"
+                            color="warning"
+                            size="large"
+                            endIcon={<Cancel />}
+                            onClick={get_args}
+                        >
+                            Reset{' '}
+                        </Button>
                     </Box>
-                </Box>
+                    <Box sx={{ paddingTop: '20px' }}>{props.children}</Box>
+                </Form>
             )}
         </div>
     );
@@ -190,9 +186,10 @@ export function SettingsInner() {
     };
 
     return (
-        <div style={{ height: '100%' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <div className="Settings">
+            <Box className="SettingsNav">
                 <Tabs
+                    orientation="vertical"
                     value={idx}
                     onChange={handleChange}
                     aria-label="basic tabs example"
@@ -204,7 +201,7 @@ export function SettingsInner() {
                     <Tab label="Display"></Tab>
                 </Tabs>
             </Box>
-            <Box sx={{ overflowY: 'scroll', height: '100%' }}>
+            <Box className="SettingsPanes">
                 <Dialog
                     open={
                         Boolean(dialog_node[0]) ||
@@ -232,58 +229,56 @@ export function SettingsInner() {
                         </Button>
                     </DialogActions>
                 </Dialog>
-                <div style={{ marginBottom: '200px' }}>
-                    <Guide idx={idx} my_idx={0} />
-                    <SettingPane name={'sapio_cli'} value={idx} idx={1}>
-                        <Button
-                            onClick={test_sapio}
-                            variant="contained"
-                            color="info"
-                            size="large"
-                        >
-                            Test Sapio-Cli
-                        </Button>
-                    </SettingPane>
-                    <SettingPane name={'bitcoin'} value={idx} idx={2}>
-                        <Button
-                            onClick={test_bitcoind}
-                            variant="contained"
-                            color="info"
-                            size="large"
-                        >
-                            Test Connection
-                        </Button>
-                    </SettingPane>
-                    <SettingPane name={'local_oracle'} value={idx} idx={3}>
-                        <Button
-                            variant="contained"
-                            color="success"
-                            size="large"
-                            onClick={window.electron.emulator.start}
-                        >
-                            Start
-                        </Button>
-                        <Button
-                            sx={{ marginLeft: '20px' }}
-                            variant="contained"
-                            color="error"
-                            size="large"
-                            onClick={window.electron.emulator.kill}
-                        >
-                            Kill
-                        </Button>
-                        <Button
-                            sx={{ marginLeft: '20px' }}
-                            variant="contained"
-                            color="info"
-                            size="large"
-                            onClick={check_emulator}
-                        >
-                            Check Status
-                        </Button>
-                    </SettingPane>
-                    <SettingPane name={'display'} value={idx} idx={4} />
-                </div>
+                <Guide idx={idx} my_idx={0} />
+                <SettingPane name={'sapio_cli'} value={idx} idx={1}>
+                    <Button
+                        onClick={test_sapio}
+                        variant="contained"
+                        color="info"
+                        size="large"
+                    >
+                        Test Sapio-Cli
+                    </Button>
+                </SettingPane>
+                <SettingPane name={'bitcoin'} value={idx} idx={2}>
+                    <Button
+                        onClick={test_bitcoind}
+                        variant="contained"
+                        color="info"
+                        size="large"
+                    >
+                        Test Connection
+                    </Button>
+                </SettingPane>
+                <SettingPane name={'local_oracle'} value={idx} idx={3}>
+                    <Button
+                        variant="contained"
+                        color="success"
+                        size="large"
+                        onClick={window.electron.emulator.start}
+                    >
+                        Start
+                    </Button>
+                    <Button
+                        sx={{ marginLeft: '20px' }}
+                        variant="contained"
+                        color="error"
+                        size="large"
+                        onClick={window.electron.emulator.kill}
+                    >
+                        Kill
+                    </Button>
+                    <Button
+                        sx={{ marginLeft: '20px' }}
+                        variant="contained"
+                        color="info"
+                        size="large"
+                        onClick={check_emulator}
+                    >
+                        Check Status
+                    </Button>
+                </SettingPane>
+                <SettingPane name={'display'} value={idx} idx={4} />
             </Box>
         </div>
     );
@@ -292,7 +287,7 @@ export function SettingsInner() {
 function Guide(props: { idx: number; my_idx: number }) {
     const { my_idx, idx } = props;
     return (
-        <div hidden={idx !== my_idx}>
+        <div hidden={idx !== my_idx} className="SettingPane">
             {idx === my_idx && (
                 <Box>
                     <Typography variant="h2">
