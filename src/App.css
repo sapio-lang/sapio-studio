@@ -57,15 +57,19 @@ body {
 
 .App {
     height: 100vh;
+    max-height: 100vh;
     background-color: black;
     color: white;
     display: grid;
     grid-template-rows: 1fr auto;
+    overflow: hidden;
 }
 
 .App-area {
     display: grid;
     grid-template-columns: 200px 1fr;
+    overflow: scroll;
+    max-height: 100%;
 }
 
 .App-gutter {
@@ -79,6 +83,8 @@ body {
 
 .area-inner {
     width: calc(100vw - 200px);
+    overflow-y: scroll;
+    max-height: 100%;
 }
 
 .area-overlays {
@@ -106,8 +112,5 @@ body {
 }
 
 .settings-container {
-    padding-left: 50px;
-    padding-right: 50px;
-    padding-bottom: 20px;
     height: 100%;
 }

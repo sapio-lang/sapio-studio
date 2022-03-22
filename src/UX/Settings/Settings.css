@@ -1,0 +1,32 @@
+.SettingPane {
+    max-height: 100%;
+    margin-bottom: 100px;
+    height: 100%;
+}
+
+.SettingForm {
+    max-height: 100%;
+    height: 100%;
+}
+
+.Settings {
+    max-height: 100%;
+    display: grid;
+    height: 100%;
+    grid-template-columns: max-content auto;
+}
+
+.SettingsPanes {
+    max-height: 100%;
+    padding-right: 50px;
+    overflow: scroll;
+    height: 100%;
+    padding-left: 50px;
+}
+
+.SettingsNav {
+    border-bottom: 1;
+    border-color: 'divider';
+    max-height: 100%;
+    height: fit-content;
+}

@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Data } from './Data/ContractManager';
 import { AppDispatch, RootState } from './Store/store';
-import { hasOwn } from './util';
+import { createSelectorCreator, defaultMemoize } from 'reselect';
+import _ from 'lodash';
 
 type ContractArgs = {
     arguments: Record<string | number, unknown>;
@@ -138,14 +139,17 @@ export const selectStatusBar: (state: RootState) => boolean = (
     state: RootState
 ) => state.appReducer.status_bar;
 
-export const selectHasEffect: (
-    state: RootState
-) => (s: string, key: string) => boolean = (state: RootState) => {
-    return (s, key) => {
-        const d = state.appReducer.data?.args.context.effects?.effects ?? {};
-        return hasOwn(d, s) && hasOwn(d[s]!, key);
-    };
-};
+const createDeepEqualSelector = createSelectorCreator(
+    defaultMemoize,
+    _.isEqual
+);
+export const selectHasEffect = createDeepEqualSelector(
+    [
+        (state: RootState, path: string) =>
+            state.appReducer.data?.args.context.effects?.effects ?? {},
+    ],
+    (d) => Object.fromEntries(Object.keys(d).map((k) => [k, null]))
+);
 
 export const selectShowing: (state: RootState) => Pages = (state: RootState) =>
     state.appReducer.showing;
