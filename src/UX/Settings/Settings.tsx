@@ -107,7 +107,8 @@ function SettingPane(props: {
         </div>
     );
 }
-export function Settings() {
+export const Settings = React.memo(SettingsInner);
+export function SettingsInner() {
     const [idx, set_idx] = React.useState<number>(0);
     const [dialog_node, set_dialog_node] = React.useState<
         [string | null, string[]]
