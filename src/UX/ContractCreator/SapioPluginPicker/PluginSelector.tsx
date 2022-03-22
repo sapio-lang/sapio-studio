@@ -2,22 +2,21 @@ import React from 'react';
 import './PluginSelector.css';
 import { PluginTile } from './PluginTile';
 import { PluginForm } from './PluginForm';
-import { selectAPIs, selectSelectedAPI } from '../ContractCreatorSlice';
+import { selectAPI, selectAPIEntries } from '../ContractCreatorSlice';
 import { useDispatch, useSelector } from 'react-redux';
 export function PluginSelector() {
     const dispatch = useDispatch();
-    const apis = useSelector(selectAPIs);
-    const selected = useSelector(selectSelectedAPI);
+    const selected = useSelector(selectAPI);
+    const all_apis = useSelector(selectAPIEntries);
 
-    if (apis === null) return null;
     if (selected !== null) {
         return (
             <div>
-                <PluginForm app={apis[selected]!} />
+                <PluginForm app={selected} />
             </div>
         );
     } else {
-        const tiles = Array.from(Object.entries(apis), ([name, app], i) => (
+        const tiles = Array.from(all_apis, ([name, app], i) => (
             <PluginTile app={app} />
         ));
         return (

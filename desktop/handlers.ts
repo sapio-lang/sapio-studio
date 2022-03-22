@@ -128,7 +128,7 @@ export default function (window: BrowserWindow) {
                 }
             );
 
-            const name = JSON.parse(mod).which;
+            const name = JSON.parse(mod).module;
 
             return { ok: { data, name, args } };
         }

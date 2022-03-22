@@ -1,4 +1,6 @@
 import { createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit';
+import { createSelectorCreator, defaultMemoize } from 'reselect';
+
 import { RootState } from '../../Store/store';
 import { JSONSchema7 } from 'json-schema';
 import {
@@ -6,6 +8,7 @@ import {
     Continuation,
     ContinuationTable,
 } from '../../Data/ContractManager';
+import _ from 'lodash';
 export type APIs = Record<
     string,
     { name: string; key: string; api: JSONSchema7; logo: string }
@@ -55,12 +58,26 @@ export const register = (dispatch: Dispatch) => {
         dispatch(show_apis(true));
     });
 };
-export const selectAPIs = (rs: RootState): APIs | null => {
+const selectAPIs = (rs: RootState): APIs | null => {
     return rs.contractCreatorReducer.apis;
 };
-export const selectSelectedAPI = (rs: RootState): keyof APIs | null => {
+const selectSelectedAPI = (rs: RootState): keyof APIs | null => {
     return rs.contractCreatorReducer.selected_api;
 };
+
+const createDeepEqualSelector = createSelectorCreator(
+    defaultMemoize,
+    _.isEqual
+);
+
+export const selectAPI = createDeepEqualSelector(
+    [selectAPIs, selectSelectedAPI],
+    (apis, key) => (apis === null || key === null ? null : apis[key] ?? null)
+);
+export const selectAPIEntries = createDeepEqualSelector([selectAPIs], (apis) =>
+    Object.entries(apis ?? {})
+);
+
 export const showAPIs = (rs: RootState): boolean => {
     return rs.contractCreatorReducer.show;
 };
