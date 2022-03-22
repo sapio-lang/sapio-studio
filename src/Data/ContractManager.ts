@@ -13,6 +13,7 @@ import {
 } from '../util';
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
+import Color from 'color';
 export type NodeColorT = ['NodeColor', string];
 export const NodeColor = {
     new(c: string): NodeColorT {
@@ -237,7 +238,11 @@ function process_txn_models(
             // TODO: a hack to make the flow technically correct and detectable
             mock_txn.addOutput(Buffer.from(''), 21e6 * 100e6);
         }
-        const color = NodeColor.new('magenta');
+        const c = Color(
+            [Math.random() * 255, Math.random() * 255, Math.random() * 255],
+            'rgb'
+        ).toString();
+        const color = NodeColor.new(c);
         const utxo_metadata: Array<UTXOFormatData | null> = new Array(
             n_outputs
         );
@@ -263,6 +268,8 @@ function process_utxo_models(
     const to_add: Array<UTXOModel> = [];
     for (const m_txn of txn_models) {
         assert.equal(m_txn.utxo_models.length, m_txn.tx.outs.length);
+        if (!(m_txn instanceof PhantomTransactionModel))
+            to_add.push(...m_txn.utxo_models);
         _.zip(m_txn.utxo_models, m_txn.tx.outs).forEach(
             ([opt_utxo_model, opt_out], output_index) => {
                 // safe because of assert
@@ -274,10 +281,12 @@ function process_utxo_models(
                         m_txn.get_txid(),
                         output_index
                     ) ?? [];
+                assert.equal(m_txn, utxo_model.txn);
                 if (
-                    utxo_model?.txn instanceof PhantomTransactionModel &&
+                    m_txn instanceof PhantomTransactionModel &&
                     spenders.length > 0
                 ) {
+                    to_add.push(utxo_model);
                     if (spenders[0]?.witness_set.witnesses.length) {
                         const witstack =
                             spenders[0]?.witness_set.witnesses[0]?.[
@@ -337,7 +346,6 @@ function process_utxo_models(
                 });
             }
         );
-        to_add.push(...m_txn.utxo_models);
     }
     return to_add;
 }
