@@ -24,7 +24,12 @@ export type CreatedContract = {
     data: Data;
 };
 
-type Pages = 'ContractCreator' | 'ContractViewer' | 'Wallet' | 'Settings';
+type Pages =
+    | 'ContractCreator'
+    | 'ContractViewer'
+    | 'Wallet'
+    | 'Settings'
+    | 'MiniscriptCompiler';
 type StateType = {
     data: CreatedContract | null;
     counter: number;

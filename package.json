@@ -30,6 +30,7 @@
         "@types/react": "^17.0.18",
         "@types/react-dom": "^17.0.9",
         "@types/react-redux": "^7.1.18",
+        "@wasm-tool/wasm-pack-plugin": "^1.6.0",
         "await-spawn": "^4.0.2",
         "bitcoin-core-ts": "^3.0.3",
         "bitcoinjs-lib": "^5.1.6",
@@ -45,6 +46,7 @@
         "paths-js": "^0.4.10",
         "prettier": "^2.6.0",
         "react": "17.0.2",
+        "react-app-rewired": "^2.2.1",
         "react-dom": "17.0.2",
         "react-redux": "^7.2.4",
         "react-scripts": "^4.0.3",
@@ -56,13 +58,13 @@
     "scripts": {
         "build-electron": "yarn tsc -p ./tsconfig.node.json",
         "watch": "yarn tsc -w",
-        "build": "react-scripts build",
+        "build": "react-app-rewired build",
         "eject": "react-scripts eject",
         "prettier": "prettier --write src desktop",
         "prettier:check": "prettier --check src desktop",
         "start-electron": "export ELECTRON_START_URL='http://localhost:3000' && yarn build-electron && electron .",
-        "start-react": "export BROWSER=none REACT_EDITOR=none && react-scripts start",
-        "test": "react-scripts test"
+        "start-react": "export BROWSER=none REACT_EDITOR=none && react-app-rewired start",
+        "test": "react-app-rewired test"
     },
     "eslintConfig": {
         "extends": "react-app"

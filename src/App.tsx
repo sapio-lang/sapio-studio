@@ -45,10 +45,10 @@ import {
     selectShouldViewEntity,
 } from './UX/Entity/EntitySlice';
 import { CurrentlyViewedEntity } from './UX/Entity/EntityViewer';
+import { MiniscriptCompiler } from './UX/Miniscript/Compiler';
 import { Modals } from './UX/Modals';
 import { Settings } from './UX/Settings/Settings';
 import { Wallet } from './Wallet/Wallet';
-
 export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
     isSelected: boolean;
 };
@@ -274,6 +274,12 @@ function Viewing(props: {
             return <CreateContractModal />;
         case 'ContractViewer':
             return <ContractViewer {...props} />;
+        case 'MiniscriptCompiler':
+            return (
+                <Paper className="miniscript-container" square={true}>
+                    <MiniscriptCompiler></MiniscriptCompiler>
+                </Paper>
+            );
     }
 }
 function ContractViewer(props: {

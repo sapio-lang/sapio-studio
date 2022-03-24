@@ -1,0 +1,9 @@
+.MiniscriptCompiler {
+    padding: 50px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.CompilerOutput {
+    max-width: 50%;
+}
