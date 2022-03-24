@@ -5,10 +5,7 @@ import appReducer from '../AppSlice';
 import { dataReducer } from '../Data/DataSlice';
 import modalReducer from '../UX/ModalSlice';
 import { settingsReducer } from '../Settings/SettingsSlice';
-import {
-    contractCreatorReducer,
-    register,
-} from '../UX/ContractCreator/ContractCreatorSlice';
+import { contractCreatorReducer } from '../UX/ContractCreator/ContractCreatorSlice';
 import { simulationReducer } from '../Data/SimulationSlice';
 
 export const store = configureStore({
@@ -24,7 +21,6 @@ export const store = configureStore({
     middleware: [thunk],
     devTools: true,
 });
-register(store.dispatch);
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;

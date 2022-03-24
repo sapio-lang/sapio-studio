@@ -57,7 +57,7 @@ function save_psbt(psbt: string): Promise<null> {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
 
-function fetch_psbt(): Promise<null> {
+function fetch_psbt(): Promise<string> {
     return ipcRenderer.invoke('fetch_psbt');
 }
 function save_contract(contract: string): Promise<null> {
@@ -69,28 +69,6 @@ function save_settings(which: string, data: string): Promise<boolean> {
 
 function load_settings_sync(which: string): any {
     return ipcRenderer.invoke('load_settings_sync', which);
-}
-
-const callbacks = {
-    simulate: 0,
-    load_hex: 0,
-    save_hex: 0,
-    create_contracts: 0,
-    load_contract: 0,
-    'bitcoin-node-bar': 0,
-};
-
-type Callback = keyof typeof callbacks;
-
-function register(msg: Callback, action: (args: any) => void): () => void {
-    if (callbacks.hasOwnProperty(msg)) {
-        const listener = (event: IpcRendererEvent, args: any) => {
-            action(args);
-        };
-        ipcRenderer.on(msg, listener);
-        return () => ipcRenderer.removeListener(msg, listener);
-    }
-    throw 'Unregistered Callback';
 }
 
 function write_clipboard(s: string) {
@@ -112,9 +90,8 @@ function emulator_read_log(): Promise<string> {
     return ipcRenderer.invoke('emulator::read_log');
 }
 
-const api = {
+const api /*:ugh preloads*/ = {
     bitcoin_command,
-    register,
     save_psbt,
     save_contract,
     fetch_psbt,

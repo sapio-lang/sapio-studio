@@ -15,15 +15,11 @@ import createEngine, {
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import './App.css';
-import {
-    load_new_model,
-    selectContract,
-    selectShowing,
-    selectStatusBar,
-} from './AppSlice';
+import { selectContract, selectShowing, selectStatusBar } from './AppSlice';
+import { Data } from './common/preload_interface';
 import { BitcoinNodeManager } from './Data/BitcoinNode';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
-import { ContractModel, Data } from './Data/ContractManager';
+import { ContractModel } from './Data/ContractManager';
 import { ModelManager } from './Data/ModelManager';
 import { SimulationController } from './Data/Simulation';
 import { selectSimIsShowing, toggle_showing } from './Data/SimulationSlice';
@@ -93,11 +89,11 @@ function App() {
     const model = React.useRef(new DiagramModel());
 
     // TODO: This should go somewhere else :(
-    React.useEffect(() => {
-        return window.electron.register('load_contract', (data: string) => {
-            dispatch(load_new_model(JSON.parse(data)));
-        });
-    });
+    //React.useEffect(() => {
+    //    return window.electron.register_callback('load_contract', (data: string) => {
+    //        dispatch(load_new_model(JSON.parse(data)));
+    //    });
+    //});
     React.useEffect(() => {
         setTimeout(() => {
             poll_settings(dispatch);

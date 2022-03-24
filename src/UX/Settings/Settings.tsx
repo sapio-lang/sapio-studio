@@ -1,4 +1,3 @@
-import { schemas } from './Schemas';
 import {
     Tabs,
     Tab,
@@ -20,6 +19,7 @@ import { Cancel } from '@mui/icons-material';
 import { poll_settings } from '../../Settings/SettingsSlice';
 import { useDispatch } from 'react-redux';
 import './Settings.css';
+import { schemas } from '../../common/settings_gen';
 
 function SettingPane(props: {
     name: keyof typeof schemas;

@@ -12,14 +12,14 @@ import { preferences, sapio_config_file } from './settings';
 import path from 'path';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { mkdir, readdir, writeFile } from 'fs/promises';
+import { API, Result } from '../src/common/preload_interface';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
 
-type Result = { ok: string } | { err: string };
 class SapioCompiler {
     constructor() {}
-    static async command(args: string[]): Promise<Result> {
+    static async command(args: string[]): Promise<Result<string>> {
         const binary = preferences.data.sapio_cli.sapio_cli;
         const source = preferences.data.sapio_cli.preferences;
         let new_args: string[] = [];
@@ -45,7 +45,7 @@ class SapioCompiler {
         }
     }
 
-    async psbt_finalize(psbt: string): Promise<Result> {
+    async psbt_finalize(psbt: string): Promise<Result<string>> {
         return await SapioCompiler.command([
             'psbt',
             'finalize',
@@ -54,18 +54,11 @@ class SapioCompiler {
         ]);
     }
 
-    async show_config(): Promise<Result> {
+    async show_config(): Promise<Result<string>> {
         return await SapioCompiler.command(['configure', 'show']);
     }
-    async list_contracts(): Promise<
-        | {
-              ok: Record<
-                  string,
-                  { name: string; key: string; api: JSONSchema7; logo: string }
-              >;
-          }
-        | { err: string }
-    > {
+
+    async list_contracts(): Promise<Result<API>> {
         const res = await SapioCompiler.command(['contract', 'list']);
         if ('err' in res) return res;
         const contracts = res.ok;
@@ -98,33 +91,34 @@ class SapioCompiler {
             })
         );
         const logos_p = Promise.all(
-            lines.map(([name, key]: [string, string]): Promise<Result> => {
-                if (memo_logos.has(key)) {
-                    return Promise.resolve(memo_logos.get(key));
-                } else {
-                    return SapioCompiler.command([
-                        'contract',
-                        'logo',
-                        '--key',
-                        key,
-                    ])
-                        .then((logo: Result) => {
-                            return 'ok' in logo ? { ok: logo.ok.trim() } : logo;
-                        })
-                        .then((logo: Result) => {
-                            if ('err' in logo) return logo;
-                            memo_logos.set(key, logo);
-                            return logo;
-                        });
+            lines.map(
+                ([name, key]: [string, string]): Promise<Result<string>> => {
+                    if (memo_logos.has(key)) {
+                        return Promise.resolve(memo_logos.get(key));
+                    } else {
+                        return SapioCompiler.command([
+                            'contract',
+                            'logo',
+                            '--key',
+                            key,
+                        ])
+                            .then((logo: Result<string>) => {
+                                return 'ok' in logo
+                                    ? { ok: logo.ok.trim() }
+                                    : logo;
+                            })
+                            .then((logo: Result<string>) => {
+                                if ('err' in logo) return logo;
+                                memo_logos.set(key, logo);
+                                return logo;
+                            });
+                    }
                 }
-            })
+            )
         );
         const [apis, logos] = await Promise.all([apis_p, logos_p]);
 
-        const results: Record<
-            string,
-            { name: string; key: string; api: Object; logo: string }
-        > = {};
+        const results: API = {};
         equal(lines.length, apis.length);
         equal(lines.length, logos.length);
         for (let i = 0; i < lines.length; ++i) {
@@ -169,7 +163,7 @@ class SapioCompiler {
     async create_contract(
         which: string,
         args: string
-    ): Promise<{ ok: string | null } | { err: string }> {
+    ): Promise<Result<string | null>> {
         let create, created, bound;
         const args_h = Bitcoin.crypto.sha256(Buffer.from(args)).toString('hex');
         // Unique File Name of Time + Args + Module

@@ -1,28 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Data } from './Data/ContractManager';
 import { AppDispatch, RootState } from './Store/store';
 import { createSelectorCreator, defaultMemoize } from 'reselect';
 import _ from 'lodash';
-
-type ContractArgs = {
-    arguments: Record<string | number, unknown>;
-    context: {
-        amount: number;
-        network: 'Regtest' | 'Signet' | 'Testnet' | 'Bitcoin';
-        effects?: {
-            effects?: Record<
-                string,
-                Record<string, Record<string | number, unknown>>
-            >;
-        };
-    };
-};
-
-export type CreatedContract = {
-    name: string;
-    args: ContractArgs;
-    data: Data;
-};
+import { CreatedContract, Data } from './common/preload_interface';
 
 type Pages =
     | 'ContractCreator'

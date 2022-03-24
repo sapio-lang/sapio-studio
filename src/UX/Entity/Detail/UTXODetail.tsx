@@ -17,7 +17,7 @@ import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Continuation, ContractModel } from '../../../Data/ContractManager';
+import { ContractModel } from '../../../Data/ContractManager';
 import { PhantomTransactionModel } from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
 import {
@@ -45,6 +45,7 @@ import {
     selectHasEffect,
 } from '../../../AppSlice';
 import { RootState } from '../../../Store/store';
+import { Continuation } from '../../../common/preload_interface';
 
 interface UTXODetailProps {
     entity: UTXOModel;

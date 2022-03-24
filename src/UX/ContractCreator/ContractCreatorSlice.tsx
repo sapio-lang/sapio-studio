@@ -1,21 +1,17 @@
-import { createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createSelectorCreator, defaultMemoize } from 'reselect';
 
 import { RootState } from '../../Store/store';
-import { JSONSchema7 } from 'json-schema';
 import {
+    API,
     APIPath,
     Continuation,
     ContinuationTable,
-} from '../../Data/ContractManager';
+} from '../../common/preload_interface';
 import _ from 'lodash';
-export type APIs = Record<
-    string,
-    { name: string; key: string; api: JSONSchema7; logo: string }
->;
 type CreatorStateType = {
-    apis: null | APIs;
-    selected_api: keyof APIs | null;
+    apis: null | API;
+    selected_api: keyof API | null;
     show: boolean;
     continuations: ContinuationTable;
 };
@@ -32,10 +28,10 @@ export const contractCreatorSlice = createSlice({
     name: 'ContractCreator',
     initialState: default_state(),
     reducers: {
-        set_apis: (state, action: PayloadAction<APIs>) => {
+        set_apis: (state, action: PayloadAction<API>) => {
             state.apis = action.payload;
         },
-        select_api: (state, action: PayloadAction<keyof APIs | null>) => {
+        select_api: (state, action: PayloadAction<keyof API | null>) => {
             state.selected_api = action.payload;
         },
         show_apis: (state, action: PayloadAction<boolean>) => {
@@ -52,16 +48,16 @@ export const contractCreatorSlice = createSlice({
 export const { show_apis, set_apis, select_api, set_continuations } =
     contractCreatorSlice.actions;
 
-export const register = (dispatch: Dispatch) => {
-    window.electron.register('create_contracts', (apis: APIs) => {
-        dispatch(set_apis(apis));
-        dispatch(show_apis(true));
-    });
-};
-const selectAPIs = (rs: RootState): APIs | null => {
+//export const register = (dispatch: Dispatch) => {
+//    window.electron.register_callback('create_contracts', (apis: API) => {
+//        dispatch(set_apis(apis));
+//        dispatch(show_apis(true));
+//    });
+//};
+const selectAPIs = (rs: RootState): API | null => {
     return rs.contractCreatorReducer.apis;
 };
-const selectSelectedAPI = (rs: RootState): keyof APIs | null => {
+const selectSelectedAPI = (rs: RootState): keyof API | null => {
     return rs.contractCreatorReducer.selected_api;
 };
 

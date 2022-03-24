@@ -4,67 +4,10 @@ import React from 'react';
 import { TextField, InputAdornment } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { selectMaxSats } from './Settings/SettingsSlice';
-import { APIs } from './UX/ContractCreator/ContractCreatorSlice';
-import { schemas } from './UX/Settings/Schemas';
-import { CreatedContract } from './AppSlice';
-// must manually copy from preload
-type Callback =
-    | 'simulate'
-    | 'load_hex'
-    | 'save_hex'
-    | 'create_contracts'
-    | 'load_contract'
-    | 'bitcoin-node-bar';
-export type Result<T, E = string> = { ok: T } | { err: E };
+import { preloads } from './common/preload_interface';
 declare global {
     interface Window {
-        electron: {
-            bitcoin_command: (
-                command: {
-                    method: string;
-                    parameters: any[];
-                }[]
-            ) => Promise<any>;
-            register: (
-                msg: Callback,
-                action: (args: any) => void
-            ) => () => void;
-            save_psbt: (psbt: string) => Promise<null>;
-            save_contract: (contract: string) => Promise<null>;
-            fetch_psbt: () => Promise<string>;
-            write_clipboard: (s: string) => void;
-            save_settings: (
-                which: keyof typeof schemas,
-                data: string
-            ) => Promise<boolean>;
-            load_settings_sync: (which: keyof typeof schemas) => Promise<any>;
-            select_filename: () => Promise<string | null>;
-            sapio: {
-                show_config: () => Promise<Result<string>>;
-                load_wasm_plugin: () => Promise<Result<null>>;
-                open_contract_from_file: () => Promise<Result<string>>;
-                load_contract_list: () => Promise<Result<APIs>>;
-                create_contract: (
-                    which: string,
-                    args: string
-                ) => Promise<Result<string | null>>;
-                compiled_contracts: {
-                    list: () => Promise<string[]>;
-                    trash: (file_name: string) => Promise<void>;
-                    open: (
-                        file_name: string
-                    ) => Promise<Result<CreatedContract>>;
-                };
-                psbt: {
-                    finalize: (psbt: string) => Promise<Result<string>>;
-                };
-            };
-            emulator: {
-                kill: () => Promise<void>;
-                start: () => Promise<void>;
-                read_log: () => Promise<string>;
-            };
-        };
+        electron: preloads;
     }
 }
 

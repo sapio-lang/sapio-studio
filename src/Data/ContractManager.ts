@@ -2,7 +2,6 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
 import _, { Collection } from 'lodash';
-import { JSONSchema7 } from 'json-schema';
 import {
     InputMapT,
     InputMap,
@@ -14,6 +13,12 @@ import {
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
 import Color from 'color';
+import {
+    Continuation,
+    ContinuationTable,
+    Data,
+    UTXOFormatData,
+} from '../common/preload_interface';
 export type NodeColorT = ['NodeColor', string];
 export const NodeColor = {
     new(c: string): NodeColorT {
@@ -26,33 +31,6 @@ export const NodeColor = {
         return NodeColor.new(c[1].slice());
     },
 };
-export interface UTXOFormatData {
-    color: string;
-    label: string;
-}
-export interface TransactionData {
-    psbt: string;
-    hex: string;
-    metadata: {
-        color?: string;
-        label?: string;
-    };
-    output_metadata?: Array<UTXOFormatData | null>;
-}
-export type ContinuationTable = Record<string, Record<APIPath, Continuation>>;
-
-export type APIPath = string;
-export interface Continuation {
-    schema: JSONSchema7;
-    path: APIPath;
-}
-export interface DataItem {
-    txs: Array<{ linked_psbt: TransactionData }>;
-    continue_apis: Record<APIPath, Continuation>;
-}
-export interface Data {
-    program: Record<APIPath, DataItem>;
-}
 
 type PreProcessedData = {
     psbts: Array<Bitcoin.Psbt>;
