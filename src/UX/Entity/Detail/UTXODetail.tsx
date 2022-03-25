@@ -25,10 +25,13 @@ import {
     hasOwn,
     is_mock_outpoint,
     PrettyAmountField,
+    TXIDAndWTXIDMap,
 } from '../../../util';
 import {
     create,
+    EntityType,
     fetch_utxo,
+    selectEntityToView,
     selectUTXO,
     selectUTXOFlash,
     select_txn,
@@ -57,8 +60,20 @@ const C = React.memo(UTXODetailInner, (prev, next) => {
     console.log('NEWCHECK?', b);
     return b;
 });
-export function UTXODetail(props: UTXODetailProps) {
-    return <C {...props}></C>;
+export function UTXODetail(props: { contract: ContractModel }) {
+    const entity_id: EntityType = useSelector(selectEntityToView);
+    const entity =
+        entity_id[0] === 'UTXO'
+            ? TXIDAndWTXIDMap.get_by_txid_s(
+                  props.contract.txid_map,
+                  entity_id[1].hash
+              )?.utxo_models[entity_id[1].nIn] ?? null
+            : null;
+    return (
+        <div hidden={entity === null}>
+            {entity && <C contract={props.contract} entity={entity}></C>}
+        </div>
+    );
 }
 
 export function UTXODetailInner(props: UTXODetailProps) {

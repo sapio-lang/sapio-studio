@@ -2,19 +2,11 @@ import { IconButton, Tooltip, useTheme } from '@mui/material';
 import { red } from '@mui/material/colors';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { ContractModel } from '../../Data/ContractManager';
-import { TransactionModel } from '../../Data/Transaction';
-import { UTXOModel } from '../../Data/UTXO';
-import { TXIDAndWTXIDMap } from '../../util';
 import { TransactionDetail } from './Detail/TransactionDetail';
 import { UTXODetail } from './Detail/UTXODetail';
-import {
-    deselect_entity,
-    EntityType,
-    selectEntityToView,
-    selectShouldViewEntity,
-} from './EntitySlice';
+import { deselect_entity } from './EntitySlice';
 import './EntityViewer.css';
 import Color from 'color';
 
@@ -24,6 +16,7 @@ interface CurrentylViewedEntityProps {
 
 export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
     const theme = useTheme();
+    const dispatch = useDispatch();
     const [width, setWidth] = React.useState('20em');
     const onMouseUp = (e: MouseEvent) => {
         e.preventDefault();
@@ -41,50 +34,6 @@ export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
         document.addEventListener('mouseup', onMouseUp);
     };
 
-    const show = useSelector(selectShouldViewEntity);
-    const entity_id: EntityType = useSelector(selectEntityToView);
-    let guts: JSX.Element | null = null;
-    if (show) {
-        switch (entity_id[0]) {
-            case 'TXN': {
-                const entity =
-                    TXIDAndWTXIDMap.get_by_txid_s(
-                        props.current_contract.txid_map,
-                        entity_id[1]
-                    ) ?? null;
-                if (entity) {
-                    guts = (
-                        <TransactionDetail
-                            entity={entity as TransactionModel}
-                            find_tx_model={(a: Buffer, b: number) =>
-                                props.current_contract.lookup_utxo_model(a, b)
-                            }
-                        />
-                    );
-                }
-                break;
-            }
-            case 'UTXO': {
-                const entity =
-                    TXIDAndWTXIDMap.get_by_txid_s(
-                        props.current_contract.txid_map,
-                        entity_id[1].hash
-                    )?.utxo_models[entity_id[1].nIn] ?? null;
-                if (entity) {
-                    guts = (
-                        <UTXODetail
-                            entity={entity as UTXOModel}
-                            contract={props.current_contract}
-                        />
-                    );
-                }
-                break;
-            }
-            case 'NULL':
-                break;
-        }
-    }
-    const dispatch = useDispatch();
     return (
         <div
             className="EntityViewerFrame"
@@ -110,7 +59,13 @@ export function CurrentlyViewedEntity(props: CurrentylViewedEntityProps) {
                         width: width,
                     }}
                 >
-                    {guts}
+                    <TransactionDetail
+                        current_contract={props.current_contract}
+                        find_tx_model={(a: Buffer, b: number) =>
+                            props.current_contract.lookup_utxo_model(a, b)
+                        }
+                    />
+                    <UTXODetail contract={props.current_contract} />
                 </div>
             </div>
         </div>
