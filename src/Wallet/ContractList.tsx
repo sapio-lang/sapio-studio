@@ -43,7 +43,7 @@ export function ContractList(props: { idx: number; value: number }) {
         const [mod, args, time] = id.split('-');
         return {
             id,
-            module,
+            mod,
             args,
             time: new Date(parseInt(time!)),
         };
@@ -54,20 +54,11 @@ export function ContractList(props: { idx: number; value: number }) {
     };
 
     const columns: GridColumns = [
-        { field: 'mod', headerName: 'Module', width: 130, type: 'text' },
-        { field: 'args', headerName: 'Args Hash', width: 130 },
-        { field: 'time', headerName: 'Time', width: 130, type: 'date' },
         {
-            field: 'actions',
+            field: 'actions-load',
             type: 'actions',
-            width: 80,
+            flex: 0.2,
             getActions: (params) => [
-                <GridActionsCellItem
-                    key="delete"
-                    icon={<Delete />}
-                    label="Delete"
-                    onClick={() => delete_contract(params.id)}
-                />,
                 <GridActionsCellItem
                     key="open-folder"
                     icon={<VisibilityIcon />}
@@ -80,6 +71,39 @@ export function ContractList(props: { idx: number; value: number }) {
                             )
                         );
                     }}
+                />,
+            ],
+        },
+        {
+            field: 'time',
+            headerName: 'Time',
+            minWidth: 100,
+            type: 'dateTime',
+            flex: 1,
+        },
+        {
+            field: 'args',
+            headerName: 'Args Hash',
+            width: 100,
+            flex: 1,
+        },
+        {
+            field: 'mod',
+            headerName: 'Module',
+            width: 100,
+            type: 'text',
+            flex: 1,
+        },
+        {
+            field: 'actions-delete',
+            type: 'actions',
+            flex: 0.2,
+            getActions: (params) => [
+                <GridActionsCellItem
+                    key="delete"
+                    icon={<Delete />}
+                    label="Delete"
+                    onClick={() => delete_contract(params.id)}
                 />,
             ],
         },
@@ -121,6 +145,8 @@ export function ContractList(props: { idx: number; value: number }) {
                         <DataGrid
                             rows={contract_rows}
                             columns={columns}
+                            disableExtendRowFullWidth={false}
+                            columnBuffer={3}
                             pageSize={10}
                             rowsPerPageOptions={[5]}
                             disableColumnSelector
