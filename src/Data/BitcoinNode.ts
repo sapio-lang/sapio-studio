@@ -375,7 +375,7 @@ export class BitcoinNodeManager {
                     } else {
                         s[1] = {
                             txid: txdata.txid,
-                            confirmations: txdata.confirmations ?? null,
+                            confirmations: txdata.confirmations ?? 0,
                         };
                     }
                     s[0] = s[1].txid;
