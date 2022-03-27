@@ -14,6 +14,7 @@ import { new_utxo_inner_data, UTXOModel } from './UTXO';
 import { select_txn } from '../UX/Entity/EntitySlice';
 import { store } from '../Store/store';
 import { TransactionData, UTXOFormatData } from '../common/preload_interface';
+import _ from 'lodash';
 
 export class TransactionModel extends TransactionNodeModel implements HasKeys {
     tx: Bitcoin.Transaction;
@@ -36,10 +37,13 @@ export class TransactionModel extends TransactionNodeModel implements HasKeys {
         this.witness_set = all_witnesses;
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = NodeColor.clone(color);
-            const metadata: UTXOFormatData = utxo_labels[y] || {
-                color: NodeColor.get(subcolor),
-                label: name,
-            };
+            const metadata: UTXOFormatData = _.merge(
+                {
+                    color: NodeColor.get(subcolor),
+                    label: name,
+                },
+                utxo_labels[y]
+            );
             // TODO: Get rid of assertion
             const out: Bitcoin.TxOutput = tx.outs[y] as Bitcoin.TxOutput;
             const utxo = new UTXOModel(
