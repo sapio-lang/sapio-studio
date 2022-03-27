@@ -259,7 +259,7 @@ function process_utxo_models(
                         m_txn.get_txid(),
                         output_index
                     ) ?? [];
-                assert.equal(m_txn, utxo_model.txn);
+                assert.equal(m_txn, utxo_model.getOptions().txn);
                 if (
                     m_txn instanceof PhantomTransactionModel &&
                     spenders.length > 0
@@ -268,7 +268,7 @@ function process_utxo_models(
                     if (spenders[0]?.witness_set.witnesses.length) {
                         const witstack =
                             spenders[0]?.witness_set.witnesses[0]?.[
-                                utxo_model.utxo.index
+                                utxo_model.getOptions().utxo.index
                             ];
                         if (witstack) {
                             const program = witstack[witstack.length - 1];
@@ -294,11 +294,12 @@ function process_utxo_models(
                                     0
                                 );
                                 (
-                                    utxo_model.txn.tx.outs[
-                                        utxo_model.utxo.index
+                                    utxo_model.getOptions().txn.tx.outs[
+                                        utxo_model.getOptions().utxo.index
                                     ] as Output
                                 ).value = max_amount;
-                                utxo_model.utxo.amount = max_amount;
+                                utxo_model.getOptions().utxo.amount =
+                                    max_amount;
                                 const _address =
                                     Bitcoin.address.fromOutputScript(
                                         script,
@@ -320,7 +321,7 @@ function process_utxo_models(
                     }
                     const link = utxo_model.spent_by(spender, spend_idx, idx);
                     spender.input_links.push(link);
-                    utxo_model.utxo.spends.push(spender);
+                    utxo_model.getOptions().utxo.spends.push(spender);
                 });
             }
         );

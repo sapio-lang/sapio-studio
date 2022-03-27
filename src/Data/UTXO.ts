@@ -1,18 +1,14 @@
 import { Transaction } from 'bitcoinjs-lib';
-import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
+import {
+    UTXOInnerData,
+    UTXONodeModel,
+} from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
 import { TransactionModel } from './Transaction';
 import { is_mock_outpoint, txid_buf_to_string } from '../util';
 import { store } from '../Store/store';
 import { select_utxo } from '../UX/Entity/EntitySlice';
 import { UTXOFormatData } from '../common/preload_interface';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
-export type UTXOInnerData = {
-    index: number;
-    script: Buffer;
-    amount: number;
-    spends: Array<TransactionModel>;
-    txid: string;
-};
 export function new_utxo_inner_data(
     script: Buffer,
     amount: number,
@@ -28,8 +24,6 @@ export function new_utxo_inner_data(
     };
 }
 export class UTXOModel extends UTXONodeModel {
-    txn: TransactionModel;
-    utxo: UTXOInnerData;
     constructor(
         utxo: UTXOInnerData,
         metadata: UTXOFormatData,
@@ -41,12 +35,13 @@ export class UTXOModel extends UTXONodeModel {
                 color: metadata.color,
                 amount: utxo.amount,
                 confirmed: false,
+                txn,
+                utxo,
+                metadata,
             },
             txn.get_txid(),
             utxo.index
         );
-        this.utxo = utxo;
-        this.txn = txn;
         this.registerListener({
             selectionChanged: (event: any) => {
                 // TODO: get store the right way?
@@ -58,7 +53,7 @@ export class UTXOModel extends UTXONodeModel {
         });
     }
     getAmount(): number {
-        return this.utxo.amount;
+        return this.getOptions().utxo.amount;
     }
 
     spent_by(
@@ -80,13 +75,15 @@ export function update_utxomodel(utxo_in: UTXOModel) {
         const s = to_iterate.pop()!;
         for (const utxo of s) {
             // Pop a node for processing...
-            utxo.utxo.spends.forEach((spend: TransactionModel) => {
+            utxo.getOptions().utxo.spends.forEach((spend: TransactionModel) => {
                 spend.tx.ins
                     .filter(
-                        (inp) => txid_buf_to_string(inp.hash) === utxo.utxo.txid
+                        (inp) =>
+                            txid_buf_to_string(inp.hash) ===
+                            utxo.getOptions().utxo.txid
                     )
                     .forEach((inp) => {
-                        inp.hash = utxo.txn.tx.getHash();
+                        inp.hash = utxo.getOptions().txn.tx.getHash();
                     });
                 spend.tx.ins
                     .filter((inp) =>
@@ -97,8 +94,8 @@ export function update_utxomodel(utxo_in: UTXOModel) {
                     )
                     .forEach((inp) => {
                         // TODO: Only modify the mock that was intended
-                        inp.hash = utxo.txn.tx.getHash();
-                        inp.index = utxo.utxo.index;
+                        inp.hash = utxo.getOptions().txn.tx.getHash();
+                        inp.index = utxo.getOptions().utxo.index;
                     });
                 to_iterate.push(spend.utxo_models);
             });

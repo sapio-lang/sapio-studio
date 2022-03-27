@@ -80,8 +80,9 @@ export function UTXODetailInner(props: UTXODetailProps) {
     const theme = useTheme();
     const dispatch = useDispatch();
     const select_continuations = useSelector(selectContinuation);
-    const txid = props.entity.txn.get_txid();
-    const idx = props.entity.utxo.index;
+    const opts = props.entity.getOptions();
+    const txid = opts.txn.get_txid();
+    const idx = opts.utxo.index;
     const outpoint = { hash: txid, nIn: idx };
 
     const external_utxo = useSelector(selectUTXO)(outpoint);
@@ -91,8 +92,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
     const decomp =
         external_utxo?.scriptPubKey.address ??
         Bitcoin.script.toASM(
-            Bitcoin.script.decompile(props.entity.utxo.script) ??
-                Buffer.from('')
+            Bitcoin.script.decompile(opts.utxo.script) ?? Buffer.from('')
         );
     // first attempt to get the address from the extenral utxo if it's present,
     // otherwise attempt to read if from the utxo model
@@ -101,9 +101,9 @@ export function UTXODetailInner(props: UTXODetailProps) {
     if (!address) {
         address = 'UNKNOWN';
         try {
-            asm = Bitcoin.script.toASM(props.entity.utxo.script);
+            asm = Bitcoin.script.toASM(opts.utxo.script);
             address = Bitcoin.address.fromOutputScript(
-                props.entity.utxo.script,
+                opts.utxo.script,
                 /// TODO: Read from preferences?
                 Bitcoin.networks.regtest
             );
@@ -111,7 +111,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
             // TODO: Recovery?
         }
     }
-    const spends = props.entity.utxo.spends.map((elt, i) => (
+    const spends = opts.utxo.spends.map((elt, i) => (
         <div key={get_wtxid_backwards(elt.tx)} className="Spend">
             <Hex value={elt.get_txid()} label="TXID" />
             <Tooltip title="Go To The Spending Transaction">
@@ -131,11 +131,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
                     aria-label="create-contract"
                     onClick={() =>
                         dispatch(
-                            create(
-                                props.entity.txn.tx,
-                                props.entity,
-                                props.contract
-                            )
+                            create(opts.txn.tx, props.entity, props.contract)
                         )
                     }
                 >
@@ -155,10 +151,10 @@ export function UTXODetailInner(props: UTXODetailProps) {
             </Tooltip>
         );
     const title =
-        props.entity.txn instanceof PhantomTransactionModel ? (
+        opts.txn instanceof PhantomTransactionModel ? (
             <p>External UTXO</p>
         ) : (
-            <PrettyAmountField amount={props.entity.utxo.amount} />
+            <PrettyAmountField amount={opts.utxo.amount} />
         );
     const obj = select_continuations(`${txid}:${idx}`);
     const continuations = obj

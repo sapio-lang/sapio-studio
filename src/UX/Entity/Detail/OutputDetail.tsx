@@ -15,12 +15,14 @@ interface OutputDetailProps {
 }
 export function OutputDetail(props: OutputDetailProps) {
     const dispatch = useDispatch();
+    const opts = props.txoutput.getOptions();
     const decomp =
-        Bitcoin.script.decompile(props.txoutput.utxo.script) ?? Buffer.from('');
+        Bitcoin.script.decompile(opts.utxo.script) ?? Buffer.from('');
     const script = Bitcoin.script.toASM(decomp);
+
     return (
         <div className="OutputDetail">
-            <PrettyAmountField amount={props.txoutput.utxo.amount} />
+            <PrettyAmountField amount={opts.utxo.amount} />
             <Hex className="txhex" value={script} label="Script" />
             <Tooltip title="Go To the Transaction that created this.">
                 <IconButton
@@ -28,8 +30,8 @@ export function OutputDetail(props: OutputDetailProps) {
                     onClick={() =>
                         dispatch(
                             select_utxo({
-                                hash: props.txoutput.txn.get_txid(),
-                                nIn: props.txoutput.utxo.index,
+                                hash: opts.txn.get_txid(),
+                                nIn: opts.utxo.index,
                             })
                         )
                     }

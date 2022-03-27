@@ -9,7 +9,16 @@ import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import { TXID } from '../../../../util';
 import { OutputPortModel } from '../OutputPortModel';
 import { TransactionState } from '../TransactionNode/TransactionNodeModel';
+import { TransactionModel } from '../../../../Data/Transaction';
+import { UTXOFormatData } from '../../../../common/preload_interface';
 
+export type UTXOInnerData = {
+    index: number;
+    script: Buffer;
+    amount: number;
+    spends: Array<TransactionModel>;
+    txid: string;
+};
 export interface UTXONodeModelOptions extends BasePositionModelOptions {
     name: string;
     color: string;
@@ -17,6 +26,10 @@ export interface UTXONodeModelOptions extends BasePositionModelOptions {
     confirmed: TransactionState;
     txid: TXID;
     index: number;
+
+    txn: TransactionModel;
+    utxo: UTXOInnerData;
+    metadata: UTXOFormatData;
 }
 export interface UTXONodeModelGenerics extends NodeModelGenerics {
     OPTIONS: UTXONodeModelOptions;
