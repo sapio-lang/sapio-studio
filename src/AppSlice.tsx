@@ -67,10 +67,11 @@ export const {
 } = appSlice.actions;
 
 export const create_contract_of_type =
-    (type_arg: string, contract: any) =>
+    (type_arg: string, txn: string | null, contract: any) =>
     async (dispatch: AppDispatch, getState: () => RootState) => {
         const compiled_contract = await window.electron.sapio.create_contract(
             type_arg,
+            txn,
             contract
         );
         if ('ok' in compiled_contract && compiled_contract.ok)
@@ -88,6 +89,8 @@ export const recreate_contract =
         if (s.appReducer.data === null) return;
         return create_contract_of_type(
             s.appReducer.data.name,
+            s.appReducer.data.data.program['funding']?.txs[0]?.linked_psbt
+                ?.psbt ?? null,
             JSON.stringify(s.appReducer.data.args)
         )(dispatch, getState);
     };

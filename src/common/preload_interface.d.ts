@@ -86,6 +86,7 @@ export type preloads = {
     sapio: {
         create_contract: (
             which: string,
+            txn: string | null,
             args: string
         ) => Promise<Result<string | null>>;
         show_config: () => Promise<Result<string>>;

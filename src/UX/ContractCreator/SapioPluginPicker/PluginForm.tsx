@@ -16,7 +16,9 @@ export function PluginForm(props: PluginFormProps) {
     const handleSubmit = async (event: ISubmitEvent<any>, type: string) => {
         const formData = event.formData;
         dispatch(switch_showing('ContractViewer'));
-        await dispatch(create_contract_of_type(type, JSON.stringify(formData)));
+        await dispatch(
+            create_contract_of_type(type, null, JSON.stringify(formData))
+        );
         dispatch(show_apis(false));
     };
     return (
