@@ -14,8 +14,12 @@ function bitcoin_command(
 }
 
 type Result<T> = { ok: T } | { err: string };
-function create_contract(which: string, args: string): Promise<Result<string>> {
-    return ipcRenderer.invoke('sapio::create_contract', [which, args]);
+function create_contract(
+    which: string,
+    txn: string | null,
+    args: string
+): Promise<Result<string>> {
+    return ipcRenderer.invoke('sapio::create_contract', [which, txn, args]);
 }
 
 function open_contract_from_file(): Promise<Result<string>> {

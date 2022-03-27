@@ -41,10 +41,13 @@ export default function (window: BrowserWindow) {
         const contracts = await sapio.list_contracts();
         return contracts;
     });
-    ipcMain.handle('sapio::create_contract', async (event, [which, args]) => {
-        const result = await sapio.create_contract(which, args);
-        return result;
-    });
+    ipcMain.handle(
+        'sapio::create_contract',
+        async (event, [which, psbt, args]) => {
+            const result = await sapio.create_contract(which, psbt, args);
+            return result;
+        }
+    );
 
     ipcMain.handle('sapio::show_config', async (event) => {
         return await sapio.show_config();

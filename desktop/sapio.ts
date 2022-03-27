@@ -162,6 +162,7 @@ class SapioCompiler {
 
     async create_contract(
         which: string,
+        txn: string | null,
         args: string
     ): Promise<Result<string | null>> {
         let create, created, bound;
@@ -212,19 +213,18 @@ class SapioCompiler {
         Promise.all([w_create]);
         let bind;
         try {
-            bind = await SapioCompiler.command([
-                'contract',
-                'bind',
-                '--base64_psbt',
-                created,
-            ]);
+            const bind_args = ['contract', 'bind', '--base64_psbt'];
+            if (txn) bind_args.push('--txn', txn);
+            bind_args.push(created);
+            bind = await SapioCompiler.command(bind_args);
         } catch (e: any) {
             console.debug(created);
             console.log('Failed to bind', e.toString());
             return { ok: null };
         }
         if ('err' in bind) {
-            write_str('bind_error.json', JSON.stringify(create));
+            console.log(['bind'], typeof bind, bind);
+            write_str('bind_error.json', JSON.stringify(bind));
             return bind;
         }
         const w_bound = write_str('bound.json', bind.ok);
