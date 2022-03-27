@@ -4,8 +4,8 @@ import {
     PortModel,
     PortModelAlignment,
 } from '@projectstorm/react-diagrams-core';
-import { OutputPortModel } from '../OutputLink';
-import { SpendPortModel } from '../SpendLink/SpendLink';
+import { OutputPortModel } from '../OutputPortModel';
+import { SpendPortModel } from '../SpendLink/SpendPortModel';
 import { Transaction } from 'bitcoinjs-lib';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import { DefaultPortModel } from '@projectstorm/react-diagrams';

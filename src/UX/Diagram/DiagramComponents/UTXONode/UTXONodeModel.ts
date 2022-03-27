@@ -4,10 +4,10 @@ import {
     NodeModelGenerics,
     PortModel,
 } from '@projectstorm/react-diagrams-core';
-import { SpendPortModel } from '../SpendLink/SpendLink';
+import { SpendPortModel } from '../SpendLink/SpendPortModel';
 import { BasePositionModelOptions } from '@projectstorm/react-canvas-core';
 import { TXID } from '../../../../util';
-import { OutputPortModel } from '../OutputLink';
+import { OutputPortModel } from '../OutputPortModel';
 import { TransactionState } from '../TransactionNode/TransactionNodeModel';
 
 export interface UTXONodeModelOptions extends BasePositionModelOptions {

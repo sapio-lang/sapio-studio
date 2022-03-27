@@ -10,7 +10,7 @@ import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/Transactio
 import { HasKeys, TXID } from '../util';
 import { NodeColorT, SigningDataStore, NodeColor } from './ContractManager';
 import './Transaction.css';
-import { UTXOMetaData, UTXOModel } from './UTXO';
+import { new_utxo_inner_data, UTXOModel } from './UTXO';
 import { select_txn } from '../UX/Entity/EntitySlice';
 import { store } from '../Store/store';
 import { TransactionData, UTXOFormatData } from '../common/preload_interface';
@@ -36,16 +36,15 @@ export class TransactionModel extends TransactionNodeModel implements HasKeys {
         this.witness_set = all_witnesses;
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = NodeColor.clone(color);
-            const metadata = utxo_labels[y] || {
+            const metadata: UTXOFormatData = utxo_labels[y] || {
                 color: NodeColor.get(subcolor),
                 label: name,
             };
             // TODO: Get rid of assertion
             const out: Bitcoin.TxOutput = tx.outs[y] as Bitcoin.TxOutput;
             const utxo = new UTXOModel(
-                new UTXOMetaData(out.script, out.value, tx, y),
-                metadata.label,
-                NodeColor.new(metadata.color),
+                new_utxo_inner_data(out.script, out.value, tx, y),
+                metadata,
                 this
             );
             this.utxo_models.push(utxo);

@@ -1,8 +1,3 @@
-import {
-    DefaultPortModel,
-    DefaultPortModelOptions,
-    PortModel,
-} from '@projectstorm/react-diagrams';
 import * as React from 'react';
 import Color from 'color';
 import { SpendLinkModel } from './SpendLinkModel';
@@ -14,24 +9,6 @@ import { TransactionModel } from '../../../../Data/Transaction';
 import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
 
-export class SpendPortModel extends DefaultPortModel {
-    constructor(options: DefaultPortModelOptions) {
-        super({
-            ...options,
-        });
-    }
-    createLinkModel(factory: any): SpendLinkModel {
-        return new SpendLinkModel();
-    }
-    spend_link(x: SpendPortModel, to: TransactionModel, factory: any) {
-        const link = this.createLinkModel(factory);
-        // TODO: fix?
-        link.setSourcePort(this as unknown as PortModel);
-        link.setTargetPort(x as unknown as PortModel);
-        link.linked_to = to;
-        return link;
-    }
-}
 let unique_key = 0;
 type PathSettings = {
     circle: MutableRefObject<SVGCircleElement | null>;

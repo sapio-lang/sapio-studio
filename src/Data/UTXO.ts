@@ -1,43 +1,44 @@
 import { Transaction } from 'bitcoinjs-lib';
-import { NodeColor, NodeColorT } from './ContractManager';
 import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
 import { TransactionModel } from './Transaction';
 import { is_mock_outpoint, txid_buf_to_string } from '../util';
-import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 import { store } from '../Store/store';
 import { select_utxo } from '../UX/Entity/EntitySlice';
-export class UTXOMetaData {
+import { UTXOFormatData } from '../common/preload_interface';
+import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
+export type UTXOInnerData = {
     index: number;
     script: Buffer;
     amount: number;
     spends: Array<TransactionModel>;
     txid: string;
-    constructor(
-        script: Buffer,
-        amount: number,
-        txn: Transaction,
-        index: number
-    ) {
-        this.txid = txn.getId();
-        this.index = index;
-        this.script = script;
-        this.amount = amount;
-        this.spends = [];
-    }
+};
+export function new_utxo_inner_data(
+    script: Buffer,
+    amount: number,
+    txn: Transaction,
+    index: number
+): UTXOInnerData {
+    return {
+        txid: txn.getId(),
+        index: index,
+        script: script,
+        amount: amount,
+        spends: [],
+    };
 }
 export class UTXOModel extends UTXONodeModel {
     txn: TransactionModel;
-    utxo: UTXOMetaData;
+    utxo: UTXOInnerData;
     constructor(
-        utxo: UTXOMetaData,
-        name: string,
-        color: NodeColorT,
+        utxo: UTXOInnerData,
+        metadata: UTXOFormatData,
         txn: TransactionModel
     ) {
         super(
             {
-                name,
-                color: NodeColor.get(color),
+                name: metadata.label,
+                color: metadata.color,
                 amount: utxo.amount,
                 confirmed: false,
             },

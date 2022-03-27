@@ -36,19 +36,19 @@ export type CreatedContract = {
 };
 
 export type APIPath = string;
-export interface Continuation {
+export type Continuation = {
     schema: JSONSchema7;
     path: APIPath;
-}
-export interface DataItem {
+};
+export type DataItem = {
     txs: Array<{ linked_psbt: TransactionData }>;
     continue_apis: Record<APIPath, Continuation>;
-}
-export interface Data {
+};
+export type Data = {
     program: Record<APIPath, DataItem>;
-}
+};
 
-export interface TransactionData {
+export type TransactionData = {
     psbt: string;
     hex: string;
     metadata: {
@@ -56,12 +56,12 @@ export interface TransactionData {
         label?: string;
     };
     output_metadata?: Array<UTXOFormatData | null>;
-}
+};
 
-export interface UTXOFormatData {
+export type UTXOFormatData = {
     color: string;
     label: string;
-}
+};
 
 export type ContinuationTable = Record<string, Record<APIPath, Continuation>>;
 export type preloads = {
