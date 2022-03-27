@@ -61,7 +61,7 @@ export type TransactionData = {
 export type UTXOFormatData = {
     color: string;
     label: string;
-};
+} & Record<string, any>;
 
 export type ContinuationTable = Record<string, Record<APIPath, Continuation>>;
 export type preloads = {

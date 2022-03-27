@@ -48,7 +48,10 @@ import {
     selectHasEffect,
 } from '../../../AppSlice';
 import { RootState } from '../../../Store/store';
-import { Continuation } from '../../../common/preload_interface';
+import {
+    Continuation,
+    UTXOFormatData,
+} from '../../../common/preload_interface';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -180,6 +183,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
             </div>
             {title}
             {cont}
+            <OutputMetadataTable metadata={opts.metadata} />
             <OutpointDetail txid={txid} n={idx} />
             <ASM className="txhex" value={address} label="Address" />
             <ASM className="txhex" value={asm ?? 'UNKNOWN'} label="ASM" />
@@ -189,6 +193,34 @@ export function UTXODetailInner(props: UTXODetailProps) {
             </Typography>
             {spends}
         </div>
+    );
+}
+
+function OutputMetadataTable(props: { metadata: UTXOFormatData }) {
+    return (
+        <>
+            <Typography variant="h5">Metadata</Typography>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {Object.entries(props.metadata).map(([k, v]) => (
+                        <tr key={k}>
+                            <td>
+                                <Typography>{k}</Typography>
+                            </td>
+                            <td>
+                                <Typography>{v}</Typography>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </>
     );
 }
 
