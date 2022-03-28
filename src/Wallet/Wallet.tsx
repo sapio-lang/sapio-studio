@@ -6,11 +6,19 @@ import './Wallet.css';
 import { ContractList } from './ContractList';
 import { WalletSend } from './WalletSend';
 import { WalletHistory } from './WalletHistory';
+import { Workspaces } from './Workspaces';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    selectWalletTab,
+    switch_wallet_tab,
+    TabIndexes,
+} from './Slice/Reducer';
 
 export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
-    const [idx, set_idx] = React.useState(0);
-    const handleChange = (_: any, idx: number) => {
-        set_idx(idx);
+    const dispatch = useDispatch();
+    const idx = useSelector(selectWalletTab);
+    const handleChange = (_: any, idx: TabIndexes) => {
+        dispatch(switch_wallet_tab(idx));
     };
     return (
         <div className="Wallet">
@@ -29,7 +37,7 @@ export function Wallet(props: { bitcoin_node_manager: BitcoinNodeManager }) {
             <Box sx={{ overflowY: 'scroll', height: '100%' }}>
                 <WalletSend value={0} idx={idx} {...props}></WalletSend>
                 <WalletHistory value={1} idx={idx} {...props}></WalletHistory>
-                <ContractList value={2} idx={idx}></ContractList>
+                <Workspaces value={2} idx={idx}></Workspaces>
                 <ContractList value={3} idx={idx}></ContractList>
             </Box>
         </div>
