@@ -38,3 +38,15 @@
     display: grid;
     grid-template-columns: 10% 80% 10%;
 }
+
+.WorkspaceList {
+    height: 75%;
+}
+
+.WorkspaceListInner {
+    padding-top: 3em;
+    padding-bottom: 30px;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 10% 80% 10%;
+}

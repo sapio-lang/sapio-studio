@@ -85,6 +85,7 @@ export type preloads = {
     select_filename: () => Promise<string | null>;
     sapio: {
         create_contract: (
+            workspace: string,
             which: string,
             txn: string | null,
             args: string
@@ -94,12 +95,20 @@ export type preloads = {
         open_contract_from_file: () => Promise<Result<string>>;
         load_contract_list: () => Promise<Result<API>>;
         compiled_contracts: {
-            list: () => Promise<string[]>;
-            trash: (file_name: string) => Promise<void>;
-            open: (file_name: string) => Promise<Result<CreatedContract>>;
+            list: (workspace: string) => Promise<string[]>;
+            trash: (workspace: string, file_name: string) => Promise<void>;
+            open: (
+                workspace: string,
+                file_name: string
+            ) => Promise<Result<CreatedContract>>;
         };
         psbt: {
             finalize: (psbt: string) => Promise<Result<string>>;
+        };
+        workspaces: {
+            init: (workspace: string) => Promise<void>;
+            list: () => Promise<string[]>;
+            trash: (workspace) => Promise<void>;
         };
     };
     emulator: {

@@ -69,7 +69,9 @@ export const {
 export const create_contract_of_type =
     (type_arg: string, txn: string | null, contract: any) =>
     async (dispatch: AppDispatch, getState: () => RootState) => {
+        const state = getState();
         const compiled_contract = await window.electron.sapio.create_contract(
+            state.walletReducer.workspace,
             type_arg,
             txn,
             contract
@@ -98,10 +100,13 @@ export const recreate_contract =
 export const open_contract_directory =
     (file_name: string) =>
     async (dispatch: AppDispatch, getState: () => RootState) => {
-        window.electron.sapio.compiled_contracts.open(file_name).then((v) => {
-            if ('err' in v) return;
-            return 'ok' in v && dispatch(load_new_model(v.ok));
-        });
+        const state = getState();
+        window.electron.sapio.compiled_contracts
+            .open(state.walletReducer.workspace, file_name)
+            .then((v) => {
+                if ('err' in v) return;
+                return 'ok' in v && dispatch(load_new_model(v.ok));
+            });
     };
 
 export const create_contract_from_file =

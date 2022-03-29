@@ -1,5 +1,4 @@
 import { ipcRenderer, contextBridge } from 'electron';
-import { IpcRendererEvent } from 'electron/main';
 
 function bitcoin_command(
     command: { method: string; parameters: any[] }[]
@@ -15,11 +14,16 @@ function bitcoin_command(
 
 type Result<T> = { ok: T } | { err: string };
 function create_contract(
+    workspace: string,
     which: string,
     txn: string | null,
     args: string
 ): Promise<Result<string>> {
-    return ipcRenderer.invoke('sapio::create_contract', [which, txn, args]);
+    return ipcRenderer.invoke('sapio::create_contract', workspace, [
+        which,
+        txn,
+        args,
+    ]);
 }
 
 function open_contract_from_file(): Promise<Result<string>> {
@@ -43,17 +47,33 @@ const psbt = {
     },
 };
 const compiled_contracts = {
-    list: () => {
-        return ipcRenderer.invoke('sapio::compiled_contracts::list');
+    list: (workspace: string) => {
+        return ipcRenderer.invoke('sapio::compiled_contracts::list', workspace);
     },
-    trash: (file_name: string) => {
+    trash: (workspace: string, file_name: string) => {
         return ipcRenderer.invoke(
             'sapio::compiled_contracts::trash',
+            workspace,
             file_name
         );
     },
-    open: (file_name: string) => {
-        return ipcRenderer.invoke('sapio::compiled_contracts::open', file_name);
+    open: (workspace: string, file_name: string) => {
+        return ipcRenderer.invoke(
+            'sapio::compiled_contracts::open',
+            workspace,
+            file_name
+        );
+    },
+};
+const workspaces = {
+    init: (workspace: string) => {
+        return ipcRenderer.invoke('sapio::workspaces::init', workspace);
+    },
+    list: () => {
+        return ipcRenderer.invoke('sapio::workspaces::list');
+    },
+    trash: (workspace: string) => {
+        return ipcRenderer.invoke('sapio::workspaces::trash', workspace);
     },
 };
 
@@ -94,7 +114,8 @@ function emulator_read_log(): Promise<string> {
     return ipcRenderer.invoke('emulator::read_log');
 }
 
-const api /*:ugh preloads*/ = {
+// to typecheck, uncomment and import preloads
+const api /*:preloads*/ = {
     bitcoin_command,
     save_psbt,
     save_contract,
@@ -111,6 +132,7 @@ const api /*:ugh preloads*/ = {
         load_contract_list,
         compiled_contracts,
         psbt,
+        workspaces,
     },
     emulator: {
         kill: emulator_kill,

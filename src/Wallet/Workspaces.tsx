@@ -1,33 +1,40 @@
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Delete } from '@mui/icons-material';
-import { DataGrid, GridActionsCellItem, GridColumns } from '@mui/x-data-grid';
+import { Add, Delete, FolderOpen } from '@mui/icons-material';
+import { Button } from '@mui/material';
+import {
+    DataGrid,
+    GridActionsCellItem,
+    GridColumns,
+    GridToolbarContainer,
+} from '@mui/x-data-grid';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { open_contract_directory, switch_showing } from '../AppSlice';
+import { useDispatch } from 'react-redux';
 import { DeleteDialog } from './DeleteDialog';
-import { selectWorkspace } from './Slice/Reducer';
-import { Typography } from '@mui/material';
+import { NewWorkspace } from './NewWorkspace';
+import { switch_wallet_tab, switch_workspace } from './Slice/Reducer';
 
-export function ContractList(props: { idx: number; value: number }) {
+export function Workspaces(props: { idx: number; value: number }) {
     const dispatch = useDispatch();
-    const [contracts, set_contracts] = React.useState<string[]>([]);
+    const [workspaces, set_workspaces] = React.useState<string[]>([]);
     const [to_delete, set_to_delete] = React.useState<string | null>(null);
     const [trigger_now, set_trigger_now] = React.useState(0);
-    const workspace = useSelector(selectWorkspace);
+    const [show_new_workspace, set_new_workspace] = React.useState(false);
+    const hide_new_workspace = () => {
+        set_new_workspace(false);
+    };
+    const reload = () => {
+        set_trigger_now(trigger_now + 1);
+    };
     React.useEffect(() => {
         let cancel = false;
         const update = async () => {
             if (cancel) return;
 
             try {
-                const list =
-                    await window.electron.sapio.compiled_contracts.list(
-                        workspace
-                    );
-                set_contracts(list);
+                const list = await window.electron.sapio.workspaces.list();
+                set_workspaces(list);
             } catch (err) {
                 console.error(err);
-                set_contracts([]);
+                set_workspaces([]);
             }
             setTimeout(update, 5000);
         };
@@ -36,17 +43,14 @@ export function ContractList(props: { idx: number; value: number }) {
         return () => {
             cancel = true;
         };
-    }, [trigger_now, workspace]);
-    const contract_rows = contracts.map((id) => {
-        const [mod, args, time] = id.split('-');
+    }, [trigger_now]);
+    const contract_rows = workspaces.map((id) => {
         return {
             id,
-            mod,
-            args,
-            time: new Date(parseInt(time!)),
+            name: id,
         };
     });
-    const delete_contract = (fname: string | number) => {
+    const delete_workspace = (fname: string | number) => {
         if (typeof fname === 'number') return;
         set_to_delete(fname);
     };
@@ -59,35 +63,20 @@ export function ContractList(props: { idx: number; value: number }) {
             getActions: (params) => [
                 <GridActionsCellItem
                     key="open-folder"
-                    icon={<VisibilityIcon />}
+                    icon={<FolderOpen />}
                     label="Open"
                     onClick={() => {
-                        dispatch(switch_showing('ContractViewer'));
-                        dispatch(
-                            open_contract_directory(
-                                typeof params.id === 'number' ? '' : params.id
-                            )
-                        );
+                        // TODO: Better tabbing?
+                        dispatch(switch_wallet_tab(3));
+                        typeof params.id === 'string' &&
+                            dispatch(switch_workspace(params.id));
                     }}
                 />,
             ],
         },
         {
-            field: 'time',
-            headerName: 'Time',
-            minWidth: 100,
-            type: 'dateTime',
-            flex: 1,
-        },
-        {
-            field: 'args',
-            headerName: 'Args Hash',
-            width: 100,
-            flex: 1,
-        },
-        {
-            field: 'mod',
-            headerName: 'Module',
+            field: 'name',
+            headerName: 'Name',
             width: 100,
             type: 'text',
             flex: 1,
@@ -101,24 +90,40 @@ export function ContractList(props: { idx: number; value: number }) {
                     key="delete"
                     icon={<Delete />}
                     label="Delete"
-                    onClick={() => delete_contract(params.id)}
+                    onClick={() => delete_workspace(params.id)}
                 />,
             ],
         },
     ];
+    function CustomToolbar() {
+        return (
+            <GridToolbarContainer>
+                <Button onClick={() => set_new_workspace(true)}>
+                    New Workspace<Add></Add>
+                </Button>
+            </GridToolbarContainer>
+        );
+    }
     return (
-        <div hidden={props.idx !== props.value} className="ContractList">
-            <Typography variant="h4">Workspace: {workspace}</Typography>
+        <div hidden={props.idx !== props.value} className="WorkspaceList">
+            <NewWorkspace
+                show={show_new_workspace}
+                hide={hide_new_workspace}
+                reload={reload}
+            />
             <DeleteDialog
                 set_to_delete={() => set_to_delete(null)}
-                to_delete={to_delete === null ? null : ['contract', to_delete]}
-                reload={() => set_trigger_now(trigger_now + 1)}
+                to_delete={to_delete !== null ? ['workspace', to_delete] : null}
+                reload={reload}
             />
             {props.idx === props.value && (
-                <div className="ContractListInner">
+                <div className="WorkspaceListInner">
                     <div></div>
                     <div>
                         <DataGrid
+                            components={{
+                                Toolbar: CustomToolbar,
+                            }}
                             rows={contract_rows}
                             columns={columns}
                             disableExtendRowFullWidth={false}

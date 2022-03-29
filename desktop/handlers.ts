@@ -3,6 +3,7 @@ import {
     get_emulator_log,
     kill_emulator,
     sapio,
+    SapioWorkspace,
     start_sapio_oracle,
 } from './sapio';
 import { readFile, writeFile } from 'fs/promises';
@@ -43,8 +44,13 @@ export default function (window: BrowserWindow) {
     });
     ipcMain.handle(
         'sapio::create_contract',
-        async (event, [which, psbt, args]) => {
-            const result = await sapio.create_contract(which, psbt, args);
+        async (event, workspace, [which, psbt, args]) => {
+            const result = await sapio.create_contract(
+                workspace,
+                which,
+                psbt,
+                args
+            );
             return result;
         }
     );
@@ -80,62 +86,46 @@ export default function (window: BrowserWindow) {
             return { ok: data };
         }
     });
-    ipcMain.handle('sapio::compiled_contracts::list', (event) => {
-        return sapio.list_compiled_contracts();
-    });
-    ipcMain.handle('sapio::compiled_contracts::trash', (event, file_name) => {
-        return sapio.trash_compiled_contract(file_name);
-    });
+    ipcMain.handle(
+        'sapio::compiled_contracts::list',
+        async (event, workspace) => {
+            return (
+                await SapioWorkspace.new(workspace)
+            ).list_compiled_contracts();
+        }
+    );
+    ipcMain.handle(
+        'sapio::compiled_contracts::trash',
+        async (event, workspace, file_name) => {
+            return (
+                await SapioWorkspace.new(workspace)
+            ).trash_compiled_contract(file_name);
+        }
+    );
     ipcMain.handle('sapio::psbt::finalize', (event, psbt) => {
         return sapio.psbt_finalize(psbt);
     });
-
     ipcMain.handle(
         'sapio::compiled_contracts::open',
-        async (event, file_name) => {
-            const data = JSON.parse(
-                await readFile(
-                    path.join(
-                        app.getPath('userData'),
-                        'compiled_contracts',
-                        file_name,
-                        'bound.json'
-                    ),
-                    {
-                        encoding: 'utf-8',
-                    }
-                )
-            );
-            const args = JSON.parse(
-                await readFile(
-                    path.join(
-                        app.getPath('userData'),
-                        'compiled_contracts',
-                        file_name,
-                        'args.json'
-                    ),
-                    {
-                        encoding: 'utf-8',
-                    }
-                )
-            );
-            const mod = await readFile(
-                path.join(
-                    app.getPath('userData'),
-                    'compiled_contracts',
-                    file_name,
-                    'module.json'
-                ),
-                {
-                    encoding: 'utf-8',
-                }
-            );
-
-            const name = JSON.parse(mod).module;
-
+        async (event, workspace_name, file_name) => {
+            const workspace = await SapioWorkspace.new(workspace_name);
+            const data = await workspace.read_bound_data_for(file_name);
+            const name = await workspace.read_module_for(file_name);
+            const args = await workspace.read_args_for(file_name);
             return { ok: { data, name, args } };
         }
     );
+
+    ipcMain.handle('sapio::workspaces::init', async (event, workspace) => {
+        await SapioWorkspace.new(workspace);
+    });
+    ipcMain.handle('sapio::workspaces::list', async (event) => {
+        return await SapioWorkspace.list_all();
+    });
+    ipcMain.handle('sapio::workspaces::trash', async (event, workspace) => {
+        return (await SapioWorkspace.new(workspace)).trash_workspace(workspace);
+    });
+
     ipcMain.handle('write_clipboard', (event, s: string) => {
         clipboard.writeText(s);
     });
