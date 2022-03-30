@@ -6,3 +6,7 @@ declare module 'await-spawn' {
     ): Promise<BufferList>;
     export = spawn;
 }
+
+declare module 'another-json' {
+    declare function stringify(js: any): string;
+}

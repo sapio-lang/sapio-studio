@@ -12,7 +12,9 @@ import { preferences, Prefs } from './settings';
 import { get_bitcoin_node } from './bitcoin_rpc';
 import RpcError from 'bitcoin-core-ts/dist/src/errors/rpc-error';
 import path from 'path';
+import { setup_chat } from './chat';
 export default function (window: BrowserWindow) {
+    setup_chat();
     ipcMain.handle('bitcoin::command', async (event, arg) => {
         const node = await get_bitcoin_node();
         try {

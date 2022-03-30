@@ -116,4 +116,13 @@ export type preloads = {
         start: () => Promise<void>;
         read_log: () => Promise<string>;
     };
+
+    chat: {
+        init: () => Promise<void>;
+        send: (message: EnvelopeIn) => Promise<void>;
+        add_user: (name: string, key: string) => Promise<void>;
+        list_users: () => Promise<string[]>;
+        list_channels: () => Promise<string>;
+        list_messages_channel: (channel: string) => Promise<any[]>;
+    };
 };
