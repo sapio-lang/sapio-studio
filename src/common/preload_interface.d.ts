@@ -1,7 +1,7 @@
 import { JSONSchema7 } from 'json-schema';
 import { schemas } from './settings_gen';
 export type Result<T> = { ok: T } | { err: string };
-
+import { EnvelopeIn } from './chat_interface';
 export const callbacks = {
     simulate: 0,
     load_hex: 0,
@@ -121,8 +121,8 @@ export type preloads = {
         init: () => Promise<void>;
         send: (message: EnvelopeIn) => Promise<void>;
         add_user: (name: string, key: string) => Promise<void>;
-        list_users: () => Promise<string[]>;
-        list_channels: () => Promise<string>;
+        list_users: () => Promise<{ nickname: string; key: string }[]>;
+        list_channels: () => Promise<{ channel_id: string }[]>;
         list_messages_channel: (channel: string) => Promise<any[]>;
     };
 };

@@ -29,6 +29,7 @@ import './Glyphs.css';
 import { poll_settings } from './Settings/SettingsSlice';
 import { TXIDAndWTXIDMap } from './util';
 import { AppNavbar } from './UX/AppNavbar';
+import { Chat } from './UX/Chat/Chat';
 import { set_continuations } from './UX/ContractCreator/ContractCreatorSlice';
 import { CreateContractModal } from './UX/ContractCreator/CreateContractModal';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
@@ -274,6 +275,12 @@ function Viewing(props: {
             return (
                 <Paper className="miniscript-container" square={true}>
                     <MiniscriptCompiler></MiniscriptCompiler>
+                </Paper>
+            );
+        case 'Chat':
+            return (
+                <Paper className="chat-container" square={true}>
+                    <Chat></Chat>
                 </Paper>
             );
     }

@@ -9,7 +9,8 @@ type Pages =
     | 'ContractViewer'
     | 'Wallet'
     | 'Settings'
-    | 'MiniscriptCompiler';
+    | 'MiniscriptCompiler'
+    | 'Chat';
 type StateType = {
     data: CreatedContract | null;
     counter: number;

@@ -9,29 +9,30 @@ import { stringify } from 'another-json';
 let g_chat_server: ChatServer | null = null;
 export function setup_chat() {
     ipcMain.handle('chat::init', async (event) => {
+        if (g_chat_server) return;
         const privateKey = ed.utils.randomPrivateKey();
         const publicKey = await ed.getPublicKey(privateKey);
         g_chat_server = new ChatServer(privateKey, publicKey);
     });
     ipcMain.handle('chat::send', async (event, message: EnvelopeIn) => {
         if (!g_chat_server) return;
-        g_chat_server.send_message(message);
+        return g_chat_server.send_message(message);
     });
     ipcMain.handle('chat::add_user', (event, name: string, key: string) => {
         if (!g_chat_server) return;
-        g_chat_server.add_user(name, key);
+        return g_chat_server.add_user(name, key);
     });
     ipcMain.handle('chat::list_users', (event) => {
         if (!g_chat_server) return;
-        g_chat_server.list_users();
+        return g_chat_server.list_users();
     });
     ipcMain.handle('chat::list_channels', (event) => {
         if (!g_chat_server) return;
-        g_chat_server.list_channels();
+        return g_chat_server.list_channels();
     });
     ipcMain.handle('chat::list_messages_channel', (event, channel) => {
         if (!g_chat_server) return;
-        g_chat_server.list_messages_channel(channel);
+        return g_chat_server.list_messages_channel(channel);
     });
 }
 
@@ -49,7 +50,7 @@ class ChatServer {
             { readonly: false }
         );
         this.insert = this.db.prepare(
-            'INSERT INTO user (nickname, key) VALUES (@name, @key)'
+            'INSERT INTO user (nickname, key) VALUES (@name, @key);'
         );
         this.list_all_users = this.db.prepare(
             'SELECT nickname, key from user;'
@@ -58,7 +59,12 @@ class ChatServer {
             'SELECT DISTINCT channel_id from messages;'
         );
         this.list_msg_chan = this.db.prepare(
-            'SELECT * from messages where channel_id=@chan;'
+            `
+                SELECT messages.body, user.nickname
+                FROM messages 
+                INNER JOIN user ON messages.user = user.userid
+                where messages.channel_id = ?;
+            `
         );
         this.my_pk = publicKey;
         this.my_sk = privateKey;
@@ -76,15 +82,12 @@ class ChatServer {
         return this.list_all_channels.all();
     }
     list_messages_channel(chan: string) {
-        return this.list_msg_chan.all({ chan });
+        return this.list_msg_chan.all(chan);
     }
 
     async send_message(m: EnvelopeIn): Promise<void> {
-        const channel = Bitcoin.crypto
-            .sha256(Buffer.from(m.channel))
-            .toString('hex');
         const partial: Partial<EnvelopeOut> = {};
-        partial.channel = channel;
+        partial.channel = m.channel;
         partial.key = Array.from(this.my_pk);
         partial.msg = m.msg;
         const encoded = Buffer.from(stringify(partial), 'utf-8');
