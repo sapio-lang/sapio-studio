@@ -3,6 +3,7 @@ export type EnvelopeIn = {
         Data: string;
     };
     channel: string;
+    sent_time_ms: number;
 };
 
 export type EnvelopeOut = {
@@ -11,5 +12,6 @@ export type EnvelopeOut = {
     };
     channel: string;
     key: number[];
+    sent_time_ms: number;
     signatures: {};
 };

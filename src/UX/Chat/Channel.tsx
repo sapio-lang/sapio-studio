@@ -68,6 +68,7 @@ function Typing(props: { channel_id: string }) {
                                 window.electron.chat.send({
                                     msg: { Data: typed },
                                     channel: props.channel_id,
+                                    sent_time_ms: Date.now(),
                                 });
                                 set_typed('');
                             }

@@ -86,13 +86,9 @@ class ChatServer {
     }
 
     async send_message(m: EnvelopeIn): Promise<void> {
-        const partial: Partial<EnvelopeOut> = {};
-        partial.channel = m.channel;
+        const partial: Partial<EnvelopeOut> = m;
         partial.key = Array.from(this.my_pk);
-        partial.msg = m.msg;
         const encoded = Buffer.from(stringify(partial), 'utf-8');
-        console.log(encoded.toString('utf-8'));
-        console.log(partial);
         // keys, messages & other inputs can be Uint8Arrays or hex strings
         // Uint8Array.from([0xde, 0xad, 0xbe, 0xef]) === 'deadbeef'
         const message = Uint8Array.from(encoded);

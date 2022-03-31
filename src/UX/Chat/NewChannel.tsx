@@ -39,6 +39,7 @@ export function NewChannel(props: { show: boolean; hide: () => void }) {
                             await window.electron.chat.send({
                                 msg: { Data: 'hello' },
                                 channel: value,
+                                sent_time_ms: Date.now(),
                             });
                             props.hide();
                         }
