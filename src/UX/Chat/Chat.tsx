@@ -155,7 +155,7 @@ function Channels() {
         return (
             <GridToolbarContainer>
                 <Button onClick={() => set_add_new_channel(true)}>
-                    New User<Add></Add>
+                    Create New Channel<Add></Add>
                 </Button>
             </GridToolbarContainer>
         );

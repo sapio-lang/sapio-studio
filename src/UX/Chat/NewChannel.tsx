@@ -36,7 +36,7 @@ export function NewChannel(props: { show: boolean; hide: () => void }) {
                     color="success"
                     onClick={async (ev) => {
                         if (value !== null) {
-                            await window.electron.chat.send({
+                            window.electron.chat.send({
                                 msg: { Data: 'hello' },
                                 channel: value,
                                 sent_time_ms: Date.now(),

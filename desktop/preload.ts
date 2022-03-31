@@ -122,8 +122,8 @@ const chat = {
         ipcRenderer.invoke('chat::add_user', name, key),
     list_users: () => ipcRenderer.invoke('chat::list_users'),
     list_channels: () => ipcRenderer.invoke('chat::list_channels'),
-    list_messages_channel: (channel: string) =>
-        ipcRenderer.invoke('chat::list_messages_channel', channel),
+    list_messages_channel: (channel: string, since: number) =>
+        ipcRenderer.invoke('chat::list_messages_channel', channel, since),
 };
 
 // to typecheck, uncomment and import preloads

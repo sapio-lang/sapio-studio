@@ -123,6 +123,9 @@ export type preloads = {
         add_user: (name: string, key: string) => Promise<void>;
         list_users: () => Promise<{ nickname: string; key: string }[]>;
         list_channels: () => Promise<{ channel_id: string }[]>;
-        list_messages_channel: (channel: string) => Promise<any[]>;
+        list_messages_channel: (
+            channel: string,
+            since: number
+        ) => Promise<any[]>;
     };
 };

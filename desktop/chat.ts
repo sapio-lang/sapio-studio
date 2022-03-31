@@ -30,9 +30,9 @@ export function setup_chat() {
         if (!g_chat_server) return;
         return g_chat_server.list_channels();
     });
-    ipcMain.handle('chat::list_messages_channel', (event, channel) => {
+    ipcMain.handle('chat::list_messages_channel', (event, channel, since) => {
         if (!g_chat_server) return;
-        return g_chat_server.list_messages_channel(channel);
+        return g_chat_server.list_messages_channel(channel, since);
     });
 }
 
@@ -60,10 +60,10 @@ class ChatServer {
         );
         this.list_msg_chan = this.db.prepare(
             `
-                SELECT messages.body, user.nickname
+                SELECT messages.body, user.nickname, messages.received_time
                 FROM messages 
                 INNER JOIN user ON messages.user = user.userid
-                where messages.channel_id = ?;
+                where messages.channel_id = ? AND messages.received_time > ?;
             `
         );
         this.my_pk = publicKey;
@@ -81,8 +81,8 @@ class ChatServer {
     list_channels(): string[] {
         return this.list_all_channels.all();
     }
-    list_messages_channel(chan: string) {
-        return this.list_msg_chan.all(chan);
+    list_messages_channel(chan: string, since: number) {
+        return this.list_msg_chan.all(chan, since);
     }
 
     async send_message(m: EnvelopeIn): Promise<void> {
