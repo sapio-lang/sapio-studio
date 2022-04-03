@@ -134,7 +134,7 @@ class SapioCompiler {
             const ok = (await spawn(binary, new_args)).toString();
             return { ok };
         } catch (e: any) {
-            return { err: e.toString() };
+            return { err: e.stderr.toString() };
         }
     }
 
@@ -235,7 +235,7 @@ class SapioCompiler {
             '--file',
             file,
         ]);
-        console.log(`child stdout:\n${child}`);
+        console.log(`child stdout:\n${JSON.stringify(child)}`);
         return { ok: null };
     }
 
