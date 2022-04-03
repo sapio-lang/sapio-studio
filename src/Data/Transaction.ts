@@ -8,17 +8,13 @@ import { OutputLinkModel } from '../UX/Diagram/DiagramComponents/OutputLink';
 import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 import { TransactionNodeModel } from '../UX/Diagram/DiagramComponents/TransactionNode/TransactionNodeModel';
 import { HasKeys, TXID } from '../util';
-import {
-    NodeColorT,
-    UTXOFormatData,
-    SigningDataStore,
-    NodeColor,
-} from './ContractManager';
+import { NodeColorT, SigningDataStore, NodeColor } from './ContractManager';
 import './Transaction.css';
-import { UTXOMetaData, UTXOModel } from './UTXO';
-import { TransactionData } from './ContractManager';
+import { new_utxo_inner_data, UTXOModel } from './UTXO';
 import { select_txn } from '../UX/Entity/EntitySlice';
 import { store } from '../Store/store';
+import { TransactionData, UTXOFormatData } from '../common/preload_interface';
+import _ from 'lodash';
 
 export class TransactionModel extends TransactionNodeModel implements HasKeys {
     tx: Bitcoin.Transaction;
@@ -41,16 +37,18 @@ export class TransactionModel extends TransactionNodeModel implements HasKeys {
         this.witness_set = all_witnesses;
         for (let y = 0; y < this.tx.outs.length; ++y) {
             const subcolor = NodeColor.clone(color);
-            const metadata = utxo_labels[y] || {
-                color: NodeColor.get(subcolor),
-                label: name,
-            };
+            const metadata: UTXOFormatData = _.merge(
+                {
+                    color: NodeColor.get(subcolor),
+                    label: name,
+                },
+                utxo_labels[y]
+            );
             // TODO: Get rid of assertion
             const out: Bitcoin.TxOutput = tx.outs[y] as Bitcoin.TxOutput;
             const utxo = new UTXOModel(
-                new UTXOMetaData(out.script, out.value, tx, y),
-                metadata.label,
-                NodeColor.new(metadata.color),
+                new_utxo_inner_data(out.script, out.value, tx, y),
+                metadata,
                 this
             );
             this.utxo_models.push(utxo);
@@ -81,6 +79,7 @@ export class TransactionModel extends TransactionNodeModel implements HasKeys {
                 return {
                     color: u.getOptions().color,
                     label: u.getOptions().name,
+                    simp: {},
                 };
             }),
         };

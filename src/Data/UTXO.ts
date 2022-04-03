@@ -1,51 +1,47 @@
 import { Transaction } from 'bitcoinjs-lib';
-import { NodeColor, NodeColorT } from './ContractManager';
-import { UTXONodeModel } from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
+import {
+    UTXOInnerData,
+    UTXONodeModel,
+} from '../UX/Diagram/DiagramComponents/UTXONode/UTXONodeModel';
 import { TransactionModel } from './Transaction';
 import { is_mock_outpoint, txid_buf_to_string } from '../util';
-import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
 import { store } from '../Store/store';
 import { select_utxo } from '../UX/Entity/EntitySlice';
-export class UTXOMetaData {
-    index: number;
-    script: Buffer;
-    amount: number;
-    spends: Array<TransactionModel>;
-    txid: string;
-    constructor(
-        script: Buffer,
-        amount: number,
-        txn: Transaction,
-        index: number
-    ) {
-        this.txid = txn.getId();
-        this.index = index;
-        this.script = script;
-        this.amount = amount;
-        this.spends = [];
-    }
+import { UTXOFormatData } from '../common/preload_interface';
+import { SpendLinkModel } from '../UX/Diagram/DiagramComponents/SpendLink/SpendLinkModel';
+export function new_utxo_inner_data(
+    script: Buffer,
+    amount: number,
+    txn: Transaction,
+    index: number
+): UTXOInnerData {
+    return {
+        txid: txn.getId(),
+        index: index,
+        script: script,
+        amount: amount,
+        spends: [],
+    };
 }
 export class UTXOModel extends UTXONodeModel {
-    txn: TransactionModel;
-    utxo: UTXOMetaData;
     constructor(
-        utxo: UTXOMetaData,
-        name: string,
-        color: NodeColorT,
+        utxo: UTXOInnerData,
+        metadata: UTXOFormatData,
         txn: TransactionModel
     ) {
         super(
             {
-                name,
-                color: NodeColor.get(color),
+                name: metadata.label,
+                color: metadata.color,
                 amount: utxo.amount,
                 confirmed: false,
+                txn,
+                utxo,
+                metadata,
             },
             txn.get_txid(),
             utxo.index
         );
-        this.utxo = utxo;
-        this.txn = txn;
         this.registerListener({
             selectionChanged: (event: any) => {
                 // TODO: get store the right way?
@@ -57,7 +53,7 @@ export class UTXOModel extends UTXONodeModel {
         });
     }
     getAmount(): number {
-        return this.utxo.amount;
+        return this.getOptions().utxo.amount;
     }
 
     spent_by(
@@ -79,13 +75,15 @@ export function update_utxomodel(utxo_in: UTXOModel) {
         const s = to_iterate.pop()!;
         for (const utxo of s) {
             // Pop a node for processing...
-            utxo.utxo.spends.forEach((spend: TransactionModel) => {
+            utxo.getOptions().utxo.spends.forEach((spend: TransactionModel) => {
                 spend.tx.ins
                     .filter(
-                        (inp) => txid_buf_to_string(inp.hash) === utxo.utxo.txid
+                        (inp) =>
+                            txid_buf_to_string(inp.hash) ===
+                            utxo.getOptions().utxo.txid
                     )
                     .forEach((inp) => {
-                        inp.hash = utxo.txn.tx.getHash();
+                        inp.hash = utxo.getOptions().txn.tx.getHash();
                     });
                 spend.tx.ins
                     .filter((inp) =>
@@ -96,8 +94,8 @@ export function update_utxomodel(utxo_in: UTXOModel) {
                     )
                     .forEach((inp) => {
                         // TODO: Only modify the mock that was intended
-                        inp.hash = utxo.txn.tx.getHash();
-                        inp.index = utxo.utxo.index;
+                        inp.hash = utxo.getOptions().txn.tx.getHash();
+                        inp.index = utxo.getOptions().utxo.index;
                     });
                 to_iterate.push(spend.utxo_models);
             });

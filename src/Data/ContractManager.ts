@@ -2,7 +2,6 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import { Output } from 'bitcoinjs-lib/types/transaction';
 import * as assert from 'assert';
 import _, { Collection } from 'lodash';
-import { JSONSchema7 } from 'json-schema';
 import {
     InputMapT,
     InputMap,
@@ -14,6 +13,12 @@ import {
 import { PhantomTransactionModel, TransactionModel } from './Transaction';
 import { UTXOModel } from './UTXO';
 import Color from 'color';
+import {
+    Continuation,
+    ContinuationTable,
+    Data,
+    UTXOFormatData,
+} from '../common/preload_interface';
 export type NodeColorT = ['NodeColor', string];
 export const NodeColor = {
     new(c: string): NodeColorT {
@@ -26,33 +31,6 @@ export const NodeColor = {
         return NodeColor.new(c[1].slice());
     },
 };
-export interface UTXOFormatData {
-    color: string;
-    label: string;
-}
-export interface TransactionData {
-    psbt: string;
-    hex: string;
-    metadata: {
-        color?: string;
-        label?: string;
-    };
-    output_metadata?: Array<UTXOFormatData | null>;
-}
-export type ContinuationTable = Record<string, Record<APIPath, Continuation>>;
-
-export type APIPath = string;
-export interface Continuation {
-    schema: JSONSchema7;
-    path: APIPath;
-}
-export interface DataItem {
-    txs: Array<{ linked_psbt: TransactionData }>;
-    continue_apis: Record<APIPath, Continuation>;
-}
-export interface Data {
-    program: Record<APIPath, DataItem>;
-}
 
 type PreProcessedData = {
     psbts: Array<Bitcoin.Psbt>;
@@ -281,7 +259,7 @@ function process_utxo_models(
                         m_txn.get_txid(),
                         output_index
                     ) ?? [];
-                assert.equal(m_txn, utxo_model.txn);
+                assert.equal(m_txn, utxo_model.getOptions().txn);
                 if (
                     m_txn instanceof PhantomTransactionModel &&
                     spenders.length > 0
@@ -290,7 +268,7 @@ function process_utxo_models(
                     if (spenders[0]?.witness_set.witnesses.length) {
                         const witstack =
                             spenders[0]?.witness_set.witnesses[0]?.[
-                                utxo_model.utxo.index
+                                utxo_model.getOptions().utxo.index
                             ];
                         if (witstack) {
                             const program = witstack[witstack.length - 1];
@@ -316,11 +294,12 @@ function process_utxo_models(
                                     0
                                 );
                                 (
-                                    utxo_model.txn.tx.outs[
-                                        utxo_model.utxo.index
+                                    utxo_model.getOptions().txn.tx.outs[
+                                        utxo_model.getOptions().utxo.index
                                     ] as Output
                                 ).value = max_amount;
-                                utxo_model.utxo.amount = max_amount;
+                                utxo_model.getOptions().utxo.amount =
+                                    max_amount;
                                 const _address =
                                     Bitcoin.address.fromOutputScript(
                                         script,
@@ -342,7 +321,7 @@ function process_utxo_models(
                     }
                     const link = utxo_model.spent_by(spender, spend_idx, idx);
                     spender.input_links.push(link);
-                    utxo_model.utxo.spends.push(spender);
+                    utxo_model.getOptions().utxo.spends.push(spender);
                 });
             }
         );

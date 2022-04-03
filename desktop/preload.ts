@@ -1,5 +1,4 @@
 import { ipcRenderer, contextBridge } from 'electron';
-import { IpcRendererEvent } from 'electron/main';
 
 function bitcoin_command(
     command: { method: string; parameters: any[] }[]
@@ -14,8 +13,17 @@ function bitcoin_command(
 }
 
 type Result<T> = { ok: T } | { err: string };
-function create_contract(which: string, args: string): Promise<Result<string>> {
-    return ipcRenderer.invoke('sapio::create_contract', [which, args]);
+function create_contract(
+    workspace: string,
+    which: string,
+    txn: string | null,
+    args: string
+): Promise<Result<string>> {
+    return ipcRenderer.invoke('sapio::create_contract', workspace, [
+        which,
+        txn,
+        args,
+    ]);
 }
 
 function open_contract_from_file(): Promise<Result<string>> {
@@ -39,17 +47,33 @@ const psbt = {
     },
 };
 const compiled_contracts = {
-    list: () => {
-        return ipcRenderer.invoke('sapio::compiled_contracts::list');
+    list: (workspace: string) => {
+        return ipcRenderer.invoke('sapio::compiled_contracts::list', workspace);
     },
-    trash: (file_name: string) => {
+    trash: (workspace: string, file_name: string) => {
         return ipcRenderer.invoke(
             'sapio::compiled_contracts::trash',
+            workspace,
             file_name
         );
     },
-    open: (file_name: string) => {
-        return ipcRenderer.invoke('sapio::compiled_contracts::open', file_name);
+    open: (workspace: string, file_name: string) => {
+        return ipcRenderer.invoke(
+            'sapio::compiled_contracts::open',
+            workspace,
+            file_name
+        );
+    },
+};
+const workspaces = {
+    init: (workspace: string) => {
+        return ipcRenderer.invoke('sapio::workspaces::init', workspace);
+    },
+    list: () => {
+        return ipcRenderer.invoke('sapio::workspaces::list');
+    },
+    trash: (workspace: string) => {
+        return ipcRenderer.invoke('sapio::workspaces::trash', workspace);
     },
 };
 
@@ -57,7 +81,7 @@ function save_psbt(psbt: string): Promise<null> {
     return ipcRenderer.invoke('save_psbt', psbt);
 }
 
-function fetch_psbt(): Promise<null> {
+function fetch_psbt(): Promise<string> {
     return ipcRenderer.invoke('fetch_psbt');
 }
 function save_contract(contract: string): Promise<null> {
@@ -69,28 +93,6 @@ function save_settings(which: string, data: string): Promise<boolean> {
 
 function load_settings_sync(which: string): any {
     return ipcRenderer.invoke('load_settings_sync', which);
-}
-
-const callbacks = {
-    simulate: 0,
-    load_hex: 0,
-    save_hex: 0,
-    create_contracts: 0,
-    load_contract: 0,
-    'bitcoin-node-bar': 0,
-};
-
-type Callback = keyof typeof callbacks;
-
-function register(msg: Callback, action: (args: any) => void): () => void {
-    if (callbacks.hasOwnProperty(msg)) {
-        const listener = (event: IpcRendererEvent, args: any) => {
-            action(args);
-        };
-        ipcRenderer.on(msg, listener);
-        return () => ipcRenderer.removeListener(msg, listener);
-    }
-    throw 'Unregistered Callback';
 }
 
 function write_clipboard(s: string) {
@@ -112,9 +114,21 @@ function emulator_read_log(): Promise<string> {
     return ipcRenderer.invoke('emulator::read_log');
 }
 
-const api = {
+const chat = {
+    init: () => ipcRenderer.invoke('chat::init'),
+    send: (message: any /*EnvelopeIn*/) =>
+        ipcRenderer.invoke('chat::send', message),
+    add_user: (name: string, key: string) =>
+        ipcRenderer.invoke('chat::add_user', name, key),
+    list_users: () => ipcRenderer.invoke('chat::list_users'),
+    list_channels: () => ipcRenderer.invoke('chat::list_channels'),
+    list_messages_channel: (channel: string, since: number) =>
+        ipcRenderer.invoke('chat::list_messages_channel', channel, since),
+};
+
+// to typecheck, uncomment and import preloads
+const api /*:preloads*/ = {
     bitcoin_command,
-    register,
     save_psbt,
     save_contract,
     fetch_psbt,
@@ -130,11 +144,13 @@ const api = {
         load_contract_list,
         compiled_contracts,
         psbt,
+        workspaces,
     },
     emulator: {
         kill: emulator_kill,
         start: emulator_start,
         read_log: emulator_read_log,
     },
+    chat,
 };
 contextBridge.exposeInMainWorld('electron', api);

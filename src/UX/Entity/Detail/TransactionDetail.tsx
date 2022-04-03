@@ -14,9 +14,12 @@ import {
     outpoint_to_id,
     sequence_convert,
     time_to_pretty_string,
+    TXIDAndWTXIDMap,
 } from '../../../util';
 import Color from 'color';
 import {
+    EntityType,
+    selectEntityToView,
     selectTXNColor,
     selectTXNPurpose,
     set_custom_color,
@@ -25,11 +28,36 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { Divider, TextField, Typography } from '@mui/material';
 import { PSBTDetail } from './PSBTDetail';
+import { ContractModel } from '../../../Data/ContractManager';
 interface TransactionDetailProps {
-    entity: TransactionModel;
+    current_contract: ContractModel;
     find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
 }
 export function TransactionDetail(props: TransactionDetailProps) {
+    const entity_id: EntityType = useSelector(selectEntityToView);
+    const entity =
+        entity_id[0] === 'TXN'
+            ? TXIDAndWTXIDMap.get_by_txid_s(
+                  props.current_contract.txid_map,
+                  entity_id[1]
+              ) ?? null
+            : null;
+    return (
+        <div hidden={entity === null}>
+            {entity && (
+                <TransactionDetailInner
+                    entity={entity}
+                    find_tx_model={props.find_tx_model}
+                />
+            )}
+        </div>
+    );
+}
+interface TransactionInnerDetailProps {
+    entity: TransactionModel;
+    find_tx_model: (a: Buffer, b: number) => UTXOModel | null;
+}
+export function TransactionDetailInner(props: TransactionInnerDetailProps) {
     const dispatch = useDispatch();
     const opts = props.entity.getOptions();
     const txid = opts.txn.getId();

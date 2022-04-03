@@ -5,7 +5,7 @@ import { custom_sapio_config } from './settings';
 
 import { createMenu } from './createMenu';
 import register_handlers from './handlers';
-import { start_sapio_oracle } from './sapio';
+import { SapioWorkspace, start_sapio_oracle } from './sapio';
 import { register_devtools } from './devtools';
 import { get_bitcoin_node } from './bitcoin_rpc';
 
@@ -13,6 +13,7 @@ let mainWindow: BrowserWindow | null = null;
 
 async function createWindow() {
     await get_bitcoin_node();
+    await SapioWorkspace.new('default');
     const startUrl =
         process.env.ELECTRON_START_URL ||
         url.format({

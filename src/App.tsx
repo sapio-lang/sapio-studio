@@ -15,15 +15,11 @@ import createEngine, {
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import './App.css';
-import {
-    load_new_model,
-    selectContract,
-    selectShowing,
-    selectStatusBar,
-} from './AppSlice';
+import { selectContract, selectShowing, selectStatusBar } from './AppSlice';
+import { Data } from './common/preload_interface';
 import { BitcoinNodeManager } from './Data/BitcoinNode';
 import { BitcoinStatusBar } from './Data/BitcoinStatusBar';
-import { ContractModel, Data } from './Data/ContractManager';
+import { ContractModel } from './Data/ContractManager';
 import { ModelManager } from './Data/ModelManager';
 import { SimulationController } from './Data/Simulation';
 import { selectSimIsShowing, toggle_showing } from './Data/SimulationSlice';
@@ -33,6 +29,7 @@ import './Glyphs.css';
 import { poll_settings } from './Settings/SettingsSlice';
 import { TXIDAndWTXIDMap } from './util';
 import { AppNavbar } from './UX/AppNavbar';
+import { Chat } from './UX/Chat/Chat';
 import { set_continuations } from './UX/ContractCreator/ContractCreatorSlice';
 import { CreateContractModal } from './UX/ContractCreator/CreateContractModal';
 import { DemoCanvasWidget } from './UX/Diagram/DemoCanvasWidget';
@@ -45,10 +42,10 @@ import {
     selectShouldViewEntity,
 } from './UX/Entity/EntitySlice';
 import { CurrentlyViewedEntity } from './UX/Entity/EntityViewer';
+import { MiniscriptCompiler } from './UX/Miniscript/Compiler';
 import { Modals } from './UX/Modals';
 import { Settings } from './UX/Settings/Settings';
 import { Wallet } from './Wallet/Wallet';
-
 export type SelectedEvent = BaseEntityEvent<BaseModel<BaseModelGenerics>> & {
     isSelected: boolean;
 };
@@ -93,11 +90,11 @@ function App() {
     const model = React.useRef(new DiagramModel());
 
     // TODO: This should go somewhere else :(
-    React.useEffect(() => {
-        return window.electron.register('load_contract', (data: string) => {
-            dispatch(load_new_model(JSON.parse(data)));
-        });
-    });
+    //React.useEffect(() => {
+    //    return window.electron.register_callback('load_contract', (data: string) => {
+    //        dispatch(load_new_model(JSON.parse(data)));
+    //    });
+    //});
     React.useEffect(() => {
         setTimeout(() => {
             poll_settings(dispatch);
@@ -274,6 +271,18 @@ function Viewing(props: {
             return <CreateContractModal />;
         case 'ContractViewer':
             return <ContractViewer {...props} />;
+        case 'MiniscriptCompiler':
+            return (
+                <Paper className="miniscript-container" square={true}>
+                    <MiniscriptCompiler></MiniscriptCompiler>
+                </Paper>
+            );
+        case 'Chat':
+            return (
+                <Paper className="chat-container" square={true}>
+                    <Chat></Chat>
+                </Paper>
+            );
     }
 }
 function ContractViewer(props: {

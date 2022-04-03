@@ -3,7 +3,7 @@ const app = electron.app;
 import path from 'path';
 import { writeFileSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
-import { default_settings } from './settings_gen';
+import { default_settings } from '../src/common/settings_gen';
 import { deinit_bitcoin_node, get_bitcoin_node } from './bitcoin_rpc';
 import { kill_emulator, start_sapio_oracle } from './sapio';
 

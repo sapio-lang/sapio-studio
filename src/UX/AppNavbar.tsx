@@ -1,3 +1,4 @@
+import { Chat } from '@mui/icons-material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import {
     Divider,
@@ -32,7 +33,7 @@ export function AppNavbar(props: {
 
     return (
         <Paper className="AppNavBar" square={true}>
-            <List>
+            <List sx={{ textAlign: 'center' }}>
                 <MainScreens></MainScreens>
             </List>
             <Divider />
@@ -126,6 +127,29 @@ function MainScreens() {
             >
                 <ListItemIcon></ListItemIcon>
                 <ListItemText primary={'Contract Creator'} />
+            </ListItem>
+            <ListItem
+                disableGutters
+                button
+                key={'Miniscript'}
+                onClick={async () => {
+                    dispatch(switch_showing('MiniscriptCompiler'));
+                }}
+            >
+                <ListItemIcon></ListItemIcon>
+                <ListItemText primary={'Miniscript Testing'} />
+            </ListItem>
+
+            <ListItem
+                disableGutters
+                button={true}
+                key={'Chat'}
+                onClick={() => dispatch(switch_showing('Chat'))}
+            >
+                <ListItemIcon>
+                    <Chat></Chat>
+                </ListItemIcon>
+                <ListItemText primary={'Chat'} />
             </ListItem>
         </>
     );

@@ -1,30 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Data } from './Data/ContractManager';
 import { AppDispatch, RootState } from './Store/store';
 import { createSelectorCreator, defaultMemoize } from 'reselect';
 import _ from 'lodash';
+import { CreatedContract, Data } from './common/preload_interface';
 
-type ContractArgs = {
-    arguments: Record<string | number, unknown>;
-    context: {
-        amount: number;
-        network: 'Regtest' | 'Signet' | 'Testnet' | 'Bitcoin';
-        effects?: {
-            effects?: Record<
-                string,
-                Record<string, Record<string | number, unknown>>
-            >;
-        };
-    };
-};
-
-export type CreatedContract = {
-    name: string;
-    args: ContractArgs;
-    data: Data;
-};
-
-type Pages = 'ContractCreator' | 'ContractViewer' | 'Wallet' | 'Settings';
+type Pages =
+    | 'ContractCreator'
+    | 'ContractViewer'
+    | 'Wallet'
+    | 'Settings'
+    | 'MiniscriptCompiler'
+    | 'Chat';
 type StateType = {
     data: CreatedContract | null;
     counter: number;
@@ -82,10 +68,13 @@ export const {
 } = appSlice.actions;
 
 export const create_contract_of_type =
-    (type_arg: string, contract: any) =>
+    (type_arg: string, txn: string | null, contract: any) =>
     async (dispatch: AppDispatch, getState: () => RootState) => {
+        const state = getState();
         const compiled_contract = await window.electron.sapio.create_contract(
+            state.walletReducer.workspace,
             type_arg,
+            txn,
             contract
         );
         if ('ok' in compiled_contract && compiled_contract.ok)
@@ -103,6 +92,8 @@ export const recreate_contract =
         if (s.appReducer.data === null) return;
         return create_contract_of_type(
             s.appReducer.data.name,
+            s.appReducer.data.data.program['funding']?.txs[0]?.linked_psbt
+                ?.psbt ?? null,
             JSON.stringify(s.appReducer.data.args)
         )(dispatch, getState);
     };
@@ -110,10 +101,13 @@ export const recreate_contract =
 export const open_contract_directory =
     (file_name: string) =>
     async (dispatch: AppDispatch, getState: () => RootState) => {
-        window.electron.sapio.compiled_contracts.open(file_name).then((v) => {
-            if ('err' in v) return;
-            return 'ok' in v && dispatch(load_new_model(v.ok));
-        });
+        const state = getState();
+        window.electron.sapio.compiled_contracts
+            .open(state.walletReducer.workspace, file_name)
+            .then((v) => {
+                if ('err' in v) return;
+                return 'ok' in v && dispatch(load_new_model(v.ok));
+            });
     };
 
 export const create_contract_from_file =

@@ -17,7 +17,7 @@ import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import * as Bitcoin from 'bitcoinjs-lib';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Continuation, ContractModel } from '../../../Data/ContractManager';
+import { ContractModel } from '../../../Data/ContractManager';
 import { PhantomTransactionModel } from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
 import {
@@ -25,10 +25,13 @@ import {
     hasOwn,
     is_mock_outpoint,
     PrettyAmountField,
+    TXIDAndWTXIDMap,
 } from '../../../util';
 import {
     create,
+    EntityType,
     fetch_utxo,
+    selectEntityToView,
     selectUTXO,
     selectUTXOFlash,
     select_txn,
@@ -37,14 +40,17 @@ import Hex, { ASM } from './Hex';
 import { OutpointDetail } from './OutpointDetail';
 import './UTXODetail.css';
 import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
-import { MuiForm5 as Form } from '@rjsf/material-ui';
-import { FormValidation, ISubmitEvent } from '@rjsf/core';
+import Form, { FormValidation, ISubmitEvent } from '@rjsf/core';
 import {
     add_effect_to_contract,
     recreate_contract,
     selectHasEffect,
 } from '../../../AppSlice';
 import { RootState } from '../../../Store/store';
+import {
+    Continuation,
+    UTXOFormatData,
+} from '../../../common/preload_interface';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -56,16 +62,29 @@ const C = React.memo(UTXODetailInner, (prev, next) => {
     console.log('NEWCHECK?', b);
     return b;
 });
-export function UTXODetail(props: UTXODetailProps) {
-    return <C {...props}></C>;
+export function UTXODetail(props: { contract: ContractModel }) {
+    const entity_id: EntityType = useSelector(selectEntityToView);
+    const entity =
+        entity_id[0] === 'UTXO'
+            ? TXIDAndWTXIDMap.get_by_txid_s(
+                  props.contract.txid_map,
+                  entity_id[1].hash
+              )?.utxo_models[entity_id[1].nIn] ?? null
+            : null;
+    return (
+        <div hidden={entity === null}>
+            {entity && <C contract={props.contract} entity={entity}></C>}
+        </div>
+    );
 }
 
 export function UTXODetailInner(props: UTXODetailProps) {
     const theme = useTheme();
     const dispatch = useDispatch();
     const select_continuations = useSelector(selectContinuation);
-    const txid = props.entity.txn.get_txid();
-    const idx = props.entity.utxo.index;
+    const opts = props.entity.getOptions();
+    const txid = opts.txn.get_txid();
+    const idx = opts.utxo.index;
     const outpoint = { hash: txid, nIn: idx };
 
     const external_utxo = useSelector(selectUTXO)(outpoint);
@@ -75,8 +94,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
     const decomp =
         external_utxo?.scriptPubKey.address ??
         Bitcoin.script.toASM(
-            Bitcoin.script.decompile(props.entity.utxo.script) ??
-                Buffer.from('')
+            Bitcoin.script.decompile(opts.utxo.script) ?? Buffer.from('')
         );
     // first attempt to get the address from the extenral utxo if it's present,
     // otherwise attempt to read if from the utxo model
@@ -85,9 +103,9 @@ export function UTXODetailInner(props: UTXODetailProps) {
     if (!address) {
         address = 'UNKNOWN';
         try {
-            asm = Bitcoin.script.toASM(props.entity.utxo.script);
+            asm = Bitcoin.script.toASM(opts.utxo.script);
             address = Bitcoin.address.fromOutputScript(
-                props.entity.utxo.script,
+                opts.utxo.script,
                 /// TODO: Read from preferences?
                 Bitcoin.networks.regtest
             );
@@ -95,7 +113,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
             // TODO: Recovery?
         }
     }
-    const spends = props.entity.utxo.spends.map((elt, i) => (
+    const spends = opts.utxo.spends.map((elt, i) => (
         <div key={get_wtxid_backwards(elt.tx)} className="Spend">
             <Hex value={elt.get_txid()} label="TXID" />
             <Tooltip title="Go To The Spending Transaction">
@@ -115,11 +133,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
                     aria-label="create-contract"
                     onClick={() =>
                         dispatch(
-                            create(
-                                props.entity.txn.tx,
-                                props.entity,
-                                props.contract
-                            )
+                            create(opts.txn.tx, props.entity, props.contract)
                         )
                     }
                 >
@@ -139,10 +153,10 @@ export function UTXODetailInner(props: UTXODetailProps) {
             </Tooltip>
         );
     const title =
-        props.entity.txn instanceof PhantomTransactionModel ? (
+        opts.txn instanceof PhantomTransactionModel ? (
             <p>External UTXO</p>
         ) : (
-            <PrettyAmountField amount={props.entity.utxo.amount} />
+            <PrettyAmountField amount={opts.utxo.amount} />
         );
     const obj = select_continuations(`${txid}:${idx}`);
     const continuations = obj
@@ -168,6 +182,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
             </div>
             {title}
             {cont}
+            <OutputMetadataTable metadata={opts.metadata} />
             <OutpointDetail txid={txid} n={idx} />
             <ASM className="txhex" value={address} label="Address" />
             <ASM className="txhex" value={asm ?? 'UNKNOWN'} label="ASM" />
@@ -178,6 +193,59 @@ export function UTXODetailInner(props: UTXODetailProps) {
             {spends}
         </div>
     );
+}
+
+function OutputMetadataTable(props: { metadata: UTXOFormatData }) {
+    return (
+        <>
+            <Typography variant="h5">Metadata</Typography>
+            <SIMPNeg12345
+                simp_neg_12345={props.metadata.simp[-12345]}
+            ></SIMPNeg12345>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {Object.entries(props.metadata)
+                        .filter(([k, _]) => k !== 'simp')
+                        .map(([k, v]) => (
+                            <tr key={k}>
+                                <td>
+                                    <Typography>{k}</Typography>
+                                </td>
+                                <td>
+                                    <Typography>
+                                        {typeof v === 'string'
+                                            ? v
+                                            : JSON.stringify(v)}
+                                    </Typography>
+                                </td>
+                            </tr>
+                        ))}
+                </tbody>
+            </table>
+        </>
+    );
+}
+
+function SIMPNeg12345(props: { simp_neg_12345?: any }) {
+    let nft = null;
+    if (props.simp_neg_12345) {
+        nft = (
+            <div>
+                <img
+                    style={{ maxWidth: '50%' }}
+                    src={`https://${props.simp_neg_12345.cid}.ipfs.nftstorage.link`}
+                ></img>
+            </div>
+        );
+    }
+
+    return nft;
 }
 
 function ContinuationOption(props: { v: Continuation }) {

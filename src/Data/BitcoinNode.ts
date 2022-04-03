@@ -350,7 +350,7 @@ export class BitcoinNodeManager {
             .map((tm) => tm.get_txid());
         const req = txids.map((txid) => {
             return {
-                method: 'gettransaction',
+                method: 'getrawtransaction',
                 parameters: [txid, true],
             };
         });
@@ -375,7 +375,7 @@ export class BitcoinNodeManager {
                     } else {
                         s[1] = {
                             txid: txdata.txid,
-                            confirmations: txdata.confirmations ?? null,
+                            confirmations: txdata.confirmations ?? 0,
                         };
                     }
                     s[0] = s[1].txid;

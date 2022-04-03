@@ -11,15 +11,108 @@ import { sys } from 'typescript';
 import { preferences, sapio_config_file } from './settings';
 import path from 'path';
 import * as Bitcoin from 'bitcoinjs-lib';
-import { mkdir, readdir, writeFile } from 'fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'fs/promises';
+import { API, Result } from '../src/common/preload_interface';
+import { ConstructionRounded } from '@mui/icons-material';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
 
-type Result = { ok: string } | { err: string };
+export class SapioWorkspace {
+    name: string;
+    private constructor(name: string) {
+        this.name = name;
+    }
+    static async list_all(): Promise<string[]> {
+        const file = path.join(app.getPath('userData'), 'workspaces');
+        return readdir(file, { encoding: 'ascii' });
+    }
+    static async new(name: string): Promise<SapioWorkspace> {
+        const file = path.join(
+            app.getPath('userData'),
+            'workspaces',
+            name,
+            'compiled_contracts'
+        );
+        const created = await mkdir(file, { recursive: true });
+        return new SapioWorkspace(name);
+    }
+
+    async list_compiled_contracts(): Promise<string[]> {
+        const file = path.join(
+            app.getPath('userData'),
+            'workspaces',
+            this.name,
+            'compiled_contracts'
+        );
+        const contracts = await readdir(file, { encoding: 'ascii' });
+        return contracts;
+    }
+    async trash_compiled_contract(s: string): Promise<void> {
+        const file = path.join(
+            app.getPath('userData'),
+            'workspaces',
+            this.name,
+            'compiled_contracts',
+            s
+        );
+        return shell.trashItem(file);
+    }
+    async trash_workspace(s: string): Promise<void> {
+        const file = path.join(
+            app.getPath('userData'),
+            'workspaces',
+            this.name
+        );
+        return shell.trashItem(file);
+    }
+
+    contract_output_path_name(fname: string) {
+        return path.join(
+            app.getPath('userData'),
+            'workspaces',
+            this.name,
+            'compiled_contracts',
+            fname
+        );
+    }
+    async contract_output_path(fname: string) {
+        const file = this.contract_output_path_name(fname);
+        await mkdir(file, { recursive: true });
+        return file;
+    }
+
+    async read_bound_data_for(file_name: string) {
+        const file = this.contract_output_path_name(file_name);
+        const data = JSON.parse(
+            await readFile(path.join(file, 'bound.json'), {
+                encoding: 'utf-8',
+            })
+        );
+        return data;
+    }
+    async read_args_for(file_name: string) {
+        const file = this.contract_output_path_name(file_name);
+        const args = JSON.parse(
+            await readFile(path.join(file, 'args.json'), {
+                encoding: 'utf-8',
+            })
+        );
+        return args;
+    }
+
+    async read_module_for(file_name: string): Promise<string> {
+        const file = this.contract_output_path_name(file_name);
+        const mod = await readFile(path.join(file, 'module.json'), {
+            encoding: 'utf-8',
+        });
+        const name = JSON.parse(mod).module;
+        return name;
+    }
+}
+
 class SapioCompiler {
-    constructor() {}
-    static async command(args: string[]): Promise<Result> {
+    static async command(args: string[]): Promise<Result<string>> {
         const binary = preferences.data.sapio_cli.sapio_cli;
         const source = preferences.data.sapio_cli.preferences;
         let new_args: string[] = [];
@@ -41,11 +134,11 @@ class SapioCompiler {
             const ok = (await spawn(binary, new_args)).toString();
             return { ok };
         } catch (e: any) {
-            return { err: e.toString() };
+            return { err: e.stderr.toString() };
         }
     }
 
-    async psbt_finalize(psbt: string): Promise<Result> {
+    async psbt_finalize(psbt: string): Promise<Result<string>> {
         return await SapioCompiler.command([
             'psbt',
             'finalize',
@@ -54,18 +147,11 @@ class SapioCompiler {
         ]);
     }
 
-    async show_config(): Promise<Result> {
+    async show_config(): Promise<Result<string>> {
         return await SapioCompiler.command(['configure', 'show']);
     }
-    async list_contracts(): Promise<
-        | {
-              ok: Record<
-                  string,
-                  { name: string; key: string; api: JSONSchema7; logo: string }
-              >;
-          }
-        | { err: string }
-    > {
+
+    async list_contracts(): Promise<Result<API>> {
         const res = await SapioCompiler.command(['contract', 'list']);
         if ('err' in res) return res;
         const contracts = res.ok;
@@ -98,33 +184,34 @@ class SapioCompiler {
             })
         );
         const logos_p = Promise.all(
-            lines.map(([name, key]: [string, string]): Promise<Result> => {
-                if (memo_logos.has(key)) {
-                    return Promise.resolve(memo_logos.get(key));
-                } else {
-                    return SapioCompiler.command([
-                        'contract',
-                        'logo',
-                        '--key',
-                        key,
-                    ])
-                        .then((logo: Result) => {
-                            return 'ok' in logo ? { ok: logo.ok.trim() } : logo;
-                        })
-                        .then((logo: Result) => {
-                            if ('err' in logo) return logo;
-                            memo_logos.set(key, logo);
-                            return logo;
-                        });
+            lines.map(
+                ([name, key]: [string, string]): Promise<Result<string>> => {
+                    if (memo_logos.has(key)) {
+                        return Promise.resolve(memo_logos.get(key));
+                    } else {
+                        return SapioCompiler.command([
+                            'contract',
+                            'logo',
+                            '--key',
+                            key,
+                        ])
+                            .then((logo: Result<string>) => {
+                                return 'ok' in logo
+                                    ? { ok: logo.ok.trim() }
+                                    : logo;
+                            })
+                            .then((logo: Result<string>) => {
+                                if ('err' in logo) return logo;
+                                memo_logos.set(key, logo);
+                                return logo;
+                            });
+                    }
                 }
-            })
+            )
         );
         const [apis, logos] = await Promise.all([apis_p, logos_p]);
 
-        const results: Record<
-            string,
-            { name: string; key: string; api: Object; logo: string }
-        > = {};
+        const results: API = {};
         equal(lines.length, apis.length);
         equal(lines.length, logos.length);
         for (let i = 0; i < lines.length; ++i) {
@@ -148,28 +235,17 @@ class SapioCompiler {
             '--file',
             file,
         ]);
-        console.log(`child stdout:\n${child}`);
+        console.log(`child stdout:\n${JSON.stringify(child)}`);
         return { ok: null };
     }
 
-    async list_compiled_contracts(): Promise<string[]> {
-        const file = path.join(app.getPath('userData'), 'compiled_contracts');
-        const contracts = await readdir(file, { encoding: 'ascii' });
-        return contracts;
-    }
-    async trash_compiled_contract(s: string): Promise<void> {
-        const file = path.join(
-            app.getPath('userData'),
-            'compiled_contracts',
-            s
-        );
-        return shell.trashItem(file);
-    }
-
     async create_contract(
+        workspace_name: string,
         which: string,
+        txn: string | null,
         args: string
-    ): Promise<{ ok: string | null } | { err: string }> {
+    ): Promise<Result<string | null>> {
+        const workspace = await SapioWorkspace.new(workspace_name);
         let create, created, bound;
         const args_h = Bitcoin.crypto.sha256(Buffer.from(args)).toString('hex');
         // Unique File Name of Time + Args + Module
@@ -177,13 +253,7 @@ class SapioCompiler {
             0,
             16
         )}-${new Date().getTime()}`;
-        const file = path.join(
-            app.getPath('userData'),
-            'compiled_contracts',
-            fname
-        );
-        // technically a race condition
-        await mkdir(file, { recursive: true });
+        const file = await workspace.contract_output_path(fname);
         const write_str = (to: string, data: string) =>
             writeFile(path.join(file, to), data, { encoding: 'utf-8' });
         const w_arg = write_str('args.json', args);
@@ -218,19 +288,18 @@ class SapioCompiler {
         Promise.all([w_create]);
         let bind;
         try {
-            bind = await SapioCompiler.command([
-                'contract',
-                'bind',
-                '--base64_psbt',
-                created,
-            ]);
+            const bind_args = ['contract', 'bind', '--base64_psbt'];
+            if (txn) bind_args.push('--txn', txn);
+            bind_args.push(created);
+            bind = await SapioCompiler.command(bind_args);
         } catch (e: any) {
             console.debug(created);
             console.log('Failed to bind', e.toString());
             return { ok: null };
         }
         if ('err' in bind) {
-            write_str('bind_error.json', JSON.stringify(create));
+            console.log(['bind'], typeof bind, bind);
+            write_str('bind_error.json', JSON.stringify(bind));
             return bind;
         }
         const w_bound = write_str('bound.json', bind.ok);
