@@ -62,13 +62,19 @@ export default function (window: BrowserWindow) {
     });
 
     ipcMain.handle('sapio::load_wasm_plugin', (event) => {
-        const plugin = dialog.showOpenDialogSync({
-            properties: ['openFile'],
+        const plugins = dialog.showOpenDialogSync({
+            properties: ['openFile', 'multiSelections'],
             filters: [{ extensions: ['wasm'], name: 'WASM' }],
         });
-        if (plugin && plugin.length)
-            return sapio.load_contract_file_name(plugin[0]!);
-        return { err: 'No Plugin Selected' };
+        const errs = [];
+        if (!plugins || !plugins.length) return { err: 'No Plugin Selected' };
+        for (const plugin of plugins) {
+            const loaded = sapio.load_contract_file_name(plugin);
+            if ('err' in loaded) {
+                return loaded;
+            }
+        }
+        return { ok: null };
     });
 
     ipcMain.handle('sapio::open_contract_from_file', (event) => {
