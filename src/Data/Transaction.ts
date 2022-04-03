@@ -79,6 +79,7 @@ export class TransactionModel extends TransactionNodeModel implements HasKeys {
                 return {
                     color: u.getOptions().color,
                     label: u.getOptions().name,
+                    simp: {},
                 };
             }),
         };

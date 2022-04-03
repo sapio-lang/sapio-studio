@@ -40,8 +40,7 @@ import Hex, { ASM } from './Hex';
 import { OutpointDetail } from './OutpointDetail';
 import './UTXODetail.css';
 import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
-import { MuiForm5 as Form } from '@rjsf/material-ui';
-import { FormValidation, ISubmitEvent } from '@rjsf/core';
+import Form, { FormValidation, ISubmitEvent } from '@rjsf/core';
 import {
     add_effect_to_contract,
     recreate_contract,
@@ -200,6 +199,9 @@ function OutputMetadataTable(props: { metadata: UTXOFormatData }) {
     return (
         <>
             <Typography variant="h5">Metadata</Typography>
+            <SIMPNeg12345
+                simp_neg_12345={props.metadata.simp[-12345]}
+            ></SIMPNeg12345>
             <table>
                 <thead>
                     <tr>
@@ -208,20 +210,42 @@ function OutputMetadataTable(props: { metadata: UTXOFormatData }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {Object.entries(props.metadata).map(([k, v]) => (
-                        <tr key={k}>
-                            <td>
-                                <Typography>{k}</Typography>
-                            </td>
-                            <td>
-                                <Typography>{v}</Typography>
-                            </td>
-                        </tr>
-                    ))}
+                    {Object.entries(props.metadata)
+                        .filter(([k, _]) => k !== 'simp')
+                        .map(([k, v]) => (
+                            <tr key={k}>
+                                <td>
+                                    <Typography>{k}</Typography>
+                                </td>
+                                <td>
+                                    <Typography>
+                                        {typeof v === 'string'
+                                            ? v
+                                            : JSON.stringify(v)}
+                                    </Typography>
+                                </td>
+                            </tr>
+                        ))}
                 </tbody>
             </table>
         </>
     );
+}
+
+function SIMPNeg12345(props: { simp_neg_12345?: any }) {
+    let nft = null;
+    if (props.simp_neg_12345) {
+        nft = (
+            <div>
+                <img
+                    style={{ maxWidth: '50%' }}
+                    src={`https://${props.simp_neg_12345.cid}.ipfs.nftstorage.link`}
+                ></img>
+            </div>
+        );
+    }
+
+    return nft;
 }
 
 function ContinuationOption(props: { v: Continuation }) {

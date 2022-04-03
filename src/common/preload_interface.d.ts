@@ -61,6 +61,7 @@ export type TransactionData = {
 export type UTXOFormatData = {
     color: string;
     label: string;
+    simp: Record<number, any>;
 } & Record<string, any>;
 
 export type ContinuationTable = Record<string, Record<APIPath, Continuation>>;
