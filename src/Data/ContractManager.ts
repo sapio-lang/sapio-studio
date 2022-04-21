@@ -17,6 +17,7 @@ import {
     Continuation,
     ContinuationTable,
     Data,
+    ObjectMetadata,
     UTXOFormatData,
 } from '../common/preload_interface';
 export type NodeColorT = ['NodeColor', string];
@@ -39,6 +40,7 @@ type PreProcessedData = {
     txn_labels: Array<string>;
     utxo_labels: Array<Array<UTXOFormatData | null>>;
     continuations: ContinuationTable;
+    object_metadata: Record<string, ObjectMetadata>;
 };
 type ProcessedData = {
     inputs_map: InputMapT<TransactionModel>;
@@ -46,6 +48,7 @@ type ProcessedData = {
     txn_models: Array<TransactionModel>;
     utxo_models: Array<UTXOModel>;
     continuations: ContinuationTable;
+    object_metadata: Record<string, ObjectMetadata>;
 };
 
 function preprocess_data(data: Data): PreProcessedData {
@@ -55,8 +58,13 @@ function preprocess_data(data: Data): PreProcessedData {
     const txn_colors = [];
     const utxo_labels = [];
     const continuations: Record<string, Record<string, Continuation>> = {};
+    const object_metadata: Record<string, ObjectMetadata> = {};
+
     for (const [path, entry] of Object.entries(data.program)) {
-        let txid: null | TXID = null;
+        const k = entry.out;
+        continuations[k] = entry.continue_apis;
+        object_metadata[k] = entry.metadata;
+        let txid = null;
         let idx = 0;
         for (const [j, tx] of entry.txs.entries()) {
             psbts.push(Bitcoin.Psbt.fromBase64(tx.linked_psbt.psbt));
@@ -81,8 +89,6 @@ function preprocess_data(data: Data): PreProcessedData {
                 tx.linked_psbt.output_metadata ?? new Array(txn.outs.length)
             );
         }
-        const k = `${txid}:${idx}`;
-        continuations[k] = entry.continue_apis;
     }
 
     return {
@@ -92,6 +98,7 @@ function preprocess_data(data: Data): PreProcessedData {
         txn_labels,
         utxo_labels,
         continuations,
+        object_metadata,
     };
 }
 
@@ -329,8 +336,15 @@ function process_utxo_models(
     return to_add;
 }
 function process_data(obj: PreProcessedData): ProcessedData {
-    const { psbts, txns, txn_colors, txn_labels, utxo_labels, continuations } =
-        obj;
+    const {
+        psbts,
+        txns,
+        txn_colors,
+        txn_labels,
+        utxo_labels,
+        continuations,
+        object_metadata,
+    } = obj;
     const [txid_map, txn_models] = process_txn_models(
         psbts,
         txns,
@@ -347,6 +361,7 @@ function process_data(obj: PreProcessedData): ProcessedData {
         txn_models: txn_models,
         txid_map: txid_map,
         continuations,
+        object_metadata,
     };
 }
 
@@ -610,12 +625,14 @@ export class ContractBase {
     inputs_map: InputMapT<TransactionModel>;
     txid_map: TXIDAndWTXIDMapT<TransactionModel>;
     continuations: ContinuationTable;
+    object_metadata: Record<string, ObjectMetadata>;
     constructor() {
         this.utxo_models = [];
         this.inputs_map = InputMap.new();
         this.txn_models = [];
         this.txid_map = TXIDAndWTXIDMap.new();
         this.continuations = {};
+        this.object_metadata = {};
     }
 
     lookup_utxo_model(txid: Buffer, n: number): UTXOModel | null {
@@ -639,13 +656,20 @@ export class ContractModel extends ContractBase {
         this.checkable = true;
         if (obj === undefined) return;
         const new_obj = preprocess_data(obj);
-        const { inputs_map, utxo_models, txn_models, txid_map, continuations } =
-            process_data(new_obj);
+        const {
+            inputs_map,
+            utxo_models,
+            txn_models,
+            txid_map,
+            continuations,
+            object_metadata,
+        } = process_data(new_obj);
         this.utxo_models = utxo_models;
         this.inputs_map = inputs_map;
         this.txn_models = txn_models;
         this.txid_map = txid_map;
         this.continuations = continuations;
+        this.object_metadata = object_metadata;
     }
     should_update() {
         return this.checkable;
