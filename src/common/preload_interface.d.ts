@@ -40,7 +40,14 @@ export type Continuation = {
     schema: JSONSchema7;
     path: APIPath;
 };
+export type ObjectMetadata = { simp: Record<number, any> } & Record<
+    string,
+    any
+>;
 export type DataItem = {
+    metadata: ObjectMetadata;
+    /// formatted as txid:idx
+    out: string;
     txs: Array<{ linked_psbt: TransactionData }>;
     continue_apis: Record<APIPath, Continuation>;
 };

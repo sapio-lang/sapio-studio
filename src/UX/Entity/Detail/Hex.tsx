@@ -27,7 +27,7 @@ function BaseHex(props: { value: string; styling: string; label?: string }) {
                     ref={code}
                     fullWidth
                     label={props.label}
-                    defaultValue={props.value}
+                    value={props.value}
                     variant="outlined"
                     InputProps={{
                         readOnly: true,
@@ -58,7 +58,7 @@ export function ReadOnly(props: { value: React.ReactNode; label: string }) {
         <TextField
             fullWidth
             label={props.label}
-            defaultValue={props.value}
+            value={props.value}
             variant="outlined"
             InputProps={{
                 readOnly: true,

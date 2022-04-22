@@ -49,7 +49,7 @@ import {
 import { RootState } from '../../../Store/store';
 import {
     Continuation,
-    UTXOFormatData,
+    ObjectMetadata,
 } from '../../../common/preload_interface';
 
 interface UTXODetailProps {
@@ -85,6 +85,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
     const opts = props.entity.getOptions();
     const txid = opts.txn.get_txid();
     const idx = opts.utxo.index;
+    const object_metadata = props.contract.object_metadata[`${txid}:${idx}`];
     const outpoint = { hash: txid, nIn: idx };
 
     const external_utxo = useSelector(selectUTXO)(outpoint);
@@ -182,7 +183,9 @@ export function UTXODetailInner(props: UTXODetailProps) {
             </div>
             {title}
             {cont}
-            <OutputMetadataTable metadata={opts.metadata} />
+            {object_metadata && (
+                <OutputMetadataTable metadata={object_metadata} />
+            )}
             <OutpointDetail txid={txid} n={idx} />
             <ASM className="txhex" value={address} label="Address" />
             <ASM className="txhex" value={asm ?? 'UNKNOWN'} label="ASM" />
@@ -195,7 +198,7 @@ export function UTXODetailInner(props: UTXODetailProps) {
     );
 }
 
-function OutputMetadataTable(props: { metadata: UTXOFormatData }) {
+function OutputMetadataTable(props: { metadata: ObjectMetadata }) {
     return (
         <>
             <Typography variant="h5">Metadata</Typography>

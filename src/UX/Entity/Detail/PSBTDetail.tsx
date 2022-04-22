@@ -158,6 +158,12 @@ export function PSBTDetail(props: IProps) {
             {i} -- {w.toBase64().substr(0, 16)}...
         </MenuItem>
     ));
+    const [idx, set_idx] = React.useState(0);
+    React.useEffect(() => {
+        if (idx < props.psbts.length && idx >= 0) {
+            setPSBT(props.psbts[idx]!);
+        }
+    }, [idx, props.psbts]);
     // missing horizontal
     return (
         <div className="PSBTDetail">
@@ -171,9 +177,7 @@ export function PSBTDetail(props: IProps) {
                     const idx: number =
                         parseInt(psbt_selection_form.current?.value ?? '0') ??
                         0;
-                    if (idx < props.psbts.length && idx >= 0) {
-                        setPSBT(props.psbts[idx]!);
-                    }
+                    set_idx(idx);
                 }}
             >
                 {selectable_psbts}
