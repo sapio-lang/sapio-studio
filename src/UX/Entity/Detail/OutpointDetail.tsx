@@ -55,10 +55,6 @@ export function RefOutpointDetail(props: { txid: string; n: number }) {
     );
 }
 
-export class TXIDDetail extends React.Component<{
-    txid: string;
-}> {
-    render() {
-        return <Hex className="txhex" value={this.props.txid} label="TXID" />;
-    }
+export function TXIDDetail(props: { txid: string }) {
+    return <Hex className="txhex" value={props.txid} label="TXID" />;
 }
