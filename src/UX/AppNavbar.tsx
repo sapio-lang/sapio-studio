@@ -11,10 +11,11 @@ import {
     Paper,
 } from '@mui/material';
 import React from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
     create_contract_from_file,
     recreate_contract,
+    selectWorkspace,
     switch_showing,
     toggle_status_bar,
 } from '../AppSlice';
@@ -156,6 +157,7 @@ function MainScreens() {
 }
 function ContractMenu(props: { relayout: () => void }) {
     const dispatch = useDispatch();
+    const workspace = useSelector(selectWorkspace);
     const contractRef = React.useRef<HTMLLIElement>(null);
     const [contracts_open, setContractsOpen] = React.useState(false);
 
@@ -208,7 +210,7 @@ function ContractMenu(props: { relayout: () => void }) {
                 <MenuItem
                     onClick={() => {
                         setContractsOpen(false);
-                        window.electron.sapio.load_wasm_plugin();
+                        window.electron.sapio.load_wasm_plugin(workspace);
                     }}
                 >
                     Load WASM Plugin
@@ -217,7 +219,9 @@ function ContractMenu(props: { relayout: () => void }) {
                     onClick={async () => {
                         setContractsOpen(false);
                         const apis =
-                            await window.electron.sapio.load_contract_list();
+                            await window.electron.sapio.load_contract_list(
+                                workspace
+                            );
                         if ('err' in apis) {
                             alert(apis.err);
                             return;

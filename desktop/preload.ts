@@ -29,16 +29,16 @@ function create_contract(
 function open_contract_from_file(): Promise<Result<string>> {
     return ipcRenderer.invoke('sapio::open_contract_from_file');
 }
-function load_wasm_plugin(): Promise<Result<null>> {
-    return ipcRenderer.invoke('sapio::load_wasm_plugin');
+function load_wasm_plugin(workspace: string): Promise<Result<null>> {
+    return ipcRenderer.invoke('sapio::load_wasm_plugin', workspace);
 }
 
 function show_config(): Promise<Result<string>> {
     return ipcRenderer.invoke('sapio::show_config');
 }
 
-function load_contract_list() {
-    return ipcRenderer.invoke('sapio::load_contract_list');
+function load_contract_list(workspace: string) {
+    return ipcRenderer.invoke('sapio::load_contract_list', workspace);
 }
 
 const psbt = {
