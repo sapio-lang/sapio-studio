@@ -40,8 +40,8 @@ export default function (window: BrowserWindow) {
         return get_emulator_log();
     });
 
-    ipcMain.handle('sapio::load_contract_list', async (event) => {
-        const contracts = await sapio.list_contracts();
+    ipcMain.handle('sapio::load_contract_list', async (event, workspace) => {
+        const contracts = await sapio.list_contracts(workspace);
         return contracts;
     });
     ipcMain.handle(
@@ -61,7 +61,7 @@ export default function (window: BrowserWindow) {
         return await sapio.show_config();
     });
 
-    ipcMain.handle('sapio::load_wasm_plugin', (event) => {
+    ipcMain.handle('sapio::load_wasm_plugin', (event, workspace) => {
         const plugins = dialog.showOpenDialogSync({
             properties: ['openFile', 'multiSelections'],
             filters: [{ extensions: ['wasm'], name: 'WASM' }],
@@ -69,7 +69,7 @@ export default function (window: BrowserWindow) {
         const errs = [];
         if (!plugins || !plugins.length) return { err: 'No Plugin Selected' };
         for (const plugin of plugins) {
-            const loaded = sapio.load_contract_file_name(plugin);
+            const loaded = sapio.load_contract_file_name(workspace, plugin);
             if ('err' in loaded) {
                 return loaded;
             }

@@ -67,6 +67,10 @@ export class SapioWorkspace {
         return shell.trashItem(file);
     }
 
+    workspace_location() {
+        return path.join(app.getPath('userData'), 'workspaces', this.name);
+    }
+
     contract_output_path_name(fname: string) {
         return path.join(
             app.getPath('userData'),
@@ -151,8 +155,14 @@ class SapioCompiler {
         return await SapioCompiler.command(['configure', 'show']);
     }
 
-    async list_contracts(): Promise<Result<API>> {
-        const res = await SapioCompiler.command(['contract', 'list']);
+    async list_contracts(workspace_name: string): Promise<Result<API>> {
+        const workspace = await SapioWorkspace.new(workspace_name);
+        const res = await SapioCompiler.command([
+            'contract',
+            'list',
+            '--workspace',
+            workspace.workspace_location(),
+        ]);
         if ('err' in res) return res;
         const contracts = res.ok;
         const lines: Array<[string, string]> = contracts
@@ -174,6 +184,8 @@ class SapioCompiler {
                         'api',
                         '--key',
                         key,
+                        '--workspace',
+                        workspace.workspace_location(),
                     ]).then((v) => {
                         if ('err' in v) return v;
                         const api = JSON.parse(v.ok);
@@ -194,6 +206,8 @@ class SapioCompiler {
                             'logo',
                             '--key',
                             key,
+                            '--workspace',
+                            workspace.workspace_location(),
                         ])
                             .then((logo: Result<string>) => {
                                 return 'ok' in logo
@@ -228,12 +242,18 @@ class SapioCompiler {
         }
         return { ok: results };
     }
-    async load_contract_file_name(file: string): Promise<{ ok: null }> {
+    async load_contract_file_name(
+        workspace_name: string,
+        file: string
+    ): Promise<{ ok: null }> {
+        const workspace = await SapioWorkspace.new(workspace_name);
         const child = await SapioCompiler.command([
             'contract',
             'load',
             '--file',
             file,
+            '--workspace',
+            workspace.workspace_location(),
         ]);
         console.log(`child stdout:\n${JSON.stringify(child)}`);
         return { ok: null };
@@ -274,6 +294,8 @@ class SapioCompiler {
                 '--key',
                 which,
                 args,
+                '--workspace',
+                workspace.workspace_location(),
             ]);
         } catch (e) {
             console.debug('Failed to Create', which, args);

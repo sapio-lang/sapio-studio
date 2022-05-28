@@ -99,9 +99,9 @@ export type preloads = {
             args: string
         ) => Promise<Result<string | null>>;
         show_config: () => Promise<Result<string>>;
-        load_wasm_plugin: () => Promise<Result<null>>;
+        load_wasm_plugin: (workspace: string) => Promise<Result<null>>;
         open_contract_from_file: () => Promise<Result<string>>;
-        load_contract_list: () => Promise<Result<API>>;
+        load_contract_list: (workspace: string) => Promise<Result<API>>;
         compiled_contracts: {
             list: (workspace: string) => Promise<string[]>;
             trash: (workspace: string, file_name: string) => Promise<void>;
