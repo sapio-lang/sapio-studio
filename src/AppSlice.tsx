@@ -148,7 +148,4 @@ export const selectHasEffect = createDeepEqualSelector(
 export const selectShowing: (state: RootState) => Pages = (state: RootState) =>
     state.appReducer.showing;
 
-export const selectWorkspace: (state: RootState) => string = (state) =>
-    state.walletReducer.workspace;
-
 export default appSlice.reducer;
