@@ -14,6 +14,19 @@ import * as Bitcoin from 'bitcoinjs-lib';
 import { mkdir, readdir, readFile, writeFile } from 'fs/promises';
 import { API, Result } from '../src/common/preload_interface';
 import { ConstructionRounded } from '@mui/icons-material';
+import {
+    APIFor_CreateArgsFor_AnyValueAnd_AnyValue,
+    ApiReturn,
+    Auth,
+    CallReturn,
+    ListReturn,
+    LoadReturn,
+    LogoReturn,
+    Object as Compiled,
+    Program,
+    Request,
+    Response,
+} from './sapio_args';
 
 const memo_apis = new Map();
 const memo_logos = new Map();
@@ -142,6 +155,20 @@ class SapioCompiler {
         }
     }
 
+    static async command2(args: Request): Promise<Result<Response>> {
+        const binary = preferences.data.sapio_cli.sapio_cli;
+        try {
+            console.log(['sapio', 'request'], JSON.stringify(args));
+            const proc = spawn(binary, ['studio', 'server', '--stdin']);
+            proc.child?.stdin?.write(JSON.stringify(args));
+            proc.child?.stdin?.end();
+            const resp = (await proc).toString();
+            console.log(['sapio', 'responded'], resp);
+            return { ok: JSON.parse(resp) };
+        } catch (e: any) {
+            return { err: e.stderr.toString() };
+        }
+    }
     async psbt_finalize(psbt: string): Promise<Result<string>> {
         return await SapioCompiler.command([
             'psbt',
@@ -157,68 +184,87 @@ class SapioCompiler {
 
     async list_contracts(workspace_name: string): Promise<Result<API>> {
         const workspace = await SapioWorkspace.new(workspace_name);
-        const res = await SapioCompiler.command([
-            'contract',
-            'list',
-            '--workspace',
-            workspace.workspace_location(),
-        ]);
-        if ('err' in res) return res;
-        const contracts = res.ok;
-        const lines: Array<[string, string]> = contracts
-            .trim()
-            .split(/\r?\n/)
-            .map((line: string) => {
-                const v: string[] = line.split(' -- ')!;
-                equal(v.length, 2);
-                return v as [string, string];
-            });
-
+        let net = preferences.data.bitcoin.network.toLowerCase();
+        if (net === 'bitcoin') net = 'main';
+        const response = await SapioCompiler.command2({
+            command: { List: null },
+            context: {
+                net,
+                path: path.join(workspace.workspace_location(), 'modules'),
+                file: null,
+                emulator: null,
+                key: null,
+                plugin_map: {},
+            },
+        });
+        if ('err' in response) return response;
+        if ('Err' in response.ok.result)
+            return { err: response.ok.Err as unknown as string };
+        const list_return = (response.ok.result.Ok as { List: ListReturn })
+            .List;
+        const lines = Object.entries(list_return.items);
         const apis_p = Promise.all(
-            lines.map(([name, key]: [string, string]): Promise<JSONSchema7> => {
+            lines.map(([key, name]): Promise<Result<JSONSchema7>> => {
                 if (memo_apis.has(key)) {
                     return Promise.resolve(memo_apis.get(key));
                 } else {
-                    return SapioCompiler.command([
-                        'contract',
-                        'api',
-                        '--key',
-                        key,
-                        '--workspace',
-                        workspace.workspace_location(),
-                    ]).then((v) => {
+                    return SapioCompiler.command2({
+                        command: { Api: null },
+                        context: {
+                            net,
+                            path: path.join(
+                                workspace.workspace_location(),
+                                'modules'
+                            ),
+                            file: null,
+                            emulator: null,
+                            key: key,
+                            plugin_map: {},
+                        },
+                    }).then((v) => {
                         if ('err' in v) return v;
-                        const api = JSON.parse(v.ok);
-                        memo_apis.set(key, api);
-                        return api;
+                        if ('Err' in v.ok.result)
+                            return { err: v.ok.Err as unknown as string };
+                        let api = (v.ok.result.Ok as { Api: ApiReturn }).Api
+                            .api;
+                        memo_apis.set(key, api.input);
+                        return {
+                            ok: api.input as unknown as JSONSchema7,
+                        };
                     });
                 }
             })
         );
         const logos_p = Promise.all(
             lines.map(
-                ([name, key]: [string, string]): Promise<Result<string>> => {
+                ([key, name]: [string, string]): Promise<Result<string>> => {
                     if (memo_logos.has(key)) {
                         return Promise.resolve(memo_logos.get(key));
                     } else {
-                        return SapioCompiler.command([
-                            'contract',
-                            'logo',
-                            '--key',
-                            key,
-                            '--workspace',
-                            workspace.workspace_location(),
-                        ])
-                            .then((logo: Result<string>) => {
-                                return 'ok' in logo
-                                    ? { ok: logo.ok.trim() }
-                                    : logo;
-                            })
-                            .then((logo: Result<string>) => {
-                                if ('err' in logo) return logo;
-                                memo_logos.set(key, logo);
-                                return logo;
-                            });
+                        return SapioCompiler.command2({
+                            command: { Logo: null },
+                            context: {
+                                net,
+                                path: path.join(
+                                    workspace.workspace_location(),
+                                    'modules'
+                                ),
+                                file: null,
+                                emulator: null,
+                                key: key,
+                                plugin_map: {},
+                            },
+                        }).then((v) => {
+                            if ('err' in v) return v;
+                            if ('Err' in v.ok.result)
+                                return { err: v.ok.Err as unknown as string };
+                            let logo = (v.ok.result.Ok as { Logo: LogoReturn })
+                                .Logo.logo;
+                            memo_logos.set(key, logo);
+                            return {
+                                ok: logo,
+                            };
+                        });
                     }
                 }
             )
@@ -229,14 +275,15 @@ class SapioCompiler {
         equal(lines.length, apis.length);
         equal(lines.length, logos.length);
         for (let i = 0; i < lines.length; ++i) {
-            const [name, key] = lines[i]!;
+            const [key, name] = lines[i]!;
             const api = apis[i]!;
+            if ('err' in api) return api;
             const logo = logos[i]!;
             if ('err' in logo) return logo;
             results[key] = {
                 name,
                 key,
-                api,
+                api: api.ok,
                 logo: logo.ok,
             };
         }
@@ -245,18 +292,33 @@ class SapioCompiler {
     async load_contract_file_name(
         workspace_name: string,
         file: string
-    ): Promise<{ ok: null }> {
+    ): Promise<Result<null>> {
         const workspace = await SapioWorkspace.new(workspace_name);
-        const child = await SapioCompiler.command([
-            'contract',
-            'load',
-            '--file',
-            file,
-            '--workspace',
-            workspace.workspace_location(),
-        ]);
-        console.log(`child stdout:\n${JSON.stringify(child)}`);
-        return { ok: null };
+        let net = preferences.data.bitcoin.network.toLowerCase();
+        if (net === 'bitcoin') net = 'main';
+        let v = await SapioCompiler.command2({
+            command: { Load: null },
+            context: {
+                net,
+                path: path.join(workspace.workspace_location(), 'modules'),
+                file: {
+                    // todo: switch from OsString representation?
+                    // Perhaps make the argument the actual file data...
+                    Unix: Array.from(file).map((ch) => ch.charCodeAt(0)),
+                    Windows: Array.from(file).map((ch) => ch.charCodeAt(0)),
+                },
+                emulator: null,
+                key: null,
+                plugin_map: {},
+            },
+        });
+        if ('err' in v) return v;
+        if ('Err' in v.ok.result) return { err: v.ok.Err as unknown as string };
+        let result = (v.ok.result.Ok as { Load: LoadReturn }).Load;
+        console.log(['sapio'], result.key);
+        return {
+            ok: null,
+        };
     }
 
     async create_contract(
@@ -287,33 +349,66 @@ class SapioCompiler {
 
         Promise.all([w_arg, w_mod, w_settings]);
 
+        let net = preferences.data.bitcoin.network.toLowerCase();
+        if (net === 'bitcoin') net = 'main';
         try {
-            create = await SapioCompiler.command([
-                'contract',
-                'create',
-                '--key',
-                which,
-                args,
-                '--workspace',
-                workspace.workspace_location(),
-            ]);
+            create = await SapioCompiler.command2({
+                // TODO: why is params true?
+                command: { Call: { params: args as unknown as any } },
+                context: {
+                    net,
+                    path: path.join(workspace.workspace_location(), 'modules'),
+                    file: null,
+                    emulator: null,
+                    key: which,
+                    plugin_map: {},
+                },
+            });
         } catch (e) {
             console.debug('Failed to Create', which, args);
             return { ok: null };
         }
+
         if ('err' in create) {
             write_str('create_error.json', JSON.stringify(create));
             return create;
         }
-        created = create.ok;
-        const w_create = write_str('create.json', create.ok);
+        if ('Err' in create.ok.result) {
+            const res = { err: create.ok.Err as unknown as string };
+            write_str('create_error.json', JSON.stringify(create));
+            return res;
+        }
+        created = (create.ok.result.Ok as { Call: CallReturn }).Call.result;
+        const created_s = JSON.stringify(created);
+        const w_create = write_str('create.json', created_s);
         Promise.all([w_create]);
         let bind;
         try {
-            const bind_args = ['contract', 'bind', '--base64_psbt'];
-            if (txn) bind_args.push('--txn', txn);
-            bind_args.push(created);
-            bind = await SapioCompiler.command(bind_args);
+            const auth = preferences.data.bitcoin.auth;
+            const port = preferences.data.bitcoin.port;
+            const host = preferences.data.bitcoin.host;
+            bind = await SapioCompiler.command2({
+                command: {
+                    Bind: {
+                        // TODO: Fix client_auth none
+                        client_auth: auth as Auth,
+                        client_url: `http://${host}:${port}`,
+                        compiled: created as Compiled,
+                        //                        outpoint?: OutPoint | null,
+                        use_base64: true,
+                        use_mock: false,
+                        use_txn: txn,
+                    },
+                },
+                context: {
+                    net,
+                    path: path.join(workspace.workspace_location(), 'modules'),
+                    file: null,
+                    emulator: null,
+                    key: which,
+                    plugin_map: {},
+                },
+            });
         } catch (e: any) {
             console.debug(created);
             console.log('Failed to bind', e.toString());
@@ -324,10 +419,18 @@ class SapioCompiler {
             write_str('bind_error.json', JSON.stringify(bind));
             return bind;
         }
-        const w_bound = write_str('bound.json', bind.ok);
+        if ('Err' in bind.ok.result) {
+            console.log(['bind'], typeof bind, bind);
+            const err = { err: bind.ok.result.Err as string };
+            write_str('bind_error.json', JSON.stringify(err));
+            return err;
+        }
+        const bind_result = (bind.ok.result.Ok as { Bind: Program }).Bind;
+        const bind_str = JSON.stringify(bind_result);
+        const w_bound = write_str('bound.json', bind_str);
         await w_bound;
         console.debug(bound);
-        return bind;
+        return { ok: bind_str };
     }
 }
 

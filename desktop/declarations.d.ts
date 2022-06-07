@@ -1,9 +1,9 @@
 declare module 'await-spawn' {
-    import { spawn } from 'child_process';
+    import { ChildProcess, spawn } from 'child_process';
     type SpawnParams = Parameters<spawn>;
     declare async function spawn(
         ...spawn_params: SpawnParams
-    ): Promise<BufferList>;
+    ): Promise<BufferList> & { child: ChildProcess };
     export = spawn;
 }
 
