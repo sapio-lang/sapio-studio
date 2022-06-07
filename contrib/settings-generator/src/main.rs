@@ -75,10 +75,7 @@ enum Preferences {
     },
     /// # File
     /// Use a custom config file
-    File {
-        /// # Configuration File:
-        config: FilePicker,
-    },
+    File(FilePicker),
     /// # Default
     /// Use sapio-cli's default settings configuration
     Default,
