@@ -342,7 +342,7 @@ class SapioCompiler {
         try {
             create = await SapioCompiler.command2({
                 // TODO: why is params true?
-                command: { Call: { params: args as unknown as any } },
+                command: { Call: { params: JSON.parse(args) } },
                 context: {
                     net,
                     path: path.join(workspace.workspace_location(), 'modules'),
