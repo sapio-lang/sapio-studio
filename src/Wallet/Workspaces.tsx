@@ -1,5 +1,5 @@
 import { Add, Delete, FolderOpen } from '@mui/icons-material';
-import { Button } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import {
     DataGrid,
     GridActionsCellItem,
@@ -7,13 +7,18 @@ import {
     GridToolbarContainer,
 } from '@mui/x-data-grid';
 import React from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { DeleteDialog } from './DeleteDialog';
 import { NewWorkspace } from './NewWorkspace';
-import { switch_wallet_tab, switch_workspace } from './Slice/Reducer';
+import {
+    selectWorkspace,
+    switch_wallet_tab,
+    switch_workspace,
+} from './Slice/Reducer';
 
 export function Workspaces(props: { idx: number; value: number }) {
     const dispatch = useDispatch();
+    const workspace = useSelector(selectWorkspace);
     const [workspaces, set_workspaces] = React.useState<string[]>([]);
     const [to_delete, set_to_delete] = React.useState<string | null>(null);
     const [trigger_now, set_trigger_now] = React.useState(0);
@@ -101,6 +106,7 @@ export function Workspaces(props: { idx: number; value: number }) {
                 <Button onClick={() => set_new_workspace(true)}>
                     New Workspace<Add></Add>
                 </Button>
+                <Typography>Currenty Active Workspace: {workspace} </Typography>
             </GridToolbarContainer>
         );
     }

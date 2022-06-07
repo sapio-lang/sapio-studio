@@ -15,13 +15,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
     create_contract_from_file,
     recreate_contract,
-    selectWorkspace,
     switch_showing,
     toggle_status_bar,
 } from '../AppSlice';
 import { BitcoinNodeManager } from '../Data/BitcoinNode';
 import { ContractModel } from '../Data/ContractManager';
 import { toggle_showing } from '../Data/SimulationSlice';
+import { selectWorkspace } from '../Wallet/Slice/Reducer';
 import './AppNavbar.css';
 import { set_apis } from './ContractCreator/ContractCreatorSlice';
 import { open_modal } from './ModalSlice';
