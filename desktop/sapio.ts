@@ -5,7 +5,6 @@ import {
     spawn as spawnSync,
 } from 'child_process';
 import { JSONSchema7 } from 'json-schema';
-
 import { app, dialog, shell } from 'electron';
 import { sys } from 'typescript';
 import { preferences, sapio_config_file } from './settings';
@@ -13,16 +12,14 @@ import path from 'path';
 import * as Bitcoin from 'bitcoinjs-lib';
 import { mkdir, readdir, readFile, writeFile } from 'fs/promises';
 import { API, Result } from '../src/common/preload_interface';
-import { ConstructionRounded } from '@mui/icons-material';
 import {
-    APIFor_CreateArgsFor_AnyValueAnd_AnyValue,
     ApiReturn,
     Auth,
     CallReturn,
+    Compiled,
     ListReturn,
     LoadReturn,
     LogoReturn,
-    Object as Compiled,
     Program,
     Request,
     Response,
@@ -191,10 +188,9 @@ class SapioCompiler {
             context: {
                 net,
                 path: path.join(workspace.workspace_location(), 'modules'),
-                file: null,
                 emulator: null,
-                key: null,
                 plugin_map: {},
+                module_locator: 'Unknown',
             },
         });
         if ('err' in response) return response;
@@ -216,9 +212,8 @@ class SapioCompiler {
                                 workspace.workspace_location(),
                                 'modules'
                             ),
-                            file: null,
+                            module_locator: { Key: key },
                             emulator: null,
-                            key: key,
                             plugin_map: {},
                         },
                     }).then((v) => {
@@ -249,9 +244,8 @@ class SapioCompiler {
                                     workspace.workspace_location(),
                                     'modules'
                                 ),
-                                file: null,
+                                module_locator: { Key: key },
                                 emulator: null,
-                                key: key,
                                 plugin_map: {},
                             },
                         }).then((v) => {
@@ -301,14 +295,8 @@ class SapioCompiler {
             context: {
                 net,
                 path: path.join(workspace.workspace_location(), 'modules'),
-                file: {
-                    // todo: switch from OsString representation?
-                    // Perhaps make the argument the actual file data...
-                    Unix: Array.from(file).map((ch) => ch.charCodeAt(0)),
-                    Windows: Array.from(file).map((ch) => ch.charCodeAt(0)),
-                },
+                module_locator: { FileName: file },
                 emulator: null,
-                key: null,
                 plugin_map: {},
             },
         });
@@ -358,9 +346,8 @@ class SapioCompiler {
                 context: {
                     net,
                     path: path.join(workspace.workspace_location(), 'modules'),
-                    file: null,
                     emulator: null,
-                    key: which,
+                    module_locator: { Key: which },
                     plugin_map: {},
                 },
             });
@@ -403,9 +390,8 @@ class SapioCompiler {
                 context: {
                     net,
                     path: path.join(workspace.workspace_location(), 'modules'),
-                    file: null,
                     emulator: null,
-                    key: which,
+                    module_locator: { Key: which },
                     plugin_map: {},
                 },
             });
