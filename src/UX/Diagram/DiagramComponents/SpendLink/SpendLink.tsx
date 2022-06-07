@@ -1,13 +1,13 @@
 import * as React from 'react';
 import Color from 'color';
 import { SpendLinkModel } from './SpendLinkModel';
-import { MutableRefObject } from 'react-transition-group/node_modules/@types/react';
 import { useTheme } from '@mui/material';
 import { store } from '../../../../Store/store';
 import { selectAnimateFlow } from '../../../../Settings/SettingsSlice';
 import { TransactionModel } from '../../../../Data/Transaction';
 import { useSelector } from 'react-redux';
 import { selectIsReachable } from '../../../../Data/SimulationSlice';
+import { MutableRefObject } from 'react';
 
 let unique_key = 0;
 type PathSettings = {

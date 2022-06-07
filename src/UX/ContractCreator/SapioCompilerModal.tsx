@@ -3,9 +3,8 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import React from 'react';
+import React, { FormEventHandler } from 'react';
 import { useDispatch } from 'react-redux';
-import { FormEventHandler } from 'react-transition-group/node_modules/@types/react';
 import { close_modal } from '../ModalSlice';
 
 export function SapioCompilerModal(props: { show: boolean }) {
