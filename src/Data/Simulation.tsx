@@ -1,4 +1,4 @@
-import React, { FormEvent } from 'react';
+import React, { ChangeEvent, FormEvent } from 'react';
 import { ContractModel } from '../Data/ContractManager';
 
 import './Simulation.css';
@@ -19,7 +19,6 @@ import { green, red, pink } from '@mui/material/colors';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 
-import { ChangeEvent } from 'react-transition-group/node_modules/@types/react';
 import { selectNetwork } from '../Settings/SettingsSlice';
 import Color from 'color';
 export function SimulationController(props: {
