@@ -30,8 +30,8 @@ pub fn compile(s: &str) -> Result<String, JsValue> {
 }
 use bitcoin::secp256k1::VerifyOnly;
 use sapio_miniscript::bitcoin::secp256k1::Secp256k1;
-use std::lazy::SyncLazy;
-static SECP: SyncLazy<Secp256k1<VerifyOnly>> = SyncLazy::new(|| Secp256k1::verification_only());
+use std::sync::LazyLock;
+static SECP: LazyLock<Secp256k1<VerifyOnly>> = LazyLock::new(|| Secp256k1::verification_only());
 use bitcoin::util::taproot::TaprootSpendInfo;
 use sapio_miniscript::TranslatePk;
 #[wasm_bindgen]
