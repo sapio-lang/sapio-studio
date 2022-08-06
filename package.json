@@ -74,9 +74,6 @@
         "start-react": "export BROWSER=none REACT_EDITOR=none && react-app-rewired start",
         "test": "react-app-rewired test"
     },
-    "eslintConfig": {
-        "extends": "react-app"
-    },
     "browserslist": {
         "production": [
             ">0.2%",
