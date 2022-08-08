@@ -15,13 +15,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
     create_contract_from_file,
     recreate_contract,
+    selectWorkspace,
     switch_showing,
     toggle_status_bar,
 } from '../AppSlice';
 import { BitcoinNodeManager } from '../Data/BitcoinNode';
 import { ContractModel } from '../Data/ContractManager';
 import { toggle_showing } from '../Data/SimulationSlice';
-import { selectWorkspace } from '../Wallet/Slice/Reducer';
+import { useAppDispatch } from '../Store/store';
 import './AppNavbar.css';
 import { set_apis } from './ContractCreator/ContractCreatorSlice';
 import { open_modal } from './ModalSlice';
@@ -156,7 +157,7 @@ function MainScreens() {
     );
 }
 function ContractMenu(props: { relayout: () => void }) {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const workspace = useSelector(selectWorkspace);
     const contractRef = React.useRef<HTMLLIElement>(null);
     const [contracts_open, setContractsOpen] = React.useState(false);
@@ -194,7 +195,7 @@ function ContractMenu(props: { relayout: () => void }) {
                 <MenuItem
                     onClick={() => {
                         setContractsOpen(false);
-                        dispatch(create_contract_from_file());
+                        dispatch(create_contract_from_file);
                     }}
                 >
                     Open Contract from File

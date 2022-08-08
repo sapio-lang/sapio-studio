@@ -1,15 +1,16 @@
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Delete } from '@mui/icons-material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Typography } from '@mui/material';
 import { DataGrid, GridActionsCellItem, GridColumns } from '@mui/x-data-grid';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { open_contract_directory, switch_showing } from '../AppSlice';
+import { useAppDispatch } from '../Store/store';
 import { DeleteDialog } from './DeleteDialog';
 import { selectWorkspace } from './Slice/Reducer';
-import { Typography } from '@mui/material';
 
 export function ContractList(props: { idx: number; value: number }) {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [contracts, set_contracts] = React.useState<string[]>([]);
     const [to_delete, set_to_delete] = React.useState<string | null>(null);
     const [trigger_now, set_trigger_now] = React.useState(0);

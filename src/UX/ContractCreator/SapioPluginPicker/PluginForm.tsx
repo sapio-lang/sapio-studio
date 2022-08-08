@@ -1,18 +1,18 @@
 import React from 'react';
 
+import { Button } from '@mui/material';
 import Form, { ISubmitEvent } from '@rjsf/core';
-import { logo_image, Plugin } from './PluginTile';
 import { create_contract_of_type, switch_showing } from '../../../AppSlice';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../Store/store';
 import { show_apis } from '../ContractCreatorSlice';
 import './PluginForm.css';
-import { Button } from '@mui/material';
+import { logo_image, Plugin } from './PluginTile';
 
 interface PluginFormProps {
     app: Plugin;
 }
 export function PluginForm(props: PluginFormProps) {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const handleSubmit = async (event: ISubmitEvent<any>, type: string) => {
         const formData = event.formData;
         dispatch(switch_showing('ContractViewer'));

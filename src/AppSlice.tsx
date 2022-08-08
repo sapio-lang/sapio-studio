@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppDispatch, RootState } from './Store/store';
-import { createSelectorCreator, defaultMemoize } from 'reselect';
 import _ from 'lodash';
+import { createSelectorCreator, defaultMemoize } from 'reselect';
 import { CreatedContract, Data } from './common/preload_interface';
+import { AppDispatch, RootState } from './Store/store';
 
 type Pages =
     | 'ContractCreator'
@@ -110,14 +110,17 @@ export const open_contract_directory =
             });
     };
 
-export const create_contract_from_file =
-    () => async (dispatch: AppDispatch, getState: () => RootState) => {
-        window.electron.sapio
-            .open_contract_from_file()
-            .then(
-                (v) => 'ok' in v && dispatch(load_new_model(JSON.parse(v.ok)))
-            );
-    };
+export const create_contract_from_file = async (
+    dispatch: AppDispatch,
+    getState: () => RootState
+) => {
+    window.electron.sapio
+        .open_contract_from_file()
+        .then((v) => 'ok' in v && dispatch(load_new_model(JSON.parse(v.ok))));
+};
+
+export const selectWorkspace: (state: RootState) => string = (state) =>
+    state.walletReducer.workspace;
 
 export const selectContract: (state: RootState) => [Data | null, number] = (
     state: RootState

@@ -1,4 +1,6 @@
-import { JSONSchema7 } from 'json-schema';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import {
     Button,
     Dialog,
@@ -11,15 +13,24 @@ import {
     useTheme,
 } from '@mui/material';
 import { green, purple } from '@mui/material/colors';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
+import Form, { FormValidation, ISubmitEvent } from '@rjsf/core';
 import * as Bitcoin from 'bitcoinjs-lib';
+import { JSONSchema7 } from 'json-schema';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+    add_effect_to_contract,
+    recreate_contract,
+    selectHasEffect,
+} from '../../../AppSlice';
+import {
+    Continuation,
+    ObjectMetadata,
+} from '../../../common/preload_interface';
 import { ContractModel } from '../../../Data/ContractManager';
 import { PhantomTransactionModel } from '../../../Data/Transaction';
 import { UTXOModel } from '../../../Data/UTXO';
+import { RootState, useAppDispatch } from '../../../Store/store';
 import {
     get_wtxid_backwards,
     hasOwn,
@@ -27,6 +38,7 @@ import {
     PrettyAmountField,
     TXIDAndWTXIDMap,
 } from '../../../util';
+import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
 import {
     create,
     EntityType,
@@ -39,18 +51,6 @@ import {
 import Hex, { ASM } from './Hex';
 import { OutpointDetail } from './OutpointDetail';
 import './UTXODetail.css';
-import { selectContinuation } from '../../ContractCreator/ContractCreatorSlice';
-import Form, { FormValidation, ISubmitEvent } from '@rjsf/core';
-import {
-    add_effect_to_contract,
-    recreate_contract,
-    selectHasEffect,
-} from '../../../AppSlice';
-import { RootState } from '../../../Store/store';
-import {
-    Continuation,
-    ObjectMetadata,
-} from '../../../common/preload_interface';
 
 interface UTXODetailProps {
     entity: UTXOModel;
@@ -80,7 +80,7 @@ export function UTXODetail(props: { contract: ContractModel }) {
 
 export function UTXODetailInner(props: UTXODetailProps) {
     const theme = useTheme();
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const select_continuations = useSelector(selectContinuation);
     const opts = props.entity.getOptions();
     const txid = opts.txn.get_txid();
@@ -254,7 +254,7 @@ function SIMPNeg12345(props: { simp_neg_12345?: any }) {
 function ContinuationOption(props: { v: Continuation }) {
     const [is_open, setOpen] = React.useState(false);
     const name = props.v.path.substr(props.v.path.lastIndexOf('/') + 1);
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
     return (
         <div>
