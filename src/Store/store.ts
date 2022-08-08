@@ -1,12 +1,12 @@
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
-import thunk from 'redux-thunk';
-import entityReducer from '../UX/Entity/EntitySlice';
+import { useDispatch } from 'react-redux';
 import appReducer from '../AppSlice';
 import { dataReducer } from '../Data/DataSlice';
-import modalReducer from '../UX/ModalSlice';
+import { simulationReducer } from '../Data/SimulationSlice';
 import { settingsReducer } from '../Settings/SettingsSlice';
 import { contractCreatorReducer } from '../UX/ContractCreator/ContractCreatorSlice';
-import { simulationReducer } from '../Data/SimulationSlice';
+import entityReducer from '../UX/Entity/EntitySlice';
+import modalReducer from '../UX/ModalSlice';
 import { walletReducer } from '../Wallet/Slice/Reducer';
 
 export const store = configureStore({
@@ -20,7 +20,6 @@ export const store = configureStore({
         dataReducer,
         walletReducer,
     },
-    middleware: [thunk],
     devTools: true,
 });
 
@@ -32,3 +31,5 @@ export type AppThunk<ReturnType = void> = ThunkAction<
     unknown,
     Action<string>
 >;
+
+export const useAppDispatch: () => AppDispatch = useDispatch;
