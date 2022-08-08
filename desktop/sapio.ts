@@ -25,8 +25,8 @@ import {
     Response,
 } from './sapio_args';
 
-const memo_apis = new Map();
-const memo_logos = new Map();
+const memo_apis = new Map<String, Result<JSONSchema7>>();
+const memo_logos = new Map<String, Result<string>>();
 
 export class SapioWorkspace {
     name: string;
@@ -201,8 +201,9 @@ class SapioCompiler {
         const lines = Object.entries(list_return.items);
         const apis_p = Promise.all(
             lines.map(([key, name]): Promise<Result<JSONSchema7>> => {
-                if (memo_apis.has(key)) {
-                    return Promise.resolve(memo_apis.get(key));
+                const api = memo_apis.get(key);
+                if (api) {
+                    return Promise.resolve(api);
                 } else {
                     return SapioCompiler.command2({
                         command: { Api: null },
@@ -220,12 +221,13 @@ class SapioCompiler {
                         if ('err' in v) return v;
                         if ('Err' in v.ok.result)
                             return { err: v.ok.Err as unknown as string };
-                        let api = (v.ok.result.Ok as { Api: ApiReturn }).Api
+                        const api = (v.ok.result.Ok as { Api: ApiReturn }).Api
                             .api;
-                        memo_apis.set(key, api.input);
-                        return {
-                            ok: api.input as unknown as JSONSchema7,
+                        const visible_api = {
+                            ok: api.arguments as unknown as JSONSchema7,
                         };
+                        memo_apis.set(key, visible_api);
+                        return visible_api;
                     });
                 }
             })
@@ -233,8 +235,9 @@ class SapioCompiler {
         const logos_p = Promise.all(
             lines.map(
                 ([key, name]: [string, string]): Promise<Result<string>> => {
-                    if (memo_logos.has(key)) {
-                        return Promise.resolve(memo_logos.get(key));
+                    const logo = memo_logos.get(key);
+                    if (logo) {
+                        return Promise.resolve(logo);
                     } else {
                         return SapioCompiler.command2({
                             command: { Logo: null },
@@ -254,10 +257,11 @@ class SapioCompiler {
                                 return { err: v.ok.Err as unknown as string };
                             let logo = (v.ok.result.Ok as { Logo: LogoReturn })
                                 .Logo.logo;
-                            memo_logos.set(key, logo);
-                            return {
+                            const visible_logo = {
                                 ok: logo,
                             };
+                            memo_logos.set(key, visible_logo);
+                            return visible_logo;
                         });
                     }
                 }
