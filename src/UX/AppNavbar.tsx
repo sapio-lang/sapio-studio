@@ -223,6 +223,7 @@ function ContractMenu(props: { relayout: () => void }) {
                             await window.electron.sapio.load_contract_list(
                                 workspace
                             );
+                        console.log(apis);
                         if ('err' in apis) {
                             alert(apis.err);
                             return;

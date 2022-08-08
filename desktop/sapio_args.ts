@@ -272,6 +272,12 @@ export interface ContinuationPoint {
      * The arguments required at this point TODO: De-Duplicate repeated types?
      */
     schema?: RootSchema | null;
+    /**
+     * Metadata for this particular Continuation Point
+     */
+    simp: {
+        [k: string]: unknown;
+    };
     [k: string]: unknown;
 }
 /**
@@ -995,7 +1001,7 @@ export interface TxOut {
 }
 export interface Common {
     emulator?: EmulatorConfig | null;
-    module_locator: ModuleLocator;
+    module_locator?: ModuleLocator | null;
     net: string;
     path: string;
     plugin_map?: {
@@ -1078,7 +1084,7 @@ export interface Program {
     [k: string]: unknown;
 }
 /**
- * A `SapioStudioObject` is a json-friendly format for a `Object` for use in Sapio Studio
+ * A `SapioStudioObject` is a json-friendly format for a `Compiled` for use in Sapio Studio
  */
 export interface SapioStudioObject {
     /**
@@ -1112,11 +1118,11 @@ export interface APIFor_CreateArgsFor_AnyValueAnd_AnyValue {
     /**
      * What is expected to be passed to the module
      */
-    input: RootSchema;
+    arguments: RootSchema;
     /**
      * What is expected to be returned from the module
      */
-    output: RootSchema;
+    returns: RootSchema;
     [k: string]: unknown;
 }
 export interface LogoReturn {
