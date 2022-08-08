@@ -26,12 +26,16 @@ export function PluginForm(props: PluginFormProps) {
         const s = await navigator.clipboard.readText();
         set_data(JSON.parse(s));
     };
+    const copyInput = () => {
+        navigator.clipboard.writeText(JSON.stringify(props.app.api));
+    };
     return (
         <div className="PluginForm">
             <div></div>
             <div>
                 {logo_image(props.app)}
                 <Button onClick={handleClick}>Paste</Button>
+                <Button onClick={copyInput}>Copy Input Schema</Button>
                 <Form
                     formData={data}
                     schema={props.app.api}
