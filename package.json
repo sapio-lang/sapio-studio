@@ -19,8 +19,8 @@
         "test": "npm run build:desktop && vitest run",
         "test:ui": "playwright test",
         "test:sapio": "npm run build:desktop && node --import tsx scripts/check-sapio.ts",
-        "format": "prettier --write src desktop shared scripts tests docs *.json *.ts *.md public/demo/*.md",
-        "format:check": "prettier --check src desktop shared scripts tests docs *.json *.ts *.md public/demo/*.md"
+        "format": "prettier --write src desktop shared scripts tests docs *.json *.ts *.md .github public/demo/*.md",
+        "format:check": "prettier --check src desktop shared scripts tests docs *.json *.ts *.md .github public/demo/*.md"
     },
     "dependencies": {
         "@xyflow/react": "12.11.6",

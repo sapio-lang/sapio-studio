@@ -1,0 +1,87 @@
+name: Studio checks
+
+on:
+    pull_request:
+    push:
+        branches: [master]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: studio-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    studio:
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-24.04, macos-15]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version: '24'
+                  cache: npm
+            - run: npm ci
+            - run: npm run format:check
+            - run: npm test
+            - run: npm run build
+            - name: Test the production desktop
+              if: runner.os == 'Linux'
+              run: xvfb-run -a npm run test:ui
+            - name: Test the production desktop
+              if: runner.os == 'macOS'
+              run: npm run test:ui
+            - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              if: failure()
+              with:
+                  name: studio-test-results-${{ matrix.os }}
+                  path: |
+                      test-results/
+                      playwright-report/
+
+    sapio:
+        runs-on: ubuntu-24.04
+        env:
+            CARGO_BUILD_JOBS: 2
+            CARGO_PROFILE_DEV_DEBUG: 0
+            CARGO_INCREMENTAL: 0
+            CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/sapio-target
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version: '24'
+                  cache: npm
+            - run: npm ci
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  repository: sapio-lang/sapio
+                  ref: b6a03c452463a3500dd0d84f3b853d9bc78ef68c
+                  path: .cache/sapio
+            - name: Build the reviewed Sapio CLI
+              working-directory: .cache/sapio
+              run: |
+                  rustup show
+                  cargo build --locked -p sapio-cli
+            - name: Check actual contract and module workflows
+              env:
+                  SAPIO_CLI: ${{ github.workspace }}/.cache/sapio-target/debug/sapio-cli
+                  SAPIO_MODULES: ${{ github.workspace }}/public/demo
+              run: npm run test:sapio
+            - run: npm run build
+            - name: Test visual composition with the real CLI
+              env:
+                  SAPIO_CLI: ${{ github.workspace }}/.cache/sapio-target/debug/sapio-cli
+              run: xvfb-run -a npm run test:ui
+            - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              if: failure()
+              with:
+                  name: studio-sapio-test-results
+                  path: |
+                      test-results/
+                      playwright-report/
