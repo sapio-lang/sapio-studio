@@ -1,64 +1,93 @@
-import { app, BrowserWindow } from 'electron';
-import path from 'path';
-import url from 'url';
-import { custom_sapio_config } from './settings';
+import { app, BrowserWindow, dialog, session } from 'electron';
+import path from 'node:path';
+import { registerStudioHandlers } from './studio-handlers';
 
-import { createMenu } from './createMenu';
-import register_handlers from './handlers';
-import { SapioWorkspace, start_sapio_oracle } from './sapio';
-import { register_devtools } from './devtools';
-import { get_bitcoin_node } from './bitcoin_rpc';
-
-let mainWindow: BrowserWindow | null = null;
+let window: BrowserWindow | null = null;
 
 async function createWindow() {
-    await get_bitcoin_node();
-    await SapioWorkspace.new('default');
-    const startUrl =
-        process.env.ELECTRON_START_URL ||
-        url.format({
-            pathname: path.join(__dirname, '../index.html'),
-            protocol: 'file:',
-            slashes: true,
+    const requestedDevUrl = !app.isPackaged
+        ? process.env.STUDIO_DEV_SERVER_URL
+        : undefined;
+    if (requestedDevUrl && requestedDevUrl !== 'http://127.0.0.1:5173')
+        throw new Error(
+            'Studio development server must use http://127.0.0.1:5173.',
+        );
+    const devUrl = requestedDevUrl;
+    const policy = [
+        "default-src 'self'",
+        `script-src 'self'${devUrl ? " 'unsafe-inline'" : ''}`,
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data:",
+        "font-src 'self'",
+        `connect-src 'self'${devUrl ? ' ws://127.0.0.1:5173' : ''}`,
+        "object-src 'none'",
+        "base-uri 'none'",
+        "frame-src 'none'",
+        "form-action 'none'",
+    ].join('; ');
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        callback({
+            responseHeaders: {
+                ...details.responseHeaders,
+                'Content-Security-Policy': [policy],
+            },
         });
-    mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+    });
+    session.defaultSession.setPermissionRequestHandler(
+        (_contents, _permission, callback) => callback(false),
+    );
+    session.defaultSession.setPermissionCheckHandler(() => false);
+    window = new BrowserWindow({
+        width: 1440,
+        height: 960,
+        minWidth: 900,
+        minHeight: 640,
         show: false,
-        frame: false,
-        backgroundColor: 'black',
+        title: 'Sapio Studio',
+        backgroundColor: '#f4f3ef',
+        autoHideMenuBar: true,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            allowRunningInsecureContent: false,
+            preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,
             nodeIntegration: false,
             sandbox: true,
+            webSecurity: true,
+            allowRunningInsecureContent: false,
         },
     });
-    mainWindow.once('ready-to-show', () => {
-        mainWindow && mainWindow.show();
+    const current = window;
+    const unregister = registerStudioHandlers(
+        current,
+        path.join(__dirname, devUrl ? '../../public/demo' : '../renderer/demo'),
+    );
+    current.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    current.webContents.on('will-navigate', (event) => event.preventDefault());
+    current.webContents.on('will-attach-webview', (event) =>
+        event.preventDefault(),
+    );
+    current.once('ready-to-show', () => current.show());
+    current.on('closed', () => {
+        unregister();
+        window = null;
     });
-    mainWindow.loadURL(startUrl);
-    mainWindow.on('closed', function () {
-        mainWindow = null;
-    });
-    createMenu(mainWindow);
-    register_handlers(mainWindow);
-    custom_sapio_config();
-    start_sapio_oracle();
+    if (devUrl) await current.loadURL(devUrl);
+    else await current.loadFile(path.join(__dirname, '../renderer/index.html'));
 }
-register_devtools();
 
-app.on('ready', createWindow);
-
-app.on('window-all-closed', function () {
-    if (process.platform !== 'darwin') {
+app.whenReady()
+    .then(async () => {
+        await createWindow();
+        app.on('activate', () => {
+            if (window === null) void createWindow();
+        });
+    })
+    .catch((error: unknown) => {
+        dialog.showErrorBox(
+            'Sapio Studio could not start',
+            error instanceof Error ? error.message : String(error),
+        );
         app.quit();
-    }
-});
-
-app.on('activate', function () {
-    if (mainWindow === null) {
-        createWindow();
-    }
+    });
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
 });
