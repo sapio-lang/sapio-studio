@@ -1,9 +1,0 @@
-.Draggable {
-    -webkit-user-select: none;
-    -webkit-app-region: drag;
-}
-
-.AppNavBar {
-    width: 100%;
-    height: 100%;
-}

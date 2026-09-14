@@ -1,9 +1,0 @@
-.OutpointDetail {
-    display: grid;
-    grid-template-columns: 1fr min-content;
-}
-
-.TXIDDetail {
-    display: grid;
-    grid-template-columns: 1fr 16em;
-}

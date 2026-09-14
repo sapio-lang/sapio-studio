@@ -25,6 +25,10 @@ yarn-error.log*
 tags
 
 **/node_modules
+.cache/
+test-results/
+playwright-report/
+*.tsbuildinfo
 .vscode
 .eslintcache
 

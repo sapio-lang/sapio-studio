@@ -1,0 +1,203 @@
+{
+  "artifact": {
+    "native_ctv_in_graph": false,
+    "nodes": [
+      {
+        "location": "",
+        "source_path": "payment",
+        "address": "tr(63b63cbc0f928d1f9ef5bb194d0db23adfecdeb6ab832ac11721efdcf61479f8,pk(63b63cbc0f928d1f9ef5bb194d0db23adfecdeb6ab832ac11721efdcf61479f8))#8srx5d3m",
+        "descriptor": {
+          "XOnly": "tr(63b63cbc0f928d1f9ef5bb194d0db23adfecdeb6ab832ac11721efdcf61479f8,pk(63b63cbc0f928d1f9ef5bb194d0db23adfecdeb6ab832ac11721efdcf61479f8))#8srx5d3m"
+        },
+        "required_input_sats": 20000,
+        "covenants": {
+          "lowering": "Native",
+          "predicates": []
+        },
+        "program_policies": [
+          {
+            "policy": {
+              "Program": {
+                "instance": {
+                  "evaluator": "c99794a01b53f5d41775d7f01e6d13afa072ab113540109267846af40d159111",
+                  "program": [
+                    112,
+                    97,
+                    121,
+                    45,
+                    97,
+                    116,
+                    45,
+                    108,
+                    101,
+                    97,
+                    115,
+                    116,
+                    47,
+                    118,
+                    49
+                  ],
+                  "parameters": [
+                    136,
+                    19,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    34,
+                    0,
+                    0,
+                    0,
+                    81,
+                    32,
+                    106,
+                    19,
+                    181,
+                    214,
+                    172,
+                    143,
+                    186,
+                    174,
+                    213,
+                    233,
+                    26,
+                    9,
+                    151,
+                    73,
+                    52,
+                    172,
+                    245,
+                    189,
+                    125,
+                    33,
+                    34,
+                    246,
+                    3,
+                    0,
+                    157,
+                    21,
+                    10,
+                    27,
+                    246,
+                    186,
+                    113,
+                    50
+                  ]
+                },
+                "root": "tpubD6NzVbkrYhZ4YGk611BUFcJp7GB5eU8GS38TF62hRw3jNyNuMdpHmctrXCsDnXBheg2MANHwsCvzCdV2qioGf8vVWk2U6tEuHYrPgno9NdD"
+              }
+            },
+            "paths": [
+              "KeyPath",
+              {
+                "ScriptPath": "fd371f44d401bc5d7d8e7d5af2ba2eb8274113c652eb2f60bd00a79385f48d3f"
+              }
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "path": "payment/@action/pay/@suggested",
+            "kind": "suggested",
+            "schema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "description": "A candidate may pay more than the minimum fixed by the contract.",
+              "properties": {
+                "amount_sats": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "amount_sats"
+              ],
+              "title": "PaymentRequest",
+              "type": "object"
+            }
+          }
+        ],
+        "templates": [
+          {
+            "hash": "0c762c7624c72b74830e0a24c84ffe51c5b6b33d2896a42f7275a0b2b70f0632",
+            "kind": "suggested",
+            "guards": [],
+            "minimum_funding_sats": 20000,
+            "contract_input_sats": 20000,
+            "reserved_fee_sats": 500,
+            "funding_constraints": {
+              "inputs": [
+                {
+                  "name": "contract",
+                  "minimum": 20000
+                }
+              ],
+              "outputs": [
+                "recipient",
+                "change"
+              ],
+              "maximum_fee": 500,
+              "minimum_feerate_sat_kwu": 250
+            },
+            "version": 2,
+            "lock_time": 0,
+            "inputs": [
+              {
+                "index": 0,
+                "name": "contract",
+                "minimum_sats": 20000,
+                "sequence": 4194304
+              }
+            ],
+            "outputs": [
+              {
+                "index": 0,
+                "name": "recipient",
+                "amount_sats": 6000,
+                "script_pubkey": "51206a13b5d6ac8fbaaed5e91a09974934acf5bd7d2122f603009d150a1bf6ba7132",
+                "contract_location": "/suggested_template_hash_to_template_map/0c762c7624c72b74830e0a24c84ffe51c5b6b33d2896a42f7275a0b2b70f0632/outputs_info/0/receiving_contract"
+              },
+              {
+                "index": 1,
+                "name": "change",
+                "amount_sats": 13500,
+                "script_pubkey": "51205d572ec9c426446bc8e459b2ed77498c223f7fb0556eeee1550505930f43939b",
+                "contract_location": "/suggested_template_hash_to_template_map/0c762c7624c72b74830e0a24c84ffe51c5b6b33d2896a42f7275a0b2b70f0632/outputs_info/1/receiving_contract"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "location": "/suggested_template_hash_to_template_map/0c762c7624c72b74830e0a24c84ffe51c5b6b33d2896a42f7275a0b2b70f0632/outputs_info/0/receiving_contract",
+        "source_path": "",
+        "address": "bcrt1pdgfmt44v37a2a40frgyewjf54n6m6lfpytmqxqyaz59pha46wyeq0dxvcx",
+        "descriptor": null,
+        "required_input_sats": 0,
+        "covenants": {
+          "lowering": "Native",
+          "predicates": []
+        },
+        "program_policies": [],
+        "actions": [],
+        "templates": []
+      },
+      {
+        "location": "/suggested_template_hash_to_template_map/0c762c7624c72b74830e0a24c84ffe51c5b6b33d2896a42f7275a0b2b70f0632/outputs_info/1/receiving_contract",
+        "source_path": "",
+        "address": "bcrt1pt4tjajwyyezxhj8ytxew6a6f3s3r7las24hwac24q5zexr6rjwdsfzeuqh",
+        "descriptor": null,
+        "required_input_sats": 0,
+        "covenants": {
+          "lowering": "Native",
+          "predicates": []
+        },
+        "program_policies": [],
+        "actions": [],
+        "templates": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,428 @@
+.patch-workspace {
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    height: 100%;
+    color: #2f3934;
+}
+.patch-workspace button,
+.patch-workspace select {
+    font: inherit;
+}
+.patch-workspace button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid #d8dbd1;
+    border-radius: 6px;
+    background: #fcfcf7;
+    color: #455047;
+    padding: 8px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.patch-workspace button:hover {
+    background: #f0f2e8;
+    border-color: #b5c0ad;
+}
+.patch-workspace button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+.patch-workspace button:focus-visible,
+.patch-workspace select:focus-visible,
+.patch-workspace textarea:focus-visible {
+    outline: 2px solid #287c73;
+    outline-offset: 2px;
+}
+.patch-workspace select {
+    min-width: 0;
+    border: 1px solid #d8dbd1;
+    background: #fcfcf7;
+    padding: 8px;
+    border-radius: 5px;
+    color: #455047;
+    font-size: 12px;
+}
+.patch-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+    padding: 14px 18px;
+    background: #f8f8f2;
+    border-bottom: 1px solid #dcdfd5;
+}
+.patch-add-control,
+.patch-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.patch-workspace .patch-run {
+    background: #287c73;
+    color: white;
+    border-color: #287c73;
+}
+.patch-workspace .patch-run:hover {
+    background: #22695f;
+}
+.patch-stage {
+    display: flex;
+    flex: 1;
+    min-height: 500px;
+    position: relative;
+}
+.patch-flow {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    min-height: 500px;
+    background: #eef0e7;
+}
+.patch-flow .react-flow {
+    position: absolute;
+    inset: 0;
+}
+.patch-module {
+    width: 316px;
+    border: 1px solid #c9d0c3;
+    border-radius: 10px;
+    background: #fffffa;
+    box-shadow: 0 6px 18px #334b3720;
+    overflow: visible;
+    font-size: 12px;
+}
+.patch-module-selected {
+    border-color: #2d8475;
+    box-shadow:
+        0 0 0 2px #2d847544,
+        0 6px 18px #334b3720;
+}
+.patch-module.running {
+    box-shadow: 0 0 0 3px #a88c3c77;
+}
+.patch-module-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px;
+    border-bottom: 1px solid #e0e5d9;
+    background: #f7f9f0;
+    border-radius: 10px 10px 0 0;
+}
+.patch-module-title > div {
+    min-width: 0;
+    flex: 1;
+}
+.patch-module-title strong {
+    display: block;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.patch-module-title code {
+    display: block;
+    font-size: 10px;
+    margin-top: 4px;
+    color: #666c61;
+}
+.patch-module-title > svg {
+    color: #287669;
+}
+.patch-module-icon {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    color: #26756d;
+    background: #e6eee2;
+}
+.patch-module-ref {
+    position: relative;
+    color: #8c6229;
+    padding: 9px 13px;
+    border-bottom: 1px dashed #dcd8c8;
+    text-align: right;
+    font-size: 11px;
+}
+.patch-module-ports {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 12px 0;
+}
+.patch-module-inputs > small,
+.patch-module-outputs > small {
+    color: #686c62;
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 0 11px 4px;
+}
+.patch-module-outputs {
+    text-align: right;
+}
+.patch-port-row {
+    position: relative;
+    min-height: 33px;
+    padding: 5px 11px;
+}
+.patch-port-row > span {
+    display: block;
+    color: #475649;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    max-width: 132px;
+}
+.patch-port-row em {
+    display: block;
+    font-style: normal;
+    font-size: 10px;
+    color: #676c60;
+    margin-top: 2px;
+}
+.patch-module .react-flow__handle {
+    width: 9px;
+    height: 9px;
+    border: 2px solid #fffffa;
+    background: #287c73;
+}
+.patch-module .react-flow__handle.patch-handle-module {
+    background: #aa7937;
+    border-radius: 2px;
+}
+.patch-workspace .patch-expand {
+    width: 100%;
+    font-size: 10px;
+    border-width: 1px 0 0;
+    border-radius: 0 0 10px 10px;
+    color: #646d5e;
+    padding: 7px;
+    background: #fbfcf5;
+}
+.patch-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    max-width: 430px;
+    width: 85%;
+    pointer-events: none;
+}
+.patch-empty-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    border: 1px solid #ccd6c5;
+    border-radius: 18px;
+    color: #606e5f;
+    background: #f7f9f0;
+}
+.patch-empty h2 {
+    font-size: 21px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 20px 0 12px;
+    letter-spacing: -0.025em;
+    color: #52604e;
+}
+.patch-empty p {
+    font-size: 13px;
+    color: #666d60;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+.patch-empty button {
+    pointer-events: auto;
+}
+.patch-legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 24px;
+    font-size: 10px;
+    color: #656c5d;
+}
+.patch-legend span {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.patch-legend i {
+    background: #287c73;
+    border-radius: 50%;
+    width: 7px;
+    height: 7px;
+}
+.patch-legend i.reference {
+    background: #aa7937;
+    border-radius: 1px;
+}
+.patch-inspector {
+    width: 310px;
+    flex-shrink: 0;
+    padding: 18px;
+    border-left: 1px solid #d9dfd0;
+    background: #fafbf4;
+    overflow-y: auto;
+    max-height: calc(100vh - 270px);
+}
+.patch-inspector > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+.patch-inspector > header small {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #646d5c;
+}
+.patch-inspector h3 {
+    font-size: 16px;
+    margin: 6px 0 10px;
+    overflow-wrap: anywhere;
+}
+.patch-inspector > header button {
+    padding: 5px;
+    border: 0;
+    background: none;
+}
+.patch-inspector-description {
+    font-size: 12px;
+    color: #656c5d;
+    line-height: 1.6;
+    margin: 0 0 18px;
+}
+.patch-inspector label {
+    display: block;
+    font-size: 11px;
+    color: #616e54;
+    margin: 12px 0 7px;
+}
+.patch-json {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 230px;
+    border: 1px solid #d6ddce;
+    border-radius: 5px;
+    background: #fffffc;
+    color: #3b5041;
+    padding: 10px;
+    font:
+        11px/1.7 ui-monospace,
+        SFMono-Regular,
+        Consolas,
+        monospace;
+    resize: vertical;
+    tab-size: 2;
+}
+.patch-context-note,
+.patch-reference-note {
+    color: #666d5d;
+    font-size: 11px;
+    line-height: 1.6;
+    margin: 10px 0 16px;
+}
+.patch-reference-note {
+    padding: 10px;
+    border-left: 2px solid #b6935c;
+    background: #f4f0e2;
+    color: #776949;
+}
+.patch-field-error {
+    color: #a14235;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+.patch-wire-editor {
+    border-top: 1px solid #e1e6d8;
+    padding-top: 14px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: #5f6e51;
+}
+.patch-wire-editor summary {
+    cursor: pointer;
+}
+.patch-wire-editor select {
+    display: block;
+    width: 100%;
+    margin-top: 5px;
+}
+.patch-wire-editor button {
+    margin-top: 8px;
+}
+.patch-result {
+    font-size: 12px;
+    color: #5f6e51;
+    margin-top: 18px;
+}
+.patch-result pre {
+    background: #f0f3e7;
+    border-radius: 5px;
+    padding: 10px;
+    max-height: 240px;
+    overflow: auto;
+    font-size: 10px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.patch-status {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 42px;
+    padding: 10px 18px;
+    border-top: 1px solid #d9dfd0;
+    background: #f8f9f1;
+    color: #616e57;
+    font-size: 11px;
+}
+.patch-status small {
+    white-space: nowrap;
+    font-size: 10px;
+    color: #656b5f;
+}
+.patch-flow .react-flow__edge-text {
+    font-size: 10px;
+    fill: #5b6d54;
+}
+.patch-flow .react-flow__edge-textbg {
+    fill: #f7f9ef;
+}
+@media (max-width: 1100px) {
+    .patch-inspector {
+        width: 255px;
+    }
+    .patch-toolbar-right button {
+        font-size: 11px;
+        padding: 7px;
+    }
+}
+@media (max-width: 780px) {
+    .patch-stage {
+        flex-direction: column;
+    }
+    .patch-inspector {
+        width: auto;
+        max-height: none;
+        border-left: 0;
+        border-top: 1px solid #d9dfd0;
+    }
+    .patch-toolbar-right {
+        flex-wrap: wrap;
+    }
+    .patch-status small {
+        display: none;
+    }
+}
