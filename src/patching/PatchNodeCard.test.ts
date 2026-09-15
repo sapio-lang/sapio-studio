@@ -108,6 +108,28 @@ describe('compact typed node cards', () => {
         ).toEqual(['']);
     });
 
+    it('hides unused direct-call ports while preserving connected inputs on callable implementations', () => {
+        const ports = valuePorts(type, 'arguments');
+        expect(visibleNodePorts(ports, 'arguments', false, [], true)).toEqual(
+            [],
+        );
+        expect(
+            visibleNodePorts(
+                ports,
+                'arguments',
+                false,
+                ['/release/delay'],
+                true,
+            ).map((port) => port.path),
+        ).toEqual(['/release/delay']);
+        expect(
+            visibleNodePorts(valuePorts(type), 'returns', false, [], true),
+        ).toEqual([]);
+        expect(visibleNodePorts(ports, 'arguments', true, [], true)).toEqual(
+            ports,
+        );
+    });
+
     it('uses human names for variables and keeps labels independent of identity', () => {
         const node = {
             kind: 'variable' as const,

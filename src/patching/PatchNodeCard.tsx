@@ -50,6 +50,7 @@ export interface PatchNodeCardData extends Record<string, unknown> {
     compatibleInputs?: string[];
     compatibleOutputs?: string[];
     compatibleCallable?: boolean;
+    referenceOnly?: boolean;
 }
 
 export type FlowPatchNode = Node<PatchNodeCardData, 'patch'>;
@@ -60,6 +61,7 @@ export function visibleNodePorts(
     side: 'arguments' | 'returns',
     expanded: boolean,
     connectedPaths: string[],
+    referenceOnly = false,
 ): SchemaPort[] {
     if (expanded) return ports;
     const connected = new Set(connectedPaths);
@@ -68,6 +70,7 @@ export function visibleNodePorts(
     );
     return ports.filter((port) => {
         if (connected.has(port.path)) return true;
+        if (referenceOnly) return false;
         if (side === 'returns') return port.path === '';
         return topLevel
             ? pointerTokens(port.path).length === 1
@@ -182,7 +185,10 @@ export function PatchNodeCard({
     selected,
 }: NodeProps<FlowPatchNode>) {
     const { patchNode, modules } = data;
+    const referenceOnly =
+        patchNode.kind === 'module' && Boolean(data.referenceOnly);
     const showCallable =
+        referenceOnly ||
         data.showCallable ||
         Boolean(data.connectionPending && data.compatibleCallable);
     const allInputs = nodePorts(patchNode, modules, 'arguments');
@@ -191,35 +197,40 @@ export function PatchNodeCard({
         allInputs,
         'arguments',
         data.expanded,
-        data.connectionPending
+        data.connectionPending && !referenceOnly
             ? [...data.connectedInputs, ...(data.compatibleInputs ?? [])]
             : data.connectedInputs,
+        referenceOnly,
     );
     const outputs = visibleNodePorts(
         allOutputs,
         'returns',
         data.expanded,
-        data.connectionPending
+        data.connectionPending && !referenceOnly
             ? [...data.connectedOutputs, ...(data.compatibleOutputs ?? [])]
             : data.connectedOutputs,
+        referenceOnly,
     );
     const name = patchNodeLabel(patchNode, modules);
-    const role = nodeRole(patchNode, allOutputs);
+    const role = referenceOnly
+        ? 'Callable implementation'
+        : nodeRole(patchNode, allOutputs);
     const missing =
         data.availability === 'missing' ||
         (patchNode.kind === 'module' &&
             !modules.some((module) => module.key === patchNode.moduleKey));
     const invalid = data.availability === 'invalid';
-    const Icon =
-        patchNode.kind === 'variable'
-            ? Variable
-            : patchNode.kind === 'parameter'
-              ? SlidersHorizontal
-              : patchNode.kind === 'subpatch'
-                ? Component
-                : role === 'Contract builder'
-                  ? Vault
-                  : Box;
+    const Icon = referenceOnly
+        ? FunctionSquare
+        : patchNode.kind === 'variable'
+          ? Variable
+          : patchNode.kind === 'parameter'
+            ? SlidersHorizontal
+            : patchNode.kind === 'subpatch'
+              ? Component
+              : role === 'Contract builder'
+                ? Vault
+                : Box;
     const updateInternals = useUpdateNodeInternals();
     const handleLayout = JSON.stringify([
         inputs.map((port) => port.path),
@@ -252,6 +263,7 @@ export function PatchNodeCard({
             className={`patch-module patch-node-card patch-node-${patchNode.kind} ${selected ? 'patch-module-selected' : ''} ${data.status ?? ''} ${missing || invalid ? 'patch-node-unavailable' : ''}`}
             aria-label={`${name}, ${role}`}
             data-node-kind={patchNode.kind}
+            data-reference-only={referenceOnly || undefined}
         >
             <header className="patch-module-title">
                 <span className="patch-module-icon">
@@ -288,6 +300,11 @@ export function PatchNodeCard({
                     />
                 )}
             </header>
+            {referenceOnly && (
+                <p className="patch-reference-note">
+                    The calling module supplies the inputs.
+                </p>
+            )}
             {(patchNode.kind === 'variable' ||
                 patchNode.kind === 'parameter') && (
                 <div
@@ -467,9 +484,13 @@ export function PatchNodeCard({
                         ) : (
                             <ChevronDown size={12} />
                         )}
-                        {data.expanded
-                            ? 'Compact fields'
-                            : 'Show record fields'}
+                        {referenceOnly
+                            ? data.expanded
+                                ? 'Hide direct-call ports'
+                                : 'Show direct-call ports'
+                            : data.expanded
+                              ? 'Compact fields'
+                              : 'Show record fields'}
                     </button>
                 )}
                 {patchNode.kind === 'module' && (

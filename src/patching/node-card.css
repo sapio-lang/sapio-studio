@@ -180,6 +180,12 @@
     font-size: 11px;
     line-height: 1.5;
 }
+.patch-reference-note {
+    margin: 12px 14px 0;
+    color: #796342;
+    font-size: 11px;
+    line-height: 1.5;
+}
 .patch-node-unavailable {
     border-color: #bea178;
 }
