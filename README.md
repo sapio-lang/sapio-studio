@@ -35,14 +35,14 @@ read-only preview; desktop file access, compilation and signing use Electron.
 
 Open Settings and select your Sapio CLI executable. Studio requires the current
 file-based CLI and Program signer, tested at Sapio revision
-[`21ad197b248002c8e26949827ec13ad772c2fdef`](https://github.com/sapio-lang/sapio/commit/21ad197b248002c8e26949827ec13ad772c2fdef)
+[`9533a62ecb6f639d6f3cd4a552c63ade902e7618`](https://github.com/sapio-lang/sapio/commit/9533a62ecb6f639d6f3cd4a552c63ade902e7618)
 with typed module interfaces. The historical crates.io CLI does not expose
 this API. Build the reviewed source with:
 
 ```sh
 git clone https://github.com/sapio-lang/sapio.git sapio-core
 cd sapio-core
-git checkout 21ad197b248002c8e26949827ec13ad772c2fdef
+git checkout 9533a62ecb6f639d6f3cd4a552c63ade902e7618
 cargo build --locked -p sapio-cli
 ```
 

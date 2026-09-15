@@ -33,6 +33,8 @@ import {
     initialValue,
     valuePorts,
     standaloneSchema,
+    rebaseSchema,
+    recordType,
     schemaLabel,
 } from './schema';
 
@@ -1162,7 +1164,15 @@ describe('callable interface boundaries', () => {
         ) as JsonSchema;
         const provider = module(1, {}, left);
         const expected = module(2, {}, right);
-        const input = valuePorts({ schema: socket(expected.api) })[0]!;
+        const input = valuePorts({
+            schema: socket({
+                ...expected.api,
+                returns: rebaseSchema(
+                    expected.api.returns,
+                    '#/x-sapio-module/returns',
+                ),
+            }),
+        })[0]!;
         expect(compatibleModule(provider, input).compatible).toBe(true);
         const changed = structuredClone(right) as JsonObject;
         (
@@ -1175,6 +1185,170 @@ describe('callable interface boundaries', () => {
                 input,
             ).compatible,
         ).toBe(false);
+    });
+
+    const recursiveCallable = (
+        name: string,
+        quantity: JsonSchema = blocks,
+    ): JsonSchema => ({
+        $ref: `#/definitions/${name}Arguments`,
+        definitions: {
+            [`${name}Arguments`]: module(
+                1,
+                {
+                    type: 'object',
+                    properties: {
+                        next: { $ref: `#/definitions/${name}Handle` },
+                        quantity: { $ref: `#/definitions/${name}Quantity` },
+                    },
+                    required: ['next', 'quantity'],
+                    additionalProperties: false,
+                },
+                satoshis,
+            ).api.arguments,
+            [`${name}Handle`]: socket({
+                arguments: { $ref: `#/definitions/${name}Arguments` },
+                returns: { $ref: `#/definitions/${name}Result` },
+            }),
+            [`${name}Quantity`]: quantity,
+            [`${name}Result`]: satoshis,
+        },
+    });
+
+    it('matches recursive callable metadata in the containing schema graph', () => {
+        const implementation = {
+            ...module(1, {}, satoshis),
+            api: {
+                arguments: recursiveCallable('Provider'),
+                returns: satoshis,
+            },
+        };
+        const target = valuePorts({
+            schema: { $ref: '#/definitions/ConsumerHandle' },
+            root: recursiveCallable('Consumer'),
+        })[0]!;
+        expect(compatibleModule(implementation, target).compatible).toBe(true);
+        expect(
+            sameSchema(
+                { schema: recursiveCallable('Provider') },
+                { schema: recursiveCallable('Consumer') },
+            ),
+        ).toBe(true);
+        expect(
+            compatibleModule(
+                {
+                    ...implementation,
+                    api: {
+                        ...implementation.api,
+                        arguments: recursiveCallable('Wrong', satoshis),
+                    },
+                },
+                target,
+            ).compatible,
+        ).toBe(false);
+        const broken = structuredClone(target);
+        broken.schema = socket({
+            arguments: { $ref: '#/definitions/Missing' },
+            returns: satoshis,
+        });
+        expect(compatibleModule(implementation, broken).compatible).toBe(false);
+    });
+
+    it('preserves recursive callable roots through extraction and reusable inputs', async () => {
+        const root = recursiveCallable('Original');
+        const selected = {
+            schema: { $ref: '#/definitions/OriginalHandle' },
+            root,
+        };
+        const implementation = {
+            ...module(1, {}, satoshis),
+            api: { arguments: root, returns: satoshis },
+        };
+        const extracted = { schema: standaloneSchema(selected) };
+        const originalPort = valuePorts(selected)[0]!;
+        const extractedPort = valuePorts(extracted)[0]!;
+        expect(compatibleModule(implementation, extractedPort).compatible).toBe(
+            true,
+        );
+        expect(compatibleValues(originalPort, extractedPort).status).toBe(
+            'exact',
+        );
+        const record = recordType([
+            { name: 'policy', type: extracted, required: true },
+            {
+                name: 'other',
+                type: {
+                    schema: { $ref: '#/definitions/OriginalHandle' },
+                    root: recursiveCallable('Original', satoshis),
+                },
+                required: true,
+            },
+        ]);
+        const ports = valuePorts(record, 'arguments');
+        expect(
+            compatibleModule(
+                implementation,
+                ports.find((port) => port.path === '/policy')!,
+            ).compatible,
+        ).toBe(true);
+        expect(
+            compatibleModule(
+                implementation,
+                ports.find((port) => port.path === '/other')!,
+            ).compatible,
+        ).toBe(false);
+        const reference = { which_plugin: { HashKey: implementation.key } };
+        const definition: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'policy',
+                    kind: 'parameter',
+                    name: 'policy',
+                    type: extracted,
+                    position: location,
+                },
+            ],
+            connections: [],
+            outputs: [{ name: 'policy', node: 'policy', path: '' }],
+            output: 'policy',
+        };
+        const graph: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'nested',
+                    kind: 'subpatch',
+                    name: 'Recursive policy',
+                    patch: definition,
+                    arguments: { policy: reference },
+                    position: location,
+                },
+            ],
+            connections: [],
+            outputs: [{ name: 'policy', node: 'nested', path: '/policy' }],
+            output: 'policy',
+        };
+        const invoke = vi.fn();
+        const result = await runPatch(
+            graph,
+            [implementation],
+            null,
+            {},
+            runtime([implementation], invoke),
+        );
+        expect(result.output).toEqual(reference);
+        expect(invoke).not.toHaveBeenCalled();
+        const wrong = {
+            ...implementation,
+            api: {
+                ...implementation.api,
+                arguments: recursiveCallable('Wrong', satoshis),
+            },
+        };
+        await expect(
+            runPatch(graph, [wrong], null, {}, runtime([wrong], invoke)),
+        ).rejects.toThrow(/does not implement/);
     });
 
     it('evaluates callable reference values and checks the selected implementation before use', async () => {

@@ -41,8 +41,9 @@ Modules export ordinary JSON Schemas with three Sapio annotations:
   `sapio.authorization`. The identity participates in compatibility checks,
   including inside records and lists.
 - `x-sapio-module` declares a callable input's expected `arguments` and `returns`
-  schemas. Each is an independent schema root. The arguments schema includes
-  the complete Sapio invocation envelope and its compilation context.
+  schema nodes. Their local references resolve in the containing API schema,
+  allowing recursive callable types to share definitions. The arguments schema
+  includes the complete Sapio invocation envelope and its compilation context.
 - `x-sapio-role: "contract"` identifies a compiled contract result for presentation.
 
 A value wire requires compatible declared types. Different semantic identities

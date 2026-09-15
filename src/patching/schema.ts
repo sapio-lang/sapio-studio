@@ -123,7 +123,7 @@ function withAnnotations(resolved: JsonSchema, source: JsonObject): JsonSchema {
     return result;
 }
 
-/** Relocate local schema references without rewriting defaults or API annotations. */
+/** Relocate schema references, including callable types, without rewriting data. */
 export function rebaseSchema(schema: JsonSchema, prefix: string): JsonSchema {
     if (!object(schema)) return schema;
     const maps = new Set([
@@ -153,6 +153,16 @@ export function rebaseSchema(schema: JsonSchema, prefix: string): JsonSchema {
             child.startsWith('#')
         ) {
             result[key] = `${prefix}${child.slice(1)}`;
+        } else if (key === 'x-sapio-module' && object(child)) {
+            result[key] = Object.fromEntries(
+                Object.entries(child).map(([side, value]) => [
+                    side,
+                    ['arguments', 'returns'].includes(side) &&
+                    asSchema(value) !== undefined
+                        ? rebaseSchema(value as JsonSchema, prefix)
+                        : structuredClone(value),
+                ]),
+            );
         } else if (maps.has(key) && object(child)) {
             result[key] = Object.fromEntries(
                 Object.entries(child).map(([name, field]) => {
@@ -405,7 +415,7 @@ export function normalized(
                 const result =
                     part === undefined
                         ? undefined
-                        : normalized(part, part, depth + 1, budget);
+                        : normalized(part, root, depth + 1, budget);
                 if (result === undefined) return undefined;
                 signature[side] = result;
             }
@@ -604,7 +614,7 @@ export function sameSchema(a: ValueType, b: ValueType): boolean {
                         return (
                             a !== undefined &&
                             b !== undefined &&
-                            compare({ schema: a }, { schema: b }, depth + 1)
+                            schema(a, b, depth + 1)
                         );
                     });
                 }
@@ -813,9 +823,12 @@ export function compatibleModule(
     if (
         !sameSchema(
             { schema: module.api.arguments },
-            { schema: argumentsSchema },
+            { schema: argumentsSchema, root: target.root },
         ) ||
-        !sameSchema({ schema: module.api.returns }, { schema: returnsSchema })
+        !sameSchema(
+            { schema: module.api.returns },
+            { schema: returnsSchema, root: target.root },
+        )
     )
         return mismatch(
             'This module does not implement the input and output types required by the callable socket.',
