@@ -1,0 +1,113 @@
+{
+    "program": {
+        "payment": {
+            "continue_apis": {
+                "payment/@action/pay/@suggested": {
+                    "path": "payment/@action/pay/@suggested",
+                    "schema": {
+                        "$schema": "http://json-schema.org/draft-07/schema#",
+                        "description": "A candidate may pay more than the minimum fixed by the contract.",
+                        "properties": {
+                            "amount_sats": {
+                                "format": "uint64",
+                                "minimum": 0,
+                                "type": "integer"
+                            }
+                        },
+                        "required": ["amount_sats"],
+                        "title": "PaymentRequest",
+                        "type": "object"
+                    },
+                    "simp": {}
+                }
+            },
+            "metadata": {
+                "simp": {},
+                "simps_for_guards": []
+            },
+            "out": "3b8dd1dd9f018ca4328713e3d4be0fb3a3410fce8e6f9da701ae4bcbad675d2d:0",
+            "source_path": "payment",
+            "txs": [
+                {
+                    "linked_psbt": {
+                        "added_output_metadata": [
+                            {
+                                "simp": {}
+                            },
+                            {
+                                "simp": {}
+                            }
+                        ],
+                        "hex": "02000000012d5d67adcb4bae01a79d6f8ece0f41a3b30fbed4e3138732a48c019fddd18d3b0000000000000040000270170000000000002251206a13b5d6ac8fbaaed5e91a09974934acf5bd7d2122f603009d150a1bf6ba7132bc340000000000002251205d572ec9c426446bc8e459b2ed77498c223f7fb0556eeee1550505930f43939b00000000",
+                        "metadata": {
+                            "simp": {}
+                        },
+                        "output_metadata": [
+                            {
+                                "simp": {},
+                                "simps_for_guards": []
+                            },
+                            {
+                                "simp": {},
+                                "simps_for_guards": []
+                            }
+                        ],
+                        "psbt": "cHNidP8BAIkCAAAAAS1dZ63LS64Bp51vjs4PQaOzD77U4xOHMqSMAZ/d0Y07AAAAAAAAAEAAAnAXAAAAAAAAIlEgahO11qyPuq7V6RoJl0k0rPW9fSEi9gMAnRUKG/a6cTK8NAAAAAAAACJRIF1XLsnEJkRryORZsu13SYwiP3+wVW7u4VUFBZMPQ5ObAAAAAAABAF4CAAAAAXYyteHkO7awPfXscSBnm3M4cKjE6vVAvAmjnEeIJ/+iAAAAAAAAAEAAASBOAAAAAAAAIlEgZ6C0EcFFWNZVNYQNDCLRCIh2gisK82TdTTOaKzlimCgAAAAAAQErIE4AAAAAAAAiUSBnoLQRwUVY1lU1hA0MItEIiHaCKwrzZN1NM5orOWKYKCIVwWO2PLwPko0fnvW7GU0Nsjrf7N62q4MqwRch79z2FHn4IyBjtjy8D5KNH571uxlNDbI63+zetquDKsEXIe/c9hR5+KzAARcgY7Y8vA+SjR+e9bsZTQ2yOt/s3rargyrBFyHv3PYUefgBGCD9Nx9E1AG8XX2OfVryui64J0ETxlLrL2C9AKeThfSNPwAAAA=="
+                    }
+                }
+            ]
+        },
+        "payment/@funding": {
+            "continue_apis": {},
+            "metadata": {
+                "simp": {},
+                "simps_for_guards": []
+            },
+            "out": "a2ff2788479ca309bc40f5eac4a87038739b672071ecf53db0b63be4e1b53276:0",
+            "txs": [
+                {
+                    "linked_psbt": {
+                        "added_output_metadata": [
+                            {
+                                "simp": {}
+                            }
+                        ],
+                        "hex": "02000000017632b5e1e43bb6b03df5ec7120679b733870a8c4eaf540bc09a39c478827ffa200000000000000400001204e00000000000022512067a0b411c14558d65535840d0c22d1088876822b0af364dd4d339a2b3962982800000000",
+                        "metadata": {
+                            "color": "pink",
+                            "label": "funding",
+                            "simp": {}
+                        },
+                        "output_metadata": [
+                            {
+                                "simp": {},
+                                "simps_for_guards": []
+                            }
+                        ],
+                        "psbt": "cHNidP8BAF4CAAAAAXYyteHkO7awPfXscSBnm3M4cKjE6vVAvAmjnEeIJ/+iAAAAAAAAAEAAASBOAAAAAAAAIlEgZ6C0EcFFWNZVNYQNDCLRCIh2gisK82TdTTOaKzlimCgAAAAAAAAA"
+                    }
+                }
+            ]
+        },
+        "payment/@suggested/0c762c7624c72b74830e0a24c84ffe51c5b6b33d2896a42f7275a0b2b70f0632/#0": {
+            "continue_apis": {},
+            "metadata": {
+                "simp": {},
+                "simps_for_guards": []
+            },
+            "out": "545e11b645c54c64a31e070a71c76aaa3783c0ce1bfa8d4174447d5d2fdaf794:0",
+            "source_path": "",
+            "txs": []
+        },
+        "payment/@suggested/0c762c7624c72b74830e0a24c84ffe51c5b6b33d2896a42f7275a0b2b70f0632/#1": {
+            "continue_apis": {},
+            "metadata": {
+                "simp": {},
+                "simps_for_guards": []
+            },
+            "out": "545e11b645c54c64a31e070a71c76aaa3783c0ce1bfa8d4174447d5d2fdaf794:1",
+            "source_path": "",
+            "txs": []
+        }
+    }
+}
