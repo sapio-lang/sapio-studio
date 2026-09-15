@@ -43,6 +43,27 @@ function setup(run: typeof runCli, exampleModules?: string[]) {
 }
 
 describe('fixed Sapio operations', () => {
+    it('validates typed values in the schema worker without invoking a WASM module', async () => {
+        const run = vi.fn<typeof runCli>();
+        const { bridge } = setup(run);
+        const schema = {
+            type: 'integer',
+            minimum: 1,
+            maximum: 65535,
+            'x-sapio-type': 'sapio.relative-block-delay/v1',
+        };
+        expect(
+            await bridge.modules.validateValue({ schema, value: 144 }),
+        ).toEqual({ valid: true, errors: [] });
+        expect(
+            (await bridge.modules.validateValue({ schema, value: 0 })).valid,
+        ).toBe(false);
+        expect(
+            (await bridge.modules.validateValue({ schema, value: '144' }))
+                .valid,
+        ).toBe(false);
+        expect(run).not.toHaveBeenCalled();
+    });
     it('checks the combined document limit before staging files or starting Sapio', async () => {
         const run = vi.fn<typeof runCli>();
         const { bridge } = setup(run);

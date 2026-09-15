@@ -242,6 +242,18 @@ export function createSapioBridge(dependencies: BridgeDependencies): Pick<
                     dependencies.schemaWorker,
                 );
             },
+            async validateValue(input) {
+                object(input, 'Value validation');
+                if (typeof input.schema !== 'boolean')
+                    object(input.schema, 'Value schema');
+                if (!Object.hasOwn(input, 'value'))
+                    throw new Error('Supply a value to validate.');
+                return validateValue(
+                    input.schema,
+                    input.value,
+                    dependencies.schemaWorker,
+                );
+            },
         },
         async explain(input: ExplainInput) {
             object(input, 'Explanation input');

@@ -28,6 +28,7 @@ const studio: StudioAPI = {
         info: (key) => invoke('modules.info', key),
         call: (input) => invoke('modules.call', input),
         validate: (input) => invoke('modules.validate', input),
+        validateValue: (input) => invoke('modules.validateValue', input),
     },
     explain: (input) => invoke('explain', input),
     bind: (input) => invoke('bind', input),
