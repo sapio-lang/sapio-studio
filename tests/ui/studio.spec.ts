@@ -5,7 +5,7 @@ import {
     type Locator,
     type Page,
 } from '@playwright/test';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -584,6 +584,233 @@ test('typed Variables and wired reusable Outputs work without a Sapio executable
         await expect(page.locator('.patch-status')).toContainText(
             'invalid field',
         );
+        expect(errors).toEqual([]);
+    } finally {
+        await application.close();
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('a bound child transaction opens Spend with its own contract and linked PSBT', async () => {
+    test.skip(
+        !process.env.SAPIO_CLI,
+        'Set SAPIO_CLI for real binding and spending-path validation.',
+    );
+    test.setTimeout(120_000);
+    const directory = await mkdtemp(path.join(tmpdir(), 'studio-bound-'));
+    const config = path.join(directory, 'runtime.json');
+    const exportedPsbt = path.join(directory, 'pending-release.psbt');
+    await writeFile(
+        config,
+        JSON.stringify({
+            main: null,
+            testnet: null,
+            signet: null,
+            regtest: {
+                active: true,
+                api_node: {
+                    url: 'http://127.0.0.1:1',
+                    auth: { CookieFile: '/deliberately/missing/cookie' },
+                },
+                covenant: { mode: 'native_ctv_research' },
+            },
+        }),
+    );
+    const application = await launchDesktop(directory, process.env.SAPIO_CLI!);
+    try {
+        const page = await application.firstWindow();
+        const errors: string[] = [];
+        page.on('pageerror', (error) => errors.push(error.message));
+        await page.getByRole('button', { name: /Studio settings/ }).click();
+        const settings = page.getByRole('dialog');
+        await settings
+            .getByText('Binding configuration', { exact: true })
+            .click();
+        await settings.getByLabel('Optional runtime config').fill(config);
+        await settings
+            .getByRole('button', { name: 'Save & check CLI', exact: true })
+            .click();
+        await expect(settings.locator('.success-message')).toContainText(
+            'sapio',
+        );
+        await page.keyboard.press('Escape');
+        await application.evaluate(({ dialog }, filename) => {
+            dialog.showOpenDialog = async () => ({
+                canceled: false,
+                filePaths: [filename],
+            });
+        }, path.resolve('tests/ui/fixtures/fixed-vault.artifact.json'));
+        await page
+            .getByRole('button', { name: 'Open artifact', exact: true })
+            .click();
+        await expect(
+            page.getByText('Unbound template graph', { exact: true }),
+        ).toBeVisible();
+        const proposals = page.getByRole('button', {
+            name: 'Generate proposal',
+            exact: true,
+        });
+        await expect(proposals).toHaveCount(2);
+        for (const proposal of await proposals.all())
+            await expect(proposal).toBeDisabled();
+        await page
+            .getByRole('button', { name: 'Bind graph', exact: true })
+            .first()
+            .click();
+        const binding = page.getByRole('dialog', {
+            name: 'Bind contract graph',
+        });
+        await expect(binding.getByLabel('Funding source')).toHaveValue('mock');
+        await binding
+            .getByRole('button', { name: 'Bind graph', exact: true })
+            .click();
+        await expect(binding).toHaveCount(0);
+        await expect(
+            page.getByText('Mock-bound preview', { exact: true }),
+        ).toBeVisible();
+        await page
+            .locator('.transaction-choices button')
+            .filter({ hasText: 'pending' })
+            .click();
+        await expect(
+            page.getByRole('heading', {
+                name: 'Transaction template',
+                exact: true,
+            }),
+        ).toBeVisible();
+        await page
+            .locator('.allocation-list')
+            .getByRole('button', { name: /pending/ })
+            .click();
+        await expect(
+            page.getByRole('heading', {
+                name: 'Receiving contract',
+                exact: true,
+            }),
+        ).toBeVisible();
+        await page
+            .locator('.transaction-choices button')
+            .filter({ hasText: 'release' })
+            .click();
+        await expect(page.locator('.allocation-list')).toContainText('99,000');
+        await page.getByText('Input requirements', { exact: true }).click();
+        await expect(
+            page.locator('details').filter({ hasText: 'Input requirements' }),
+        ).toContainText('"sequence": 144');
+        await application.evaluate(({ dialog }, filename) => {
+            dialog.showSaveDialog = async () => ({
+                canceled: false,
+                filePath: filename,
+            });
+        }, exportedPsbt);
+        await page
+            .getByRole('button', { name: 'Export PSBT', exact: true })
+            .click();
+        await expect
+            .poll(async () => {
+                try {
+                    return (await readFile(exportedPsbt, 'utf8')).trim();
+                } catch (error) {
+                    if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+                        return '';
+                    throw error;
+                }
+            })
+            .toMatch(/^cHNidP/);
+        const psbt = (await readFile(exportedPsbt, 'utf8')).trim();
+        await page
+            .getByRole('button', { name: 'Review spend', exact: true })
+            .click();
+        await expect(
+            page.getByRole('tab', { name: 'Spend', exact: true }),
+        ).toHaveAttribute('aria-selected', 'true');
+        await expect(page.locator('.spend-source')).toContainText(
+            'Spending the selected child contract.',
+        );
+        await expect(page.locator('.spend-source')).toContainText(
+            'Synthetic funding preview',
+        );
+        await expect(
+            page.getByLabel('Funded PSBT', { exact: true }),
+        ).toHaveValue(psbt);
+        await expect(
+            page.getByLabel('Input index', { exact: true }),
+        ).toHaveValue('0');
+        await expect(page.locator('.spend-paths')).toContainText(
+            'Funding: requirements met',
+        );
+        const paths = page.getByRole('combobox', {
+            name: 'Available spending path',
+            exact: true,
+        });
+        const release = paths.getByRole('option', {
+            name: /^Script path \d+ · Transaction compatible$/,
+        });
+        await paths.selectOption((await release.getAttribute('value'))!);
+        await expect(paths).toHaveValue(/^script:/);
+        await page
+            .getByText('Selected spending policy', { exact: true })
+            .click();
+        await expect(page.locator('.spend-paths')).toContainText(
+            'txtmpl(e51217c0923f078d1c85dc549e63afeac8b2581a8bd3a8873f873baaba200ab9)',
+        );
+        await expect(
+            page.getByRole('button', { name: 'Prepare intent', exact: true }),
+        ).toBeEnabled();
+        await page.screenshot({
+            path: 'test-results/studio-bound-child-spend.png',
+            fullPage: true,
+        });
+        await page
+            .getByRole('button', { name: 'Prepare intent', exact: true })
+            .click();
+        await expect(
+            page.getByLabel('Spend intent JSON', { exact: true }),
+        ).not.toHaveValue('');
+        await page
+            .getByRole('button', { name: 'Back to graph', exact: true })
+            .click();
+        await expect(
+            page.getByRole('heading', {
+                name: 'Transaction template',
+                exact: true,
+            }),
+        ).toBeVisible();
+        await expect(
+            page.getByText('Mock-bound preview', { exact: true }),
+        ).toBeVisible();
+        await page
+            .getByRole('button', { name: 'Go to source contract', exact: true })
+            .click();
+        await page
+            .getByRole('button', {
+                name: 'Go to creating transaction',
+                exact: true,
+            })
+            .click();
+        await expect(page.locator('.allocation-list')).toContainText('pending');
+        await page
+            .getByRole('button', { name: 'Change funding', exact: true })
+            .click();
+        await page
+            .getByRole('dialog', { name: 'Bind contract graph' })
+            .getByRole('button', { name: 'Bind graph', exact: true })
+            .click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.getByRole('tab', { name: 'Spend', exact: true }).click();
+        await expect(page.locator('.spend-source')).toHaveCount(0);
+        await expect(
+            page.getByLabel('Funded PSBT', { exact: true }),
+        ).toHaveValue('');
+        await page
+            .getByRole('button', { name: 'Resume intent', exact: true })
+            .click();
+        await expect(
+            page.getByLabel('Spend intent JSON', { exact: true }),
+        ).toHaveValue('');
+        await expect(
+            page.getByLabel('Current PSBT', { exact: true }),
+        ).toHaveValue('');
         expect(errors).toEqual([]);
     } finally {
         await application.close();
