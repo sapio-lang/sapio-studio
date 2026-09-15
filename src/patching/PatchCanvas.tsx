@@ -10,7 +10,7 @@ import {
     type Connection,
     type Edge,
 } from '@xyflow/react';
-import { Cable, FolderOpen, Play, Plus, Save, Trash2, X } from 'lucide-react';
+import { Cable, FolderOpen, Play, Plus, Save, Trash2 } from 'lucide-react';
 import type { JsonValue, ModuleInfo } from '../../shared/studio';
 import {
     ancestorPath,
@@ -40,6 +40,8 @@ import {
     type ValueType,
 } from './schema';
 import { SchemaValueEditor } from './SchemaValueEditor';
+import { PatchInspector } from './PatchInspector';
+import { PatchSourcePicker, type SourceCandidate } from './PatchSourcePicker';
 import {
     displayModuleName,
     nodeTypes,
@@ -765,14 +767,7 @@ export function PatchCanvas(props: PatchCanvasProps) {
                 type: { schema: port.schema, root: port.root },
             });
         }
-    const candidates: {
-        node: PatchNode;
-        port?: SchemaPort;
-        edge: PatchConnection;
-        reason: string;
-        compatible: boolean;
-        producer: boolean;
-    }[] = [];
+    const candidates: SourceCandidate[] = [];
     if (sourcePicker && sourcePort) {
         const addCandidates = (node: PatchNode, producer: boolean) => {
             if (node.id === sourcePicker.node) return;
@@ -1117,690 +1112,260 @@ export function PatchCanvas(props: PatchCanvasProps) {
                     )}
                 </div>
                 {(selectedNode || addingVariable) && (
-                    <aside
-                        className="patch-inspector"
-                        aria-label="Node inspector"
-                    >
-                        <header>
-                            <div>
-                                <small>
-                                    {addingVariable
-                                        ? 'NEW VALUE'
-                                        : selectedNode?.kind.toUpperCase()}
-                                </small>
-                                <h3>
-                                    {addingVariable
-                                        ? 'Add Variable'
-                                        : selectedNode && nameOf(selectedNode)}
-                                </h3>
-                            </div>
-                            <button
-                                aria-label="Close inspector"
-                                onClick={() => {
-                                    if (choose(null)) setAddingVariable(false);
-                                }}
-                            >
-                                <X size={16} />
-                            </button>
-                        </header>
-                        {addingVariable ? (
-                            <>
-                                <p className="patch-inspector-description">
-                                    Variables hold named values you can reuse.
-                                    Creating one from an input automatically
-                                    gives it the matching type.
-                                </p>
-                                <label>
-                                    Variable type
-                                    <select
-                                        aria-label="Variable type"
-                                        value={variableType}
-                                        onChange={(event) =>
-                                            setVariableType(event.target.value)
-                                        }
-                                    >
-                                        {typeChoices.map((choice, index) => (
-                                            <option key={index} value={index}>
-                                                {choice.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
-                                <button
-                                    onClick={() => {
-                                        const choice =
-                                            typeChoices[Number(variableType)];
-                                        if (choice) createVariable(choice.type);
-                                    }}
-                                >
-                                    Create Variable
-                                </button>
-                                {discovering && (
-                                    <p role="status">
-                                        Reading available types…
-                                    </p>
-                                )}
-                            </>
-                        ) : (
-                            selectedNode && (
-                                <>
-                                    <label>
-                                        Node name
-                                        <input
-                                            aria-label="Node name"
-                                            value={
-                                                selectedNode.label ??
-                                                nameOf(selectedNode)
-                                            }
-                                            disabled={running}
-                                            onChange={(event) =>
-                                                updateNode(
-                                                    {
-                                                        ...selectedNode,
-                                                        label: event.target
-                                                            .value,
-                                                    },
-                                                    false,
-                                                )
-                                            }
-                                        />
-                                    </label>
-                                    {selectedNode.kind === 'subpatch' && (
-                                        <>
-                                            <p className="patch-context-note">
-                                                This instance inherits the
-                                                parent execution context. Its
-                                                inputs override the definition’s
-                                                parameter defaults.
-                                            </p>
-                                            <button
-                                                onClick={() => {
-                                                    if (!choose(null)) return;
-                                                    setPath([
-                                                        ...path,
-                                                        selectedNode.id,
-                                                    ]);
-                                                    clearResult();
-                                                }}
-                                            >
-                                                Edit definition
-                                            </button>
-                                        </>
-                                    )}
-                                    {sourcePort &&
-                                        sourceTarget &&
-                                        sourcePicker && (
-                                            <section
-                                                className="patch-source-picker"
-                                                aria-label="Choose input source"
-                                            >
-                                                <header>
-                                                    <h4>
-                                                        {sourcePort.label} ·{' '}
-                                                        {schemaLabel(
-                                                            sourcePort,
-                                                        )}
-                                                    </h4>
-                                                    <button
-                                                        aria-label="Close source picker"
-                                                        onClick={() =>
-                                                            setSourcePicker(
-                                                                null,
-                                                            )
-                                                        }
-                                                    >
-                                                        <X size={13} />
-                                                    </button>
-                                                </header>
-                                                {sourceEdge ? (
-                                                    <>
-                                                        <p>
-                                                            This input is
-                                                            supplied by{' '}
-                                                            {nameOf(
-                                                                patch.nodes.find(
-                                                                    (node) =>
-                                                                        node.id ===
-                                                                        sourceEdge.source,
-                                                                )!,
-                                                            )}
-                                                            .
-                                                        </p>
-                                                        <button
-                                                            onClick={() =>
-                                                                disconnect(
-                                                                    sourcePicker.node,
-                                                                    sourcePicker.path,
-                                                                )
-                                                            }
-                                                        >
-                                                            Disconnect source
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        {sourcePort.kind ===
-                                                            'value' && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        setSourcePicker(
-                                                                            null,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Enter a
-                                                                    value below
-                                                                </button>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        createVariable(
-                                                                            sourcePort,
-                                                                            sourcePort.label,
-                                                                            hasPointer(
-                                                                                valueOf(
-                                                                                    sourceTarget,
-                                                                                ),
-                                                                                sourcePort.path,
-                                                                            )
-                                                                                ? readPointer(
-                                                                                      valueOf(
-                                                                                          sourceTarget,
-                                                                                      )!,
-                                                                                      sourcePort.path,
-                                                                                  )
-                                                                                : undefined,
-                                                                            sourcePicker,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Create
-                                                                    matching
-                                                                    Variable
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        <h5>
-                                                            Compatible sources
-                                                        </h5>
-                                                        {candidates
-                                                            .filter(
-                                                                (candidate) =>
-                                                                    candidate.compatible &&
-                                                                    !candidate.producer,
-                                                            )
-                                                            .map(
-                                                                (candidate) => (
-                                                                    <button
-                                                                        key={`${candidate.node.id}:${candidate.edge.kind}:${candidate.edge.sourcePath}`}
-                                                                        title={
-                                                                            candidate.reason
-                                                                        }
-                                                                        onClick={() =>
-                                                                            useCandidate(
-                                                                                candidate,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        {nameOf(
-                                                                            candidate.node,
-                                                                        )}
-                                                                        {candidate
-                                                                            .port
-                                                                            ?.path
-                                                                            ? ` · ${candidate.port.label}`
-                                                                            : candidate
-                                                                                    .edge
-                                                                                    .kind ===
-                                                                                'module'
-                                                                              ? ' · callable implementation'
-                                                                              : ''}
-                                                                        <small>
-                                                                            {
-                                                                                candidate.reason
-                                                                            }
-                                                                        </small>
-                                                                    </button>
-                                                                ),
-                                                            )}
-                                                        <h5>Building blocks</h5>
-                                                        {discovering && (
-                                                            <p role="status">
-                                                                Reading module
-                                                                interfaces…
-                                                            </p>
-                                                        )}
-                                                        {candidates
-                                                            .filter(
-                                                                (candidate) =>
-                                                                    candidate.compatible &&
-                                                                    candidate.producer,
-                                                            )
-                                                            .map(
-                                                                (candidate) => (
-                                                                    <button
-                                                                        key={`${candidate.node.id}:${candidate.edge.kind}:${candidate.edge.sourcePath}`}
-                                                                        title={
-                                                                            candidate.reason
-                                                                        }
-                                                                        onClick={() =>
-                                                                            useCandidate(
-                                                                                candidate,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        Add{' '}
-                                                                        {nameOf(
-                                                                            candidate.node,
-                                                                        )}
-                                                                        {candidate
-                                                                            .port
-                                                                            ?.path
-                                                                            ? ` · ${candidate.port.label}`
-                                                                            : candidate
-                                                                                    .edge
-                                                                                    .kind ===
-                                                                                'module'
-                                                                              ? ' · callable implementation'
-                                                                              : ''}
-                                                                        <small>
-                                                                            {
-                                                                                candidate.reason
-                                                                            }
-                                                                        </small>
-                                                                    </button>
-                                                                ),
-                                                            )}
-                                                        <details>
-                                                            <summary>
-                                                                Why other
-                                                                sources do not
-                                                                fit
-                                                            </summary>
-                                                            {candidates
-                                                                .filter(
-                                                                    (
-                                                                        candidate,
-                                                                    ) =>
-                                                                        !candidate.compatible &&
-                                                                        !candidate.producer,
-                                                                )
-                                                                .map(
-                                                                    (
-                                                                        candidate,
-                                                                    ) => (
-                                                                        <p
-                                                                            key={`${candidate.node.id}:${candidate.edge.kind}:${candidate.edge.sourcePath}`}
-                                                                        >
-                                                                            <strong>
-                                                                                {nameOf(
-                                                                                    candidate.node,
-                                                                                )}
-                                                                                {candidate
-                                                                                    .port
-                                                                                    ?.path
-                                                                                    ? ` · ${candidate.port.label}`
-                                                                                    : candidate
-                                                                                            .edge
-                                                                                            .kind ===
-                                                                                        'module'
-                                                                                      ? ' · callable implementation'
-                                                                                      : ''}
-                                                                            </strong>
-                                                                            :{' '}
-                                                                            {
-                                                                                candidate.reason
-                                                                            }
-                                                                        </p>
-                                                                    ),
-                                                                )}
-                                                        </details>
-                                                    </>
-                                                )}
-                                            </section>
-                                        )}
-                                    {selectedType && (
-                                        <fieldset
-                                            disabled={running}
-                                            className="patch-editor-fields"
-                                        >
-                                            <SchemaValueEditor
-                                                key={`${path.join('/')}/${selectedNode.id}`}
-                                                schema={selectedType.schema}
-                                                rootSchema={selectedType.root}
-                                                value={valueOf(selectedNode)}
-                                                label={
-                                                    selectedNode.kind ===
-                                                    'variable'
-                                                        ? 'Value'
-                                                        : selectedNode.kind ===
-                                                            'parameter'
-                                                          ? 'Default value'
-                                                          : 'Inputs'
-                                                }
-                                                onChange={(value) =>
-                                                    updateNode(
-                                                        replaceValue(
-                                                            selectedNode,
-                                                            value,
-                                                        ),
-                                                    )
-                                                }
-                                                sources={sources}
-                                                onValidityChange={(
-                                                    _,
-                                                    valid,
-                                                    editorId,
-                                                ) => {
-                                                    const key = `${selectedNode.id}:${editorId}`;
-                                                    const wasInvalid =
-                                                        invalidDrafts.current.has(
-                                                            key,
-                                                        );
-                                                    if (valid)
-                                                        invalidDrafts.current.delete(
-                                                            key,
-                                                        );
-                                                    else
-                                                        invalidDrafts.current.add(
-                                                            key,
-                                                        );
-                                                    if (wasInvalid !== !valid) {
-                                                        setInvalid(
-                                                            new Set(
-                                                                invalidDrafts.current,
-                                                            ),
-                                                        );
-                                                        if (!valid)
-                                                            clearResult();
-                                                    }
-                                                }}
-                                                onDisconnect={(input) =>
-                                                    disconnect(
-                                                        selectedNode.id,
-                                                        input,
-                                                    )
-                                                }
-                                                onCreateVariable={
-                                                    selectedNode.kind ===
-                                                        'module' ||
-                                                    selectedNode.kind ===
-                                                        'subpatch'
-                                                        ? (input, schema) =>
-                                                              createVariable(
-                                                                  {
-                                                                      schema,
-                                                                      root:
-                                                                          selectedType.root ??
-                                                                          selectedType.schema,
-                                                                  },
-                                                                  nodePorts(
-                                                                      selectedNode,
-                                                                      modules,
-                                                                      'arguments',
-                                                                  ).find(
-                                                                      (port) =>
-                                                                          port.path ===
-                                                                          input,
-                                                                  )?.label ??
-                                                                      'Variable',
-                                                                  undefined,
-                                                                  {
-                                                                      node: selectedNode.id,
-                                                                      path: input,
-                                                                  },
-                                                              )
-                                                        : undefined
-                                                }
-                                                onExtract={
-                                                    selectedNode.kind ===
-                                                        'module' ||
-                                                    selectedNode.kind ===
-                                                        'subpatch'
-                                                        ? (
-                                                              input,
-                                                              value,
-                                                              schema,
-                                                          ) =>
-                                                              createVariable(
-                                                                  {
-                                                                      schema,
-                                                                      root:
-                                                                          selectedType.root ??
-                                                                          selectedType.schema,
-                                                                  },
-                                                                  nodePorts(
-                                                                      selectedNode,
-                                                                      modules,
-                                                                      'arguments',
-                                                                  ).find(
-                                                                      (port) =>
-                                                                          port.path ===
-                                                                          input,
-                                                                  )?.label ??
-                                                                      'Variable',
-                                                                  value,
-                                                                  {
-                                                                      node: selectedNode.id,
-                                                                      path: input,
-                                                                  },
-                                                              )
-                                                        : undefined
-                                                }
-                                            />
-                                        </fieldset>
-                                    )}
-                                    {(selectedNode.kind === 'variable' ||
-                                        selectedNode.kind === 'parameter') && (
-                                        <div className="patch-interface-controls">
-                                            {selectedNode.kind ===
-                                            'parameter' ? (
-                                                <>
-                                                    <label>
-                                                        Parameter name
-                                                        <input
-                                                            aria-label="Parameter name"
-                                                            value={
-                                                                selectedNode.name
-                                                            }
-                                                            onChange={(event) =>
-                                                                updateNode({
-                                                                    ...selectedNode,
-                                                                    name: event
-                                                                        .target
-                                                                        .value,
-                                                                })
-                                                            }
-                                                        />
-                                                    </label>
-                                                    <p>
-                                                        Callers provide this
-                                                        named input. An unset
-                                                        default makes it
-                                                        required.
-                                                    </p>
-                                                    <button
-                                                        disabled={
-                                                            running ||
-                                                            !!invalid.size
-                                                        }
-                                                        onClick={() =>
-                                                            updateNode({
-                                                                kind: 'variable',
-                                                                id: selectedNode.id,
-                                                                name: selectedNode.name,
-                                                                label: selectedNode.label,
-                                                                type: selectedNode.type,
-                                                                value: selectedNode.default,
-                                                                position:
-                                                                    selectedNode.position,
-                                                            })
-                                                        }
-                                                    >
-                                                        Make local Variable
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <button
-                                                    disabled={
-                                                        running ||
-                                                        !!invalid.size
-                                                    }
-                                                    onClick={() => {
-                                                        const names = new Set(
-                                                            patch.nodes
-                                                                .filter(
-                                                                    (node) =>
-                                                                        node.kind ===
-                                                                        'parameter',
-                                                                )
-                                                                .map(
-                                                                    (node) =>
-                                                                        node.name,
-                                                                ),
-                                                        );
-                                                        let name =
-                                                            selectedNode.label?.trim() ||
-                                                            selectedNode.name;
-                                                        const base = name;
-                                                        let index = 2;
-                                                        while (names.has(name))
-                                                            name = `${base} ${index++}`;
-                                                        updateNode({
-                                                            kind: 'parameter',
-                                                            id: selectedNode.id,
-                                                            label: selectedNode.label,
-                                                            position:
-                                                                selectedNode.position,
-                                                            type: selectedNode.type,
-                                                            name,
-                                                            default:
-                                                                selectedNode.value,
-                                                        });
-                                                    }}
-                                                >
-                                                    Expose as parameter
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                    <div className="patch-interface-controls">
-                                        <button
-                                            onClick={() =>
-                                                void run(selectedNode.id)
-                                            }
-                                            disabled={running || !!invalid.size}
-                                        >
-                                            Evaluate value
-                                        </button>
-                                        <label>
-                                            Output name
-                                            <input
-                                                aria-label="Output name"
-                                                value={outputName}
-                                                onChange={(event) =>
-                                                    setOutputName(
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
-                                        <label>
-                                            Output value
-                                            <select
-                                                aria-label="Output value"
-                                                value={outputPath}
-                                                onChange={(event) =>
-                                                    setOutputPath(
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            >
-                                                {outputs.map((port) => (
-                                                    <option
-                                                        key={port.path}
-                                                        value={port.path}
-                                                    >
-                                                        {port.label} ·{' '}
-                                                        {schemaLabel(port)}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </label>
-                                        <button
-                                            disabled={
-                                                running || !outputName.trim()
-                                            }
-                                            onClick={declareOutput}
-                                        >
-                                            Use as output
-                                        </button>
-                                    </div>
-                                    {patch.outputs.some(
-                                        (output) =>
-                                            output.node === selectedNode.id,
-                                    ) && (
-                                        <div className="patch-named-outputs">
-                                            {patch.outputs
-                                                .filter(
-                                                    (output) =>
-                                                        output.node ===
-                                                        selectedNode.id,
-                                                )
-                                                .map((output) => (
-                                                    <div key={output.name}>
-                                                        <span>
-                                                            Output:{' '}
-                                                            {output.name}
-                                                        </span>
-                                                        <button
-                                                            aria-label={`Remove output ${output.name}`}
-                                                            onClick={() => {
-                                                                const outputs =
-                                                                    patch.outputs.filter(
-                                                                        (
-                                                                            item,
-                                                                        ) =>
-                                                                            item.name !==
-                                                                            output.name,
-                                                                    );
-                                                                change({
-                                                                    ...patch,
-                                                                    outputs,
-                                                                    output:
-                                                                        patch.output ===
-                                                                        output.name
-                                                                            ? (outputs[0]
-                                                                                  ?.name ??
-                                                                              null)
-                                                                            : patch.output,
-                                                                });
-                                                            }}
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    )}
-                                    {result !== undefined && (
-                                        <details className="patch-result">
-                                            <summary>
-                                                Inspect evaluated value
-                                            </summary>
-                                            <pre>
-                                                {JSON.stringify(
-                                                    result,
-                                                    null,
-                                                    2,
-                                                )}
-                                            </pre>
-                                        </details>
-                                    )}
-                                </>
-                            )
+                    <PatchInspector
+                        selectedNode={selectedNode}
+                        nodeName={selectedNode && nameOf(selectedNode)}
+                        addingVariable={addingVariable}
+                        variableType={variableType}
+                        typeChoices={typeChoices}
+                        discovering={discovering}
+                        running={running}
+                        invalid={!!invalid.size}
+                        outputs={outputs}
+                        namedOutputs={patch.outputs.filter(
+                            (output) => output.node === selectedNode?.id,
                         )}
-                    </aside>
+                        outputName={outputName}
+                        outputPath={outputPath}
+                        result={result}
+                        onClose={() => {
+                            if (choose(null)) setAddingVariable(false);
+                        }}
+                        onVariableTypeChange={setVariableType}
+                        onCreateVariable={() => {
+                            const choice = typeChoices[Number(variableType)];
+                            if (choice) createVariable(choice.type);
+                        }}
+                        onRename={(label) => {
+                            if (selectedNode)
+                                updateNode({ ...selectedNode, label }, false);
+                        }}
+                        onEditDefinition={() => {
+                            if (!selectedNode || !choose(null)) return;
+                            setPath([...path, selectedNode.id]);
+                            clearResult();
+                        }}
+                        onParameterNameChange={(name) => {
+                            if (selectedNode?.kind === 'parameter')
+                                updateNode({ ...selectedNode, name });
+                        }}
+                        onMakeLocalVariable={() => {
+                            if (selectedNode?.kind !== 'parameter') return;
+                            updateNode({
+                                kind: 'variable',
+                                id: selectedNode.id,
+                                name: selectedNode.name,
+                                label: selectedNode.label,
+                                type: selectedNode.type,
+                                value: selectedNode.default,
+                                position: selectedNode.position,
+                            });
+                        }}
+                        onExposeParameter={() => {
+                            if (selectedNode?.kind !== 'variable') return;
+                            const names = new Set(
+                                patch.nodes
+                                    .filter((node) => node.kind === 'parameter')
+                                    .map((node) => node.name),
+                            );
+                            let name =
+                                selectedNode.label?.trim() || selectedNode.name;
+                            const base = name;
+                            let index = 2;
+                            while (names.has(name)) name = `${base} ${index++}`;
+                            updateNode({
+                                kind: 'parameter',
+                                id: selectedNode.id,
+                                label: selectedNode.label,
+                                position: selectedNode.position,
+                                type: selectedNode.type,
+                                name,
+                                default: selectedNode.value,
+                            });
+                        }}
+                        onEvaluate={() => {
+                            if (selectedNode) void run(selectedNode.id);
+                        }}
+                        onOutputNameChange={setOutputName}
+                        onOutputPathChange={setOutputPath}
+                        onDeclareOutput={declareOutput}
+                        onRemoveOutput={(name) => {
+                            const outputs = patch.outputs.filter(
+                                (item) => item.name !== name,
+                            );
+                            change({
+                                ...patch,
+                                outputs,
+                                output:
+                                    patch.output === name
+                                        ? (outputs[0]?.name ?? null)
+                                        : patch.output,
+                            });
+                        }}
+                        sourcePicker={
+                            sourcePort &&
+                            sourceTarget &&
+                            sourcePicker && (
+                                <PatchSourcePicker
+                                    sourcePort={sourcePort}
+                                    sourceLabel={
+                                        sourceEdge
+                                            ? nameOf(
+                                                  patch.nodes.find(
+                                                      (node) =>
+                                                          node.id ===
+                                                          sourceEdge.source,
+                                                  )!,
+                                              )
+                                            : null
+                                    }
+                                    candidates={candidates}
+                                    discovering={discovering}
+                                    nameOf={nameOf}
+                                    onClose={() => setSourcePicker(null)}
+                                    onDisconnect={() =>
+                                        disconnect(
+                                            sourcePicker.node,
+                                            sourcePicker.path,
+                                        )
+                                    }
+                                    onCreateVariable={() =>
+                                        createVariable(
+                                            sourcePort,
+                                            sourcePort.label,
+                                            hasPointer(
+                                                valueOf(sourceTarget),
+                                                sourcePort.path,
+                                            )
+                                                ? readPointer(
+                                                      valueOf(sourceTarget)!,
+                                                      sourcePort.path,
+                                                  )
+                                                : undefined,
+                                            sourcePicker,
+                                        )
+                                    }
+                                    useCandidate={useCandidate}
+                                />
+                            )
+                        }
+                        editor={
+                            selectedNode &&
+                            selectedType && (
+                                <fieldset
+                                    disabled={running}
+                                    className="patch-editor-fields"
+                                >
+                                    <SchemaValueEditor
+                                        key={`${path.join('/')}/${selectedNode.id}`}
+                                        schema={selectedType.schema}
+                                        rootSchema={selectedType.root}
+                                        value={valueOf(selectedNode)}
+                                        label={
+                                            selectedNode.kind === 'variable'
+                                                ? 'Value'
+                                                : selectedNode.kind ===
+                                                    'parameter'
+                                                  ? 'Default value'
+                                                  : 'Inputs'
+                                        }
+                                        onChange={(value) =>
+                                            updateNode(
+                                                replaceValue(
+                                                    selectedNode,
+                                                    value,
+                                                ),
+                                            )
+                                        }
+                                        sources={sources}
+                                        onValidityChange={(
+                                            _,
+                                            valid,
+                                            editorId,
+                                        ) => {
+                                            const key = `${selectedNode.id}:${editorId}`;
+                                            const wasInvalid =
+                                                invalidDrafts.current.has(key);
+                                            if (valid)
+                                                invalidDrafts.current.delete(
+                                                    key,
+                                                );
+                                            else invalidDrafts.current.add(key);
+                                            if (wasInvalid !== !valid) {
+                                                setInvalid(
+                                                    new Set(
+                                                        invalidDrafts.current,
+                                                    ),
+                                                );
+                                                if (!valid) clearResult();
+                                            }
+                                        }}
+                                        onDisconnect={(input) =>
+                                            disconnect(selectedNode.id, input)
+                                        }
+                                        onCreateVariable={
+                                            selectedNode.kind === 'module' ||
+                                            selectedNode.kind === 'subpatch'
+                                                ? (input, schema) =>
+                                                      createVariable(
+                                                          {
+                                                              schema,
+                                                              root:
+                                                                  selectedType.root ??
+                                                                  selectedType.schema,
+                                                          },
+                                                          nodePorts(
+                                                              selectedNode,
+                                                              modules,
+                                                              'arguments',
+                                                          ).find(
+                                                              (port) =>
+                                                                  port.path ===
+                                                                  input,
+                                                          )?.label ??
+                                                              'Variable',
+                                                          undefined,
+                                                          {
+                                                              node: selectedNode.id,
+                                                              path: input,
+                                                          },
+                                                      )
+                                                : undefined
+                                        }
+                                        onExtract={
+                                            selectedNode.kind === 'module' ||
+                                            selectedNode.kind === 'subpatch'
+                                                ? (input, value, schema) =>
+                                                      createVariable(
+                                                          {
+                                                              schema,
+                                                              root:
+                                                                  selectedType.root ??
+                                                                  selectedType.schema,
+                                                          },
+                                                          nodePorts(
+                                                              selectedNode,
+                                                              modules,
+                                                              'arguments',
+                                                          ).find(
+                                                              (port) =>
+                                                                  port.path ===
+                                                                  input,
+                                                          )?.label ??
+                                                              'Variable',
+                                                          value,
+                                                          {
+                                                              node: selectedNode.id,
+                                                              path: input,
+                                                          },
+                                                      )
+                                                : undefined
+                                        }
+                                    />
+                                </fieldset>
+                            )
+                        }
+                    />
                 )}
             </div>
             <footer className="patch-status" role="status">
