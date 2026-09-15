@@ -22,6 +22,7 @@ import {
 import type { JsonValue, ModuleInfo } from '../../shared/studio';
 import { nodePorts, type PatchNode } from './engine';
 import {
+    escapePointer,
     humanize,
     modulePorts,
     object,
@@ -88,19 +89,7 @@ export function patchNodeLabel(node: PatchNode, modules: ModuleInfo[]): string {
 /** Prefer a concise author-supplied title to the Rust registration name. */
 export function displayModuleName(module: ModuleInfo): string {
     const input = modulePorts(module, 'arguments')[0];
-    let payload = input?.schema;
-    if (
-        object(payload) &&
-        (typeof payload.$ref === 'string' ||
-            (Array.isArray(payload.allOf) && payload.allOf.length === 1))
-    ) {
-        // CreateArgs annotates the arguments field itself. Its generic label
-        // is not the title authored on the referenced module input type.
-        const { title: _fieldTitle, ...reference } = payload;
-        payload = reference;
-    }
-    const schema =
-        input && payload !== undefined && resolveSchema(payload, input.root);
+    const schema = input && resolveSchema(input.schema, input.root);
     const title =
         object(schema) && typeof schema.title === 'string'
             ? schema.title.trim()
@@ -172,11 +161,17 @@ function sourceFor(
     )?.[1];
 }
 
-function portLabel(port: SchemaPort): string {
+export function portLabel(port: SchemaPort, allPorts: SchemaPort[]): string {
     const tokens = pointerTokens(port.path);
-    return tokens.length > 1
-        ? `${tokens.slice(0, -1).map(humanize).join(' › ')} › ${port.label}`
-        : port.label;
+    let path = '';
+    const ancestors = tokens.slice(0, -1).map((token) => {
+        path += `/${escapePointer(token)}`;
+        return (
+            allPorts.find((item) => item.path === path)?.label ??
+            humanize(token)
+        );
+    });
+    return [...ancestors, port.label].join(' › ');
 }
 
 export function PatchNodeCard({
@@ -346,7 +341,7 @@ export function PatchNodeCard({
                                 <div
                                     key={port.path}
                                     className={`patch-port-row ${provider ? 'patch-port-connected' : ''} ${connectionClass(compatibleInputs.has(port.path))}`}
-                                    title={`${portLabel(port)} · ${schemaLabel(port)}\n${source}${data.connectionPending ? `\n${connectionHint(compatibleInputs.has(port.path))}` : ''}`}
+                                    title={`${portLabel(port, allInputs)} · ${schemaLabel(port)}\n${source}${data.connectionPending ? `\n${connectionHint(compatibleInputs.has(port.path))}` : ''}`}
                                     data-connection-fit={
                                         data.connectionPending
                                             ? compatibleInputs.has(port.path)
@@ -373,10 +368,10 @@ export function PatchNodeCard({
                                         type="button"
                                         className="patch-input-button nodrag nopan"
                                         onClick={() => data.onInput(port.path)}
-                                        aria-label={`${name}: configure ${portLabel(port)}`}
+                                        aria-label={`${name}: configure ${portLabel(port, allInputs)}`}
                                     >
                                         <span className="patch-input-title">
-                                            {portLabel(port)}
+                                            {portLabel(port, allInputs)}
                                         </span>
                                         <em>{schemaLabel(port)}</em>
                                         <span
@@ -401,7 +396,7 @@ export function PatchNodeCard({
                             <div
                                 key={port.path}
                                 className={`patch-port-row ${connectionClass(compatibleOutputs.has(port.path))}`}
-                                title={`${portLabel(port)} · ${schemaLabel(port)}${data.connectionPending ? `\n${connectionHint(compatibleOutputs.has(port.path))}` : ''}`}
+                                title={`${portLabel(port, allOutputs)} · ${schemaLabel(port)}${data.connectionPending ? `\n${connectionHint(compatibleOutputs.has(port.path))}` : ''}`}
                                 data-connection-fit={
                                     data.connectionPending
                                         ? compatibleOutputs.has(port.path)
@@ -413,7 +408,7 @@ export function PatchNodeCard({
                                 <span>
                                     {port.path === ''
                                         ? schemaLabel(port)
-                                        : portLabel(port)}
+                                        : portLabel(port, allOutputs)}
                                 </span>
                                 {port.path !== '' && (
                                     <em>{schemaLabel(port)}</em>

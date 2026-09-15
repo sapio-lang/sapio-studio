@@ -258,11 +258,24 @@ export function modulePorts(
 ): SchemaPort[] {
     const root = module.api[side];
     const envelope = resolveSchema(root, root);
-    const initial =
+    let initial =
         side === 'arguments' && object(envelope) && object(envelope.properties)
             ? asSchema(envelope.properties.arguments)
             : root;
     if (initial === undefined) return [];
+    if (
+        side === 'arguments' &&
+        object(initial) &&
+        (typeof initial.$ref === 'string' ||
+            (Array.isArray(initial.allOf) &&
+                initial.allOf.length === 1 &&
+                object(initial.allOf[0]) &&
+                typeof initial.allOf[0].$ref === 'string'))
+    ) {
+        // The envelope names a field, not the referenced payload's type.
+        initial = { ...initial };
+        delete initial.title;
+    }
     return valuePorts({ schema: initial, root }, side);
 }
 

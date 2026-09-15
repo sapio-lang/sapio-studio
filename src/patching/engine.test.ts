@@ -591,6 +591,34 @@ describe('typed values and reusable patches', () => {
         expect(schemaLabel(port)).toBe('Authorization');
     });
 
+    it.each<JsonObject>([
+        { $ref: '#/definitions/Parties' },
+        { allOf: [{ $ref: '#/definitions/Parties' }] },
+    ])('labels referenced module inputs by their payload type: %j', (ref) => {
+        const api = module(4, { ...ref, title: 'Envelope field' }, {});
+        const root = api.api.arguments as JsonObject;
+        root.definitions = {
+            Parties: { type: 'object', title: 'Signing parties' },
+        };
+        const port = modulePorts(api, 'arguments')[0]!;
+        expect(port.label).toBe('Inputs');
+        expect(schemaLabel(port)).toBe('Signing parties');
+
+        root.definitions = { Parties: { type: 'object' } };
+        expect(schemaLabel(modulePorts(api, 'arguments')[0]!)).toBe('Record');
+        expect((root.properties as JsonObject).arguments).toEqual({
+            ...ref,
+            title: 'Envelope field',
+        });
+    });
+
+    it('preserves a type title declared directly on the module payload', () => {
+        const api = module(4, { type: 'object', title: 'Signing parties' }, {});
+        expect(schemaLabel(modulePorts(api, 'arguments')[0]!)).toBe(
+            'Signing parties',
+        );
+    });
+
     it('checks narrowed value constraints before invoking the destination', async () => {
         const limited = module(
             4,

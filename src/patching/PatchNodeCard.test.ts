@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     displayModuleName,
     patchNodeLabel,
+    portLabel,
     visibleNodePorts,
 } from './PatchNodeCard';
 import { valuePorts } from './schema';
@@ -106,6 +107,26 @@ describe('compact typed node cards', () => {
                 (port) => port.path,
             ),
         ).toEqual(['']);
+    });
+
+    it('uses declared ancestor roles in nested labels without changing pointers', () => {
+        const ports = valuePorts({
+            schema: {
+                type: 'object',
+                properties: {
+                    'g/parties': {
+                        type: 'object',
+                        title: 'Parties',
+                        properties: {
+                            alice: { type: 'string', title: 'Alice' },
+                        },
+                    },
+                },
+            },
+        });
+        const alice = ports.find((port) => port.path === '/g~1parties/alice')!;
+        expect(portLabel(alice, ports)).toBe('Parties › Alice');
+        expect(alice.path).toBe('/g~1parties/alice');
     });
 
     it('hides unused direct-call ports while preserving connected inputs on callable implementations', () => {
