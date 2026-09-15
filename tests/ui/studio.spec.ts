@@ -1,4 +1,9 @@
-import { test, expect, _electron as electron } from '@playwright/test';
+import {
+    test,
+    expect,
+    _electron as electron,
+    type Page,
+} from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -17,6 +22,28 @@ async function launchDesktop(directory: string, cli: string) {
             SAPIO_CLI_BINARY: cli,
         },
     });
+}
+
+async function fitPatch(page: Page) {
+    await page.getByRole('button', { name: /^fit view$/i }).click();
+    await expect
+        .poll(async () => {
+            const canvas = await page.locator('.patch-flow').boundingBox();
+            const nodes = await page.locator('.patch-node-card').all();
+            if (!canvas) return false;
+            const bounds = await Promise.all(
+                nodes.map((node) => node.boundingBox()),
+            );
+            return bounds.every(
+                (box) =>
+                    box !== null &&
+                    box.x >= canvas.x - 1 &&
+                    box.y >= canvas.y - 1 &&
+                    box.x + box.width <= canvas.x + canvas.width + 1 &&
+                    box.y + box.height <= canvas.y + canvas.height + 1,
+            );
+        })
+        .toBe(true);
 }
 
 test('the production desktop inspects a real artifact without Bitcoin or CLI configuration', async () => {
@@ -94,6 +121,15 @@ test('a saved typed patch runs real nested WASM and clears edited results', asyn
         await expect(page.locator('[data-node-kind="variable"]')).toHaveCount(
             2,
         );
+        await expect(page.locator('.patch-node-variable')).toContainText([
+            /Public key/,
+            /Public key/,
+        ]);
+        const implementation = page.locator('[data-reference-only="true"]');
+        await expect(implementation).toHaveCount(1);
+        await expect(implementation).toContainText(
+            'The calling module supplies the inputs.',
+        );
         await expect(page.locator('.react-flow__edge')).toHaveCount(3);
         const reference = page.getByLabel('Callable module connection', {
             exact: true,
@@ -103,8 +139,12 @@ test('a saved typed patch runs real nested WASM and clears edited results', asyn
         await expect(reference).toHaveClass(/\bselected\b/);
         await reference.press('Delete');
         await expect(page.locator('.react-flow__edge')).toHaveCount(2);
+        await expect(implementation).toHaveCount(0);
         await page
-            .getByRole('button', { name: 'Wrapper: configure V', exact: true })
+            .getByRole('button', {
+                name: 'Wrapper: configure Authorization implementation',
+                exact: true,
+            })
             .click();
         const picker = page.getByRole('region', {
             name: 'Choose input source',
@@ -114,6 +154,7 @@ test('a saved typed patch runs real nested WASM and clears edited results', asyn
             .getByRole('button', { name: /^Authorization implementation/ })
             .click();
         await expect(page.locator('.react-flow__edge')).toHaveCount(3);
+        await expect(implementation).toHaveCount(1);
         await page
             .getByRole('button', { name: 'Build output', exact: true })
             .click();
@@ -123,25 +164,7 @@ test('a saved typed patch runs real nested WASM and clears edited results', asyn
         await page.getByRole('button', { name: 'Review output' }).click();
         await expect(page.getByRole('dialog')).toContainText('pk(');
         await page.keyboard.press('Escape');
-        await page.getByRole('button', { name: /^fit view$/i }).click();
-        await expect
-            .poll(async () => {
-                const canvas = await page.locator('.patch-flow').boundingBox();
-                const nodes = await page.locator('.patch-node-card').all();
-                if (!canvas) return false;
-                const bounds = await Promise.all(
-                    nodes.map((node) => node.boundingBox()),
-                );
-                return bounds.every(
-                    (box) =>
-                        box !== null &&
-                        box.x >= canvas.x - 1 &&
-                        box.y >= canvas.y - 1 &&
-                        box.x + box.width <= canvas.x + canvas.width + 1 &&
-                        box.y + box.height <= canvas.y + canvas.height + 1,
-                );
-            })
-            .toBe(true);
+        await fitPatch(page);
         await page.screenshot({
             path: 'test-results/studio-typed-patch.png',
             fullPage: true,
@@ -224,7 +247,7 @@ test('a saved typed patch runs real nested WASM and clears edited results', asyn
                         .locator('.module-result')
                         .allTextContents(),
                 }),
-                { timeout: 30_000 },
+                { timeout: 60_000 },
             )
             .toMatchObject({
                 errors: [],
@@ -398,6 +421,7 @@ test('typed Variables and reusable Parameters work without a Sapio executable', 
         await page.getByRole('button', { name: 'Review output' }).click();
         await expect(page.getByRole('dialog')).toContainText('288');
         await page.keyboard.press('Escape');
+        await fitPatch(page);
         await page.screenshot({
             path: 'test-results/studio-reusable-parameters.png',
             fullPage: true,

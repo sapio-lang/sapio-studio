@@ -61,7 +61,7 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   repository: sapio-lang/sapio
-                  ref: d385c79e1acb78c42a538f7c503b52efe739ed66
+                  ref: 21ad197b248002c8e26949827ec13ad772c2fdef
                   path: .cache/sapio
             - name: Build the reviewed Sapio CLI
               working-directory: .cache/sapio

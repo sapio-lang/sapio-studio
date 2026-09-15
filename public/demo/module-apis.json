@@ -1,6 +1,6 @@
 [
   {
-    "key": "a2e49d7cdaa33f43ac07dce892077ee28af3617af0d94dccd8c2a7a247f11a51",
+    "key": "99517b448190f8eecd11cea23616c3d01239c95c4aa2da41acb798ded940cd2c",
     "description": "Provide this information to create an instance of a contract",
     "name": "GetClause",
     "api": {
@@ -63,16 +63,22 @@
             "description": "Get a Clause for two parties to sign together",
             "properties": {
               "alice": {
+                "description": "Alice's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Alice",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               },
               "bob": {
+                "description": "Bob's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Bob",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               }
             },
             "required": [
@@ -230,7 +236,7 @@
     }
   },
   {
-    "key": "4a0f0d9f3d0e3e402671019eff3ffb642e52480a94c84e91dd11ae8ed2267387",
+    "key": "d28a2c385009cb044cdce70cf961e65503ace6edc6774f3f58129cb359e829f1",
     "description": "Provide this information to create an instance of a contract",
     "name": "Wrapper",
     "api": {
@@ -293,16 +299,22 @@
             "description": "Same Inner type as the wrapped module",
             "properties": {
               "alice": {
+                "description": "Alice's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Alice",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               },
               "bob": {
+                "description": "Bob's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Bob",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               }
             },
             "required": [
@@ -479,16 +491,22 @@
                     "description": "Same Inner type as the wrapped module",
                     "properties": {
                       "alice": {
+                        "description": "Alice's x-only public key.",
                         "maxLength": 64,
                         "minLength": 64,
                         "pattern": "^[0-9a-fA-F]{64}$",
-                        "type": "string"
+                        "title": "Alice",
+                        "type": "string",
+                        "x-sapio-type": "bitcoin.x-only-public-key"
                       },
                       "bob": {
+                        "description": "Bob's x-only public key.",
                         "maxLength": 64,
                         "minLength": 64,
                         "pattern": "^[0-9a-fA-F]{64}$",
-                        "type": "string"
+                        "title": "Bob",
+                        "type": "string",
+                        "x-sapio-type": "bitcoin.x-only-public-key"
                       }
                     },
                     "required": [
@@ -702,10 +720,22 @@
             "description": "Wrapper to find the ClauseModule remotely",
             "properties": {
               "g": {
-                "$ref": "#/definitions/GetClause"
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/GetClause"
+                  }
+                ],
+                "description": "Public keys supplied to the selected authorization implementation.",
+                "title": "Parties"
               },
               "v": {
-                "$ref": "#/definitions/Module_GetClause_to_string"
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/Module_GetClause_to_string"
+                  }
+                ],
+                "description": "The caller supplies Parties as this module's arguments.",
+                "title": "Authorization implementation"
               }
             },
             "required": [

@@ -1,7 +1,7 @@
 # Built-in examples
 
 The two WASM modules are generated from Sapio revision
-`d385c79e1acb78c42a538f7c503b52efe739ed66` with Rust 1.98.1. `modules.json` records
+`21ad197b248002c8e26949827ec13ad772c2fdef` with Rust 1.98.1. `modules.json` records
 SHA-256 checksums of the bundled WASM; Sapio independently computes its module
 cache identities when loading the bytes. `module-apis.json` contains the schemas
 returned by the actual CLI for those modules.

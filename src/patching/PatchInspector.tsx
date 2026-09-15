@@ -6,6 +6,7 @@ import { schemaLabel, type SchemaPort, type ValueType } from './schema';
 
 interface PatchInspectorProps {
     selectedNode: PatchNode | undefined;
+    referenceOnly: boolean;
     nodeName: string | undefined;
     addingVariable: boolean;
     variableType: string;
@@ -37,6 +38,7 @@ interface PatchInspectorProps {
 
 export function PatchInspector({
     selectedNode,
+    referenceOnly,
     nodeName,
     addingVariable,
     variableType,
@@ -72,7 +74,9 @@ export function PatchInspector({
                     <small>
                         {addingVariable
                             ? 'NEW VALUE'
-                            : selectedNode?.kind.toUpperCase()}
+                            : referenceOnly
+                              ? 'CALLABLE IMPLEMENTATION'
+                              : selectedNode?.kind.toUpperCase()}
                     </small>
                     <h3>{addingVariable ? 'Add Variable' : nodeName}</h3>
                 </div>
@@ -121,6 +125,13 @@ export function PatchInspector({
                                 }
                             />
                         </label>
+                        {referenceOnly && (
+                            <p className="patch-reference-note">
+                                The calling module supplies the inputs. Values
+                                entered here are used only by Evaluate value for
+                                a direct call.
+                            </p>
+                        )}
                         {selectedNode.kind === 'subpatch' && (
                             <>
                                 <p className="patch-context-note">

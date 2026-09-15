@@ -446,6 +446,18 @@ export function PatchCanvas(props: PatchCanvasProps) {
         });
         return !!edge && checkConnection(patch, modules, edge) === null;
     }
+    function referenceOnly(node: PatchNode): boolean {
+        return (
+            node.kind === 'module' &&
+            patch.connections.some(
+                (edge) => edge.source === node.id && edge.kind === 'module',
+            ) &&
+            !patch.connections.some(
+                (edge) => edge.source === node.id && edge.kind === 'value',
+            ) &&
+            !patch.outputs.some((output) => output.node === node.id)
+        );
+    }
     const flowNodes: FlowPatchNode[] = patch.nodes.map((node) => ({
         id: node.id,
         type: 'patch',
@@ -455,6 +467,7 @@ export function PatchCanvas(props: PatchCanvasProps) {
         data: {
             patchNode: node,
             modules,
+            referenceOnly: referenceOnly(node),
             connectionPending: drag !== null,
             compatibleInputs: drag
                 ? nodePorts(node, modules, 'arguments')
@@ -757,8 +770,13 @@ export function PatchCanvas(props: PatchCanvasProps) {
             if (
                 port.kind === 'module' ||
                 typeNames.has(name) ||
-                name === 'object' ||
-                name === 'any value'
+                [
+                    'Record',
+                    'String',
+                    'Integer',
+                    'JSON value',
+                    'No value',
+                ].includes(name)
             )
                 continue;
             typeNames.add(name);
@@ -1114,6 +1132,9 @@ export function PatchCanvas(props: PatchCanvasProps) {
                 {(selectedNode || addingVariable) && (
                     <PatchInspector
                         selectedNode={selectedNode}
+                        referenceOnly={
+                            selectedNode ? referenceOnly(selectedNode) : false
+                        }
                         nodeName={selectedNode && nameOf(selectedNode)}
                         addingVariable={addingVariable}
                         variableType={variableType}
