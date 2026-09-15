@@ -19,6 +19,8 @@ import {
     collectModuleKeys,
     connectionCompatibility,
     nodePorts,
+    patchOutputs,
+    resolveOutputType,
     putPointer,
     removePointer,
     validatePatch,
@@ -65,37 +67,65 @@ const consumer = module(
     scalar,
 );
 const modules = [producer, consumer];
-const patch = (): Patch => ({
-    version: 2,
-    outputs: [{ name: 'result', node: 'b', path: '' }],
-    output: 'result',
-    nodes: [
+function withOutput(
+    graph: Patch,
+    name: string,
+    source: string,
+    sourcePath = '',
+): Patch {
+    const id = `output-${name}`;
+    graph.nodes.push({
+        kind: 'output',
+        id,
+        name,
+        position: { x: 900, y: 100 },
+    });
+    graph.connections.push({
+        id: `${id}-wire`,
+        kind: 'value',
+        source,
+        sourcePath,
+        target: id,
+        targetPath: '',
+    });
+    return graph;
+}
+const patch = (): Patch =>
+    withOutput(
         {
-            id: 'a',
-            kind: 'module',
-            moduleKey: producer.key,
-            arguments: {},
-            position: { x: 0, y: 0 },
+            version: 2,
+
+            nodes: [
+                {
+                    id: 'a',
+                    kind: 'module',
+                    moduleKey: producer.key,
+                    arguments: {},
+                    position: { x: 0, y: 0 },
+                },
+                {
+                    id: 'b',
+                    kind: 'module',
+                    moduleKey: consumer.key,
+                    arguments: {},
+                    position: { x: 300, y: 0 },
+                },
+            ],
+            connections: [
+                {
+                    id: 'a-b',
+                    kind: 'value',
+                    source: 'a',
+                    sourcePath: '',
+                    target: 'b',
+                    targetPath: '/amount',
+                },
+            ],
         },
-        {
-            id: 'b',
-            kind: 'module',
-            moduleKey: consumer.key,
-            arguments: {},
-            position: { x: 300, y: 0 },
-        },
-    ],
-    connections: [
-        {
-            id: 'a-b',
-            kind: 'value',
-            source: 'a',
-            sourcePath: '',
-            target: 'b',
-            targetPath: '/amount',
-        },
-    ],
-});
+        'result',
+        'b',
+        '',
+    );
 
 function runtime(
     catalog: ModuleInfo[],
@@ -499,22 +529,25 @@ const satoshis: JsonSchema = {
 };
 
 function variablePatch(value: JsonValue | undefined = 144): Patch {
-    return {
-        version: 2,
-        nodes: [
-            {
-                id: 'delay',
-                kind: 'variable',
-                name: 'Waiting period',
-                type: { schema: blocks },
-                value,
-                position: location,
-            },
-        ],
-        connections: [],
-        outputs: [{ name: 'delay', node: 'delay', path: '' }],
-        output: 'delay',
-    };
+    return withOutput(
+        {
+            version: 2,
+            nodes: [
+                {
+                    id: 'delay',
+                    kind: 'variable',
+                    name: 'Waiting period',
+                    type: { schema: blocks },
+                    value,
+                    position: location,
+                },
+            ],
+            connections: [],
+        },
+        'delay',
+        'delay',
+        '',
+    );
 }
 
 describe('typed values and reusable patches', () => {
@@ -527,7 +560,7 @@ describe('typed values and reusable patches', () => {
             {},
             runtime([], invoke),
         );
-        expect(result.output).toBe(144);
+        expect(result.output).toEqual({ delay: 144 });
         expect(result.values.get('delay')).toBe(144);
         expect(result.executed).toEqual([]);
         expect(invoke).not.toHaveBeenCalled();
@@ -641,8 +674,7 @@ describe('typed values and reusable patches', () => {
             arguments: {},
             position: location,
         });
-        graph.outputs = [{ name: 'result', node: 'consumer', path: '' }];
-        graph.output = 'result';
+        withOutput(graph, 'result', 'consumer');
         const edge: PatchConnection = {
             id: 'wire',
             kind: 'value',
@@ -682,21 +714,26 @@ describe('typed values and reusable patches', () => {
             },
             blocks,
         );
-        const original: Patch = {
-            version: 2,
-            nodes: [
-                {
-                    id: 'vault',
-                    kind: 'module',
-                    moduleKey: api.key,
-                    arguments: { schedule: { delay: 144, fees: [100, 200] } },
-                    position: location,
-                },
-            ],
-            connections: [],
-            outputs: [{ name: 'vault', node: 'vault', path: '' }],
-            output: 'vault',
-        };
+        const original: Patch = withOutput(
+            {
+                version: 2,
+                nodes: [
+                    {
+                        id: 'vault',
+                        kind: 'module',
+                        moduleKey: api.key,
+                        arguments: {
+                            schedule: { delay: 144, fees: [100, 200] },
+                        },
+                        position: location,
+                    },
+                ],
+                connections: [],
+            },
+            'vault',
+            'vault',
+            '',
+        );
         const invoke = vi.fn(async (_key, args) =>
             readPointer(args.arguments, '/schedule/delay'),
         );
@@ -738,7 +775,9 @@ describe('typed values and reusable patches', () => {
             (await runPatch(wired, [api], null, {}, runtime([api], invoke)))
                 .output,
         ).toEqual(before.output);
-        wired.connections = [];
+        wired.connections = wired.connections.filter(
+            (edge) => edge.id !== 'wire',
+        );
         await expect(
             runPatch(wired, [api], null, {}, runtime([api], invoke)),
         ).rejects.toThrow(/Invalid arguments/);
@@ -789,57 +828,65 @@ describe('typed values and reusable patches', () => {
             },
             blocks,
         );
-        const definition: Patch = {
-            version: 2,
-            nodes: [
+        const definition: Patch = withOutput(
+            withOutput(
                 {
-                    id: 'parameter',
-                    kind: 'parameter',
-                    name: 'waiting period',
-                    type: { schema: blocks },
-                    default: 144,
-                    position: location,
+                    version: 2,
+                    nodes: [
+                        {
+                            id: 'parameter',
+                            kind: 'parameter',
+                            name: 'waiting period',
+                            type: { schema: blocks },
+                            default: 144,
+                            position: location,
+                        },
+                        {
+                            id: 'build',
+                            kind: 'module',
+                            moduleKey: api.key,
+                            arguments: {},
+                            position: location,
+                        },
+                    ],
+                    connections: [
+                        {
+                            id: 'wire',
+                            kind: 'value',
+                            source: 'parameter',
+                            sourcePath: '',
+                            target: 'build',
+                            targetPath: '/delay',
+                        },
+                    ],
                 },
-                {
-                    id: 'build',
-                    kind: 'module',
-                    moduleKey: api.key,
-                    arguments: {},
-                    position: location,
-                },
-            ],
-            connections: [
-                {
-                    id: 'wire',
-                    kind: 'value',
-                    source: 'parameter',
-                    sourcePath: '',
-                    target: 'build',
-                    targetPath: '/delay',
-                },
-            ],
-            outputs: [
-                { name: 'vault', node: 'build', path: '' },
-                { name: 'delay', node: 'parameter', path: '' },
-            ],
-            output: 'vault',
-        };
-        const graph: Patch = {
-            version: 2,
-            nodes: [
-                {
-                    id: 'sub',
-                    kind: 'subpatch',
-                    name: 'Custody program',
-                    patch: definition,
-                    arguments: { 'waiting period': 288 },
-                    position: location,
-                },
-            ],
-            connections: [],
-            outputs: [{ name: 'result', node: 'sub', path: '/vault' }],
-            output: 'result',
-        };
+                'vault',
+                'build',
+                '',
+            ),
+            'delay',
+            'parameter',
+            '',
+        );
+        const graph: Patch = withOutput(
+            {
+                version: 2,
+                nodes: [
+                    {
+                        id: 'sub',
+                        kind: 'subpatch',
+                        name: 'Custody program',
+                        patch: definition,
+                        arguments: { 'waiting period': 288 },
+                        position: location,
+                    },
+                ],
+                connections: [],
+            },
+            'result',
+            'sub',
+            '/vault',
+        );
         const invoke = vi.fn(async (_key, input) => {
             expect(input.context).toEqual({ amount: 100000 });
             return readPointer(input.arguments, '/delay');
@@ -851,7 +898,7 @@ describe('typed values and reusable patches', () => {
             { amount: 100000 },
             runtime([api], invoke),
         );
-        expect(result.output).toBe(288);
+        expect(result.output).toEqual({ result: 288 });
         expect(result.executed).toEqual(['sub/build']);
         expect(result.values.get('sub')).toEqual({ delay: 288, vault: 288 });
         expect(collectModuleKeys(graph)).toEqual([api.key]);
@@ -871,7 +918,7 @@ describe('typed values and reusable patches', () => {
                     runtime([api], invoke),
                 )
             ).output,
-        ).toBe(144);
+        ).toEqual({ result: 144 });
         (graph.nodes[0] as SubpatchNode).arguments = { unknown: 1 };
         await expect(
             runPatch(graph, [api], null, {}, runtime([api], invoke)),
@@ -888,42 +935,45 @@ describe('typed values and reusable patches', () => {
             },
             scalar,
         );
-        const graph: Patch = {
-            version: 2,
-            nodes: [
-                {
-                    id: 'a',
-                    kind: 'module',
-                    moduleKey: producer.key,
-                    arguments: {},
-                    position: location,
-                },
-                {
-                    id: 'b',
-                    kind: 'module',
-                    moduleKey: producer.key,
-                    arguments: {},
-                    position: location,
-                },
-                {
-                    id: 'sum',
-                    kind: 'module',
-                    moduleKey: api.key,
-                    arguments: {},
-                    position: location,
-                },
-            ],
-            connections: ['a', 'b'].map((name) => ({
-                id: name,
-                kind: 'value',
-                source: name,
-                sourcePath: '',
-                target: 'sum',
-                targetPath: `/${name}`,
-            })),
-            outputs: [{ name: 'result', node: 'sum', path: '' }],
-            output: 'result',
-        };
+        const graph: Patch = withOutput(
+            {
+                version: 2,
+                nodes: [
+                    {
+                        id: 'a',
+                        kind: 'module',
+                        moduleKey: producer.key,
+                        arguments: {},
+                        position: location,
+                    },
+                    {
+                        id: 'b',
+                        kind: 'module',
+                        moduleKey: producer.key,
+                        arguments: {},
+                        position: location,
+                    },
+                    {
+                        id: 'sum',
+                        kind: 'module',
+                        moduleKey: api.key,
+                        arguments: {},
+                        position: location,
+                    },
+                ],
+                connections: ['a', 'b'].map((name) => ({
+                    id: name,
+                    kind: 'value',
+                    source: name,
+                    sourcePath: '',
+                    target: 'sum',
+                    targetPath: `/${name}`,
+                })),
+            },
+            'result',
+            'sum',
+            '',
+        );
         const invoke = vi.fn(async (key, args) =>
             key === producer.key
                 ? 20
@@ -964,7 +1014,9 @@ describe('typed values and reusable patches', () => {
             value: 4,
             position: location,
         });
-        graph.connections = [{ ...graph.connections[0]!, source: 'input' }];
+        graph.connections = graph.connections.map((edge) =>
+            edge.target === 'b' ? { ...edge, source: 'input' } : edge,
+        );
         const catalog = structuredClone(modules);
         const rt = runtime(
             catalog,
@@ -972,7 +1024,9 @@ describe('typed values and reusable patches', () => {
         );
         const validateValue = rt.validateValue;
         rt.validateValue = async (schema, value) => {
-            (graph.nodes[2] as VariableNode).value = 999;
+            (
+                graph.nodes.find((node) => node.id === 'input') as VariableNode
+            ).value = 999;
             (catalog[1]!.api.arguments as JsonObject).properties = {};
             return validateValue(schema, value);
         };
@@ -982,22 +1036,226 @@ describe('typed values and reusable patches', () => {
             if (event.value && typeof event.value === 'object')
                 (event.value as JsonObject).changed = true;
         });
-        expect(result.output).toBe(4);
+        expect(result.output).toEqual({ result: 4 });
         expect(result.values.get('input')).toBe(4);
     });
 
-    it('requires explicit named output designation while allowing intermediate evaluation', async () => {
+    it('requires wired Outputs when building all and allows intermediate evaluation', async () => {
         const graph = variablePatch();
-        graph.output = null;
+        graph.connections = [];
         await expect(
             runPatch(graph, [], null, {}, runtime([], vi.fn())),
-        ).rejects.toThrow(/Choose the patch output/);
+        ).rejects.toThrow(/Connect a value to Output/);
         expect(
             (await runPatch(graph, [], 'delay', {}, runtime([], vi.fn())))
                 .output,
         ).toBe(144);
         const saved = { ...graph, context: {} };
         expect(parsePatch(JSON.stringify(saved))).toEqual(saved);
+    });
+
+    it('infers terminal types from one declared value wire and never exposes an outbound port', () => {
+        const graph = variablePatch();
+        const terminal = patchOutputs(graph)[0]!;
+        expect(
+            sameSchema(resolveOutputType(graph, terminal, [])!, {
+                schema: blocks,
+            }),
+        ).toBe(true);
+        expect(nodePorts(terminal, [], 'returns', graph)).toEqual([]);
+        expect(
+            checkConnection(graph, [], {
+                id: 'second-source',
+                kind: 'value',
+                source: 'delay',
+                sourcePath: '',
+                target: terminal.id,
+                targetPath: '',
+            }),
+        ).toMatch(/already|source|overlap/i);
+        expect(
+            checkConnection(graph, [], {
+                id: 'wrong-path',
+                kind: 'value',
+                source: 'delay',
+                sourcePath: '',
+                target: terminal.id,
+                targetPath: '/field',
+            }),
+        ).toMatch(/one input/);
+        const implementation = module(1, {}, blocks);
+        graph.nodes.push({
+            id: 'implementation',
+            kind: 'module',
+            moduleKey: implementation.key,
+            arguments: {},
+            position: location,
+        });
+        expect(
+            checkConnection(graph, [implementation], {
+                id: 'raw-reference',
+                kind: 'module',
+                source: 'implementation',
+                sourcePath: '',
+                target: terminal.id,
+                targetPath: '',
+            }),
+        ).toMatch(/declared result/);
+        graph.nodes.push({
+            kind: 'output',
+            id: 'other-output',
+            name: 'other',
+            position: location,
+        });
+        expect(
+            checkConnection(graph, [implementation], {
+                id: 'outbound',
+                kind: 'value',
+                source: terminal.id,
+                sourcePath: '',
+                target: 'other-output',
+                targetPath: '',
+            }),
+        ).toMatch(/not a declared value output/);
+        graph.nodes.push({
+            kind: 'variable',
+            id: 'fees',
+            name: 'Fees',
+            type: { schema: satoshis },
+            value: 144,
+            position: location,
+        });
+        graph.connections = graph.connections.map((edge) =>
+            edge.target === terminal.id ? { ...edge, source: 'fees' } : edge,
+        );
+        expect(
+            sameSchema(resolveOutputType(graph, terminal, [implementation])!, {
+                schema: satoshis,
+            }),
+        ).toBe(true);
+    });
+
+    it('builds a chosen terminal independently and rejects duplicate interface names', async () => {
+        const graph = variablePatch();
+        graph.nodes.push({
+            kind: 'output',
+            id: 'unfinished',
+            name: 'unfinished',
+            position: location,
+        });
+        expect(
+            (
+                await runPatch(
+                    graph,
+                    [],
+                    'output-delay',
+                    {},
+                    runtime([], vi.fn()),
+                )
+            ).output,
+        ).toBe(144);
+        await expect(
+            runPatch(graph, [], null, {}, runtime([], vi.fn())),
+        ).rejects.toThrow(/Output unfinished/);
+        graph.nodes.push({
+            kind: 'output',
+            id: 'duplicate',
+            name: 'delay',
+            position: location,
+        });
+        expect(() => validatePatch(graph, [])).toThrow(
+            /Output names must be unique/,
+        );
+        expect(() =>
+            parsePatch(
+                JSON.stringify({
+                    ...variablePatch(),
+                    outputs: [],
+                    output: null,
+                    context: {},
+                }),
+            ),
+        ).toThrow(/wired Output nodes/);
+        const dangling = variablePatch();
+        dangling.connections[0]!.source = 'missing';
+        expect(() =>
+            parsePatch(JSON.stringify({ ...dangling, context: {} })),
+        ).toThrow(/unknown node/);
+        const outbound = variablePatch();
+        outbound.connections[0]!.source = 'output-delay';
+        expect(() =>
+            parsePatch(JSON.stringify({ ...outbound, context: {} })),
+        ).toThrow(/outgoing connections/);
+    });
+
+    it('scopes contexts before validation and records detached invocation provenance', async () => {
+        const api = module(
+            6,
+            { type: 'object' },
+            {
+                type: 'object',
+                properties: { marker: { type: 'integer' } },
+                required: ['marker'],
+            },
+        );
+        const graph = withOutput(
+            withOutput(
+                {
+                    version: 2,
+                    nodes: ['left', 'right'].map((id) => ({
+                        id,
+                        kind: 'module' as const,
+                        moduleKey: api.key,
+                        arguments: {},
+                        position: location,
+                    })),
+                    connections: [],
+                },
+                'left',
+                'left',
+            ),
+            'right',
+            'right',
+        );
+        const context = { marker: 2 };
+        const invoke = vi.fn(async (_key, args) => ({
+            marker: readPointer(args.context, '/marker'),
+        }));
+        const defaults: JsonValue[] = [];
+        const result = await runPatch(graph, [api], null, context, {
+            ...runtime([api], invoke),
+            contextForNode(path, inherited) {
+                defaults.push(structuredClone(inherited));
+                const marker = path[0] === 'left' ? 3 : 4;
+                path.push('not part of the graph');
+                (inherited as JsonObject).marker = marker;
+                return inherited;
+            },
+        });
+        expect(context).toEqual({ marker: 2 });
+        expect(defaults).toEqual([{ marker: 2 }, { marker: 2 }]);
+        expect(result.output).toEqual({
+            left: { marker: 3 },
+            right: { marker: 4 },
+        });
+        expect(result.trace).toEqual(
+            ['left', 'right'].map((id, index) => ({
+                nodePath: [id],
+                moduleKey: api.key,
+                args: { arguments: {}, context: { marker: index + 3 } },
+                result: { marker: index + 3 },
+            })),
+        );
+        (result.trace[0]!.result as JsonObject).marker = 99;
+        expect(result.values.get('left')).toEqual({ marker: 3 });
+        const invalidInvoke = vi.fn();
+        await expect(
+            runPatch(graph, [api], 'output-left', context, {
+                ...runtime([api], invalidInvoke),
+                contextForNode: () => 'invalid context',
+            }),
+        ).rejects.toThrow(/Invalid arguments/);
+        expect(invalidInvoke).not.toHaveBeenCalled();
     });
 
     it('round-trips typed standalone fields with their local references intact', async () => {
@@ -1027,25 +1285,28 @@ describe('typed values and reusable patches', () => {
         const sub = variablePatch();
         sub.nodes[0] = { ...(sub.nodes[0] as VariableNode), type: selected };
         (sub.nodes[0] as VariableNode).value = { delays: [144] };
-        const graph: Patch = {
-            version: 2,
-            nodes: [
-                {
-                    id: 'nested',
-                    kind: 'subpatch',
-                    name: 'Schedule',
-                    patch: sub,
-                    arguments: {},
-                    position: location,
-                },
-            ],
-            connections: [],
-            outputs: [{ name: 'out', node: 'nested', path: '/delay/delays' }],
-            output: 'out',
-        };
+        const graph: Patch = withOutput(
+            {
+                version: 2,
+                nodes: [
+                    {
+                        id: 'nested',
+                        kind: 'subpatch',
+                        name: 'Schedule',
+                        patch: sub,
+                        arguments: {},
+                        position: location,
+                    },
+                ],
+                connections: [],
+            },
+            'out',
+            'nested',
+            '/delay/delays',
+        );
         expect(
             (await runPatch(graph, [], null, {}, runtime([], vi.fn()))).output,
-        ).toEqual([144]);
+        ).toEqual({ out: [144] });
     });
 
     it('rejects unsafe numbers in nested patches and keeps arrays dense', () => {
@@ -1109,8 +1370,6 @@ describe('callable interface boundaries', () => {
                 },
             ],
             connections: [],
-            outputs: [],
-            output: null,
         };
         const edge: PatchConnection = {
             id: 'ref',
@@ -1298,37 +1557,43 @@ describe('callable interface boundaries', () => {
             ).compatible,
         ).toBe(false);
         const reference = { which_plugin: { HashKey: implementation.key } };
-        const definition: Patch = {
-            version: 2,
-            nodes: [
-                {
-                    id: 'policy',
-                    kind: 'parameter',
-                    name: 'policy',
-                    type: extracted,
-                    position: location,
-                },
-            ],
-            connections: [],
-            outputs: [{ name: 'policy', node: 'policy', path: '' }],
-            output: 'policy',
-        };
-        const graph: Patch = {
-            version: 2,
-            nodes: [
-                {
-                    id: 'nested',
-                    kind: 'subpatch',
-                    name: 'Recursive policy',
-                    patch: definition,
-                    arguments: { policy: reference },
-                    position: location,
-                },
-            ],
-            connections: [],
-            outputs: [{ name: 'policy', node: 'nested', path: '/policy' }],
-            output: 'policy',
-        };
+        const definition: Patch = withOutput(
+            {
+                version: 2,
+                nodes: [
+                    {
+                        id: 'policy',
+                        kind: 'parameter',
+                        name: 'policy',
+                        type: extracted,
+                        position: location,
+                    },
+                ],
+                connections: [],
+            },
+            'policy',
+            'policy',
+            '',
+        );
+        const graph: Patch = withOutput(
+            {
+                version: 2,
+                nodes: [
+                    {
+                        id: 'nested',
+                        kind: 'subpatch',
+                        name: 'Recursive policy',
+                        patch: definition,
+                        arguments: { policy: reference },
+                        position: location,
+                    },
+                ],
+                connections: [],
+            },
+            'policy',
+            'nested',
+            '/policy',
+        );
         const invoke = vi.fn();
         const result = await runPatch(
             graph,
@@ -1337,7 +1602,7 @@ describe('callable interface boundaries', () => {
             {},
             runtime([implementation], invoke),
         );
-        expect(result.output).toEqual(reference);
+        expect(result.output).toEqual({ policy: reference });
         expect(invoke).not.toHaveBeenCalled();
         const wrong = {
             ...implementation,
@@ -1366,37 +1631,40 @@ describe('callable interface boundaries', () => {
             satoshis,
         );
         const catalog = [provider, selector, accepts, wrong];
-        const graph: Patch = {
-            version: 2,
-            nodes: [
-                {
-                    kind: 'module',
-                    id: 'selector',
-                    moduleKey: selector.key,
-                    arguments: {},
-                    position: location,
-                },
-                {
-                    kind: 'module',
-                    id: 'consumer',
-                    moduleKey: accepts.key,
-                    arguments: {},
-                    position: location,
-                },
-            ],
-            connections: [
-                {
-                    id: 'reference-value',
-                    kind: 'value',
-                    source: 'selector',
-                    sourcePath: '',
-                    target: 'consumer',
-                    targetPath: '/policy',
-                },
-            ],
-            outputs: [{ name: 'result', node: 'consumer', path: '' }],
-            output: 'result',
-        };
+        const graph: Patch = withOutput(
+            {
+                version: 2,
+                nodes: [
+                    {
+                        kind: 'module',
+                        id: 'selector',
+                        moduleKey: selector.key,
+                        arguments: {},
+                        position: location,
+                    },
+                    {
+                        kind: 'module',
+                        id: 'consumer',
+                        moduleKey: accepts.key,
+                        arguments: {},
+                        position: location,
+                    },
+                ],
+                connections: [
+                    {
+                        id: 'reference-value',
+                        kind: 'value',
+                        source: 'selector',
+                        sourcePath: '',
+                        target: 'consumer',
+                        targetPath: '/policy',
+                    },
+                ],
+            },
+            'result',
+            'consumer',
+            '',
+        );
         expect(
             checkConnection(graph, catalog, graph.connections[0]!),
         ).toBeNull();
@@ -1422,7 +1690,7 @@ describe('callable interface boundaries', () => {
                     {},
                     runtime(catalog, invoke),
                 );
-                expect(result.output).toBe(7);
+                expect(result.output).toEqual({ result: 7 });
                 expect(result.executed).toEqual(['selector', 'consumer']);
                 expect(invoke.mock.calls.map(([key]) => key)).toEqual([
                     selector.key,
@@ -1469,7 +1737,7 @@ describe('callable interface boundaries', () => {
             runtime(catalog, invoke),
         );
         expect(result.executed).toEqual(['consumer']);
-        expect(result.output).toBe(7);
+        expect(result.output).toEqual({ result: 7 });
     });
 
     it('retains semantic markers beside references and preserves data-valued annotations', () => {

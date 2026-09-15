@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import {
     AlertCircle,
+    ArrowDownToLine,
     Box,
     CheckCircle2,
     ChevronDown,
@@ -15,12 +16,13 @@ import {
     Component,
     FunctionSquare,
     LoaderCircle,
+    Play,
     SlidersHorizontal,
     Variable,
     Vault,
 } from 'lucide-react';
 import type { JsonValue, ModuleInfo } from '../../shared/studio';
-import { nodePorts, type PatchNode } from './engine';
+import { type PatchNode } from './engine';
 import {
     escapePointer,
     humanize,
@@ -36,6 +38,10 @@ import './node-card.css';
 export interface PatchNodeCardData extends Record<string, unknown> {
     patchNode: PatchNode;
     modules: ModuleInfo[];
+    inputs: SchemaPort[];
+    outputs: SchemaPort[];
+    canBuild: boolean;
+    onBuild: () => void;
     expanded: boolean;
     showCallable: boolean;
     status?: 'running' | 'complete';
@@ -81,6 +87,7 @@ export function visibleNodePorts(
 
 export function patchNodeLabel(node: PatchNode, modules: ModuleInfo[]): string {
     if (node.label?.trim()) return node.label;
+    if (node.kind === 'output') return humanize(node.name);
     if (node.kind !== 'module') return node.name;
     const module = modules.find((item) => item.key === node.moduleKey);
     return module ? displayModuleName(module) : 'Module unavailable';
@@ -99,18 +106,29 @@ export function displayModuleName(module: ModuleInfo): string {
         : humanize(module.name);
 }
 
-function nodeRole(node: PatchNode, outputs: SchemaPort[]): string {
+function nodeRole(
+    node: PatchNode,
+    outputs: SchemaPort[],
+    inputs: SchemaPort[],
+): string {
     if (node.kind === 'variable') return 'Variable';
     if (node.kind === 'parameter') return 'Patch input';
     if (node.kind === 'subpatch') return 'Reusable patch';
-    const output = outputs.find((port) => port.path === '');
+    const output = (node.kind === 'output' ? inputs : outputs).find(
+        (port) => port.path === '',
+    );
     const shape = output && resolveSchema(output.schema, output.root);
+    if (node.kind === 'output')
+        return object(shape) && shape['x-sapio-role'] === 'contract'
+            ? 'Contract output'
+            : 'Output';
     return object(shape) && shape['x-sapio-role'] === 'contract'
         ? 'Contract builder'
         : 'Composer';
 }
 
 function literalAt(node: PatchNode, path: string): JsonValue | undefined {
+    if (node.kind === 'output') return undefined;
     let value =
         node.kind === 'module' || node.kind === 'subpatch'
             ? node.arguments
@@ -186,8 +204,8 @@ export function PatchNodeCard({
         referenceOnly ||
         data.showCallable ||
         Boolean(data.connectionPending && data.compatibleCallable);
-    const allInputs = nodePorts(patchNode, modules, 'arguments');
-    const allOutputs = nodePorts(patchNode, modules, 'returns');
+    const allInputs = data.inputs;
+    const allOutputs = data.outputs;
     const inputs = visibleNodePorts(
         allInputs,
         'arguments',
@@ -209,7 +227,7 @@ export function PatchNodeCard({
     const name = patchNodeLabel(patchNode, modules);
     const role = referenceOnly
         ? 'Callable implementation'
-        : nodeRole(patchNode, allOutputs);
+        : nodeRole(patchNode, allOutputs, allInputs);
     const missing =
         data.availability === 'missing' ||
         (patchNode.kind === 'module' &&
@@ -217,15 +235,17 @@ export function PatchNodeCard({
     const invalid = data.availability === 'invalid';
     const Icon = referenceOnly
         ? FunctionSquare
-        : patchNode.kind === 'variable'
-          ? Variable
-          : patchNode.kind === 'parameter'
-            ? SlidersHorizontal
-            : patchNode.kind === 'subpatch'
-              ? Component
-              : role === 'Contract builder'
-                ? Vault
-                : Box;
+        : patchNode.kind === 'output'
+          ? ArrowDownToLine
+          : patchNode.kind === 'variable'
+            ? Variable
+            : patchNode.kind === 'parameter'
+              ? SlidersHorizontal
+              : patchNode.kind === 'subpatch'
+                ? Component
+                : role === 'Contract builder'
+                  ? Vault
+                  : Box;
     const updateInternals = useUpdateNodeInternals();
     const handleLayout = JSON.stringify([
         inputs.map((port) => port.path),
@@ -300,6 +320,11 @@ export function PatchNodeCard({
                     The calling module supplies the inputs.
                 </p>
             )}
+            {patchNode.kind === 'output' && (
+                <p className="patch-output-note">
+                    Wire a Contract result here to build and inspect it.
+                </p>
+            )}
             {(patchNode.kind === 'variable' ||
                 patchNode.kind === 'parameter') && (
                 <div
@@ -318,7 +343,11 @@ export function PatchNodeCard({
             <div className="patch-module-ports">
                 {inputs.length > 0 && (
                     <div className="patch-module-inputs">
-                        <small>INPUTS</small>
+                        <small>
+                            {patchNode.kind === 'output'
+                                ? 'VALUE TO BUILD'
+                                : 'INPUTS'}
+                        </small>
                         {inputs.map((port) => {
                             const provider = sourceFor(
                                 data.inputSources,
@@ -368,12 +397,26 @@ export function PatchNodeCard({
                                         type="button"
                                         className="patch-input-button nodrag nopan"
                                         onClick={() => data.onInput(port.path)}
-                                        aria-label={`${name}: configure ${portLabel(port, allInputs)}`}
+                                        aria-label={
+                                            patchNode.kind === 'output'
+                                                ? `${name}: connect output`
+                                                : `${name}: configure ${portLabel(port, allInputs)}`
+                                        }
+                                        title={
+                                            patchNode.kind === 'output'
+                                                ? 'Wire a Contract result here to build and inspect it. Other values can be exported too.'
+                                                : undefined
+                                        }
                                     >
                                         <span className="patch-input-title">
                                             {portLabel(port, allInputs)}
                                         </span>
-                                        <em>{schemaLabel(port)}</em>
+                                        <em>
+                                            {patchNode.kind === 'output' &&
+                                            !provider
+                                                ? 'Type follows the wire'
+                                                : schemaLabel(port)}
+                                        </em>
                                         <span
                                             className={`patch-input-source ${literal === undefined && !provider && !childrenConnected && port.required ? 'patch-input-missing' : ''}`}
                                         >
@@ -468,6 +511,17 @@ export function PatchNodeCard({
                 </div>
             )}
             <footer className="patch-node-footer">
+                {patchNode.kind === 'output' && (
+                    <button
+                        type="button"
+                        className="patch-output-build nodrag nopan"
+                        aria-label={`${name}: build output`}
+                        disabled={!data.canBuild}
+                        onClick={data.onBuild}
+                    >
+                        <Play size={13} /> Build output
+                    </button>
+                )}
                 {hasExpandedPorts && (
                     <button
                         type="button"

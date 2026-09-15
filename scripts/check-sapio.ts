@@ -144,7 +144,7 @@ try {
     const result = await runPatch(
         patch,
         [provider, consumer],
-        null,
+        'policy-output',
         patch.context,
         runtime,
     );

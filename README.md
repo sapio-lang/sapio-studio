@@ -61,13 +61,14 @@ checksums are recorded in [the example notes](public/demo/README.md).
 
 Click a module input to enter a structured value, create a matching Variable,
 or find compatible outputs and building blocks. Each input shows its source.
-Use **Expose as parameter** and **Use as output** to define a reusable interface,
-then save it and choose **Import reusable patch** in another program.
+Use **Expose as parameter** for reusable inputs. Add an **Output** terminal,
+name it, and connect the value to export. Save the patch and choose
+**Import reusable patch** in another program.
 
 You can also load your own `.wasm` modules and connect their advertised APIs.
 See [visual patch semantics](docs/PATCHING.md) for the distinction between value
 connections and module references, validation, and the current type limits.
-Contract outputs use **Compile contract** and offer direct artifact inspection.
+Contract Output terminals use **Build output** and offer artifact inspection.
 Compilation uses the public network, amount and lowering context shown in the
 editor. Binding and signing are separate actions.
 
