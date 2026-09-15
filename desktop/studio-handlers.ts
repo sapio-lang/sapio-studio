@@ -161,6 +161,7 @@ export function registerStudioHandlers(
         'modules.info': api.modules.info,
         'modules.call': api.modules.call,
         'modules.validate': api.modules.validate,
+        'modules.validateValue': api.modules.validateValue,
         explain: api.explain,
         bind: api.bind,
         'spend.prepare': api.spend.prepare,

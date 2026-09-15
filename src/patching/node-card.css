@@ -1,0 +1,204 @@
+.patch-node-card {
+    width: 340px;
+}
+.patch-node-card .patch-module-title strong {
+    line-height: 1.35;
+}
+.patch-node-role {
+    display: block;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #677666;
+    margin-bottom: 4px;
+}
+.patch-node-card .patch-module-ports {
+    display: block;
+    padding: 10px 0 5px;
+}
+.patch-node-card .patch-module-inputs + .patch-module-outputs {
+    border-top: 1px solid #e3e9db;
+    margin-top: 9px;
+    padding-top: 10px;
+}
+.patch-node-card .patch-port-row {
+    padding: 3px 11px;
+}
+.patch-workspace .patch-input-button {
+    display: grid;
+    width: 100%;
+    text-align: left;
+    justify-content: stretch;
+    justify-items: start;
+    gap: 3px;
+    border-color: transparent;
+    background: transparent;
+    padding: 6px;
+    border-radius: 5px;
+}
+.patch-workspace .patch-input-button:hover {
+    background: #f0f5e9;
+    border-color: #dce6d2;
+}
+.patch-input-title {
+    font-size: 11px;
+    color: #435745;
+}
+.patch-node-card .patch-input-button em {
+    font-size: 10px;
+    color: #54776d;
+    margin-top: 0;
+}
+.patch-input-source {
+    font-size: 10px;
+    color: #778370;
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.patch-port-connected .patch-input-source {
+    color: #287568;
+}
+.patch-input-missing {
+    color: #946c38;
+}
+.patch-node-card .patch-port-compatible {
+    background: #e9f5ed;
+    box-shadow: inset 3px 0 #287c73;
+}
+.patch-node-card .patch-module-outputs .patch-port-compatible {
+    box-shadow: inset -3px 0 #287c73;
+}
+.patch-node-card .patch-port-compatible .react-flow__handle {
+    background: #1d7864;
+    box-shadow: 0 0 0 4px #2b886a30;
+}
+.patch-node-card .patch-port-compatible .patch-input-title,
+.patch-node-card .patch-port-compatible > span {
+    color: #215f4f;
+    font-weight: 600;
+}
+.patch-node-card .patch-port-unavailable .patch-input-title,
+.patch-node-card .patch-port-unavailable > span,
+.patch-node-card .patch-port-unavailable em,
+.patch-node-card .patch-port-unavailable .patch-input-source {
+    color: #73786f;
+}
+.patch-node-card .patch-port-unavailable .react-flow__handle {
+    background: #adb5a7;
+    box-shadow: none;
+}
+.patch-node-card .patch-port-compatible.patch-module-ref {
+    background: #faf1df;
+    box-shadow: inset -3px 0 #a27535;
+}
+.patch-node-card .patch-port-compatible.patch-module-ref > span {
+    color: #815d2b;
+}
+.patch-node-card
+    .patch-port-compatible
+    .react-flow__handle.patch-handle-module {
+    background: #a27535;
+    border-radius: 2px;
+    box-shadow: 0 0 0 4px #a2753530;
+}
+.patch-node-card .react-flow__handle.connectingfrom {
+    background: #287c73;
+    box-shadow: 0 0 0 3px #287c7340;
+}
+.patch-node-card .react-flow__handle.patch-handle-module.connectingfrom {
+    background: #a27535;
+    border-radius: 2px;
+}
+.patch-node-card .patch-module-outputs .patch-port-row > span {
+    max-width: none;
+    font-size: 11px;
+    padding: 5px 5px 7px;
+}
+.patch-node-card .patch-module-outputs .patch-port-row > em {
+    padding: 0 5px 5px;
+}
+.patch-node-value {
+    padding: 13px 16px 6px;
+    color: #314f43;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+}
+.patch-node-value small {
+    display: block;
+    color: #70836f;
+    margin-bottom: 6px;
+    font-size: 10px;
+}
+.patch-node-value-unset {
+    color: #8b784e;
+    font-size: 11px;
+}
+.patch-node-variable .patch-module-title {
+    background: #eef5e8;
+}
+.patch-node-parameter .patch-module-title {
+    background: #edf2f7;
+}
+.patch-node-subpatch .patch-module-title {
+    background: #f0edf8;
+}
+.patch-node-card .patch-module-ref {
+    margin-top: 6px;
+}
+.patch-node-card .patch-module-ref > span {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+}
+.patch-node-footer {
+    display: flex;
+    border-top: 1px solid #e3e8dc;
+}
+.patch-node-footer:empty {
+    display: none;
+}
+.patch-workspace .patch-node-footer button {
+    border: none;
+    background: transparent;
+    font-size: 10px;
+    padding: 8px;
+    flex: 1;
+}
+.patch-workspace .patch-node-footer .patch-expand {
+    width: auto;
+    border-radius: 0 0 0 10px;
+}
+.patch-workspace .patch-callable-toggle {
+    color: #896536;
+}
+.patch-node-message {
+    margin: 8px 12px;
+    color: #916037;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.patch-reference-note {
+    margin: 12px 14px 0;
+    color: #796342;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.patch-node-unavailable {
+    border-color: #bea178;
+}
+.patch-node-spinner {
+    animation: patch-node-spin 1.2s linear infinite;
+}
+@keyframes patch-node-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .patch-node-spinner {
+        animation: none;
+    }
+}

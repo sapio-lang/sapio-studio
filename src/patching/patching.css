@@ -426,3 +426,138 @@
         display: none;
     }
 }
+
+.patch-output-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 18px;
+    background: #fffffa;
+    border-bottom: 1px solid #dce3d4;
+    font-size: 12px;
+    flex-wrap: wrap;
+}
+.patch-output-bar nav {
+    flex: 1;
+}
+.patch-output-bar nav button {
+    border: none;
+    background: transparent;
+    padding: 4px;
+}
+.patch-output-bar label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.patch-inspector {
+    width: 350px;
+    box-sizing: border-box;
+    max-height: calc(100vh - 285px);
+}
+.patch-inspector input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid #d4ddcc;
+    border-radius: 5px;
+    background: #fffffc;
+    font: inherit;
+    color: #394d3e;
+}
+.patch-inspector label > select {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+}
+.patch-editor-fields {
+    border: 0;
+    padding: 0;
+    margin: 18px 0 0;
+    min-width: 0;
+}
+.patch-interface-controls {
+    padding: 16px 0;
+    border-top: 1px solid #dfe6d7;
+    margin-top: 16px;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.patch-named-outputs > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 6px 0;
+    font-size: 11px;
+}
+.patch-source-picker {
+    border: 1px solid #c9d8be;
+    border-radius: 8px;
+    margin-top: 18px;
+    padding: 12px;
+    background: #f2f6ed;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.patch-source-picker header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 8px;
+}
+.patch-source-picker h4 {
+    margin: 0 0 10px;
+}
+.patch-source-picker h5 {
+    margin: 16px 0 6px;
+    font-size: 11px;
+    color: #61725c;
+}
+.patch-source-picker > button {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    text-align: left;
+    width: 100%;
+    margin-top: 6px;
+}
+.patch-source-picker small {
+    color: #6c7b65;
+    font-size: 10px;
+}
+.patch-source-picker details {
+    margin-top: 14px;
+    font-size: 11px;
+}
+.patch-source-picker details p {
+    border-top: 1px solid #dce5d3;
+    padding-top: 6px;
+}
+.patch-flow .react-flow__handle.connectingto {
+    outline: 5px solid #64b18c66;
+}
+.patch-flow .react-flow__handle.valid {
+    background: #177946;
+    outline: 4px solid #55af7966;
+}
+.library-loading {
+    display: grid;
+    gap: 8px;
+    padding: 18px;
+    color: #64715c;
+    font-size: 11px;
+}
+@media (max-width: 780px) {
+    .patch-inspector {
+        width: auto;
+        max-height: none;
+    }
+    .patch-add-control {
+        flex-wrap: wrap;
+    }
+}
+.patch-toolbar button,
+.patch-output-bar label {
+    white-space: nowrap;
+}

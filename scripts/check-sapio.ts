@@ -6,9 +6,9 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { createSapioBridge } from '../desktop/bridge';
 import { runCli } from '../desktop/cli';
-import type { JsonValue, StudioSettings } from '../shared/studio';
+import type { JsonSchema, JsonValue, StudioSettings } from '../shared/studio';
 import { clauseTrampolinePatch } from '../src/patching/demo';
-import { runPatch } from '../src/patching/engine';
+import { runPatch, type VariableNode } from '../src/patching/engine';
 
 const cli = process.env.SAPIO_CLI;
 const modules = process.env.SAPIO_MODULES;
@@ -127,8 +127,10 @@ try {
     assert(provider);
     assert(consumer);
     assert.equal((await bridge.modules.list()).length, 2);
-    const patch = clauseTrampolinePatch(provider.key, consumer.key);
+    const patch = clauseTrampolinePatch(provider, consumer);
     const runtime = {
+        validateValue: (schema: JsonSchema, value: JsonValue) =>
+            bridge.modules.validateValue({ schema, value }),
         invoke: async (key: string, args: JsonValue): Promise<JsonValue> =>
             JSON.parse(
                 await bridge.modules.call({ key, args: JSON.stringify(args) }),
@@ -142,20 +144,25 @@ try {
     const result = await runPatch(
         patch,
         [provider, consumer],
-        'trampoline',
+        null,
         patch.context,
         runtime,
     );
     const direct = await runtime.invoke(provider.key, {
-        arguments: patch.nodes[0]!.arguments,
+        arguments: {
+            alice: (
+                patch.nodes.find((node) => node.id === 'alice') as VariableNode
+            ).value!,
+            bob: (patch.nodes.find((node) => node.id === 'bob') as VariableNode)
+                .value!,
+        },
         context: patch.context,
     });
     assert.deepEqual(result.output, direct);
     assert.deepEqual(result.executed, ['trampoline']);
     const invalid = structuredClone(patch);
-    invalid.nodes[1]!.arguments = {
-        g: { alice: 'not a key', bob: 'not a key' },
-    };
+    (invalid.nodes.find((node) => node.id === 'alice') as VariableNode).value =
+        'not a key';
     await assert.rejects(
         runPatch(
             invalid,

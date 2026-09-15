@@ -1,6 +1,6 @@
 [
   {
-    "key": "6076dc116c7c026b3660bdf4ae528467230e53cded500132203cf292b8000d43",
+    "key": "e25ccd6dab10e640556aa63687114849dcb691816b3641caa4e9ae783d6be087",
     "description": "Provide this information to create an instance of a contract",
     "name": "GetClause",
     "api": {
@@ -63,16 +63,22 @@
             "description": "Get a Clause for two parties to sign together",
             "properties": {
               "alice": {
+                "description": "Alice's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Alice",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               },
               "bob": {
+                "description": "Bob's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Bob",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               }
             },
             "required": [
@@ -230,7 +236,7 @@
     }
   },
   {
-    "key": "f88d3d0094f4af98256d1c516800b074fc95210149af4cfd0a7dd733f807627b",
+    "key": "84775a228824b3254aae8e57d3152a2ea9d8d4a4ba0a62eb16ab138a40777150",
     "description": "Provide this information to create an instance of a contract",
     "name": "Wrapper",
     "api": {
@@ -289,20 +295,54 @@
             "title": "Contextual Arguments For Creating this Contract",
             "type": "object"
           },
+          "CreateArgs": {
+            "description": "Provide this information to create an instance of a contract",
+            "properties": {
+              "arguments": {
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/GetClause"
+                  }
+                ],
+                "title": "The Main Contract Arguments"
+              },
+              "context": {
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/ContextualArguments"
+                  }
+                ],
+                "description": "Others arguments set by general system settings",
+                "title": "Contextual Arguments"
+              }
+            },
+            "required": [
+              "arguments",
+              "context"
+            ],
+            "title": "Arguments For Creating this Contract",
+            "type": "object"
+          },
           "GetClause": {
             "description": "Same Inner type as the wrapped module",
             "properties": {
               "alice": {
+                "description": "Alice's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Alice",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               },
               "bob": {
+                "description": "Bob's x-only public key.",
                 "maxLength": 64,
                 "minLength": 64,
                 "pattern": "^[0-9a-fA-F]{64}$",
-                "type": "string"
+                "title": "Bob",
+                "type": "string",
+                "x-sapio-type": "bitcoin.x-only-public-key"
               }
             },
             "required": [
@@ -408,6 +448,26 @@
             "title": "Effects",
             "type": "object"
           },
+          "Module_GetClause_to_string": {
+            "description": "The serialized locator, resolved into a module key during deserialization.",
+            "properties": {
+              "which_plugin": {
+                "$ref": "#/definitions/LookupFrom"
+              }
+            },
+            "required": [
+              "which_plugin"
+            ],
+            "type": "object",
+            "x-sapio-module": {
+              "arguments": {
+                "$ref": "#/definitions/CreateArgs"
+              },
+              "returns": {
+                "type": "string"
+              }
+            }
+          },
           "Network": {
             "description": "a remote derivation for the network definitions",
             "oneOf": [
@@ -461,26 +521,26 @@
             },
             "type": "array"
           },
-          "SapioHostAPI": {
-            "description": "A resolved module key with typed call arguments and results.\n\nConstruction resolves the locator; it does not prove interface compatibility.\nThe host validates each actual input and successful output against the\nmodule's advertised schemas, and the caller deserializes the result as `R`.",
-            "properties": {
-              "which_plugin": {
-                "$ref": "#/definitions/LookupFrom"
-              }
-            },
-            "required": [
-              "which_plugin"
-            ],
-            "type": "object"
-          },
           "Wrapper": {
             "description": "Wrapper to find the ClauseModule remotely",
             "properties": {
               "g": {
-                "$ref": "#/definitions/GetClause"
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/GetClause"
+                  }
+                ],
+                "description": "Public keys supplied to the selected authorization implementation.",
+                "title": "Parties"
               },
               "v": {
-                "$ref": "#/definitions/SapioHostAPI"
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/Module_GetClause_to_string"
+                  }
+                ],
+                "description": "The caller supplies Parties as this module's arguments.",
+                "title": "Authorization implementation"
               }
             },
             "required": [

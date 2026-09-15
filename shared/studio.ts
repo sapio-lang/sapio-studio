@@ -153,6 +153,10 @@ export interface StudioAPI {
             side: 'arguments' | 'returns';
             value: JsonValue;
         }): Promise<{ valid: boolean; errors: string[] }>;
+        validateValue(input: {
+            schema: JsonSchema;
+            value: JsonValue;
+        }): Promise<{ valid: boolean; errors: string[] }>;
     };
     explain(input: ExplainInput): Promise<Explanation>;
     bind(input: { artifact: string; funding: BindFunding }): Promise<string>;
