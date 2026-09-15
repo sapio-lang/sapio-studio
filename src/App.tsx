@@ -129,11 +129,11 @@ function App() {
     const activityRequest = useRef(0);
     const moduleRequest = useRef(0);
     const patchRevision = useRef(0);
-    const invalidatePatchResult = useCallback(() => {
+    const invalidatePatchResult = useCallback((edited: boolean) => {
         patchRevision.current++;
         setResult(null);
         setArtifact((current) =>
-            current?.source?.kind === 'patch'
+            edited && current?.source?.kind === 'patch'
                 ? { ...current, patchEdited: true }
                 : current,
         );

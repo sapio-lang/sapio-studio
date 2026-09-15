@@ -70,7 +70,7 @@ export interface PatchCanvasProps extends PatchRuntime {
         contract: boolean,
         recipe: PatchBuildRecipe,
     ) => void;
-    onInvalidate?: () => void;
+    onInvalidate?: (edited: boolean) => void;
     onContextChange?: (context: JsonValue) => void;
     onLoadModules?: (keys: string[]) => Promise<void>;
     onDiscoverModules?: () => Promise<void>;
@@ -227,11 +227,11 @@ export function PatchCanvas(props: PatchCanvasProps) {
     const nameOf = (node: PatchNode) => patchNodeLabel(node, modules);
     const id = (prefix: string) =>
         `${prefix}-${Date.now()}-${nextId.current++}`;
-    function clearResult() {
+    function clearResult(edited = true) {
         revision.current++;
         setResult(undefined);
         setStatus({});
-        onInvalidate?.();
+        onInvalidate?.(edited);
     }
     function change(next: Patch, semantic = true) {
         setRoot((current) => replaceGraph(current, path, next));
@@ -585,7 +585,7 @@ export function PatchCanvas(props: PatchCanvasProps) {
     async function run(output: string | null = null) {
         if (running || invalid.size) return;
         setRunning(true);
-        clearResult();
+        clearResult(false);
         setMessage('Validating and evaluating the patch…');
         const currentRevision = revision.current;
         const snapshot = structuredClone(patch);
