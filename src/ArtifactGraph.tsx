@@ -45,6 +45,7 @@ type OutputNode = Node<
         object: ObjectExplanation;
         outpoint?: string;
         mock?: boolean;
+        allocation?: number;
     },
     'artifact-output'
 >;
@@ -64,8 +65,10 @@ function OutputCard({ data, selected }: NodeProps<OutputNode>) {
             </div>
             <strong>{data.title}</strong>
             <div className="node-value">
-                {formatSats(data.object.required_input_sats)}{' '}
-                <span>required</span>
+                {formatSats(data.allocation ?? data.object.required_input_sats)}{' '}
+                <span>
+                    {data.allocation === undefined ? 'required' : 'allocated'}
+                </span>
             </div>
             <div
                 className={`node-binding ${data.outpoint ? 'linked' : ''}`}
@@ -129,7 +132,12 @@ export function artifactLayout(
     const selections = new Map<string, ArtifactSelection>();
     let column = 0;
     const visited = new Set<string>();
-    function visit(location: string, title: string, depth: number): number {
+    function visit(
+        location: string,
+        title: string,
+        depth: number,
+        allocation?: number,
+    ): number {
         const object = objects.get(location);
         if (!object || visited.has(location)) return column++ * 290;
         visited.add(location);
@@ -142,6 +150,7 @@ export function artifactLayout(
                     output.contract_location,
                     output.name ?? `Output ${output.index}`,
                     depth + 2,
+                    output.amount_sats,
                 );
                 edges.push({
                     id: `${templateId}:${output.index}`,
@@ -193,13 +202,14 @@ export function artifactLayout(
         nodes.push({
             id,
             type: 'artifact-output',
-            ariaLabel: `${title}, ${formatSats(object.required_input_sats)} required input`,
+            ariaLabel: `${title}, ${formatSats(allocation ?? object.required_input_sats)} ${allocation === undefined ? 'required input' : 'allocated'}`,
             position: { x, y: depth * 195 },
             data: {
                 title,
                 object,
                 outpoint: binding?.occurrences[location]?.outpoint,
                 mock: binding?.funding.kind === 'mock',
+                allocation,
             },
         });
         selections.set(id, { kind: 'output', object });

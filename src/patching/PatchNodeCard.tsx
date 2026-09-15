@@ -322,7 +322,11 @@ export function PatchNodeCard({
             )}
             {patchNode.kind === 'output' && (
                 <p className="patch-output-note">
-                    Wire a Contract result here to build and inspect it.
+                    {data.connectedInputs.length
+                        ? role === 'Contract output'
+                            ? 'Build this contract to open its transaction graph.'
+                            : 'Build this value to review or export it.'
+                        : 'Wire a result here. Contracts open their transaction graph.'}
                 </p>
             )}
             {(patchNode.kind === 'variable' ||

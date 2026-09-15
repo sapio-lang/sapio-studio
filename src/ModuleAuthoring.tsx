@@ -7,6 +7,7 @@ import { initialArguments, modulePorts } from './patching/schema';
 import { SchemaValueEditor } from './patching/SchemaValueEditor';
 import { displayModuleName } from './patching/PatchNodeCard';
 import { parseEditorJson } from './patching/schemaValue';
+import type { CompilationSource } from './compilationSource';
 
 export function ModuleAuthoring({
     module,
@@ -17,7 +18,11 @@ export function ModuleAuthoring({
     module: ModuleInfo;
     context: JsonValue;
     api?: StudioAPI;
-    onInspect: (artifact: string, name: string) => Promise<void>;
+    onInspect: (
+        artifact: string,
+        name: string,
+        source: CompilationSource,
+    ) => Promise<void>;
 }) {
     const input = modulePorts(module, 'arguments')[0];
     const name = displayModuleName(module);
@@ -25,6 +30,7 @@ export function ModuleAuthoring({
         () => initialArguments(module),
     );
     const [result, setResult] = useState('');
+    const [source, setSource] = useState<CompilationSource | null>(null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
     const [invalid, setInvalid] = useState<Set<string>>(new Set());
@@ -33,6 +39,7 @@ export function ModuleAuthoring({
     useEffect(() => {
         revision.current++;
         setResult('');
+        setSource(null);
         setError('');
     }, [context]);
     useEffect(() => {
@@ -46,6 +53,7 @@ export function ModuleAuthoring({
         revision.current++;
         setArgumentsValue(value);
         setResult('');
+        setSource(null);
         setError('');
     }
     async function run() {
@@ -90,6 +98,7 @@ export function ModuleAuthoring({
                     `Module result does not match its return schema:\n${checked.errors.join('\n')}`,
                 );
             setResult(output);
+            setSource({ kind: 'module', key: module.key, args, result: value });
         } catch (error) {
             if (current()) setError(errorMessage(error));
         } finally {
@@ -157,7 +166,7 @@ export function ModuleAuthoring({
                     {error}
                 </pre>
             )}
-            {result && (
+            {result && source && (
                 <div className="module-result">
                     <h3>Module result</h3>
                     <pre>{result}</pre>
@@ -169,7 +178,7 @@ export function ModuleAuthoring({
                                 const currentRevision = revision.current;
                                 setBusy(true);
                                 try {
-                                    await onInspect(result, name);
+                                    await onInspect(result, name, source);
                                 } catch (error) {
                                     if (
                                         mounted.current &&
