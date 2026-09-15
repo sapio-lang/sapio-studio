@@ -1,14 +1,40 @@
 import Ajv from 'ajv';
 import { describe, expect, it, vi } from 'vitest';
-import type { JsonSchema, JsonValue, ModuleInfo } from '../../shared/studio';
+import type {
+    JsonObject,
+    JsonSchema,
+    JsonValue,
+    ModuleInfo,
+} from '../../shared/studio';
 import {
     checkConnection,
     parsePatch,
     runPatch,
     type Patch,
     type PatchRuntime,
+    type ModuleNode,
+    type VariableNode,
+    type SubpatchNode,
+    type PatchConnection,
+    collectModuleKeys,
+    connectionCompatibility,
+    nodePorts,
+    putPointer,
+    removePointer,
+    validatePatch,
+    withConnection,
 } from './engine';
-import { compatibleValues, modulePorts, readPointer } from './schema';
+import {
+    compatibleModule,
+    sameSchema,
+    compatibleValues,
+    modulePorts,
+    readPointer,
+    initialValue,
+    valuePorts,
+    standaloneSchema,
+    schemaLabel,
+} from './schema';
 
 const key = (n: number) => String(n).repeat(64);
 const scalar: JsonSchema = { type: 'integer', minimum: 0, maximum: 100 };
@@ -38,16 +64,20 @@ const consumer = module(
 );
 const modules = [producer, consumer];
 const patch = (): Patch => ({
-    version: 1,
+    version: 2,
+    outputs: [{ name: 'result', node: 'b', path: '' }],
+    output: 'result',
     nodes: [
         {
             id: 'a',
+            kind: 'module',
             moduleKey: producer.key,
             arguments: {},
             position: { x: 0, y: 0 },
         },
         {
             id: 'b',
+            kind: 'module',
             moduleKey: consumer.key,
             arguments: {},
             position: { x: 300, y: 0 },
@@ -72,6 +102,15 @@ function runtime(
     const ajv = new Ajv({ strict: false });
     return {
         invoke,
+        async validateValue(schema, value) {
+            const validator = ajv.compile(schema);
+            return {
+                valid: validator(value),
+                errors: (validator.errors ?? []).map(
+                    (error) => error.message ?? '',
+                ),
+            };
+        },
         async validate(moduleKey, side, value) {
             const validator = ajv.compile(
                 catalog.find((item) => item.key === moduleKey)!.api[side],
@@ -91,7 +130,7 @@ describe('executable patches', () => {
         const unsafe = JSON.parse('9007199254740993') as number;
         const invoke = vi.fn(async () => unsafe);
         const graph = patch();
-        graph.nodes[0]!.arguments = { nested: [unsafe] };
+        (graph.nodes[0]! as ModuleNode).arguments = { nested: [unsafe] };
         await expect(
             runPatch(graph, modules, 'b', {}, runtime(modules, invoke)),
         ).rejects.toThrow(/exact integer range/);
@@ -134,7 +173,7 @@ describe('executable patches', () => {
         expect(result.output).toBe(42);
         expect(result.executed).toEqual(['a', 'b']);
         expect(invoke.mock.calls[1]![1].arguments).toEqual({ amount: 42 });
-        expect(graph.nodes[1]!.arguments).toEqual({});
+        expect((graph.nodes[1]! as ModuleNode).arguments).toEqual({});
     });
 
     it('validates produced values before downstream execution', async () => {
@@ -162,6 +201,7 @@ describe('executable patches', () => {
                 type: 'object',
                 properties: {
                     v: {
+                        'x-sapio-module': producer.api,
                         type: 'object',
                         properties: {
                             which_plugin: {
@@ -184,8 +224,9 @@ describe('executable patches', () => {
             { type: 'string' },
         );
         const graph = patch();
-        graph.nodes[0]!.arguments = 'not a valid provider invocation';
-        graph.nodes[1]!.moduleKey = target.key;
+        (graph.nodes[0]! as ModuleNode).arguments =
+            'not a valid provider invocation';
+        (graph.nodes[1]! as ModuleNode).moduleKey = target.key;
         graph.connections[0] = {
             ...graph.connections[0]!,
             kind: 'module',
@@ -216,7 +257,9 @@ describe('executable patches', () => {
             ) => {
                 if (moduleKey === producer.key) {
                     context.amount = 999;
-                    graph.nodes[1]!.arguments = { injected: true };
+                    (graph.nodes[1]! as ModuleNode).arguments = {
+                        injected: true,
+                    };
                     return 4;
                 }
                 expect(args).toEqual({
@@ -372,14 +415,14 @@ describe('schema sockets and portable patches', () => {
         ).toBe(true);
     });
 
-    it('does not mistake a matching primitive type for matching bounds or formats', () => {
+    it('marks refinements as checked at build instead of claiming equal constraints', () => {
         const loose = module(1, {}, { type: 'integer' });
         expect(
             compatibleValues(
                 modulePorts(loose, 'returns')[0]!,
                 modulePorts(consumer, 'arguments')[1]!,
             ).compatible,
-        ).toBe(false);
+        ).toBe(true);
         const strings = module(1, {}, { type: 'string' });
         const keyInput = module(
             2,
@@ -396,10 +439,10 @@ describe('schema sockets and portable patches', () => {
                 modulePorts(strings, 'returns')[0]!,
                 modulePorts(keyInput, 'arguments')[0]!,
             ).compatible,
-        ).toBe(false);
+        ).toBe(true);
     });
 
-    it('does not claim compatibility for recursive or unresolved schema references', () => {
+    it('matches productive recursive schemas but rejects unresolved references', () => {
         const recursive = module(
             1,
             {},
@@ -414,7 +457,11 @@ describe('schema sockets and portable patches', () => {
             },
         );
         const port = modulePorts(recursive, 'returns')[0]!;
-        expect(compatibleValues(port, port).compatible).toBe(false);
+        expect(compatibleValues(port, port).compatible).toBe(true);
+        const unresolved = valuePorts({
+            schema: { $ref: '#/definitions/Missing' },
+        })[0]!;
+        expect(compatibleValues(unresolved, unresolved).compatible).toBe(false);
     });
 
     it('round-trips public graph/context data and rejects invalid or unsafe pointers', () => {
@@ -425,11 +472,881 @@ describe('schema sockets and portable patches', () => {
         expect(parsePatch(JSON.stringify(file))).toEqual(file);
         expect(() =>
             parsePatch(JSON.stringify({ ...file, version: 99 })),
-        ).toThrow(/version 1/);
+        ).toThrow(/version 2/);
         expect(() => readPointer({}, '/__proto__/polluted')).toThrow(
             /Reserved/,
         );
         expect(() => readPointer({}, '/bad~2pointer')).toThrow(/Invalid/);
         expect(readPointer({ 'a/b': { '~': 42 } }, '/a~1b/~0')).toBe(42);
+    });
+});
+
+const location = { x: 0, y: 0 };
+const blocks: JsonSchema = {
+    type: 'integer',
+    'x-sapio-type': 'bitcoin.relative-blocks',
+    title: 'Block delay',
+    minimum: 1,
+    maximum: 65535,
+};
+const satoshis: JsonSchema = {
+    type: 'integer',
+    'x-sapio-type': 'bitcoin.satoshis',
+    title: 'Satoshis',
+    minimum: 0,
+};
+
+function variablePatch(value: JsonValue | undefined = 144): Patch {
+    return {
+        version: 2,
+        nodes: [
+            {
+                id: 'delay',
+                kind: 'variable',
+                name: 'Waiting period',
+                type: { schema: blocks },
+                value,
+                position: location,
+            },
+        ],
+        connections: [],
+        outputs: [{ name: 'delay', node: 'delay', path: '' }],
+        output: 'delay',
+    };
+}
+
+describe('typed values and reusable patches', () => {
+    it('evaluates a typed variable without loading or invoking a WASM module', async () => {
+        const invoke = vi.fn();
+        const result = await runPatch(
+            variablePatch(),
+            [],
+            null,
+            {},
+            runtime([], invoke),
+        );
+        expect(result.output).toBe(144);
+        expect(result.values.get('delay')).toBe(144);
+        expect(result.executed).toEqual([]);
+        expect(invoke).not.toHaveBeenCalled();
+    });
+
+    it('keeps missing variables unset and rejects values outside their declared type', async () => {
+        const missing = variablePatch();
+        delete (missing.nodes[0] as VariableNode).value;
+        await expect(
+            runPatch(missing, [], null, {}, runtime([], vi.fn())),
+        ).rejects.toThrow(/Waiting period is unset/);
+        await expect(
+            runPatch(variablePatch(0), [], null, {}, runtime([], vi.fn())),
+        ).rejects.toThrow(/Invalid Waiting period/);
+        await expect(
+            runPatch(variablePatch('144'), [], null, {}, runtime([], vi.fn())),
+        ).rejects.toThrow(/Invalid Waiting period/);
+    });
+
+    it('distinguishes semantic units even inside records and lists', () => {
+        const port = (schema: JsonSchema) => valuePorts({ schema })[0]!;
+        expect(compatibleValues(port(blocks), port(satoshis))).toMatchObject({
+            compatible: false,
+            status: 'incompatible',
+        });
+        expect(
+            compatibleValues(port(blocks), port({ type: 'integer' }))
+                .compatible,
+        ).toBe(false);
+        const record = (item: JsonSchema): JsonSchema => ({
+            type: 'object',
+            properties: { values: { type: 'array', items: item } },
+            required: ['values'],
+        });
+        expect(
+            compatibleValues(port(record(blocks)), port(record(satoshis)))
+                .compatible,
+        ).toBe(false);
+        expect(
+            compatibleValues(port(record(blocks)), port(record(blocks))).status,
+        ).toBe('exact');
+    });
+
+    it('keeps a socket role separate from its semantic type name', () => {
+        const api = module(
+            4,
+            {
+                type: 'object',
+                properties: {
+                    trigger: {
+                        type: 'object',
+                        title: 'Trigger',
+                        'x-sapio-type': 'sapio.authorization',
+                    },
+                },
+            },
+            {},
+        );
+        const port = modulePorts(api, 'arguments').find(
+            (item) => item.path === '/trigger',
+        )!;
+        expect(port.label).toBe('Trigger');
+        expect(schemaLabel(port)).toBe('Authorization');
+    });
+
+    it('checks narrowed value constraints before invoking the destination', async () => {
+        const limited = module(
+            4,
+            {
+                type: 'object',
+                properties: {
+                    delay: { ...(blocks as JsonObject), maximum: 10 },
+                },
+                required: ['delay'],
+            },
+            blocks,
+        );
+        const graph = variablePatch(144);
+        graph.nodes.push({
+            id: 'consumer',
+            kind: 'module',
+            moduleKey: limited.key,
+            arguments: {},
+            position: location,
+        });
+        graph.outputs = [{ name: 'result', node: 'consumer', path: '' }];
+        graph.output = 'result';
+        const edge: PatchConnection = {
+            id: 'wire',
+            kind: 'value',
+            source: 'delay',
+            sourcePath: '',
+            target: 'consumer',
+            targetPath: '/delay',
+        };
+        expect(connectionCompatibility(graph, [limited], edge).status).toBe(
+            'checked-at-build',
+        );
+        graph.connections.push(edge);
+        const invoke = vi.fn(async () => 1);
+        await expect(
+            runPatch(graph, [limited], null, {}, runtime([limited], invoke)),
+        ).rejects.toThrow(/Invalid value for Block delay/);
+        expect(invoke).not.toHaveBeenCalled();
+    });
+
+    it('extracts a local record into a shared variable without hidden fallback values', async () => {
+        const api = module(
+            4,
+            {
+                type: 'object',
+                properties: {
+                    schedule: {
+                        type: 'object',
+                        properties: {
+                            delay: blocks,
+                            fees: { type: 'array', items: satoshis },
+                        },
+                        required: ['delay', 'fees'],
+                        additionalProperties: false,
+                    },
+                },
+                required: ['schedule'],
+            },
+            blocks,
+        );
+        const original: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'vault',
+                    kind: 'module',
+                    moduleKey: api.key,
+                    arguments: { schedule: { delay: 144, fees: [100, 200] } },
+                    position: location,
+                },
+            ],
+            connections: [],
+            outputs: [{ name: 'vault', node: 'vault', path: '' }],
+            output: 'vault',
+        };
+        const invoke = vi.fn(async (_key, args) =>
+            readPointer(args.arguments, '/schedule/delay'),
+        );
+        const before = await runPatch(
+            original,
+            [api],
+            null,
+            {},
+            runtime([api], invoke),
+        );
+        const extracted = structuredClone(original);
+        const socket = modulePorts(api, 'arguments').find(
+            (item) => item.path === '/schedule',
+        )!;
+        extracted.nodes.push({
+            id: 'schedule',
+            kind: 'variable',
+            name: 'Shared schedule',
+            type: { schema: socket.schema, root: socket.root },
+            value: readPointer(
+                (original.nodes[0] as ModuleNode).arguments!,
+                '/schedule',
+            ),
+            position: location,
+        });
+        const wired = withConnection(extracted, [api], {
+            id: 'wire',
+            kind: 'value',
+            source: 'schedule',
+            sourcePath: '',
+            target: 'vault',
+            targetPath: '/schedule',
+        });
+        expect((wired.nodes[0] as ModuleNode).arguments).toEqual({});
+        expect((original.nodes[0] as ModuleNode).arguments).toEqual({
+            schedule: { delay: 144, fees: [100, 200] },
+        });
+        expect(
+            (await runPatch(wired, [api], null, {}, runtime([api], invoke)))
+                .output,
+        ).toEqual(before.output);
+        wired.connections = [];
+        await expect(
+            runPatch(wired, [api], null, {}, runtime([api], invoke)),
+        ).rejects.toThrow(/Invalid arguments/);
+        const conflicting = structuredClone(extracted);
+        conflicting.connections = [
+            {
+                id: 'wire',
+                kind: 'value',
+                source: 'schedule',
+                sourcePath: '',
+                target: 'vault',
+                targetPath: '/schedule',
+            },
+        ];
+        expect(() => validatePatch(conflicting, [api])).toThrow(/one source/);
+    });
+
+    it('seeds explicit defaults without choosing keys, enum alternatives, or amounts', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: {
+                fee: { ...(satoshis as JsonObject) },
+                delay: { ...(blocks as JsonObject), default: 144 },
+                mode: { enum: ['hot', 'cold'] },
+                address: { type: 'string' },
+                settings: {
+                    type: 'object',
+                    properties: { rate: { type: 'number' } },
+                },
+                enabled: { type: 'boolean', const: true },
+            },
+            required: ['fee', 'delay', 'mode', 'address', 'settings'],
+        };
+        expect(initialValue({ schema })).toEqual({ delay: 144, enabled: true });
+        expect(
+            initialValue({ schema: { enum: ['hot', 'cold'] } }),
+        ).toBeUndefined();
+        expect(initialValue({ schema: satoshis })).toBeUndefined();
+    });
+
+    it('executes reusable named parameters and outputs with inherited context', async () => {
+        const api = module(
+            4,
+            {
+                type: 'object',
+                properties: { delay: blocks },
+                required: ['delay'],
+            },
+            blocks,
+        );
+        const definition: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'parameter',
+                    kind: 'parameter',
+                    name: 'waiting period',
+                    type: { schema: blocks },
+                    default: 144,
+                    position: location,
+                },
+                {
+                    id: 'build',
+                    kind: 'module',
+                    moduleKey: api.key,
+                    arguments: {},
+                    position: location,
+                },
+            ],
+            connections: [
+                {
+                    id: 'wire',
+                    kind: 'value',
+                    source: 'parameter',
+                    sourcePath: '',
+                    target: 'build',
+                    targetPath: '/delay',
+                },
+            ],
+            outputs: [
+                { name: 'vault', node: 'build', path: '' },
+                { name: 'delay', node: 'parameter', path: '' },
+            ],
+            output: 'vault',
+        };
+        const graph: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'sub',
+                    kind: 'subpatch',
+                    name: 'Custody program',
+                    patch: definition,
+                    arguments: { 'waiting period': 288 },
+                    position: location,
+                },
+            ],
+            connections: [],
+            outputs: [{ name: 'result', node: 'sub', path: '/vault' }],
+            output: 'result',
+        };
+        const invoke = vi.fn(async (_key, input) => {
+            expect(input.context).toEqual({ amount: 100000 });
+            return readPointer(input.arguments, '/delay');
+        });
+        const result = await runPatch(
+            graph,
+            [api],
+            null,
+            { amount: 100000 },
+            runtime([api], invoke),
+        );
+        expect(result.output).toBe(288);
+        expect(result.executed).toEqual(['sub/build']);
+        expect(result.values.get('sub')).toEqual({ delay: 288, vault: 288 });
+        expect(collectModuleKeys(graph)).toEqual([api.key]);
+        expect(
+            nodePorts(graph.nodes[0]!, [api], 'arguments').find(
+                (item) => item.path === '/waiting period',
+            )?.required,
+        ).toBe(false);
+        (graph.nodes[0] as SubpatchNode).arguments = {};
+        expect(
+            (
+                await runPatch(
+                    graph,
+                    [api],
+                    null,
+                    { amount: 100000 },
+                    runtime([api], invoke),
+                )
+            ).output,
+        ).toBe(144);
+        (graph.nodes[0] as SubpatchNode).arguments = { unknown: 1 };
+        await expect(
+            runPatch(graph, [api], null, {}, runtime([api], invoke)),
+        ).rejects.toThrow(/Invalid inputs/);
+    });
+
+    it('keeps output values and invocation order independent of node order, edges, names, and layout', async () => {
+        const api = module(
+            4,
+            {
+                type: 'object',
+                properties: { a: scalar, b: scalar },
+                required: ['a', 'b'],
+            },
+            scalar,
+        );
+        const graph: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'a',
+                    kind: 'module',
+                    moduleKey: producer.key,
+                    arguments: {},
+                    position: location,
+                },
+                {
+                    id: 'b',
+                    kind: 'module',
+                    moduleKey: producer.key,
+                    arguments: {},
+                    position: location,
+                },
+                {
+                    id: 'sum',
+                    kind: 'module',
+                    moduleKey: api.key,
+                    arguments: {},
+                    position: location,
+                },
+            ],
+            connections: ['a', 'b'].map((name) => ({
+                id: name,
+                kind: 'value',
+                source: name,
+                sourcePath: '',
+                target: 'sum',
+                targetPath: `/${name}`,
+            })),
+            outputs: [{ name: 'result', node: 'sum', path: '' }],
+            output: 'result',
+        };
+        const invoke = vi.fn(async (key, args) =>
+            key === producer.key
+                ? 20
+                : Number(readPointer(args.arguments, '/a')) +
+                  Number(readPointer(args.arguments, '/b')),
+        );
+        const first = await runPatch(
+            graph,
+            [producer, api],
+            null,
+            {},
+            runtime([producer, api], invoke),
+        );
+        graph.nodes.reverse();
+        graph.connections.reverse();
+        graph.nodes.forEach((node) => {
+            node.position = { x: 123, y: 999 };
+            node.label = 'A presentation-only label';
+        });
+        const second = await runPatch(
+            graph,
+            [producer, api],
+            null,
+            {},
+            runtime([producer, api], invoke),
+        );
+        expect(first.output).toEqual(second.output);
+        expect(first.executed).toEqual(second.executed);
+    });
+
+    it('snapshots variables, embedded graphs, API schemas, and progress values during execution', async () => {
+        const graph = patch();
+        graph.nodes.push({
+            id: 'input',
+            kind: 'variable',
+            name: 'Amount',
+            type: { schema: scalar },
+            value: 4,
+            position: location,
+        });
+        graph.connections = [{ ...graph.connections[0]!, source: 'input' }];
+        const catalog = structuredClone(modules);
+        const rt = runtime(
+            catalog,
+            vi.fn(async (_key, args) => readPointer(args.arguments, '/amount')),
+        );
+        const validateValue = rt.validateValue;
+        rt.validateValue = async (schema, value) => {
+            (graph.nodes[2] as VariableNode).value = 999;
+            (catalog[1]!.api.arguments as JsonObject).properties = {};
+            return validateValue(schema, value);
+        };
+        // Runtime validation uses an independent catalog, as the desktop does.
+        rt.validate = runtime(modules, vi.fn()).validate;
+        const result = await runPatch(graph, catalog, null, {}, rt, (event) => {
+            if (event.value && typeof event.value === 'object')
+                (event.value as JsonObject).changed = true;
+        });
+        expect(result.output).toBe(4);
+        expect(result.values.get('input')).toBe(4);
+    });
+
+    it('requires explicit named output designation while allowing intermediate evaluation', async () => {
+        const graph = variablePatch();
+        graph.output = null;
+        await expect(
+            runPatch(graph, [], null, {}, runtime([], vi.fn())),
+        ).rejects.toThrow(/Choose the patch output/);
+        expect(
+            (await runPatch(graph, [], 'delay', {}, runtime([], vi.fn())))
+                .output,
+        ).toBe(144);
+        const saved = { ...graph, context: {} };
+        expect(parsePatch(JSON.stringify(saved))).toEqual(saved);
+    });
+
+    it('round-trips typed standalone fields with their local references intact', async () => {
+        const root: JsonSchema = {
+            type: 'object',
+            properties: { schedule: { $ref: '#/definitions/Schedule' } },
+            definitions: {
+                Schedule: {
+                    type: 'object',
+                    properties: {
+                        delays: {
+                            type: 'array',
+                            items: { $ref: '#/definitions/Blocks' },
+                        },
+                    },
+                    required: ['delays'],
+                },
+                Blocks: blocks,
+            },
+        };
+        const selected = { schema: { $ref: '#/definitions/Schedule' }, root };
+        const schema = standaloneSchema(selected);
+        const validate = new Ajv({ strict: false }).compile(schema);
+        expect(validate({ delays: [144, 288] })).toBe(true);
+        expect(validate({ delays: [0] })).toBe(false);
+        expect(schemaLabel(valuePorts(selected)[1]!)).toBe('List of Blocks');
+        const sub = variablePatch();
+        sub.nodes[0] = { ...(sub.nodes[0] as VariableNode), type: selected };
+        (sub.nodes[0] as VariableNode).value = { delays: [144] };
+        const graph: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'nested',
+                    kind: 'subpatch',
+                    name: 'Schedule',
+                    patch: sub,
+                    arguments: {},
+                    position: location,
+                },
+            ],
+            connections: [],
+            outputs: [{ name: 'out', node: 'nested', path: '/delay/delays' }],
+            output: 'out',
+        };
+        expect(
+            (await runPatch(graph, [], null, {}, runtime([], vi.fn()))).output,
+        ).toEqual([144]);
+    });
+
+    it('rejects unsafe numbers in nested patches and keeps arrays dense', () => {
+        const graph = variablePatch();
+        (graph.nodes[0] as VariableNode).value = 2 ** 53;
+        expect(() =>
+            parsePatch(JSON.stringify({ ...graph, context: {} })),
+        ).toThrow(/exact integer range/);
+        expect(putPointer({ fees: [1] }, '/fees/1', 2)).toEqual({
+            fees: [1, 2],
+        });
+        expect(() => putPointer({ fees: [1] }, '/fees/2', 3)).toThrow(
+            /missing elements/,
+        );
+        expect(removePointer({ a: 1, b: 2 }, '/a')).toEqual({ b: 2 });
+    });
+});
+
+describe('callable interface boundaries', () => {
+    const socket = (api: ModuleInfo['api']): JsonSchema => ({
+        type: 'object',
+        properties: {
+            which_plugin: {
+                type: 'object',
+                properties: { HashKey: { type: 'string' } },
+                required: ['HashKey'],
+                additionalProperties: false,
+            },
+        },
+        required: ['which_plugin'],
+        additionalProperties: false,
+        'x-sapio-module': api,
+    });
+
+    it('requires explicit callable metadata and checks both arguments and results', () => {
+        const provider = module(1, blocks, satoshis);
+        const accepts = module(
+            2,
+            {
+                type: 'object',
+                properties: { policy: socket(provider.api) },
+                required: ['policy'],
+            },
+            satoshis,
+        );
+        const graph: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    id: 'provider',
+                    kind: 'module',
+                    moduleKey: provider.key,
+                    position: location,
+                },
+                {
+                    id: 'consumer',
+                    kind: 'module',
+                    moduleKey: accepts.key,
+                    arguments: {},
+                    position: location,
+                },
+            ],
+            connections: [],
+            outputs: [],
+            output: null,
+        };
+        const edge: PatchConnection = {
+            id: 'ref',
+            kind: 'module',
+            source: 'provider',
+            sourcePath: '',
+            target: 'consumer',
+            targetPath: '/policy',
+        };
+        expect(checkConnection(graph, [provider, accepts], edge)).toBeNull();
+        expect(
+            checkConnection(graph, [provider, accepts], {
+                ...edge,
+                kind: 'value',
+            }),
+        ).toMatch(/different sockets/);
+        const wrong = structuredClone(provider);
+        wrong.api.returns = blocks;
+        expect(checkConnection(graph, [wrong, accepts], edge)).toMatch(
+            /does not implement/,
+        );
+        const wrongContext = structuredClone(provider);
+        (
+            (wrongContext.api.arguments as JsonObject).properties as JsonObject
+        ).context = { type: 'string' };
+        expect(checkConnection(graph, [wrongContext, accepts], edge)).toMatch(
+            /does not implement/,
+        );
+        const legacyShape = socket(provider.api) as JsonObject;
+        delete legacyShape['x-sapio-module'];
+        expect(valuePorts({ schema: legacyShape })[0]!.kind).toBe('value');
+    });
+
+    it('compares recursive callable result APIs after renaming local definitions', () => {
+        const left: JsonSchema = {
+            $ref: '#/definitions/A',
+            definitions: {
+                A: {
+                    type: 'object',
+                    properties: {
+                        next: { $ref: '#/definitions/A' },
+                        key: blocks,
+                    },
+                },
+            },
+        };
+        const right = JSON.parse(
+            JSON.stringify(left)
+                .replaceAll('definitions/A', 'definitions/B')
+                .replace('"A":', '"B":'),
+        ) as JsonSchema;
+        const provider = module(1, {}, left);
+        const expected = module(2, {}, right);
+        const input = valuePorts({ schema: socket(expected.api) })[0]!;
+        expect(compatibleModule(provider, input).compatible).toBe(true);
+        const changed = structuredClone(right) as JsonObject;
+        (
+            ((changed.definitions as JsonObject).B as JsonObject)
+                .properties as JsonObject
+        ).key = satoshis;
+        expect(
+            compatibleModule(
+                { ...provider, api: { ...provider.api, returns: changed } },
+                input,
+            ).compatible,
+        ).toBe(false);
+    });
+
+    it('evaluates callable reference values and checks the selected implementation before use', async () => {
+        const provider = module(1, blocks, satoshis);
+        const reference = socket(provider.api);
+        const selector = module(3, { type: 'object' }, reference);
+        const wrong = module(4, blocks, blocks);
+        const accepts = module(
+            2,
+            {
+                type: 'object',
+                properties: { policy: reference },
+                required: ['policy'],
+            },
+            satoshis,
+        );
+        const catalog = [provider, selector, accepts, wrong];
+        const graph: Patch = {
+            version: 2,
+            nodes: [
+                {
+                    kind: 'module',
+                    id: 'selector',
+                    moduleKey: selector.key,
+                    arguments: {},
+                    position: location,
+                },
+                {
+                    kind: 'module',
+                    id: 'consumer',
+                    moduleKey: accepts.key,
+                    arguments: {},
+                    position: location,
+                },
+            ],
+            connections: [
+                {
+                    id: 'reference-value',
+                    kind: 'value',
+                    source: 'selector',
+                    sourcePath: '',
+                    target: 'consumer',
+                    targetPath: '/policy',
+                },
+            ],
+            outputs: [{ name: 'result', node: 'consumer', path: '' }],
+            output: 'result',
+        };
+        expect(
+            checkConnection(graph, catalog, graph.connections[0]!),
+        ).toBeNull();
+        for (const selected of [provider.key, wrong.key]) {
+            const invoke = vi.fn(
+                async (
+                    key: string,
+                    args: { arguments: JsonValue; context: JsonValue },
+                ): Promise<JsonValue> => {
+                    if (key === selector.key)
+                        return { which_plugin: { HashKey: selected } };
+                    expect(args.arguments).toEqual({
+                        policy: { which_plugin: { HashKey: selected } },
+                    });
+                    return 7;
+                },
+            );
+            if (selected === provider.key) {
+                const result = await runPatch(
+                    graph,
+                    catalog,
+                    null,
+                    {},
+                    runtime(catalog, invoke),
+                );
+                expect(result.output).toBe(7);
+                expect(result.executed).toEqual(['selector', 'consumer']);
+                expect(invoke.mock.calls.map(([key]) => key)).toEqual([
+                    selector.key,
+                    accepts.key,
+                ]);
+            } else {
+                await expect(
+                    runPatch(
+                        graph,
+                        catalog,
+                        null,
+                        {},
+                        runtime(catalog, invoke),
+                    ),
+                ).rejects.toThrow(/does not implement/);
+                expect(invoke.mock.calls.map(([key]) => key)).toEqual([
+                    selector.key,
+                ]);
+            }
+        }
+        graph.nodes[0] = {
+            kind: 'variable',
+            id: 'selector',
+            name: 'Selected policy',
+            type: { schema: reference },
+            value: { which_plugin: { HashKey: provider.key } },
+            position: location,
+        };
+        expect(
+            checkConnection(graph, catalog, graph.connections[0]!),
+        ).toBeNull();
+        expect(
+            checkConnection(graph, catalog, {
+                ...graph.connections[0]!,
+                kind: 'module',
+            }),
+        ).toMatch(/Only a module node/);
+        const invoke = vi.fn(async () => 7);
+        const result = await runPatch(
+            graph,
+            catalog,
+            null,
+            {},
+            runtime(catalog, invoke),
+        );
+        expect(result.executed).toEqual(['consumer']);
+        expect(result.output).toBe(7);
+    });
+
+    it('retains semantic markers beside references and preserves data-valued annotations', () => {
+        const port = (schema: JsonSchema) => valuePorts({ schema })[0]!;
+        const root: JsonSchema = {
+            $ref: '#/definitions/Value',
+            'x-sapio-type': 'bitcoin.relative-blocks',
+            definitions: { Value: { type: 'integer' } },
+        };
+        expect(sameSchema({ schema: root }, { schema: blocks })).toBe(false);
+        expect(compatibleValues(port(root), port(satoshis)).compatible).toBe(
+            false,
+        );
+        const branded = (identity: string): JsonSchema => ({
+            $ref: '#/definitions/Value',
+            'x-sapio-type': identity,
+            definitions: { Value: true },
+        });
+        expect(
+            compatibleValues(
+                port(branded('example.a')),
+                port(branded('example.b')),
+            ).compatible,
+        ).toBe(false);
+        const literal: JsonSchema = { const: { minimum: 1, $ref: '#/a' } };
+        expect(
+            sameSchema(
+                { schema: literal },
+                { schema: { const: { minimum: 2, $ref: '#/a' } } },
+            ),
+        ).toBe(false);
+        expect(
+            compatibleValues(
+                port(literal),
+                port({ const: { minimum: 2, $ref: '#/a' } }),
+            ).compatible,
+        ).toBe(false);
+        const field = standaloneSchema({
+            schema: literal,
+            root: { definitions: { Unused: { type: 'string' } } },
+        });
+        expect((field as JsonObject).const).toEqual({
+            minimum: 1,
+            $ref: '#/a',
+        });
+        const unordered: JsonSchema = { type: 'object', required: ['a', 'b'] };
+        expect(
+            sameSchema(
+                { schema: unordered },
+                { schema: { type: 'object', required: ['b', 'a'] } },
+            ),
+        ).toBe(true);
+        expect(
+            sameSchema(
+                { schema: { type: 'string', readOnly: true } },
+                { schema: { type: 'string' } },
+            ),
+        ).toBe(false);
+    });
+
+    it('treats later-draft keywords as literal data in exact Draft 7 signatures', () => {
+        for (const keyword of ['dependentSchemas', 'prefixItems']) {
+            const field = (title: string) => ({ type: 'string', title });
+            const left: JsonSchema = {
+                type: 'object',
+                [keyword]:
+                    keyword === 'prefixItems'
+                        ? [field('First')]
+                        : { value: field('First') },
+            };
+            const right: JsonSchema = {
+                type: 'object',
+                [keyword]:
+                    keyword === 'prefixItems'
+                        ? [field('Second')]
+                        : { value: field('Second') },
+            };
+            expect(sameSchema({ schema: left }, { schema: left })).toBe(true);
+            expect(sameSchema({ schema: left }, { schema: right })).toBe(false);
+        }
     });
 });

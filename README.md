@@ -35,14 +35,14 @@ read-only preview; desktop file access, compilation and signing use Electron.
 
 Open Settings and select your Sapio CLI executable. Studio requires the current
 file-based CLI and Program signer, tested at Sapio revision
-[`b6a03c452463a3500dd0d84f3b853d9bc78ef68c`](https://github.com/sapio-lang/sapio/commit/b6a03c452463a3500dd0d84f3b853d9bc78ef68c)
-from [Sapio PR #297](https://github.com/sapio-lang/sapio/pull/297). The historical
-crates.io CLI is not a substitute. Build the reviewed source with:
+[`d385c79e1acb78c42a538f7c503b52efe739ed66`](https://github.com/sapio-lang/sapio/commit/d385c79e1acb78c42a538f7c503b52efe739ed66)
+with typed module interfaces. The historical crates.io CLI does not expose
+this API. Build the reviewed source with:
 
 ```sh
 git clone https://github.com/sapio-lang/sapio.git sapio-core
 cd sapio-core
-git checkout b6a03c452463a3500dd0d84f3b853d9bc78ef68c
+git checkout d385c79e1acb78c42a538f7c503b52efe739ed66
 cargo build --locked -p sapio-cli
 ```
 
@@ -53,14 +53,21 @@ the required commands, because an old and a new CLI may share a version label.
 ## Try visual composition
 
 Choose **Open example patch** to load and connect the bundled **GetClause** and
-**Wrapper** modules, then **Build selected** to execute the selected Wrapper
-node. Sapio executes the real nested WASM call; the result is a policy
-value, which can be inspected and exported. The bundled module sources and
+**Wrapper** modules. Alice and Bob are named public-key Variables; the
+dashed connection supplies the callable implementation. Choose **Build output**
+to evaluate the named `policy` output. Sapio executes the real nested WASM
+call; the result can be reviewed and exported. The bundled module sources and
 checksums are recorded in [the example notes](public/demo/README.md).
+
+Click a module input to enter a structured value, create a matching Variable,
+or find compatible outputs and building blocks. Each input shows its source.
+Use **Expose as parameter** and **Use as output** to define a reusable interface,
+then save it and choose **Import reusable patch** in another program.
 
 You can also load your own `.wasm` modules and connect their advertised APIs.
 See [visual patch semantics](docs/PATCHING.md) for the distinction between value
 connections and module references, validation, and the current type limits.
+Contract outputs use **Compile contract** and offer direct artifact inspection.
 Compilation uses the public network, amount and lowering context shown in the
 editor. Binding and signing are separate actions.
 

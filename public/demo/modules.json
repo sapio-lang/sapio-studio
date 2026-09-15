@@ -1,8 +1,8 @@
 {
-  "sapio_revision": "b6a03c452463a3500dd0d84f3b853d9bc78ef68c",
+  "sapio_revision": "d385c79e1acb78c42a538f7c503b52efe739ed66",
   "rust_toolchain": "1.98.1",
   "modules": {
-    "sapio_wasm_clause.wasm": "0ed0b751115f81d159c15c840fa3ec1c98029bfe224abcc46fd4af588ab99e5f",
-    "sapio_wasm_clause_trampoline.wasm": "7fbdca5b382c5bd04cd05856e36fbd782e8f08ab6da76bce71e0fbb9f34df45e"
+    "sapio_wasm_clause.wasm": "0bdf048872b18ddccb493d8b8abed74cd7027c41c9b9f1d219bbbf6dd690a998",
+    "sapio_wasm_clause_trampoline.wasm": "4f01e1417c732f7e1fce4832676d943457ff64b76adbcbe9f8d549df24393436"
   }
 }

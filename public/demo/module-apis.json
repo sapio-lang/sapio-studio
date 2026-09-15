@@ -1,6 +1,6 @@
 [
   {
-    "key": "6076dc116c7c026b3660bdf4ae528467230e53cded500132203cf292b8000d43",
+    "key": "a2e49d7cdaa33f43ac07dce892077ee28af3617af0d94dccd8c2a7a247f11a51",
     "description": "Provide this information to create an instance of a contract",
     "name": "GetClause",
     "api": {
@@ -230,7 +230,7 @@
     }
   },
   {
-    "key": "f88d3d0094f4af98256d1c516800b074fc95210149af4cfd0a7dd733f807627b",
+    "key": "4a0f0d9f3d0e3e402671019eff3ffb642e52480a94c84e91dd11ae8ed2267387",
     "description": "Provide this information to create an instance of a contract",
     "name": "Wrapper",
     "api": {
@@ -408,6 +408,243 @@
             "title": "Effects",
             "type": "object"
           },
+          "Module_GetClause_to_string": {
+            "description": "The serialized locator, resolved into a module key during deserialization.",
+            "properties": {
+              "which_plugin": {
+                "$ref": "#/definitions/LookupFrom"
+              }
+            },
+            "required": [
+              "which_plugin"
+            ],
+            "type": "object",
+            "x-sapio-module": {
+              "arguments": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "definitions": {
+                  "ContextualArguments": {
+                    "properties": {
+                      "amount": {
+                        "format": "uint64",
+                        "minimum": 0,
+                        "title": "The Amount of Funds Available to the Contract in Satoshis.",
+                        "type": "integer"
+                      },
+                      "effects": {
+                        "allOf": [
+                          {
+                            "$ref": "#/definitions/MapEffectDB"
+                          }
+                        ],
+                        "title": "Effects to augment compilations with"
+                      },
+                      "lowering": {
+                        "allOf": [
+                          {
+                            "$ref": "#/definitions/LoweringPlan"
+                          }
+                        ],
+                        "title": "Explicit, deterministic covenant lowering inputs."
+                      },
+                      "network": {
+                        "allOf": [
+                          {
+                            "$ref": "#/definitions/Network"
+                          }
+                        ],
+                        "title": "The Network the contract should be created for."
+                      },
+                      "ordinals_info": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/definitions/OrdinalsInfo"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "the ranges of ordinals held in the input"
+                      }
+                    },
+                    "required": [
+                      "lowering",
+                      "network",
+                      "amount"
+                    ],
+                    "title": "Contextual Arguments For Creating this Contract",
+                    "type": "object"
+                  },
+                  "GetClause": {
+                    "description": "Same Inner type as the wrapped module",
+                    "properties": {
+                      "alice": {
+                        "maxLength": 64,
+                        "minLength": 64,
+                        "pattern": "^[0-9a-fA-F]{64}$",
+                        "type": "string"
+                      },
+                      "bob": {
+                        "maxLength": 64,
+                        "minLength": 64,
+                        "pattern": "^[0-9a-fA-F]{64}$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "alice",
+                      "bob"
+                    ],
+                    "type": "object"
+                  },
+                  "LoweringPlan": {
+                    "description": "Immutable, serializable choices used only by explicit emulatable predicates.\n\nThese inputs determine scripts without network access, runtime callbacks or\nsecret keys. Ordinary native clauses and raw scripts are not rewritten.",
+                    "oneOf": [
+                      {
+                        "const": "Native",
+                        "description": "Emit native CTV, assuming the deployment enforces its intended semantics.",
+                        "type": "string"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "description": "Emit the existing CTV-specific BIP32 signer policy.",
+                        "properties": {
+                          "CtvEmulation": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "signers": {
+                                "description": "Public roots in policy order; endpoint and transport settings are absent.",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "threshold": {
+                                "description": "Required signer count, from one through the number of distinct roots.",
+                                "format": "uint8",
+                                "maximum": 255,
+                                "minimum": 1,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "signers",
+                              "threshold"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "CtvEmulation"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "MapEffectDB": {
+                    "description": "Map of all effects to process during compilation.  Each Key represents a\npath, each sub-key represents the sub-path name and value.",
+                    "properties": {
+                      "effects": {
+                        "additionalProperties": {
+                          "additionalProperties": true,
+                          "type": "object"
+                        },
+                        "description": "List of effects to include while compiling.",
+                        "title": "The set of all effects",
+                        "type": "object"
+                      }
+                    },
+                    "title": "Effects",
+                    "type": "object"
+                  },
+                  "Network": {
+                    "description": "a remote derivation for the network definitions",
+                    "oneOf": [
+                      {
+                        "const": "Bitcoin",
+                        "description": "Classic Bitcoin",
+                        "type": "string"
+                      },
+                      {
+                        "const": "Testnet",
+                        "description": "Bitcoin's testnet",
+                        "type": "string"
+                      },
+                      {
+                        "const": "Testnet4",
+                        "description": "Bitcoin's fourth test network.",
+                        "type": "string"
+                      },
+                      {
+                        "const": "Signet",
+                        "description": "Bitcoin's signet",
+                        "type": "string"
+                      },
+                      {
+                        "const": "Regtest",
+                        "description": "Bitcoin's regtest",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "Ordinal": {
+                    "description": "Struct to contain Ordinal ID",
+                    "format": "uint64",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "OrdinalsInfo": {
+                    "description": "Struct to contain Ordinal Spans",
+                    "items": {
+                      "items": [
+                        {
+                          "$ref": "#/definitions/Ordinal"
+                        },
+                        {
+                          "$ref": "#/definitions/Ordinal"
+                        }
+                      ],
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array"
+                  }
+                },
+                "description": "Provide this information to create an instance of a contract",
+                "properties": {
+                  "arguments": {
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/GetClause"
+                      }
+                    ],
+                    "title": "The Main Contract Arguments"
+                  },
+                  "context": {
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/ContextualArguments"
+                      }
+                    ],
+                    "description": "Others arguments set by general system settings",
+                    "title": "Contextual Arguments"
+                  }
+                },
+                "required": [
+                  "arguments",
+                  "context"
+                ],
+                "title": "Arguments For Creating this Contract",
+                "type": "object"
+              },
+              "returns": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "title": "string",
+                "type": "string"
+              }
+            }
+          },
           "Network": {
             "description": "a remote derivation for the network definitions",
             "oneOf": [
@@ -461,18 +698,6 @@
             },
             "type": "array"
           },
-          "SapioHostAPI": {
-            "description": "A resolved module key with typed call arguments and results.\n\nConstruction resolves the locator; it does not prove interface compatibility.\nThe host validates each actual input and successful output against the\nmodule's advertised schemas, and the caller deserializes the result as `R`.",
-            "properties": {
-              "which_plugin": {
-                "$ref": "#/definitions/LookupFrom"
-              }
-            },
-            "required": [
-              "which_plugin"
-            ],
-            "type": "object"
-          },
           "Wrapper": {
             "description": "Wrapper to find the ClauseModule remotely",
             "properties": {
@@ -480,7 +705,7 @@
                 "$ref": "#/definitions/GetClause"
               },
               "v": {
-                "$ref": "#/definitions/SapioHostAPI"
+                "$ref": "#/definitions/Module_GetClause_to_string"
               }
             },
             "required": [

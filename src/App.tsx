@@ -37,6 +37,7 @@ import { ModuleAuthoring } from './ModuleAuthoring';
 import { SettingsPanel } from './SettingsPanel';
 import { SpendPanel } from './SpendPanel';
 import { PatchCanvas } from './patching/PatchCanvas';
+import { displayModuleName } from './patching/PatchNodeCard';
 import {
     DocumentField,
     EmptyState,
@@ -56,6 +57,7 @@ function App() {
     const [settings, setSettings] = useState<StudioSettings | null>(null);
     const [cli, setCli] = useState<CliStatus | null>(null);
     const [modules, setModules] = useState<ModuleSummary[]>([]);
+    const [modulesLoading, setModulesLoading] = useState(false);
     const [moduleInfos, setModuleInfos] = useState<Record<string, ModuleInfo>>(
         {},
     );
@@ -86,13 +88,16 @@ function App() {
     } | null>(null);
     const [selection, setSelection] = useState<ArtifactSelection | null>(null);
     const [outline, setOutline] = useState(false);
-    const [result, setResult] = useState<{ text: string; name: string } | null>(
-        null,
-    );
+    const [result, setResult] = useState<{
+        text: string;
+        name: string;
+        contract: boolean;
+    } | null>(null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
     const artifactRequest = useRef(0);
     const activityRequest = useRef(0);
+    const moduleRequest = useRef(0);
     const invalidatePatchResult = useCallback(() => setResult(null), []);
     const loadPatchModules = useCallback(async (keys: string[]) => {
         if (!api)
@@ -128,10 +133,7 @@ function App() {
                     if (!active) return;
                     setSettings(config);
                     setCli(status);
-                    if (status.available) {
-                        const list = await api.modules.list();
-                        if (active) setModules(list);
-                    }
+                    if (status.available) await refresh();
                 })
                 .catch((error) => {
                     if (active) setError(errorMessage(error));
@@ -194,17 +196,24 @@ function App() {
     }
     async function refresh() {
         if (!api) return;
-        const available = await api.modules.list();
-        setModules(available);
-        const keys = new Set(available.map((module) => module.key));
-        setModuleInfos((current) =>
-            Object.fromEntries(
-                Object.entries(current).filter(([key]) => keys.has(key)),
-            ),
-        );
-        setSelectedModule((current) =>
-            current && keys.has(current.key) ? current : null,
-        );
+        const request = ++moduleRequest.current;
+        setModulesLoading(true);
+        try {
+            const available = await api.modules.list();
+            if (request !== moduleRequest.current) return;
+            setModules(available);
+            const keys = new Set(available.map((module) => module.key));
+            setModuleInfos((current) =>
+                Object.fromEntries(
+                    Object.entries(current).filter(([key]) => keys.has(key)),
+                ),
+            );
+            setSelectedModule((current) =>
+                current && keys.has(current.key) ? current : null,
+            );
+        } finally {
+            if (request === moduleRequest.current) setModulesLoading(false);
+        }
     }
     async function info(summary: ModuleSummary): Promise<ModuleInfo> {
         const cached = moduleInfos[summary.key];
@@ -279,7 +288,7 @@ function App() {
         setTab('inspect');
     }
     const visibleModules = modules.filter((module) =>
-        `${module.name} ${module.key}`
+        `${moduleInfos[module.key] ? displayModuleName(moduleInfos[module.key]!) : module.name} ${module.key}`
             .toLowerCase()
             .includes(search.toLowerCase()),
     );
@@ -308,7 +317,7 @@ function App() {
                     <span>Module library</span>
                     <button
                         className="icon-button"
-                        disabled={!canRun || Boolean(busy)}
+                        disabled={!canRun || Boolean(busy) || modulesLoading}
                         onClick={() => run('Refreshing modules', refresh)}
                         aria-label="Refresh modules"
                     >
@@ -346,70 +355,84 @@ function App() {
                     Load WASM module
                 </button>
                 <div className="module-library-list">
-                    {visibleModules.length ? (
-                        visibleModules.map((module) => (
-                            <div className="library-module" key={module.key}>
-                                <button
-                                    className="module-info-button"
-                                    disabled={Boolean(busy)}
-                                    onClick={() =>
-                                        run(
-                                            'Reading module schema',
-                                            async () => {
-                                                setSelectedModule(
-                                                    await info(module),
-                                                );
-                                                setModal('module');
-                                            },
-                                        )
-                                    }
-                                >
-                                    <span className="module-icon">
-                                        <Box size={16} />
-                                    </span>
-                                    <span>
-                                        <strong>{module.name}</strong>
-                                        <code>{module.key.slice(0, 12)}</code>
-                                    </span>
-                                </button>
-                                <button
-                                    className="icon-button add-module"
-                                    disabled={!canRun || Boolean(busy)}
-                                    aria-label={`Add ${module.name} to patch`}
-                                    onClick={() =>
-                                        run('Adding module', async () => {
-                                            await info(module);
-                                            setAddModule((current) => ({
-                                                key: module.key,
-                                                sequence:
-                                                    (current?.sequence ?? 0) +
-                                                    1,
-                                            }));
-                                            setTab('patch');
-                                        })
-                                    }
-                                >
-                                    <Plus size={14} />
-                                </button>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="library-empty">
-                            <Layers3 size={25} />
-                            <strong>
-                                {search
-                                    ? 'No matching modules'
-                                    : 'Your building blocks'}
-                            </strong>
-                            <p>
-                                {search
-                                    ? 'Try another name or module hash.'
-                                    : api
-                                      ? 'Load a WASM module to inspect its interface, edit inputs, and connect it to a patch.'
-                                      : 'Load your WASM modules in the desktop app. Their schemas become inputs and outputs you can connect.'}
-                            </p>
+                    {modulesLoading && (
+                        <div className="library-loading" role="status">
+                            <Spinner label="Loading module library" />
+                            <span>Reading module interfaces…</span>
                         </div>
                     )}
+                    {visibleModules.length
+                        ? visibleModules.map((module) => (
+                              <div className="library-module" key={module.key}>
+                                  <button
+                                      className="module-info-button"
+                                      disabled={Boolean(busy)}
+                                      onClick={() =>
+                                          run(
+                                              'Reading module schema',
+                                              async () => {
+                                                  setSelectedModule(
+                                                      await info(module),
+                                                  );
+                                                  setModal('module');
+                                              },
+                                          )
+                                      }
+                                  >
+                                      <span className="module-icon">
+                                          <Box size={16} />
+                                      </span>
+                                      <span>
+                                          <strong>
+                                              {moduleInfos[module.key]
+                                                  ? displayModuleName(
+                                                        moduleInfos[
+                                                            module.key
+                                                        ]!,
+                                                    )
+                                                  : module.name}
+                                          </strong>
+                                          <code>{module.key.slice(0, 12)}</code>
+                                      </span>
+                                  </button>
+                                  <button
+                                      className="icon-button add-module"
+                                      disabled={!canRun || Boolean(busy)}
+                                      aria-label={`Add ${module.name} to patch`}
+                                      onClick={() =>
+                                          run('Adding module', async () => {
+                                              await info(module);
+                                              setAddModule((current) => ({
+                                                  key: module.key,
+                                                  sequence:
+                                                      (current?.sequence ?? 0) +
+                                                      1,
+                                              }));
+                                              setTab('patch');
+                                          })
+                                      }
+                                  >
+                                      <Plus size={14} />
+                                  </button>
+                              </div>
+                          ))
+                        : !modulesLoading && (
+                              <div className="library-empty">
+                                  <Layers3 size={25} />
+                                  <strong>
+                                      {search
+                                          ? 'No matching modules'
+                                          : 'Your building blocks'}
+                                  </strong>
+                                  <p>
+                                      {search
+                                          ? 'Try another name or module hash.'
+                                          : api
+                                            ? 'Load a WASM module to inspect its interface, edit inputs, and connect it to a patch.'
+                                            : 'Load your WASM modules in the desktop app. Their schemas become inputs and outputs you can connect.'}
+                                  </p>
+                              </div>
+                          )}
                 </div>
                 <div className="library-footer">
                     <button
@@ -644,6 +667,16 @@ function App() {
                             addModule={addModule}
                             example={example}
                             onLoadModules={loadPatchModules}
+                            onDiscoverModules={async () => {
+                                await loadPatchModules(
+                                    modules
+                                        .filter(
+                                            (module) =>
+                                                !moduleInfos[module.key],
+                                        )
+                                        .map((module) => module.key),
+                                );
+                            }}
                             onInvalidate={invalidatePatchResult}
                             invoke={async (key, args) => {
                                 if (!api)
@@ -668,12 +701,21 @@ function App() {
                                     value,
                                 });
                             }}
-                            onResult={(value, key) => {
+                            validateValue={async (schema, value) => {
+                                if (!api)
+                                    throw new Error(
+                                        'Value validation is available in the desktop app.',
+                                    );
+                                return api.modules.validateValue({
+                                    schema,
+                                    value,
+                                });
+                            }}
+                            onResult={(value, name, contract) => {
                                 setResult({
                                     text: JSON.stringify(value, null, 2),
-                                    name:
-                                        moduleInfos[key]?.name ??
-                                        key.slice(0, 12),
+                                    name,
+                                    contract,
                                 });
                             }}
                         />
@@ -684,6 +726,23 @@ function App() {
                                     Latest result from{' '}
                                     <strong>{result.name}</strong>
                                 </span>
+                                {result.contract && (
+                                    <button
+                                        className="button primary small"
+                                        disabled={!canRun || Boolean(busy)}
+                                        onClick={() =>
+                                            run('Inspecting contract', () =>
+                                                inspect(
+                                                    result.text,
+                                                    result.name,
+                                                ),
+                                            )
+                                        }
+                                    >
+                                        Inspect contract{' '}
+                                        <ArrowRight size={14} />
+                                    </button>
+                                )}
                                 <button
                                     className="button small"
                                     onClick={() => setModal('result')}
