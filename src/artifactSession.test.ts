@@ -237,6 +237,8 @@ describe('bound artifact sessions', () => {
 describe('contract occurrence extraction', () => {
     it('extracts the root and each child from the validated explanation', () => {
         expect(JSON.parse(extractContract(artifactText, ''))).toEqual(artifact);
+        const original = `\n${JSON.stringify(artifact, null, 4)}\n`;
+        expect(extractContract(original, '')).toBe(original);
         for (const output of template.outputs) {
             const selected = JSON.parse(
                 extractContract(artifactText, output.contract_location),
@@ -247,6 +249,25 @@ describe('contract occurrence extraction', () => {
                 )!.required_input_sats,
             );
         }
+    });
+
+    it('rejects an unsafe numeric literal in child metadata before reserializing', () => {
+        const raw = structuredClone(artifact) as JsonObject;
+        const templates =
+            raw.suggested_template_hash_to_template_map as JsonObject;
+        const outputs = (templates[template.hash] as JsonObject)
+            .outputs_info as JsonObject[];
+        const child = outputs[0]!.receiving_contract as JsonObject;
+        (child.metadata as JsonObject).simp = {
+            '42': { counter: 'raw-unsafe-number' },
+        };
+        const text = JSON.stringify(raw).replace(
+            '"raw-unsafe-number"',
+            '9007199254740993',
+        );
+        expect(() =>
+            extractContract(text, template.outputs[0]!.contract_location),
+        ).toThrow('Outside the exact integer range');
     });
 
     it('supports escaped own property names and rejects missing or non-contract values', () => {

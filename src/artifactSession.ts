@@ -5,6 +5,7 @@ import type {
     JsonValue,
     TemplateExplanation,
 } from '../shared/studio';
+import { parseEditorJson } from './patching/schemaValue';
 
 export interface BoundTransaction {
     hash: string;
@@ -70,7 +71,7 @@ export function extractContract(
     artifactText: string,
     location: string,
 ): string {
-    let value: JsonValue = JSON.parse(artifactText);
+    let value = parseEditorJson(artifactText);
     requireMatch(
         location === '' || location.startsWith('/'),
         'Invalid contract JSON pointer.',
@@ -103,7 +104,8 @@ export function extractContract(
             }
         }
     }
-    return JSON.stringify(compiled(value), null, 2);
+    const selected = compiled(value);
+    return location === '' ? artifactText : JSON.stringify(selected, null, 2);
 }
 
 function outpoint(value: JsonValue | undefined): string {
