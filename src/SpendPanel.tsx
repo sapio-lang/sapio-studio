@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     ArrowRight,
     CheckCircle2,
@@ -39,6 +39,22 @@ function humanStatus(value: JsonValue) {
     return typeof value === 'string'
         ? (labels[value] ?? value)
         : shortValue(value);
+}
+
+export interface GraphSpend {
+    artifact: string;
+    psbt: string;
+    location: string;
+    label: string;
+    mock: boolean;
+}
+
+function branchSelector(branch: BranchPlan): SpendSelector {
+    return branch.path === 'KeyPath'
+        ? 'key'
+        : branch.path === 'Descriptor'
+          ? 'descriptor'
+          : `script:${branch.path.ScriptPath}`;
 }
 
 function Requirement({ value }: { value: JsonValue }) {
@@ -83,12 +99,16 @@ function Requirement({ value }: { value: JsonValue }) {
 export function SpendPanel({
     artifact,
     api,
+    source,
+    onBack,
 }: {
     artifact: string | null;
     api?: StudioAPI;
+    source?: GraphSpend | null;
+    onBack?: () => void;
 }) {
     const [mode, setMode] = useState<'prepare' | 'resume'>('prepare');
-    const [funded, setFunded] = useState('');
+    const [funded, setFunded] = useState(source?.psbt ?? '');
     const [assets, setAssets] = useState('');
     const [evidence, setEvidence] = useState('');
     const [path, setPath] = useState('key');
@@ -107,6 +127,42 @@ export function SpendPanel({
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
     const [notice, setNotice] = useState('');
+    const [branches, setBranches] = useState<BranchPlan[] | null>(null);
+    const [funding, setFunding] = useState<string | null>(null);
+    const pathRequest = useRef(0);
+    function choosePath(selector: string) {
+        setPath(selector.startsWith('script:') ? 'script' : selector);
+        setLeaf(selector.startsWith('script:') ? selector.slice(7) : '');
+    }
+    function invalidatePaths() {
+        pathRequest.current++;
+        setBranches(null);
+        setFunding(null);
+    }
+    async function checkPaths() {
+        if (!api || !artifact || !funded.trim()) return;
+        const request = ++pathRequest.current;
+        const explained = await api.explain({
+            artifact,
+            psbt: funded,
+            input,
+            ...(assets.trim() ? { assets } : {}),
+        });
+        if (request !== pathRequest.current) return;
+        const choices = explained.spend?.branches ?? [];
+        setBranches(choices);
+        setFunding(explained.spend?.funding ?? 'Unknown');
+        const possible = choices.filter(
+            (branch) => branch.transaction_compatible !== 'Unmet',
+        );
+        choosePath(possible.length === 1 ? branchSelector(possible[0]!) : '');
+    }
+    useEffect(() => {
+        if (source?.psbt) void run('Checking transaction paths', checkPaths);
+        return () => {
+            pathRequest.current++;
+        };
+    }, []);
     const resume: ResumeInput = {
         artifact: artifact ?? '',
         intent,
@@ -169,6 +225,24 @@ export function SpendPanel({
                 </div>
                 <span className="badge">Local workflow</span>
             </div>
+            {source && (
+                <div className="spend-source notice">
+                    <div>
+                        <strong>From graph: {source.label}</strong>
+                        <p>
+                            {source.location
+                                ? 'Spending the selected child contract.'
+                                : 'Spending the root contract.'}{' '}
+                            {source.mock
+                                ? 'Synthetic funding preview; these are not spendable coins.'
+                                : 'Review funding and authorization requirements below.'}
+                        </p>
+                    </div>
+                    <button className="button small" onClick={onBack}>
+                        Back to graph
+                    </button>
+                </div>
+            )}
             {!api && (
                 <div className="notice">
                     This browser preview shows the workflow. The desktop app
@@ -221,33 +295,125 @@ export function SpendPanel({
                                 label="Funded PSBT"
                                 kind="psbt"
                                 value={funded}
-                                onChange={setFunded}
+                                onChange={(value) => {
+                                    invalidatePaths();
+                                    setFunded(value);
+                                }}
                                 api={api}
                                 disabled={Boolean(busy)}
                                 rows={3}
                                 placeholder="Base64 PSBT with authenticated previous outputs"
                             />
+                            <button
+                                className="button small"
+                                disabled={disabled || !funded.trim()}
+                                onClick={() =>
+                                    run(
+                                        'Checking transaction paths',
+                                        checkPaths,
+                                    )
+                                }
+                            >
+                                <RefreshCw size={14} /> Check available paths
+                            </button>
+                            {branches && (
+                                <div className="spend-paths">
+                                    <label>
+                                        Available spending path
+                                        <select
+                                            value={
+                                                path === 'script'
+                                                    ? `script:${leaf}`
+                                                    : path
+                                            }
+                                            disabled={disabled}
+                                            onChange={(event) =>
+                                                choosePath(event.target.value)
+                                            }
+                                        >
+                                            <option value="">
+                                                Choose a spending path
+                                            </option>
+                                            {branches.map((branch, index) => (
+                                                <option
+                                                    key={branchSelector(branch)}
+                                                    value={branchSelector(
+                                                        branch,
+                                                    )}
+                                                    disabled={
+                                                        branch.transaction_compatible ===
+                                                        'Unmet'
+                                                    }
+                                                >
+                                                    {branch.path === 'KeyPath'
+                                                        ? 'Key path'
+                                                        : branch.path ===
+                                                            'Descriptor'
+                                                          ? 'Descriptor'
+                                                          : `Script path ${index + 1}`}{' '}
+                                                    ·{' '}
+                                                    {branch.transaction_compatible ===
+                                                    'Met'
+                                                        ? 'Transaction compatible'
+                                                        : branch.transaction_compatible ===
+                                                            'Unmet'
+                                                          ? 'Transaction incompatible'
+                                                          : 'Needs further checks'}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <p className="help-text">
+                                        Funding:{' '}
+                                        {funding === 'Met'
+                                            ? 'requirements met'
+                                            : funding === 'Unmet'
+                                              ? 'requirements not met'
+                                              : 'needs further checks'}
+                                        . Signatures and other authorizations
+                                        are collected after preparing the
+                                        intent.
+                                    </p>
+                                    {branches
+                                        .filter(
+                                            (branch) =>
+                                                branchSelector(branch) ===
+                                                (path === 'script'
+                                                    ? `script:${leaf}`
+                                                    : path),
+                                        )
+                                        .map((branch) => (
+                                            <JsonDetails
+                                                key={branchSelector(branch)}
+                                                title="Selected spending policy"
+                                                value={branch.policy}
+                                            />
+                                        ))}
+                                </div>
+                            )}
                             <div className="form-row">
-                                <label>
-                                    Spending path
-                                    <select
-                                        value={path}
-                                        onChange={(event) =>
-                                            setPath(event.target.value)
-                                        }
-                                        disabled={Boolean(busy)}
-                                    >
-                                        <option value="key">
-                                            Taproot key path
-                                        </option>
-                                        <option value="script">
-                                            Taproot script path
-                                        </option>
-                                        <option value="descriptor">
-                                            Descriptor
-                                        </option>
-                                    </select>
-                                </label>
+                                {!branches && (
+                                    <label>
+                                        Spending path
+                                        <select
+                                            value={path}
+                                            onChange={(event) =>
+                                                setPath(event.target.value)
+                                            }
+                                            disabled={Boolean(busy)}
+                                        >
+                                            <option value="key">
+                                                Taproot key path
+                                            </option>
+                                            <option value="script">
+                                                Taproot script path
+                                            </option>
+                                            <option value="descriptor">
+                                                Descriptor
+                                            </option>
+                                        </select>
+                                    </label>
+                                )}
                                 <label>
                                     Input index
                                     <input
@@ -255,14 +421,17 @@ export function SpendPanel({
                                         min={0}
                                         step={1}
                                         value={input}
-                                        onChange={(event) =>
-                                            setInput(Number(event.target.value))
-                                        }
+                                        onChange={(event) => {
+                                            invalidatePaths();
+                                            setInput(
+                                                Number(event.target.value),
+                                            );
+                                        }}
                                         disabled={Boolean(busy)}
                                     />
                                 </label>
                             </div>
-                            {path === 'script' && (
+                            {!branches && path === 'script' && (
                                 <label>
                                     Tapleaf hash
                                     <input
@@ -282,7 +451,10 @@ export function SpendPanel({
                                 <DocumentField
                                     label="Assets JSON"
                                     value={assets}
-                                    onChange={setAssets}
+                                    onChange={(value) => {
+                                        invalidatePaths();
+                                        setAssets(value);
+                                    }}
                                     api={api}
                                     disabled={Boolean(busy)}
                                     rows={3}
@@ -300,7 +472,12 @@ export function SpendPanel({
                             </details>
                             <button
                                 className="button primary"
-                                disabled={disabled || !funded.trim()}
+                                disabled={
+                                    disabled ||
+                                    !funded.trim() ||
+                                    !path ||
+                                    (path === 'script' && !leaf.trim())
+                                }
                                 onClick={() =>
                                     run('Preparing spend', async () => {
                                         if (!api) return;

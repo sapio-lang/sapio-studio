@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import type { JsonValue } from '../../shared/studio';
-import type { Patch, PatchNode } from './engine';
-import { schemaLabel, type SchemaPort, type ValueType } from './schema';
+import type { PatchNode } from './engine';
+import { type ValueType } from './schema';
 
 interface PatchInspectorProps {
     selectedNode: PatchNode | undefined;
@@ -16,10 +16,6 @@ interface PatchInspectorProps {
     invalid: boolean;
     sourcePicker: ReactNode;
     editor: ReactNode;
-    outputs: SchemaPort[];
-    namedOutputs: Patch['outputs'];
-    outputName: string;
-    outputPath: string;
     result: JsonValue | undefined;
     onClose: () => void;
     onVariableTypeChange: (value: string) => void;
@@ -30,10 +26,7 @@ interface PatchInspectorProps {
     onMakeLocalVariable: () => void;
     onExposeParameter: () => void;
     onEvaluate: () => void;
-    onOutputNameChange: (value: string) => void;
-    onOutputPathChange: (value: string) => void;
-    onDeclareOutput: () => void;
-    onRemoveOutput: (name: string) => void;
+    onConnectOutput: () => void;
 }
 
 export function PatchInspector({
@@ -48,10 +41,6 @@ export function PatchInspector({
     invalid,
     sourcePicker,
     editor,
-    outputs,
-    namedOutputs,
-    outputName,
-    outputPath,
     result,
     onClose,
     onVariableTypeChange,
@@ -62,10 +51,7 @@ export function PatchInspector({
     onMakeLocalVariable,
     onExposeParameter,
     onEvaluate,
-    onOutputNameChange,
-    onOutputPathChange,
-    onDeclareOutput,
-    onRemoveOutput,
+    onConnectOutput,
 }: PatchInspectorProps) {
     return (
         <aside className="patch-inspector" aria-label="Node inspector">
@@ -115,16 +101,39 @@ export function PatchInspector({
                 selectedNode && (
                     <>
                         <label>
-                            Node name
+                            {selectedNode.kind === 'output'
+                                ? 'Output name'
+                                : 'Node name'}
                             <input
-                                aria-label="Node name"
-                                value={selectedNode.label ?? nodeName}
+                                aria-label={
+                                    selectedNode.kind === 'output'
+                                        ? 'Output name'
+                                        : 'Node name'
+                                }
+                                value={
+                                    selectedNode.kind === 'output'
+                                        ? selectedNode.name
+                                        : (selectedNode.label ?? nodeName)
+                                }
                                 disabled={running}
                                 onChange={(event) =>
                                     onRename(event.target.value)
                                 }
                             />
                         </label>
+                        {selectedNode.kind === 'output' && (
+                            <>
+                                <p className="patch-inspector-description">
+                                    Wire a Contract result here to build and
+                                    inspect it, or connect any declared value to
+                                    export it. Its type follows the wire. This
+                                    name becomes an output of a reusable patch.
+                                </p>
+                                <button onClick={onConnectOutput}>
+                                    Choose output source
+                                </button>
+                            </>
+                        )}
                         {referenceOnly && (
                             <p className="patch-reference-note">
                                 The calling module supplies the inputs. Values
@@ -189,61 +198,11 @@ export function PatchInspector({
                                 onClick={onEvaluate}
                                 disabled={running || invalid}
                             >
-                                Evaluate value
-                            </button>
-                            <label>
-                                Output name
-                                <input
-                                    aria-label="Output name"
-                                    value={outputName}
-                                    onChange={(event) =>
-                                        onOutputNameChange(event.target.value)
-                                    }
-                                />
-                            </label>
-                            <label>
-                                Output value
-                                <select
-                                    aria-label="Output value"
-                                    value={outputPath}
-                                    onChange={(event) =>
-                                        onOutputPathChange(event.target.value)
-                                    }
-                                >
-                                    {outputs.map((port) => (
-                                        <option
-                                            key={port.path}
-                                            value={port.path}
-                                        >
-                                            {port.label} · {schemaLabel(port)}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-                            <button
-                                disabled={running || !outputName.trim()}
-                                onClick={onDeclareOutput}
-                            >
-                                Use as output
+                                {selectedNode.kind === 'output'
+                                    ? 'Build output'
+                                    : 'Evaluate value'}
                             </button>
                         </div>
-                        {namedOutputs.length > 0 && (
-                            <div className="patch-named-outputs">
-                                {namedOutputs.map((output) => (
-                                    <div key={output.name}>
-                                        <span>Output: {output.name}</span>
-                                        <button
-                                            aria-label={`Remove output ${output.name}`}
-                                            onClick={() =>
-                                                onRemoveOutput(output.name)
-                                            }
-                                        >
-                                            <X size={12} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                         {result !== undefined && (
                             <details className="patch-result">
                                 <summary>Inspect evaluated value</summary>

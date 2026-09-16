@@ -1,0 +1,330 @@
+{
+    "address": "tr(72cd6e8422c407fb6d098690f1130b7ded7ec2f7f5e1d30bd9d521f015363793,{and_v(txtmpl(f78e9ab3383b961230bf430c75a7f7b13b7db5ca7820a528ffc09975e3121cfb),pk(7b8916c0e191ac85f36ba0fbca126351afbb52307058c6f8d5faee734c9d427c)),and_v(txtmpl(2c272eeaac471a685ef3de3fe2030d4d33acbb4874fd853eac4a4544dfa7dd80),pk(9822622cf330b98e52e7357135bc93e1e5606a57a9819408734598fe5677b134))})#s4e2cev6",
+    "continuation_points": {
+        "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/recover/@next": {
+            "path": "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/recover/@next",
+            "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "title": "null",
+                "type": "null"
+            },
+            "simp": {}
+        },
+        "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/trigger/@next": {
+            "path": "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/trigger/@next",
+            "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "title": "null",
+                "type": "null"
+            },
+            "simp": {}
+        }
+    },
+    "covenant_requirements": {
+        "lowering": "Native",
+        "predicates": [
+            "2c272eeaac471a685ef3de3fe2030d4d33acbb4874fd853eac4a4544dfa7dd80",
+            "f78e9ab3383b961230bf430c75a7f7b13b7db5ca7820a528ffc09975e3121cfb"
+        ]
+    },
+    "known_descriptor": {
+        "XOnly": "tr(72cd6e8422c407fb6d098690f1130b7ded7ec2f7f5e1d30bd9d521f015363793,{and_v(txtmpl(f78e9ab3383b961230bf430c75a7f7b13b7db5ca7820a528ffc09975e3121cfb),pk(7b8916c0e191ac85f36ba0fbca126351afbb52307058c6f8d5faee734c9d427c)),and_v(txtmpl(2c272eeaac471a685ef3de3fe2030d4d33acbb4874fd853eac4a4544dfa7dd80),pk(9822622cf330b98e52e7357135bc93e1e5606a57a9819408734598fe5677b134))})#s4e2cev6"
+    },
+    "metadata": {
+        "simp": {},
+        "simps_for_guards": []
+    },
+    "program_policies": [],
+    "required_input_amount_sats": 100000,
+    "root_path": "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7",
+    "template_hash_to_template_map": {
+        "2c272eeaac471a685ef3de3fe2030d4d33acbb4874fd853eac4a4544dfa7dd80": {
+            "additional_preconditions": [
+                {
+                    "Miniscript": "pk(9822622cf330b98e52e7357135bc93e1e5606a57a9819408734598fe5677b134)"
+                }
+            ],
+            "funding_constraints": {
+                "inputs": [
+                    {
+                        "minimum": 100000,
+                        "name": "contract"
+                    }
+                ],
+                "maximum_fee": 500,
+                "minimum_feerate_sat_kwu": null,
+                "outputs": ["pending"]
+            },
+            "inputs_info": [
+                {
+                    "simp": {}
+                }
+            ],
+            "max_amount_sats": 100000,
+            "min_feerate_sats_vbyte": null,
+            "outputs_info": [
+                {
+                    "receiving_contract": {
+                        "address": "tr(72cd6e8422c407fb6d098690f1130b7ded7ec2f7f5e1d30bd9d521f015363793,{and_v(txtmpl(e51217c0923f078d1c85dc549e63afeac8b2581a8bd3a8873f873baaba200ab9),pk(9822622cf330b98e52e7357135bc93e1e5606a57a9819408734598fe5677b134)),and_v(txtmpl(69222535d97b463c5008787b6980aec03bc67f32a6fac97309dc49f5e5cfb15e),pk(7b8916c0e191ac85f36ba0fbca126351afbb52307058c6f8d5faee734c9d427c))})#z6zufled",
+                        "continuation_points": {
+                            "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/trigger/@next/@default_effect/#0/@action/recover/@next": {
+                                "path": "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/trigger/@next/@default_effect/#0/@action/recover/@next",
+                                "schema": {
+                                    "$schema": "http://json-schema.org/draft-07/schema#",
+                                    "title": "null",
+                                    "type": "null"
+                                },
+                                "simp": {}
+                            },
+                            "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/trigger/@next/@default_effect/#0/@action/release/@next": {
+                                "path": "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/trigger/@next/@default_effect/#0/@action/release/@next",
+                                "schema": {
+                                    "$schema": "http://json-schema.org/draft-07/schema#",
+                                    "title": "null",
+                                    "type": "null"
+                                },
+                                "simp": {}
+                            }
+                        },
+                        "covenant_requirements": {
+                            "lowering": "Native",
+                            "predicates": [
+                                "69222535d97b463c5008787b6980aec03bc67f32a6fac97309dc49f5e5cfb15e",
+                                "e51217c0923f078d1c85dc549e63afeac8b2581a8bd3a8873f873baaba200ab9"
+                            ]
+                        },
+                        "known_descriptor": {
+                            "XOnly": "tr(72cd6e8422c407fb6d098690f1130b7ded7ec2f7f5e1d30bd9d521f015363793,{and_v(txtmpl(e51217c0923f078d1c85dc549e63afeac8b2581a8bd3a8873f873baaba200ab9),pk(9822622cf330b98e52e7357135bc93e1e5606a57a9819408734598fe5677b134)),and_v(txtmpl(69222535d97b463c5008787b6980aec03bc67f32a6fac97309dc49f5e5cfb15e),pk(7b8916c0e191ac85f36ba0fbca126351afbb52307058c6f8d5faee734c9d427c))})#z6zufled"
+                        },
+                        "metadata": {
+                            "simp": {},
+                            "simps_for_guards": []
+                        },
+                        "program_policies": [],
+                        "required_input_amount_sats": 99500,
+                        "root_path": "@root/@root/c313c95482b6b193f81abbe1769197f5d880df6397e9e7195eda3189a5dbe5d7/@action/trigger/@next/@default_effect/#0",
+                        "template_hash_to_template_map": {
+                            "69222535d97b463c5008787b6980aec03bc67f32a6fac97309dc49f5e5cfb15e": {
+                                "additional_preconditions": [
+                                    {
+                                        "Miniscript": "pk(7b8916c0e191ac85f36ba0fbca126351afbb52307058c6f8d5faee734c9d427c)"
+                                    }
+                                ],
+                                "funding_constraints": {
+                                    "inputs": [
+                                        {
+                                            "minimum": 99500,
+                                            "name": "contract"
+                                        }
+                                    ],
+                                    "maximum_fee": 500,
+                                    "minimum_feerate_sat_kwu": null,
+                                    "outputs": ["recovery"]
+                                },
+                                "inputs_info": [
+                                    {
+                                        "simp": {}
+                                    }
+                                ],
+                                "max_amount_sats": 99500,
+                                "min_feerate_sats_vbyte": null,
+                                "outputs_info": [
+                                    {
+                                        "receiving_contract": {
+                                            "address": "bcrt1pxmjzkd5v0ty8d35rzqfhkyyx9wgllmntzw4uhe7lpz7xwft98q6ssgucd8",
+                                            "covenant_requirements": {
+                                                "lowering": "Native",
+                                                "predicates": []
+                                            },
+                                            "metadata": {
+                                                "simp": {},
+                                                "simps_for_guards": []
+                                            },
+                                            "program_policies": [],
+                                            "required_input_amount_sats": 1,
+                                            "root_path": ""
+                                        },
+                                        "sending_amount_sats": 99000
+                                    }
+                                ],
+                                "precomputed_template_hash": "69222535d97b463c5008787b6980aec03bc67f32a6fac97309dc49f5e5cfb15e",
+                                "precomputed_template_hash_idx": 0,
+                                "required_input_amount_sats": 99500,
+                                "transaction_literal": {
+                                    "input": [
+                                        {
+                                            "previous_output": "0000000000000000000000000000000000000000000000000000000000000000:4294967295",
+                                            "script_sig": "",
+                                            "sequence": 4194304,
+                                            "witness": []
+                                        }
+                                    ],
+                                    "lock_time": 0,
+                                    "output": [
+                                        {
+                                            "script_pubkey": "512036e42b368c7ac876c68310137b10862b91ffee6b13abcbe7df08bc6725653835",
+                                            "value": 99000
+                                        }
+                                    ],
+                                    "version": 2
+                                }
+                            },
+                            "e51217c0923f078d1c85dc549e63afeac8b2581a8bd3a8873f873baaba200ab9": {
+                                "additional_preconditions": [
+                                    {
+                                        "Miniscript": "pk(9822622cf330b98e52e7357135bc93e1e5606a57a9819408734598fe5677b134)"
+                                    }
+                                ],
+                                "funding_constraints": {
+                                    "inputs": [
+                                        {
+                                            "minimum": 99500,
+                                            "name": "contract"
+                                        }
+                                    ],
+                                    "maximum_fee": 500,
+                                    "minimum_feerate_sat_kwu": null,
+                                    "outputs": ["release"]
+                                },
+                                "inputs_info": [
+                                    {
+                                        "simp": {}
+                                    }
+                                ],
+                                "max_amount_sats": 99500,
+                                "min_feerate_sats_vbyte": null,
+                                "outputs_info": [
+                                    {
+                                        "receiving_contract": {
+                                            "address": "bcrt1p3p79luvy0a5qywng29scnudf2kqqgenuzc6506w5t55vdhkfg0lqaund2q",
+                                            "covenant_requirements": {
+                                                "lowering": "Native",
+                                                "predicates": []
+                                            },
+                                            "metadata": {
+                                                "simp": {},
+                                                "simps_for_guards": []
+                                            },
+                                            "program_policies": [],
+                                            "required_input_amount_sats": 1,
+                                            "root_path": ""
+                                        },
+                                        "sending_amount_sats": 99000
+                                    }
+                                ],
+                                "precomputed_template_hash": "e51217c0923f078d1c85dc549e63afeac8b2581a8bd3a8873f873baaba200ab9",
+                                "precomputed_template_hash_idx": 0,
+                                "required_input_amount_sats": 99500,
+                                "transaction_literal": {
+                                    "input": [
+                                        {
+                                            "previous_output": "0000000000000000000000000000000000000000000000000000000000000000:4294967295",
+                                            "script_sig": "",
+                                            "sequence": 144,
+                                            "witness": []
+                                        }
+                                    ],
+                                    "lock_time": 0,
+                                    "output": [
+                                        {
+                                            "script_pubkey": "5120887c5ff1847f68023a68516189f1a9558004667c163547e9d45d28c6dec943fe",
+                                            "value": 99000
+                                        }
+                                    ],
+                                    "version": 2
+                                }
+                            }
+                        }
+                    },
+                    "sending_amount_sats": 99500
+                }
+            ],
+            "precomputed_template_hash": "2c272eeaac471a685ef3de3fe2030d4d33acbb4874fd853eac4a4544dfa7dd80",
+            "precomputed_template_hash_idx": 0,
+            "required_input_amount_sats": 100000,
+            "transaction_literal": {
+                "input": [
+                    {
+                        "previous_output": "0000000000000000000000000000000000000000000000000000000000000000:4294967295",
+                        "script_sig": "",
+                        "sequence": 4194304,
+                        "witness": []
+                    }
+                ],
+                "lock_time": 0,
+                "output": [
+                    {
+                        "script_pubkey": "5120f7142ded881d80d413f382506c6a7dbc6e6c210533186f5993908b6fb26e81c8",
+                        "value": 99500
+                    }
+                ],
+                "version": 2
+            }
+        },
+        "f78e9ab3383b961230bf430c75a7f7b13b7db5ca7820a528ffc09975e3121cfb": {
+            "additional_preconditions": [
+                {
+                    "Miniscript": "pk(7b8916c0e191ac85f36ba0fbca126351afbb52307058c6f8d5faee734c9d427c)"
+                }
+            ],
+            "funding_constraints": {
+                "inputs": [
+                    {
+                        "minimum": 100000,
+                        "name": "contract"
+                    }
+                ],
+                "maximum_fee": 500,
+                "minimum_feerate_sat_kwu": null,
+                "outputs": ["recovery"]
+            },
+            "inputs_info": [
+                {
+                    "simp": {}
+                }
+            ],
+            "max_amount_sats": 100000,
+            "min_feerate_sats_vbyte": null,
+            "outputs_info": [
+                {
+                    "receiving_contract": {
+                        "address": "bcrt1pxmjzkd5v0ty8d35rzqfhkyyx9wgllmntzw4uhe7lpz7xwft98q6ssgucd8",
+                        "covenant_requirements": {
+                            "lowering": "Native",
+                            "predicates": []
+                        },
+                        "metadata": {
+                            "simp": {},
+                            "simps_for_guards": []
+                        },
+                        "program_policies": [],
+                        "required_input_amount_sats": 1,
+                        "root_path": ""
+                    },
+                    "sending_amount_sats": 99500
+                }
+            ],
+            "precomputed_template_hash": "f78e9ab3383b961230bf430c75a7f7b13b7db5ca7820a528ffc09975e3121cfb",
+            "precomputed_template_hash_idx": 0,
+            "required_input_amount_sats": 100000,
+            "transaction_literal": {
+                "input": [
+                    {
+                        "previous_output": "0000000000000000000000000000000000000000000000000000000000000000:4294967295",
+                        "script_sig": "",
+                        "sequence": 4194304,
+                        "witness": []
+                    }
+                ],
+                "lock_time": 0,
+                "output": [
+                    {
+                        "script_pubkey": "512036e42b368c7ac876c68310137b10862b91ffee6b13abcbe7df08bc6725653835",
+                        "value": 99500
+                    }
+                ],
+                "version": 2
+            }
+        }
+    }
+}

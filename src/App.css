@@ -406,6 +406,7 @@ small {
     margin-top: 4px;
 }
 .workbench {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -598,8 +599,8 @@ small {
 }
 .artifact-toolbar {
     flex-shrink: 0;
-    height: 83px;
-    padding: 0 26px;
+    min-height: 94px;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -615,6 +616,79 @@ small {
     display: flex;
     align-items: center;
     gap: 9px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.binding-status {
+    margin-top: 7px;
+}
+.binding-guide {
+    padding: 9px 20px;
+    font-size: 11px;
+    line-height: 1.5;
+    background: #f1f4ec;
+    border-bottom: 1px solid var(--line);
+}
+.artifact-graph-container {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+}
+.node-binding {
+    margin-top: 10px;
+    font-size: 10px;
+    color: #7c7669;
+}
+.node-binding.linked {
+    color: #376f62;
+}
+.graph-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 16px 0;
+}
+.outpoint-block {
+    word-break: break-all;
+    font-size: 10px;
+    line-height: 1.6;
+}
+.transaction-choices {
+    display: grid;
+    gap: 6px;
+}
+.transaction-choices button,
+.allocation-list button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    background: #f2f5ed;
+    color: inherit;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 11px;
+}
+.transaction-choices small {
+    display: block;
+    margin-top: 5px;
+    color: #65705c;
+}
+.spend-source {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+.spend-source p {
+    margin: 6px 0 0;
+}
+.spend-paths {
+    margin-top: 12px;
 }
 .artifact-stat {
     font-size: 10px;
@@ -996,6 +1070,16 @@ small {
     padding: 0 6px;
 }
 .global-message {
+    position: absolute;
+    bottom: 42px;
+    right: 18px;
+    z-index: 20;
+    max-width: min(680px, 90%);
+    max-height: 40vh;
+    overflow: auto;
+    border: 1px solid #d9e9cd;
+    border-radius: 6px;
+    box-shadow: 0 3px 12px #354b3518;
     min-height: 36px;
     display: flex;
     align-items: center;

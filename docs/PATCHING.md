@@ -1,9 +1,9 @@
 # Typed visual patches
 
-A patch contains typed values, module calls and connections, with an explicit
-output and one Sapio compilation context. Module hashes identify exact WASM
+A patch contains typed values, module calls, connections, and named Output
+terminals with one Sapio compilation context. Module hashes identify exact WASM
 bytes. Opening a patch reads its interface metadata; execution starts only when
-you evaluate a value or compile the designated output.
+you evaluate a value or build an Output.
 
 ## Nodes and inputs
 
@@ -13,6 +13,18 @@ you evaluate a value or compile the designated output.
 | Parameter | A named input to a reusable patch, with an optional default                              | No                                 |
 | Module    | Its evaluated result, or its callable implementation through a separate reference outlet | When its result is evaluated       |
 | Subpatch  | A record containing its declared named outputs                                           | Through its contained module nodes |
+| Output    | A named result supplied by its incoming value wire                                       | Through its upstream dependencies  |
+
+An Output has one incoming value wire and no outgoing ports. Wire a Contract
+result into it to build and inspect that contract; other declared values can be
+exported too. Its type follows the connected source, so the terminal stores no
+separate type or local value. Raw callable-implementation hash wires cannot enter
+an Output; a typed callable-reference value can.
+
+Use **Build output** on a terminal to build that result. **Build patch** builds
+the sole terminal, or a record of all named terminals when there are several.
+Selecting a node does not change either action. Unconnected terminals can be
+saved while editing and report a missing wire if built.
 
 A Variable keeps its declared type when you edit its value. It can feed several
 inputs. Extracting a local input into a Variable preserves the value and lets
@@ -79,14 +91,14 @@ custody behavior.
 
 ## Reusable patches
 
-A reusable patch declares Parameter nodes and named outputs. Embedding it creates
+A reusable patch declares Parameter and Output nodes. Embedding it creates
 a Subpatch node whose input fields are the parameter names and whose result is
 a record of named outputs. Parameter defaults apply only when that parameter is
 omitted. Unknown inputs are rejected.
 
 For example, a patch can accept `waiting period: Block delay` and export
 `vault: Compiled contract`. Its parent connects a Variable to `waiting period`
-and selects the `vault` output for compilation. Each embedded instance evaluates
+and wires the Subpatch's `vault` value into an Output. Each embedded instance evaluates
 its own values. Every module inherits the outer compilation context; a saved
 context inside an imported definition cannot override it.
 
@@ -99,10 +111,19 @@ results are copied to consumers. Independent inputs and named outputs are visite
 in a stable order. Moving nodes or changing their display labels does not alter
 arguments or output values.
 
-The designated output is separate from the selected canvas node. Compiling the
-patch follows the designation. Evaluating an intermediate node follows that
-node's value dependencies. A Subpatch evaluates its declared named outputs and
-exposes their record. Connections cannot write to the compilation context.
+An Output follows its incoming wire. Evaluating an intermediate node follows
+that node's value dependencies. A Subpatch evaluates its named terminals and
+exposes their record. Programmatic `runPatch` calls select a node id with the
+third argument, or use `null` to evaluate the complete named-output record.
+Connections cannot write to the compilation context.
+
+Successful module invocations also produce a detached execution trace containing
+their qualified node path, exact module key, full invocation envelope and result.
+The host can supply a context for a qualified node before argument validation;
+ordinary builds inherit the supplied default. Action replay uses the captured
+build graph and contexts, so an effect can target one originating invocation
+without changing every module that uses the same effect-path name. This trace
+and replay information is kept outside saved patch documents.
 
 Patch files use version 2. The minimal shape below is an executable typed value
 patch; compilation context is required even when it has no module nodes:
@@ -125,11 +146,24 @@ patch; compilation context is required even when it has no module nodes:
             },
             "value": 144,
             "position": { "x": 80, "y": 80 }
+        },
+        {
+            "id": "delay-output",
+            "kind": "output",
+            "name": "delay",
+            "position": { "x": 480, "y": 80 }
         }
     ],
-    "connections": [],
-    "outputs": [{ "name": "delay", "node": "delay", "path": "" }],
-    "output": "delay",
+    "connections": [
+        {
+            "id": "delay-wire",
+            "kind": "value",
+            "source": "delay",
+            "sourcePath": "",
+            "target": "delay-output",
+            "targetPath": ""
+        }
+    ],
     "context": { "amount": 100000, "network": "Regtest", "lowering": "Native" }
 }
 ```
@@ -137,19 +171,21 @@ patch; compilation context is required even when it has no module nodes:
 A module node uses `kind: "module"`, `moduleKey` and optional `arguments`.
 A parameter uses `kind: "parameter"`, `name`, `type` and optional `default`.
 A subpatch uses `kind: "subpatch"`, `name`, an embedded `patch` and optional
-`arguments`. Every node has an `id` and `position`; optional `label` is purely
+`arguments`. An Output uses `kind: "output"` and a unique `name` within its patch.
+Every node has an `id` and `position`; optional `label` is purely
 for display. A value type may include `root` to retain local schema definitions
 when it represents a selected field.
 
 Connections contain `id`, `kind` (`value` or `module`), `source`, `sourcePath`,
 `target` and `targetPath`. Paths are JSON Pointers; the empty path selects the
-whole value. Output declarations contain `name`, `node` and `path`. `output`
-selects a declared name, or is `null` while the patch is still being assembled.
+whole value. An Output wire always uses an empty destination path. Output nodes
+and their wires are the only output declarations; there is no separate output
+list or selected-output field.
 
 Exports contain public values and module hashes, not key files or signing
 authority. Loading requires the referenced modules in the selected workspace;
-it does not download code. Version 1 patches must be regenerated using the
-current recipe builder.
+it does not download code. Earlier patches with top-level `outputs`/`output`
+metadata, and version 1 patches, must be regenerated using the current builder.
 
 The editor accepts at most 256 nodes and 1,024 connections per patch, eight
 levels of embedded subpatches, and 2,048 nodes and 8,192 connections across the

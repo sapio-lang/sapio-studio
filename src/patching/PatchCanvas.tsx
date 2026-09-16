@@ -20,6 +20,7 @@ import {
     hasPointer,
     nodePorts,
     parsePatch,
+    patchOutputs,
     resolveOutputType,
     runPatch,
     withConnection,
@@ -27,6 +28,7 @@ import {
     type PatchConnection,
     type PatchNode,
     type PatchRuntime,
+    type PatchInvocation,
 } from './engine';
 import {
     initialArguments,
@@ -52,11 +54,23 @@ import { clauseTrampolinePatch } from './demo';
 import '@xyflow/react/dist/style.css';
 import './patching.css';
 
+export interface PatchBuildRecipe {
+    patch: Patch;
+    context: JsonValue;
+    outputNode: string | null;
+    trace: PatchInvocation[];
+}
+
 export interface PatchCanvasProps extends PatchRuntime {
     modules: ModuleInfo[];
     context: JsonValue;
-    onResult?: (value: JsonValue, name: string, contract: boolean) => void;
-    onInvalidate?: () => void;
+    onResult?: (
+        value: JsonValue,
+        name: string,
+        contract: boolean,
+        recipe: PatchBuildRecipe,
+    ) => void;
+    onInvalidate?: (edited: boolean) => void;
     onContextChange?: (context: JsonValue) => void;
     onLoadModules?: (keys: string[]) => Promise<void>;
     onDiscoverModules?: () => Promise<void>;
@@ -69,10 +83,15 @@ export interface PatchCanvasProps extends PatchRuntime {
 }
 const emptyPatch = (): Patch => ({
     version: 2,
-    nodes: [],
+    nodes: [
+        {
+            kind: 'output',
+            id: 'result-output',
+            name: 'result',
+            position: { x: 780, y: 160 },
+        },
+    ],
     connections: [],
-    outputs: [],
-    output: null,
 });
 const errorText = (error: unknown) =>
     error instanceof Error ? error.message : String(error);
@@ -81,11 +100,14 @@ const valueOf = (node: PatchNode) =>
         ? node.value
         : node.kind === 'parameter'
           ? node.default
-          : node.arguments;
+          : node.kind === 'output'
+            ? undefined
+            : node.arguments;
 function replaceValue(
     node: PatchNode,
     value: JsonValue | undefined,
 ): PatchNode {
+    if (node.kind === 'output') return node;
     return node.kind === 'variable'
         ? { ...node, value }
         : node.kind === 'parameter'
@@ -122,25 +144,24 @@ function isContract(type: ValueType | undefined): boolean {
     return object(schema) && schema['x-sapio-role'] === 'contract';
 }
 function withoutNodes(patch: Patch, removed: Set<string>): Patch {
-    const outputs = patch.outputs.filter((output) => !removed.has(output.node));
     return {
         ...patch,
         nodes: patch.nodes.filter((node) => !removed.has(node.id)),
         connections: patch.connections.filter(
             (edge) => !removed.has(edge.source) && !removed.has(edge.target),
         ),
-        outputs,
-        output: outputs.some((output) => output.name === patch.output)
-            ? patch.output
-            : (outputs[0]?.name ?? null),
     };
 }
 
 function FitPatchView({ identity }: { identity: string }) {
     const initialized = useNodesInitialized();
     const { fitView } = useReactFlow();
+    const fitted = useRef<string | undefined>(undefined);
     useEffect(() => {
-        if (initialized) void fitView({ padding: 0.15, maxZoom: 1 });
+        if (initialized && fitted.current !== identity) {
+            fitted.current = identity;
+            void fitView({ padding: 0.15, maxZoom: 1 });
+        }
     }, [identity, initialized, fitView]);
     return null;
 }
@@ -159,6 +180,9 @@ export function PatchCanvas(props: PatchCanvasProps) {
     } = props;
     const [root, setRoot] = useState<Patch>(emptyPatch);
     const [path, setPath] = useState<string[]>([]);
+    const [measurements, setMeasurements] = useState<
+        Record<string, { width: number; height: number }>
+    >({});
     const patch = graphAt(root, path);
     const latestRoot = useRef(root);
     latestRoot.current = root;
@@ -186,8 +210,6 @@ export function PatchCanvas(props: PatchCanvasProps) {
         node: string;
         path: string;
     } | null>(null);
-    const [outputName, setOutputName] = useState('result');
-    const [outputPath, setOutputPath] = useState('');
     const lastAdded = useRef<number | null>(null);
     const lastExample = useRef<number | undefined>(undefined);
     const nextId = useRef(0);
@@ -198,24 +220,18 @@ export function PatchCanvas(props: PatchCanvasProps) {
         selectedNode &&
         (selectedNode.kind === 'variable' || selectedNode.kind === 'parameter'
             ? selectedNode.type
-            : nodePorts(selectedNode, modules, 'arguments')[0]);
-    const outputs = selectedNode
-        ? nodePorts(selectedNode, modules, 'returns')
-        : [];
-    const designated = patch.outputs.find(
-        (output) => output.name === patch.output,
-    );
-    const contractOutput = isContract(
-        designated && resolveOutputType(patch, designated, modules),
-    );
+            : selectedNode.kind === 'output'
+              ? undefined
+              : nodePorts(selectedNode, modules, 'arguments', patch)[0]);
+    const terminals = patchOutputs(patch);
     const nameOf = (node: PatchNode) => patchNodeLabel(node, modules);
     const id = (prefix: string) =>
         `${prefix}-${Date.now()}-${nextId.current++}`;
-    function clearResult() {
+    function clearResult(edited = true) {
         revision.current++;
         setResult(undefined);
         setStatus({});
-        onInvalidate?.();
+        onInvalidate?.(edited);
     }
     function change(next: Patch, semantic = true) {
         setRoot((current) => replaceGraph(current, path, next));
@@ -233,7 +249,6 @@ export function PatchCanvas(props: PatchCanvasProps) {
         setSelected(node);
         setSelectedEdge(null);
         setSourcePicker(null);
-        setOutputPath('');
         return true;
     }
     function updateNode(node: PatchNode, semantic = true) {
@@ -248,9 +263,12 @@ export function PatchCanvas(props: PatchCanvasProps) {
         );
     }
     function position() {
+        const count = patch.nodes.filter(
+            (node) => node.kind !== 'output',
+        ).length;
         return {
-            x: 60 + (patch.nodes.length % 3) * 380,
-            y: 60 + Math.floor(patch.nodes.length / 3) * 290,
+            x: 60 + (count % 2) * 380,
+            y: 60 + Math.floor(count / 2) * 290,
         };
     }
     function moduleNode(module: ModuleInfo): PatchNode {
@@ -267,24 +285,27 @@ export function PatchCanvas(props: PatchCanvasProps) {
         const module = modules.find((item) => item.key === key);
         if (!module) return;
         const node = moduleNode(module);
-        let next = { ...patch, nodes: [...patch.nodes, node] };
-        if (!next.output || isContract(modulePorts(module, 'returns')[0])) {
-            const name = isContract(modulePorts(module, 'returns')[0])
-                ? 'contract'
-                : 'result';
-            next = {
-                ...next,
-                outputs: [
-                    ...next.outputs.filter((output) => output.name !== name),
-                    { name, node: node.id, path: '' },
-                ],
-                output: name,
-            };
-        }
-        change(next);
+        change({ ...patch, nodes: [...patch.nodes, node] });
         choose(node.id);
         setAddingVariable(false);
-        setMessage('Configure the inputs, then build the named patch output.');
+        setMessage(
+            'Configure the inputs, then wire the result into an Output node.',
+        );
+    }
+    function addOutput() {
+        if (!canNavigate()) return;
+        const names = new Set(terminals.map((node) => node.name));
+        let name = 'result';
+        for (let index = 2; names.has(name); index++) name = `output_${index}`;
+        const node: PatchNode = {
+            kind: 'output',
+            id: id('output'),
+            name,
+            position: { x: 780, y: 160 + terminals.length * 260 },
+        };
+        change({ ...patch, nodes: [...patch.nodes, node] });
+        choose(node.id);
+        setAddingVariable(false);
     }
     useEffect(() => {
         if (addModule && lastAdded.current !== addModule.sequence) {
@@ -396,12 +417,6 @@ export function PatchCanvas(props: PatchCanvasProps) {
                     target: target.node,
                     targetPath: target.path,
                 });
-            if (!next.output)
-                next = {
-                    ...next,
-                    outputs: [{ name: 'value', node: node.id, path: '' }],
-                    output: 'value',
-                };
             change(next);
             choose(node.id);
             setAddingVariable(false);
@@ -454,8 +469,7 @@ export function PatchCanvas(props: PatchCanvasProps) {
             ) &&
             !patch.connections.some(
                 (edge) => edge.source === node.id && edge.kind === 'value',
-            ) &&
-            !patch.outputs.some((output) => output.node === node.id)
+            )
         );
     }
     const flowNodes: FlowPatchNode[] = patch.nodes.map((node) => ({
@@ -463,14 +477,19 @@ export function PatchCanvas(props: PatchCanvasProps) {
         type: 'patch',
         position: node.position,
         selected: !selectedEdge && node.id === selected,
+        measured: measurements[`${path.join('/')}/${node.id}`],
         ariaLabel: `${nameOf(node)} ${node.kind}`,
         data: {
             patchNode: node,
             modules,
+            inputs: nodePorts(node, modules, 'arguments', patch),
+            outputs: nodePorts(node, modules, 'returns', patch),
+            canBuild: !running && !invalid.size,
+            onBuild: () => void run(node.id),
             referenceOnly: referenceOnly(node),
             connectionPending: drag !== null,
             compatibleInputs: drag
-                ? nodePorts(node, modules, 'arguments')
+                ? nodePorts(node, modules, 'arguments', patch)
                       .filter((port) =>
                           dragCompatible(
                               node.id,
@@ -481,7 +500,7 @@ export function PatchCanvas(props: PatchCanvasProps) {
                       .map((port) => port.path)
                 : [],
             compatibleOutputs: drag
-                ? nodePorts(node, modules, 'returns')
+                ? nodePorts(node, modules, 'returns', patch)
                       .filter((port) =>
                           dragCompatible(
                               node.id,
@@ -536,6 +555,7 @@ export function PatchCanvas(props: PatchCanvasProps) {
             patch.nodes.find((node) => node.id === edge.target)!,
             modules,
             'arguments',
+            patch,
         ).find((port) => port.path === edge.targetPath);
         return {
             id: edge.id,
@@ -565,15 +585,17 @@ export function PatchCanvas(props: PatchCanvasProps) {
     async function run(output: string | null = null) {
         if (running || invalid.size) return;
         setRunning(true);
-        clearResult();
+        clearResult(false);
         setMessage('Validating and evaluating the patch…');
         const currentRevision = revision.current;
+        const snapshot = structuredClone(patch);
+        const runContext = structuredClone(context);
         try {
             const completed = await runPatch(
-                patch,
+                snapshot,
                 modules,
                 output,
-                context,
+                runContext,
                 props,
                 (progress) => {
                     if (revision.current === currentRevision)
@@ -589,18 +611,26 @@ export function PatchCanvas(props: PatchCanvasProps) {
                 );
                 return;
             }
-            const node = patch.nodes.find((node) => node.id === output);
+            const node = snapshot.nodes.find((node) => node.id === output);
             const type = node
-                ? nodePorts(node, modules, 'returns')[0]
-                : designated && resolveOutputType(patch, designated, modules);
+                ? node.kind === 'output'
+                    ? resolveOutputType(snapshot, node, modules)
+                    : nodePorts(node, modules, 'returns', snapshot)[0]
+                : undefined;
             setResult(completed.output);
             onResult?.(
                 completed.output,
-                node ? nameOf(node) : (designated?.name ?? 'Patch output'),
+                node ? nameOf(node) : 'Patch outputs',
                 isContract(type),
+                {
+                    patch: snapshot,
+                    context: runContext,
+                    outputNode: output,
+                    trace: completed.trace,
+                },
             );
             setMessage(
-                `Evaluated ${node ? nameOf(node) : (designated?.name ?? 'output')}. ${completed.executed.length} module calls completed.`,
+                `Built ${node ? nameOf(node) : 'patch outputs'}. ${completed.executed.length} module calls completed.`,
             );
         } catch (error) {
             if (currentRevision === revision.current)
@@ -700,32 +730,12 @@ export function PatchCanvas(props: PatchCanvasProps) {
         else if (selected) change(withoutNodes(patch, new Set([selected])));
         choose(null);
     }
-    function declareOutput() {
-        if (
-            !selectedNode ||
-            !outputName.trim() ||
-            !outputs.some((port) => port.path === outputPath)
-        )
-            return;
-        const name = outputName.trim();
-        change({
-            ...patch,
-            outputs: [
-                ...patch.outputs.filter((output) => output.name !== name),
-                { name, node: selectedNode.id, path: outputPath },
-            ],
-            output: name,
-        });
-        setMessage(
-            `The main build now evaluates “${name}”, regardless of the selected node.`,
-        );
-    }
     const sourceTarget =
         sourcePicker &&
         patch.nodes.find((node) => node.id === sourcePicker.node);
     const sourcePort =
         sourceTarget &&
-        nodePorts(sourceTarget, modules, 'arguments').find(
+        nodePorts(sourceTarget, modules, 'arguments', patch).find(
             (port) => port.path === sourcePicker?.path,
         );
     const sourceEdge =
@@ -793,8 +803,17 @@ export function PatchCanvas(props: PatchCanvasProps) {
                 node,
                 modules,
                 'returns',
-            ).filter((port) => port.kind === sourcePort.kind);
-            if (sourcePort.kind === 'module' && node.kind === 'module')
+                patch,
+            ).filter(
+                (port) =>
+                    sourceTarget?.kind === 'output' ||
+                    port.kind === sourcePort.kind,
+            );
+            if (
+                sourceTarget?.kind !== 'output' &&
+                sourcePort.kind === 'module' &&
+                node.kind === 'module'
+            )
                 ports.unshift(undefined);
             for (const port of ports) {
                 const edge: PatchConnection = {
@@ -885,6 +904,9 @@ export function PatchCanvas(props: PatchCanvasProps) {
                     >
                         <Plus size={14} /> Add module
                     </button>
+                    <button onClick={addOutput} disabled={running}>
+                        <Plus size={14} /> Add Output
+                    </button>
                 </div>
                 <div className="patch-toolbar-right">
                     <button onClick={() => void open()} disabled={running}>
@@ -938,37 +960,16 @@ export function PatchCanvas(props: PatchCanvasProps) {
                         </button>
                     ))}
                 </nav>
-                <label>
-                    Patch output{' '}
-                    <select
-                        aria-label="Patch output"
-                        value={patch.output ?? ''}
-                        onChange={(event) =>
-                            change({
-                                ...patch,
-                                output: event.target.value || null,
-                            })
-                        }
-                    >
-                        <option value="">Choose an output</option>
-                        {patch.outputs.map((output) => (
-                            <option key={output.name} value={output.name}>
-                                {output.name}
-                            </option>
-                        ))}
-                    </select>
-                </label>
                 <button
                     className="patch-run"
-                    onClick={() => void run()}
-                    disabled={!designated || running || !!invalid.size}
+                    onClick={() =>
+                        void run(
+                            terminals.length === 1 ? terminals[0]!.id : null,
+                        )
+                    }
+                    disabled={!terminals.length || running || !!invalid.size}
                 >
-                    <Play size={14} />{' '}
-                    {running
-                        ? 'Evaluating…'
-                        : contractOutput
-                          ? 'Compile contract'
-                          : 'Build output'}
+                    <Play size={14} /> {running ? 'Building…' : 'Build patch'}
                 </button>
             </div>
             <div className="patch-stage">
@@ -977,8 +978,6 @@ export function PatchCanvas(props: PatchCanvasProps) {
                         nodes={flowNodes}
                         edges={flowEdges}
                         nodeTypes={nodeTypes}
-                        fitView
-                        fitViewOptions={{ maxZoom: 1, padding: 0.15 }}
                         minZoom={0.15}
                         maxZoom={1.5}
                         nodesDraggable={!running}
@@ -1011,6 +1010,36 @@ export function PatchCanvas(props: PatchCanvasProps) {
                         }}
                         onPaneClick={() => choose(null)}
                         onNodesChange={(changes) => {
+                            const dimensions = changes.filter(
+                                (item) =>
+                                    item.type === 'dimensions' &&
+                                    item.dimensions,
+                            );
+                            if (dimensions.length)
+                                setMeasurements((current) => {
+                                    let next = current;
+                                    for (const item of dimensions) {
+                                        if (
+                                            item.type !== 'dimensions' ||
+                                            !item.dimensions
+                                        )
+                                            continue;
+                                        const key = `${path.join('/')}/${item.id}`;
+                                        const { width, height } =
+                                            item.dimensions;
+                                        if (
+                                            width <= 0 ||
+                                            height <= 0 ||
+                                            (current[key]?.width === width &&
+                                                current[key]?.height === height)
+                                        )
+                                            continue;
+                                        if (next === current)
+                                            next = { ...current };
+                                        next[key] = { width, height };
+                                    }
+                                    return next;
+                                });
                             const selection = changes.find(
                                 (change) =>
                                     change.type === 'select' && change.selected,
@@ -1142,12 +1171,6 @@ export function PatchCanvas(props: PatchCanvasProps) {
                         discovering={discovering}
                         running={running}
                         invalid={!!invalid.size}
-                        outputs={outputs}
-                        namedOutputs={patch.outputs.filter(
-                            (output) => output.node === selectedNode?.id,
-                        )}
-                        outputName={outputName}
-                        outputPath={outputPath}
                         result={result}
                         onClose={() => {
                             if (choose(null)) setAddingVariable(false);
@@ -1159,7 +1182,12 @@ export function PatchCanvas(props: PatchCanvasProps) {
                         }}
                         onRename={(label) => {
                             if (selectedNode)
-                                updateNode({ ...selectedNode, label }, false);
+                                updateNode(
+                                    selectedNode.kind === 'output'
+                                        ? { ...selectedNode, name: label }
+                                        : { ...selectedNode, label },
+                                    selectedNode.kind === 'output',
+                                );
                         }}
                         onEditDefinition={() => {
                             if (!selectedNode || !choose(null)) return;
@@ -1207,21 +1235,9 @@ export function PatchCanvas(props: PatchCanvasProps) {
                         onEvaluate={() => {
                             if (selectedNode) void run(selectedNode.id);
                         }}
-                        onOutputNameChange={setOutputName}
-                        onOutputPathChange={setOutputPath}
-                        onDeclareOutput={declareOutput}
-                        onRemoveOutput={(name) => {
-                            const outputs = patch.outputs.filter(
-                                (item) => item.name !== name,
-                            );
-                            change({
-                                ...patch,
-                                outputs,
-                                output:
-                                    patch.output === name
-                                        ? (outputs[0]?.name ?? null)
-                                        : patch.output,
-                            });
+                        onConnectOutput={() => {
+                            if (selectedNode?.kind === 'output')
+                                configure(selectedNode.id, '');
                         }}
                         sourcePicker={
                             sourcePort &&
@@ -1229,6 +1245,7 @@ export function PatchCanvas(props: PatchCanvasProps) {
                             sourcePicker && (
                                 <PatchSourcePicker
                                     sourcePort={sourcePort}
+                                    wireOnly={sourceTarget.kind === 'output'}
                                     sourceLabel={
                                         sourceEdge
                                             ? nameOf(

@@ -31,7 +31,15 @@ A focused review of desktop/IPC, schema processing, module provenance and signin
 workflows remains necessary. Passing regression checks is not an independent
 security audit. Windows distribution is not claimed by the current CI matrix.
 
-Typed module-reference metadata in Sapio would allow stronger static checking of
-nested API connections. Additional scheduling or visual control-flow constructs
+Typed module-reference metadata now checks nested API connections. Additional
+scheduling or visual control-flow constructs
 should be built on explicit module semantics rather than inferred from arbitrary
 JSON Schemas. Signing and chain execution remain distinct from visual authoring.
+
+Bound graphs and action compilation sources remain in the current session.
+Artifact and bound-program exports are interoperable raw documents; restoring a
+complete authoring session, including scoped action requests, needs a dedicated
+session document format. Additional OP_VAULT trigger proposals currently exceed
+the default WASM execution budget; the initial example and unchanged recovery
+request remain usable. Studio preserves the previous graph when compilation
+fails rather than presenting a partially updated result.

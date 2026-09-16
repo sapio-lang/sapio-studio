@@ -160,6 +160,24 @@
 .patch-node-footer:empty {
     display: none;
 }
+.patch-node-output {
+    width: 260px;
+    border-color: #5a9990;
+}
+.patch-output-note {
+    margin: 12px 14px 0;
+    color: #65776e;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.patch-workspace .patch-node-footer .patch-output-build {
+    color: #226e65;
+    background: #e6f0e9;
+    border-radius: 0 0 10px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    justify-content: center;
+}
 .patch-workspace .patch-node-footer button {
     border: none;
     background: transparent;

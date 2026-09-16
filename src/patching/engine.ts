@@ -48,8 +48,12 @@ export interface SubpatchNode extends NodeBase {
     patch: Patch;
     arguments?: JsonValue;
 }
+export interface OutputNode extends NodeBase {
+    kind: 'output';
+    name: string;
+}
 export type PatchNode =
-    ModuleNode | VariableNode | ParameterNode | SubpatchNode;
+    ModuleNode | VariableNode | ParameterNode | SubpatchNode | OutputNode;
 export interface PatchConnection {
     id: string;
     kind: 'value' | 'module';
@@ -58,22 +62,16 @@ export interface PatchConnection {
     target: string;
     targetPath: string;
 }
-export interface PatchOutput {
-    name: string;
-    node: string;
-    path: string;
-}
 export interface Patch {
     version: 2;
     nodes: PatchNode[];
     connections: PatchConnection[];
-    outputs: PatchOutput[];
-    output: string | null;
 }
 export interface PatchFile extends Patch {
     context: JsonValue;
 }
 export interface PatchRuntime {
+    contextForNode?(nodePath: string[], defaultContext: JsonValue): JsonValue;
     invoke(
         key: string,
         args: { arguments: JsonValue; context: JsonValue },
@@ -97,6 +95,13 @@ export interface PatchResult {
     output: JsonValue;
     values: Map<string, JsonValue>;
     executed: string[];
+    trace: PatchInvocation[];
+}
+export interface PatchInvocation {
+    nodePath: string[];
+    moduleKey: string;
+    args: JsonValue;
+    result: JsonValue;
 }
 
 /** JSON numbers must survive a renderer round trip without integer rounding. */
@@ -142,17 +147,31 @@ export function collectModuleKeys(patch: Patch): string[] {
     return [...keys].sort();
 }
 
+export function patchOutputs(patch: Patch): OutputNode[] {
+    return patch.nodes.filter(
+        (node): node is OutputNode => node.kind === 'output',
+    );
+}
+
 export function resolveOutputType(
     patch: Patch,
-    output: PatchOutput,
+    output: OutputNode,
     modules: ModuleInfo[],
     depth = 0,
 ): ValueType | undefined {
-    const node = patch.nodes.find((item) => item.id === output.node);
+    const wires = patch.connections.filter((edge) => edge.target === output.id);
+    if (
+        wires.length !== 1 ||
+        wires[0]!.kind !== 'value' ||
+        wires[0]!.targetPath !== ''
+    )
+        return undefined;
+    const wire = wires[0]!;
+    const node = patch.nodes.find((item) => item.id === wire.source);
     const port =
         node &&
-        nodePorts(node, modules, 'returns', depth).find(
-            (item) => item.path === output.path,
+        nodePorts(node, modules, 'returns', patch, depth).find(
+            (item) => item.path === wire.sourcePath,
         );
     return port && { schema: port.schema, root: port.root };
 }
@@ -161,6 +180,7 @@ export function nodePorts(
     node: PatchNode,
     modules: ModuleInfo[],
     side: 'arguments' | 'returns',
+    patch?: Patch,
     depth = 0,
 ): SchemaPort[] {
     if (depth > 8) return [];
@@ -170,6 +190,23 @@ export function nodePorts(
     }
     if (node.kind === 'variable' || node.kind === 'parameter')
         return side === 'returns' ? valuePorts(node.type) : [];
+    if (node.kind === 'output') {
+        if (side === 'returns') return [];
+        const type = patch && resolveOutputType(patch, node, modules, depth);
+        const port = type && valuePorts(type, 'arguments')[0];
+        return [
+            {
+                ...(port ?? {
+                    schema: true,
+                    root: true,
+                    kind: 'value' as const,
+                }),
+                path: '',
+                label: 'Value',
+                required: true,
+            },
+        ];
+    }
     const fields: { name: string; type: ValueType; required: boolean }[] = [];
     if (side === 'arguments') {
         for (const parameter of node.patch.nodes) {
@@ -181,7 +218,7 @@ export function nodePorts(
                 });
         }
     } else {
-        for (const output of node.patch.outputs) {
+        for (const output of patchOutputs(node.patch)) {
             const type = resolveOutputType(
                 node.patch,
                 output,
@@ -207,7 +244,25 @@ export function connectionCompatibility(
     const source = patch.nodes.find((node) => node.id === edge.source);
     const target = patch.nodes.find((node) => node.id === edge.target);
     if (!source || !target) return fail('Both nodes must exist in the patch.');
-    const input = nodePorts(target, modules, 'arguments').find(
+    if (target.kind === 'output') {
+        if (edge.targetPath !== '')
+            return fail('An Output has one input, for its complete value.');
+        if (edge.kind !== 'value')
+            return fail(
+                'Wire a declared result into an Output, not a callable implementation hash.',
+            );
+        const port = nodePorts(source, modules, 'returns', patch).find(
+            (item) => item.path === edge.sourcePath,
+        );
+        return port
+            ? {
+                  compatible: true,
+                  status: 'exact',
+                  reason: 'The Output type follows this declared value.',
+              }
+            : fail('The source is not a declared value output.');
+    }
+    const input = nodePorts(target, modules, 'arguments', patch).find(
         (port) => port.path === edge.targetPath,
     );
     if (!input) return fail('The destination is not a declared input.');
@@ -225,7 +280,7 @@ export function connectionCompatibility(
             ? compatibleModule(module, input)
             : fail('Load the exact module hash before connecting it.');
     }
-    const output = nodePorts(source, modules, 'returns').find(
+    const output = nodePorts(source, modules, 'returns', patch).find(
         (port) => port.path === edge.sourcePath,
     );
     if (!output) return fail('The source is not a declared output.');
@@ -353,9 +408,14 @@ export function withConnection(
     if (error) throw new Error(error);
     const result = structuredClone(patch);
     const target = result.nodes.find((node) => node.id === edge.target)!;
-    if (target.kind !== 'module' && target.kind !== 'subpatch')
+    if (
+        target.kind !== 'module' &&
+        target.kind !== 'subpatch' &&
+        target.kind !== 'output'
+    )
         throw new Error('This node has no inputs.');
-    target.arguments = removePointer(target.arguments, edge.targetPath);
+    if (target.kind !== 'output')
+        target.arguments = removePointer(target.arguments, edge.targetPath);
     result.connections = [
         ...result.connections.filter((item) => item.id !== edge.id),
         structuredClone(edge),
@@ -380,6 +440,7 @@ export function validatePatch(patch: Patch, modules: ModuleInfo[]): void {
             throw new Error('The patch is too large for this editor.');
         const ids = new Set<string>();
         const parameters = new Set<string>();
+        const outputs = new Set<string>();
         for (const node of graph.nodes) {
             if (!validId(node.id))
                 throw new Error(
@@ -396,7 +457,13 @@ export function validatePatch(patch: Patch, modules: ModuleInfo[]): void {
                         `Missing module ${node.moduleKey}. Load that exact WASM module first.`,
                     );
             } else if (node.kind === 'subpatch') walk(node.patch, depth + 1);
-            else if (node.kind === 'parameter') {
+            else if (node.kind === 'output') {
+                if (outputs.has(node.name))
+                    throw new Error(
+                        'Output names must be unique within a patch.',
+                    );
+                outputs.add(node.name);
+            } else if (node.kind === 'parameter') {
                 if (parameters.has(node.name))
                     throw new Error('Patch parameter names must be unique.');
                 parameters.add(node.name);
@@ -406,7 +473,9 @@ export function validatePatch(patch: Patch, modules: ModuleInfo[]): void {
                     ? node.value
                     : node.kind === 'parameter'
                       ? node.default
-                      : node.arguments;
+                      : node.kind === 'output'
+                        ? undefined
+                        : node.arguments;
             if (value !== undefined) assertJsonNumbers(value, 'Node value');
         }
         const edges = new Set<string>();
@@ -426,20 +495,6 @@ export function validatePatch(patch: Patch, modules: ModuleInfo[]): void {
                     'A connected input also contains a local value. Remove the local value so it has one source.',
                 );
         }
-        const outputs = new Set<string>();
-        for (const output of graph.outputs) {
-            if (!validName(output.name))
-                throw new Error('Give each patch output a nonempty name.');
-            if (outputs.has(output.name))
-                throw new Error('Patch output names must be unique.');
-            outputs.add(output.name);
-            if (!resolveOutputType(graph, output, modules))
-                throw new Error(
-                    `Patch output ${output.name} does not identify a declared value.`,
-                );
-        }
-        if (graph.output !== null && !outputs.has(graph.output))
-            throw new Error('The designated patch output does not exist.');
     };
     walk(patch, 0);
 }
@@ -480,6 +535,7 @@ export async function runPatch(
     validatePatch(snapshot, catalog);
     const values = new Map<string, JsonValue>();
     const executed: string[] = [];
+    const trace: PatchInvocation[] = [];
     const validateValue = async (
         type: ValueType,
         value: JsonValue,
@@ -496,9 +552,8 @@ export async function runPatch(
     const runGraph = async (
         graph: Patch,
         input: JsonObject,
-        prefix: string,
+        parentPath: string[],
         selection: string | null,
-        allOutputs: boolean,
     ): Promise<JsonValue> => {
         const known = new Set(
             graph.nodes
@@ -516,9 +571,22 @@ export async function runPatch(
                 throw new Error(
                     'Select a node whose value you want to evaluate.',
                 );
-            const progressId = prefix + id;
+            const nodePath = [...parentPath, id];
+            const progressId = nodePath.join('/');
             let value: JsonValue;
-            if (node.kind === 'variable' || node.kind === 'parameter') {
+            if (node.kind === 'output') {
+                const wire = graph.connections.find(
+                    (edge) => edge.target === node.id,
+                );
+                if (!wire)
+                    throw new Error(
+                        `Connect a value to Output ${node.name} before building it.`,
+                    );
+                value = readPointer(
+                    await evaluate(wire.source),
+                    wire.sourcePath,
+                );
+            } else if (node.kind === 'variable' || node.kind === 'parameter') {
                 const literal =
                     node.kind === 'variable'
                         ? node.value
@@ -551,9 +619,12 @@ export async function runPatch(
                                   await evaluate(edge.source),
                                   edge.sourcePath,
                               );
-                    const port = nodePorts(node, catalog, 'arguments').find(
-                        (item) => item.path === edge.targetPath,
-                    )!;
+                    const port = nodePorts(
+                        node,
+                        catalog,
+                        'arguments',
+                        graph,
+                    ).find((item) => item.path === edge.targetPath)!;
                     await validateValue(
                         port,
                         wired,
@@ -565,7 +636,12 @@ export async function runPatch(
                     throw new Error(
                         `${node.label ?? (node.kind === 'module' ? catalog.find((item) => item.key === node.moduleKey)!.name : node.name)} has unset inputs.`,
                     );
-                for (const port of nodePorts(node, catalog, 'arguments')) {
+                for (const port of nodePorts(
+                    node,
+                    catalog,
+                    'arguments',
+                    graph,
+                )) {
                     if (port.kind !== 'module' || !hasPointer(args, port.path))
                         continue;
                     const reference = readPointer(args, port.path);
@@ -587,23 +663,22 @@ export async function runPatch(
                 progress?.({ node: progressId, state: 'running' });
                 if (node.kind === 'subpatch') {
                     await validateValue(
-                        nodePorts(node, catalog, 'arguments')[0]!,
+                        nodePorts(node, catalog, 'arguments', graph)[0]!,
                         args,
                         `Invalid inputs for ${node.name}`,
                     );
                     if (!object(args))
                         throw new Error('Subpatch inputs must be a record.');
-                    value = await runGraph(
-                        node.patch,
-                        args,
-                        `${progressId}/`,
-                        null,
-                        true,
-                    );
+                    value = await runGraph(node.patch, args, nodePath, null);
                 } else {
+                    const defaultContext = structuredClone(runContext);
+                    const invocationContext = runtime.contextForNode
+                        ? runtime.contextForNode([...nodePath], defaultContext)
+                        : defaultContext;
+                    assertJsonNumbers(invocationContext, 'Compilation context');
                     const invocation = {
                         arguments: args,
-                        context: structuredClone(runContext),
+                        context: structuredClone(invocationContext),
                     };
                     const checked = await runtime.validate(
                         node.moduleKey,
@@ -614,6 +689,7 @@ export async function runPatch(
                         throw new Error(
                             `Invalid arguments for ${catalog.find((module) => module.key === node.moduleKey)!.name}: ${checked.errors.join('; ')}`,
                         );
+                    const invokedWith = structuredClone(invocation);
                     value = await runtime.invoke(node.moduleKey, invocation);
                     assertJsonNumbers(value, 'Module result');
                     const output = await runtime.validate(
@@ -626,6 +702,12 @@ export async function runPatch(
                             `The module result violates its advertised API: ${output.errors.join('; ')}`,
                         );
                     executed.push(progressId);
+                    trace.push({
+                        nodePath,
+                        moduleKey: node.moduleKey,
+                        args: invokedWith,
+                        result: structuredClone(value),
+                    });
                 }
             }
             local.set(id, structuredClone(value));
@@ -637,28 +719,21 @@ export async function runPatch(
             });
             return structuredClone(value);
         };
-        if (allOutputs) {
-            if (!graph.outputs.length)
-                throw new Error(
-                    'A reusable patch must declare at least one named output.',
-                );
-            const result: JsonObject = {};
-            for (const output of [...graph.outputs].sort((a, b) =>
-                compareText(a.name, b.name),
-            ))
-                result[output.name] = readPointer(
-                    await evaluate(output.node),
-                    output.path,
-                );
-            return result;
-        }
         if (selection !== null) return evaluate(selection);
-        const output = graph.outputs.find((item) => item.name === graph.output);
-        if (!output) throw new Error('Choose the patch output to compile.');
-        return readPointer(await evaluate(output.node), output.path);
+        const outputs = patchOutputs(graph);
+        if (!outputs.length)
+            throw new Error(
+                'Add an Output node and wire the value you want to build.',
+            );
+        const result: JsonObject = {};
+        for (const output of outputs.sort((a, b) =>
+            compareText(a.name, b.name),
+        ))
+            result[output.name] = await evaluate(output.id);
+        return result;
     };
-    const output = await runGraph(snapshot, supplied, '', outputNode, false);
-    return { output, values, executed };
+    const output = await runGraph(snapshot, supplied, [], outputNode);
+    return { output, values, executed, trace };
 }
 
 function validName(value: unknown): value is string {
@@ -687,16 +762,18 @@ export function parsePatch(text: string): PatchFile {
             graph.version !== 2 ||
             !Array.isArray(graph.nodes) ||
             !Array.isArray(graph.connections) ||
-            !Array.isArray(graph.outputs) ||
-            !(graph.output === null || validName(graph.output))
+            Object.hasOwn(graph, 'outputs') ||
+            Object.hasOwn(graph, 'output')
         )
             throw new Error(
-                'Expected a Sapio patch with version 2 and named outputs.',
+                'Expected a version 2 Sapio patch with wired Output nodes.',
             );
+        const nodeKinds = new Map<string, string>();
+        const outputNames = new Set<string>();
+        const parameterNames = new Set<string>();
         if (
             graph.nodes.length > 256 ||
             graph.connections.length > 1024 ||
-            graph.outputs.length > 256 ||
             (budget.nodes -= graph.nodes.length) < 0 ||
             (budget.connections -= graph.connections.length) < 0
         )
@@ -713,6 +790,8 @@ export function parsePatch(text: string): PatchFile {
                 !Number.isFinite(node.position.y)
             )
                 throw new Error('Invalid patch node.');
+            if (nodeKinds.has(node.id))
+                throw new Error('Patch node identifiers must be unique.');
             if (node.kind === 'module') {
                 if (
                     typeof node.moduleKey !== 'string' ||
@@ -734,11 +813,34 @@ export function parsePatch(text: string): PatchFile {
                     )
                 )
                     throw new Error('Invalid typed value node.');
+                if (node.kind === 'parameter') {
+                    if (parameterNames.has(node.name))
+                        throw new Error(
+                            'Patch parameter names must be unique.',
+                        );
+                    parameterNames.add(node.name);
+                }
             } else if (node.kind === 'subpatch') {
                 if (!validName(node.name))
                     throw new Error('Invalid subpatch name.');
                 walk(node.patch, depth + 1);
+            } else if (node.kind === 'output') {
+                if (
+                    !validName(node.name) ||
+                    ['arguments', 'value', 'default', 'type'].some((key) =>
+                        Object.hasOwn(node, key),
+                    )
+                )
+                    throw new Error(
+                        'An Output needs a name and one incoming value wire.',
+                    );
+                if (outputNames.has(node.name))
+                    throw new Error(
+                        'Output names must be unique within a patch.',
+                    );
+                outputNames.add(node.name);
             } else throw new Error('Unknown patch node kind.');
+            nodeKinds.set(node.id, String(node.kind));
         }
         for (const edge of graph.connections) {
             if (
@@ -751,18 +853,19 @@ export function parsePatch(text: string): PatchFile {
                 typeof edge.targetPath !== 'string'
             )
                 throw new Error('Invalid patch connection.');
+            if (!nodeKinds.has(edge.source) || !nodeKinds.has(edge.target))
+                throw new Error('A connection references an unknown node.');
+            if (nodeKinds.get(edge.source) === 'output')
+                throw new Error('An Output cannot have outgoing connections.');
+            if (
+                nodeKinds.get(edge.target) === 'output' &&
+                (edge.kind !== 'value' || edge.targetPath !== '')
+            )
+                throw new Error(
+                    'An Output accepts one complete value through a value wire.',
+                );
             pointerTokens(edge.sourcePath);
             pointerTokens(edge.targetPath);
-        }
-        for (const output of graph.outputs) {
-            if (
-                !object(output) ||
-                !validName(output.name) ||
-                !validId(output.node) ||
-                typeof output.path !== 'string'
-            )
-                throw new Error('Invalid named patch output.');
-            pointerTokens(output.path);
         }
     };
     walk(value, 0);

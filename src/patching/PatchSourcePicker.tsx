@@ -13,6 +13,7 @@ export interface SourceCandidate {
 
 interface PatchSourcePickerProps {
     sourcePort: SchemaPort;
+    wireOnly?: boolean;
     sourceLabel: string | null;
     candidates: SourceCandidate[];
     discovering: boolean;
@@ -25,6 +26,7 @@ interface PatchSourcePickerProps {
 
 export function PatchSourcePicker({
     sourcePort,
+    wireOnly = false,
     sourceLabel,
     candidates,
     discovering,
@@ -41,7 +43,9 @@ export function PatchSourcePicker({
         >
             <header>
                 <h4>
-                    {sourcePort.label} · {schemaLabel(sourcePort)}
+                    {wireOnly
+                        ? 'Output source'
+                        : `${sourcePort.label} · ${schemaLabel(sourcePort)}`}
                 </h4>
                 <button aria-label="Close source picker" onClick={onClose}>
                     <X size={13} />
@@ -54,7 +58,7 @@ export function PatchSourcePicker({
                 </>
             ) : (
                 <>
-                    {sourcePort.kind === 'value' && (
+                    {!wireOnly && sourcePort.kind === 'value' && (
                         <>
                             <button onClick={onClose}>
                                 Enter a value below

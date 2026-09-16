@@ -48,6 +48,12 @@ export function clauseTrampolinePatch(
                 arguments: {},
                 position: { x: 520, y: 120 },
             },
+            {
+                id: 'policy-output',
+                kind: 'output',
+                name: 'policy',
+                position: { x: 980, y: 180 },
+            },
         ],
         connections: [
             ...['alice', 'bob'].map((name) => ({
@@ -66,8 +72,14 @@ export function clauseTrampolinePatch(
                 target: 'trampoline',
                 targetPath: '/v',
             },
+            {
+                id: 'policy-result',
+                kind: 'value',
+                source: 'trampoline',
+                sourcePath: '',
+                target: 'policy-output',
+                targetPath: '',
+            },
         ],
-        outputs: [{ name: 'policy', node: 'trampoline', path: '' }],
-        output: 'policy',
     };
 }

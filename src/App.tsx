@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ArrowRight,
     Box,
@@ -23,6 +23,7 @@ import type {
     CliStatus,
     Explanation,
     JsonValue,
+    ObjectExplanation,
     ModuleInfo,
     ModuleSummary,
     StudioSettings,
@@ -32,12 +33,22 @@ import {
     ArtifactInspector,
     type ArtifactSelection,
 } from './ArtifactGraph';
+import {
+    extractContract,
+    parseBinding,
+    templateBindingKey,
+    type BoundArtifact,
+    type BoundTransaction,
+} from './artifactSession';
 import { ContextEditor, Dialog, isObject } from './Dialog';
 import { ModuleAuthoring } from './ModuleAuthoring';
+import { ProposalDialog } from './ProposalDialog';
+import type { CompilationSource } from './compilationSource';
 import { SettingsPanel } from './SettingsPanel';
-import { SpendPanel } from './SpendPanel';
+import { SpendPanel, type GraphSpend } from './SpendPanel';
 import { PatchCanvas } from './patching/PatchCanvas';
 import { displayModuleName } from './patching/PatchNodeCard';
+import { parseEditorJson } from './patching/schemaValue';
 import {
     DocumentField,
     EmptyState,
@@ -49,7 +60,13 @@ import {
 const api = window.studio;
 type Tab = 'patch' | 'inspect' | 'spend';
 type ModalName =
-    'settings' | 'context' | 'module' | 'result' | 'binding' | null;
+    | 'settings'
+    | 'context'
+    | 'module'
+    | 'result'
+    | 'binding'
+    | 'proposal'
+    | null;
 
 function App() {
     const [tab, setTab] = useState<Tab>(api ? 'patch' : 'inspect');
@@ -85,20 +102,42 @@ function App() {
         explanation: Explanation;
         revision: number;
         demo: boolean;
+        binding: BoundArtifact | null;
+        source: CompilationSource | null;
+        patchEdited: boolean;
     } | null>(null);
     const [selection, setSelection] = useState<ArtifactSelection | null>(null);
     const [outline, setOutline] = useState(false);
+    const [proposal, setProposal] = useState<{
+        object: ObjectExplanation;
+        action: ObjectExplanation['actions'][number];
+    } | null>(null);
+    const [focusRequest, setFocusRequest] = useState(0);
+    const [spendReset, setSpendReset] = useState(0);
+    const [spendTarget, setSpendTarget] = useState<
+        (GraphSpend & { revision: number; sequence: number }) | null
+    >(null);
     const [result, setResult] = useState<{
         text: string;
         name: string;
         contract: boolean;
+        source: CompilationSource;
     } | null>(null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
     const artifactRequest = useRef(0);
     const activityRequest = useRef(0);
     const moduleRequest = useRef(0);
-    const invalidatePatchResult = useCallback(() => setResult(null), []);
+    const patchRevision = useRef(0);
+    const invalidatePatchResult = useCallback((edited: boolean) => {
+        patchRevision.current++;
+        setResult(null);
+        setArtifact((current) =>
+            edited && current?.source?.kind === 'patch'
+                ? { ...current, patchEdited: true }
+                : current,
+        );
+    }, []);
     const loadPatchModules = useCallback(async (keys: string[]) => {
         if (!api)
             throw new Error('Open the desktop app to load a saved patch.');
@@ -124,6 +163,10 @@ function App() {
     const [bindingPsbt, setBindingPsbt] = useState('');
     const contextObject = isObject(context) ? context : {};
     const canRun = Boolean(api && cli?.available);
+    const moduleCatalog = useMemo(
+        () => Object.values(moduleInfos),
+        [moduleInfos],
+    );
 
     useEffect(() => {
         let active = true;
@@ -160,6 +203,9 @@ function App() {
                             explanation,
                             revision: 1,
                             demo: true,
+                            binding: null,
+                            source: null,
+                            patchEdited: false,
                         });
                         const root = explanation.artifact.nodes[0];
                         if (root)
@@ -190,7 +236,7 @@ function App() {
         }
     }
     function closeModal() {
-        if (modal === 'module' || modal === 'result')
+        if (modal === 'module' || modal === 'result' || modal === 'proposal')
             artifactRequest.current += 1;
         setModal(null);
     }
@@ -224,7 +270,13 @@ function App() {
         setModuleInfos((current) => ({ ...current, [loaded.key]: loaded }));
         return loaded;
     }
-    async function inspect(text: string, name: string) {
+    async function inspect(
+        text: string,
+        name: string,
+        source: CompilationSource | null = null,
+        expectedPatchRevision?: number,
+        patchEdited = false,
+    ) {
         if (!api)
             throw new Error(
                 'Open the desktop app to validate an artifact with Sapio.',
@@ -235,16 +287,29 @@ function App() {
         try {
             explanation = await api.explain({ artifact: text });
         } catch (error) {
-            if (request !== artifactRequest.current) return;
+            if (
+                request !== artifactRequest.current ||
+                (expectedPatchRevision !== undefined &&
+                    expectedPatchRevision !== patchRevision.current)
+            )
+                return;
             throw error;
         }
         if (request !== artifactRequest.current) return;
+        if (
+            expectedPatchRevision !== undefined &&
+            expectedPatchRevision !== patchRevision.current
+        )
+            return;
         setArtifact((current) => ({
             text,
             name,
             explanation,
             revision: (current?.revision ?? 0) + 1,
             demo: false,
+            binding: null,
+            source: source ? structuredClone(source) : null,
+            patchEdited,
         }));
         const root = explanation.artifact.nodes[0];
         setSelection(root ? { kind: 'output', object: root } : null);
@@ -282,10 +347,50 @@ function App() {
             explanation,
             revision: (current?.revision ?? 0) + 1,
             demo: true,
+            binding: null,
+            source: null,
+            patchEdited: false,
         }));
         const root = explanation.artifact.nodes[0];
         setSelection(root ? { kind: 'output', object: root } : null);
         setTab('inspect');
+    }
+    function navigate(next: ArtifactSelection) {
+        setSelection(next);
+        setOutline(false);
+        setTab('inspect');
+        setFocusRequest((current) => current + 1);
+    }
+    function reviewSpend(selected: ArtifactSelection) {
+        if (!artifact) return;
+        const occurrence =
+            artifact.binding?.occurrences[selected.object.location];
+        const transaction =
+            selected.kind === 'template'
+                ? occurrence?.transactions[
+                      templateBindingKey(selected.template)
+                  ]
+                : undefined;
+        setSpendTarget((current) => ({
+            revision: artifact.revision,
+            sequence: (current?.sequence ?? 0) + 1,
+            artifact: extractContract(artifact.text, selected.object.location),
+            psbt: transaction?.psbt ?? '',
+            mock: artifact.binding?.funding.kind === 'mock',
+            location: selected.object.location,
+            label:
+                selected.kind === 'template'
+                    ? `${selected.template.kind} transaction ${selected.template.hash.slice(0, 8)}`
+                    : 'Custom spend',
+        }));
+        setTab('spend');
+    }
+    async function exportPsbt(transaction: BoundTransaction) {
+        await api?.documents.save({
+            name: `${transaction.kind}-${transaction.hash.slice(0, 8)}.psbt`,
+            text: transaction.psbt,
+            kind: 'psbt',
+        });
     }
     const visibleModules = modules.filter((module) =>
         `${moduleInfos[module.key] ? displayModuleName(moduleInfos[module.key]!) : module.name} ${module.key}`
@@ -661,7 +766,7 @@ function App() {
                         className="patch-panel"
                     >
                         <PatchCanvas
-                            modules={Object.values(moduleInfos)}
+                            modules={moduleCatalog}
                             context={context}
                             onContextChange={setContext}
                             addModule={addModule}
@@ -683,12 +788,12 @@ function App() {
                                     throw new Error(
                                         'Module execution is available in the desktop app.',
                                     );
-                                return JSON.parse(
+                                return parseEditorJson(
                                     await api.modules.call({
                                         key,
                                         args: JSON.stringify(args),
                                     }),
-                                ) as JsonValue;
+                                );
                             }}
                             validate={async (key, side, value) => {
                                 if (!api)
@@ -711,12 +816,27 @@ function App() {
                                     value,
                                 });
                             }}
-                            onResult={(value, name, contract) => {
+                            onResult={(value, name, contract, recipe) => {
+                                const text = JSON.stringify(value, null, 2);
+                                const source: CompilationSource = {
+                                    kind: 'patch',
+                                    recipe,
+                                };
                                 setResult({
-                                    text: JSON.stringify(value, null, 2),
+                                    text,
                                     name,
                                     contract,
+                                    source,
                                 });
+                                if (contract && api)
+                                    void run('Inspecting built contract', () =>
+                                        inspect(
+                                            text,
+                                            name,
+                                            source,
+                                            patchRevision.current,
+                                        ),
+                                    );
                             }}
                         />
                         {result && (
@@ -735,6 +855,7 @@ function App() {
                                                 inspect(
                                                     result.text,
                                                     result.name,
+                                                    result.source,
                                                 ),
                                             )
                                         }
@@ -770,6 +891,16 @@ function App() {
                                                 : 'Validated artifact'}
                                         </div>
                                         <h1>{artifact.name}</h1>
+                                        <span
+                                            className={`binding-status badge ${artifact.binding ? 'teal' : ''}`}
+                                        >
+                                            {artifact.binding
+                                                ? artifact.binding.funding
+                                                      .kind === 'mock'
+                                                    ? 'Mock-bound preview'
+                                                    : 'Bound to supplied funding'
+                                                : 'Unbound template graph'}
+                                        </span>
                                     </div>
                                     <div className="artifact-toolbar-actions">
                                         <span className="artifact-stat">
@@ -814,9 +945,52 @@ function App() {
                                             disabled={!canRun || Boolean(busy)}
                                             onClick={() => setModal('binding')}
                                         >
-                                            Bind preview
+                                            {artifact.binding
+                                                ? 'Change funding'
+                                                : 'Bind graph'}
                                         </button>
+                                        {artifact.binding && (
+                                            <button
+                                                className="button small"
+                                                disabled={!api || Boolean(busy)}
+                                                onClick={() =>
+                                                    run(
+                                                        'Exporting bound graph',
+                                                        async () => {
+                                                            await api?.documents.save(
+                                                                {
+                                                                    name: `${artifact.name}-bound.json`,
+                                                                    text: artifact
+                                                                        .binding!
+                                                                        .text,
+                                                                    kind: 'json',
+                                                                },
+                                                            );
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                <FileDown size={14} /> Export
+                                                bound graph
+                                            </button>
+                                        )}
                                     </div>
+                                </div>
+                                <div className="binding-guide" role="status">
+                                    {artifact.patchEdited && (
+                                        <strong>
+                                            The patch has changed. This graph is
+                                            the previous built snapshot. Build
+                                            an Output again to inspect your
+                                            edits.{' '}
+                                        </strong>
+                                    )}
+                                    {artifact.binding
+                                        ? artifact.binding.funding.kind ===
+                                          'mock'
+                                            ? 'Synthetic funding: explore linked transactions and spending requirements. These outpoints are previews.'
+                                            : 'Funding linked. Select a transaction to review its PSBT and spending requirements; confirmation and funding completeness are checked separately.'
+                                        : 'These are transaction templates. Bind the graph to assign outpoints and link PSBTs, then select a transaction to review its spend.'}
                                 </div>
                                 {artifact.explanation.artifact
                                     .native_ctv_in_graph && (
@@ -828,72 +1002,111 @@ function App() {
                                     </div>
                                 )}
                                 <div className="inspect-body">
-                                    {outline ? (
-                                        <div className="artifact-outline">
-                                            <h2>Contract outputs</h2>
-                                            {artifact.explanation.artifact.nodes.map(
-                                                (object, index) => (
-                                                    <button
-                                                        key={object.location}
-                                                        onClick={() =>
-                                                            setSelection({
-                                                                kind: 'output',
-                                                                object,
-                                                            })
-                                                        }
-                                                    >
-                                                        <span className="outline-index">
-                                                            {String(
-                                                                index,
-                                                            ).padStart(2, '0')}
-                                                        </span>
-                                                        <span>
-                                                            <strong>
-                                                                {object.location ===
-                                                                ''
-                                                                    ? 'Contract root'
-                                                                    : `Output occurrence ${index}`}
-                                                            </strong>
-                                                            <small>
-                                                                {
-                                                                    object
-                                                                        .templates
-                                                                        .length
-                                                                }{' '}
-                                                                transaction
-                                                                templates ·{' '}
-                                                                {
-                                                                    object
-                                                                        .program_policies
-                                                                        .length
-                                                                }{' '}
-                                                                Program policies
-                                                            </small>
-                                                        </span>
-                                                        <span>
-                                                            {formatSats(
-                                                                object.required_input_sats,
-                                                            )}
-                                                        </span>
-                                                    </button>
-                                                ),
-                                            )}
-                                        </div>
-                                    ) : (
+                                    <div
+                                        className="artifact-outline"
+                                        hidden={!outline}
+                                    >
+                                        <h2>Contract outputs</h2>
+                                        {artifact.explanation.artifact.nodes.map(
+                                            (object, index) => (
+                                                <button
+                                                    key={object.location}
+                                                    onClick={() =>
+                                                        setSelection({
+                                                            kind: 'output',
+                                                            object,
+                                                        })
+                                                    }
+                                                >
+                                                    <span className="outline-index">
+                                                        {String(index).padStart(
+                                                            2,
+                                                            '0',
+                                                        )}
+                                                    </span>
+                                                    <span>
+                                                        <strong>
+                                                            {object.location ===
+                                                            ''
+                                                                ? 'Contract root'
+                                                                : `Output occurrence ${index}`}
+                                                        </strong>
+                                                        <small>
+                                                            {
+                                                                object.templates
+                                                                    .length
+                                                            }{' '}
+                                                            transaction
+                                                            templates ·{' '}
+                                                            {
+                                                                object
+                                                                    .program_policies
+                                                                    .length
+                                                            }{' '}
+                                                            Program policies
+                                                        </small>
+                                                    </span>
+                                                    <span>
+                                                        {formatSats(
+                                                            object.required_input_sats,
+                                                        )}
+                                                    </span>
+                                                </button>
+                                            ),
+                                        )}
+                                    </div>
+                                    <div
+                                        className="artifact-graph-container"
+                                        hidden={outline}
+                                    >
                                         <ArtifactGraph
+                                            key={artifact.revision}
                                             explanation={artifact.explanation}
+                                            binding={artifact.binding}
+                                            selection={selection}
+                                            focusRequest={focusRequest}
                                             onSelect={setSelection}
                                         />
-                                    )}
+                                    </div>
                                     <aside className="artifact-inspector">
                                         <div className="inspector-heading">
                                             <span>Inspector</span>
                                             <span className="badge small">
-                                                Artifact
+                                                {artifact.binding
+                                                    ? 'Linked graph'
+                                                    : 'Template graph'}
                                             </span>
                                         </div>
                                         <ArtifactInspector
                                             selection={selection}
+                                            explanation={artifact.explanation}
+                                            binding={artifact.binding}
+                                            disabled={!canRun || Boolean(busy)}
+                                            onNavigate={navigate}
+                                            onBind={() => setModal('binding')}
+                                            onSpend={(selected) =>
+                                                run(
+                                                    'Opening selected spend',
+                                                    async () =>
+                                                        reviewSpend(selected),
+                                                )
+                                            }
+                                            onExportPsbt={(transaction) =>
+                                                run('Exporting PSBT', () =>
+                                                    exportPsbt(transaction),
+                                                )
+                                            }
+                                            onAction={
+                                                artifact.source
+                                                    ? (object, action) => {
+                                                          setProposal({
+                                                              object,
+                                                              action,
+                                                          });
+                                                          setModal('proposal');
+                                                      }
+                                                    : undefined
+                                            }
                                         />
                                     </aside>
                                 </div>
@@ -946,8 +1159,20 @@ function App() {
                         className="spend-panel"
                     >
                         <SpendPanel
-                            key={artifact?.revision ?? 0}
-                            artifact={artifact?.text ?? null}
+                            key={`${artifact?.revision ?? 0}:${spendReset}:${spendTarget?.revision === artifact?.revision ? spendTarget?.sequence : 0}`}
+                            artifact={
+                                spendTarget?.revision === artifact?.revision
+                                    ? (spendTarget?.artifact ??
+                                      artifact?.text ??
+                                      null)
+                                    : (artifact?.text ?? null)
+                            }
+                            source={
+                                spendTarget?.revision === artifact?.revision
+                                    ? spendTarget
+                                    : null
+                            }
+                            onBack={() => setTab('inspect')}
                             api={api}
                         />
                     </div>
@@ -1015,7 +1240,11 @@ function App() {
                             disabled={!canRun || Boolean(busy)}
                             onClick={() =>
                                 run('Validating contract result', async () =>
-                                    inspect(result.text, result.name),
+                                    inspect(
+                                        result.text,
+                                        result.name,
+                                        result.source,
+                                    ),
                                 )
                             }
                         >
@@ -1047,13 +1276,61 @@ function App() {
                     {error && <pre className="error-message">{error}</pre>}
                 </Dialog>
             )}
+            {modal === 'proposal' && artifact?.source && proposal && api && (
+                <Dialog title="Contract action" onClose={closeModal}>
+                    <ProposalDialog
+                        source={artifact.source}
+                        artifact={artifact.text}
+                        contract={extractContract(
+                            artifact.text,
+                            proposal.object.location,
+                        )}
+                        action={proposal.action}
+                        occurrences={
+                            artifact.explanation.artifact.nodes.filter(
+                                (object) =>
+                                    object.actions.some(
+                                        (action) =>
+                                            action.path ===
+                                            proposal.action.path,
+                                    ),
+                            ).length
+                        }
+                        modules={moduleCatalog}
+                        api={api}
+                        onGenerated={async (text, source) => {
+                            await inspect(
+                                text,
+                                artifact.name,
+                                source,
+                                undefined,
+                                artifact.patchEdited,
+                            );
+                            setResult(null);
+                        }}
+                    />
+                </Dialog>
+            )}
             {modal === 'binding' && artifact && (
-                <Dialog title="Bind artifact preview" onClose={closeModal}>
-                    <h2>Bind a contract occurrence</h2>
+                <Dialog title="Bind contract graph" onClose={closeModal}>
+                    <h2>Link the graph to funding</h2>
                     <p className="muted">
-                        Export the Studio program format with linked PSBT
-                        previews. This does not sign or broadcast a transaction.
+                        Assign outpoints and PSBTs to this contract and its next
+                        transactions. Binding may request attestations from a
+                        configured covenant emulator; it does not broadcast.
                     </p>
+                    {!settings?.runtimeConfig.trim() && (
+                        <div className="notice">
+                            Select a runtime configuration to choose covenant
+                            enforcement and binding settings.{' '}
+                            <button
+                                className="button small"
+                                onClick={() => setModal('settings')}
+                            >
+                                Open runtime settings
+                            </button>
+                        </div>
+                    )}
                     <label>
                         Funding source
                         <select
@@ -1103,33 +1380,53 @@ function App() {
                     )}
                     <button
                         className="button primary"
-                        disabled={!canRun || Boolean(busy)}
+                        disabled={
+                            !canRun ||
+                            Boolean(busy) ||
+                            !settings?.runtimeConfig.trim()
+                        }
                         onClick={() =>
                             run('Binding artifact', async () => {
                                 if (!api) return;
+                                const request = artifactRequest.current;
+                                const funding =
+                                    bindingMode === 'mock'
+                                        ? { kind: 'mock' as const }
+                                        : bindingMode === 'outpoint'
+                                          ? {
+                                                kind: 'outpoint' as const,
+                                                outpoint,
+                                            }
+                                          : {
+                                                kind: 'psbt' as const,
+                                                psbt: bindingPsbt,
+                                            };
                                 const text = await api.bind({
                                     artifact: artifact.text,
-                                    funding:
-                                        bindingMode === 'mock'
-                                            ? { kind: 'mock' }
-                                            : bindingMode === 'outpoint'
-                                              ? { kind: 'outpoint', outpoint }
-                                              : {
-                                                    kind: 'psbt',
-                                                    psbt: bindingPsbt,
-                                                },
+                                    funding,
                                 });
-                                await api.documents.save({
-                                    name: 'bound-program.json',
+                                if (request !== artifactRequest.current) return;
+                                const binding = parseBinding(
+                                    artifact.text,
+                                    artifact.explanation,
                                     text,
-                                    kind: 'json',
-                                });
-                                setModal(null);
+                                    funding,
+                                );
+                                setArtifact((current) =>
+                                    current?.revision === artifact.revision
+                                        ? { ...current, binding }
+                                        : current,
+                                );
+                                setSpendTarget(null);
+                                setSpendReset((current) => current + 1);
+                                setModal((current) =>
+                                    current === 'binding' ? null : current,
+                                );
                             })
                         }
                     >
-                        Bind & export
-                        <FileDown size={15} />
+                        Bind graph
+                        <ArrowRight size={15} />
                     </button>
                     {error && (
                         <pre className="error-message" role="alert">

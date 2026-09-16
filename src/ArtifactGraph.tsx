@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Background,
     Controls,
@@ -6,17 +6,31 @@ import {
     MiniMap,
     Position,
     ReactFlow,
+    useReactFlow,
     type Edge,
     type Node,
     type NodeProps,
 } from '@xyflow/react';
-import { ArrowDownRight, Box, GitBranch, LockKeyhole } from 'lucide-react';
+import {
+    ArrowDownRight,
+    ArrowRight,
+    Box,
+    Crosshair,
+    FileDown,
+    GitBranch,
+    LockKeyhole,
+} from 'lucide-react';
 import type {
     Explanation,
     ObjectExplanation,
     TemplateExplanation,
 } from '../shared/studio';
 import { CopyButton, JsonDetails, formatSats, shortValue } from './ui';
+import {
+    templateBindingKey,
+    type BoundArtifact,
+    type BoundTransaction,
+} from './artifactSession';
 
 export type ArtifactSelection =
     | { kind: 'output'; object: ObjectExplanation }
@@ -26,11 +40,17 @@ export type ArtifactSelection =
           template: TemplateExplanation;
       };
 type OutputNode = Node<
-    { title: string; object: ObjectExplanation },
+    {
+        title: string;
+        object: ObjectExplanation;
+        outpoint?: string;
+        mock?: boolean;
+        allocation?: number;
+    },
     'artifact-output'
 >;
 type TemplateNode = Node<
-    { template: TemplateExplanation },
+    { template: TemplateExplanation; linked?: boolean; mock?: boolean },
     'artifact-template'
 >;
 
@@ -45,8 +65,18 @@ function OutputCard({ data, selected }: NodeProps<OutputNode>) {
             </div>
             <strong>{data.title}</strong>
             <div className="node-value">
-                {formatSats(data.object.required_input_sats)}{' '}
-                <span>required</span>
+                {formatSats(data.allocation ?? data.object.required_input_sats)}{' '}
+                <span>
+                    {data.allocation === undefined ? 'required' : 'allocated'}
+                </span>
+            </div>
+            <div
+                className={`node-binding ${data.outpoint ? 'linked' : ''}`}
+                title={data.outpoint}
+            >
+                {data.outpoint
+                    ? `${data.mock ? 'Mock outpoint' : 'Linked outpoint'} · ${data.outpoint.slice(0, 8)}…:${data.outpoint.split(':').at(-1)}`
+                    : 'Unbound output'}
             </div>
             <Handle type="source" position={Position.Bottom} />
         </div>
@@ -72,6 +102,13 @@ function TemplateCard({ data, selected }: NodeProps<TemplateNode>) {
                 {formatSats(template.reserved_fee_sats)}{' '}
                 <span>reserved fee</span>
             </div>
+            <div className={`node-binding ${data.linked ? 'linked' : ''}`}>
+                {data.linked
+                    ? data.mock
+                        ? 'Mock-linked PSBT'
+                        : 'Linked PSBT'
+                    : 'Unbound template'}
+            </div>
             <Handle type="source" position={Position.Bottom} />
         </div>
     );
@@ -83,7 +120,10 @@ const nodeTypes = {
 };
 
 /** Occurrence locations, rather than reusable source paths, identify graph nodes. */
-export function artifactLayout(explanation: Explanation) {
+export function artifactLayout(
+    explanation: Explanation,
+    binding?: BoundArtifact | null,
+) {
     const objects = new Map(
         explanation.artifact.nodes.map((object) => [object.location, object]),
     );
@@ -92,7 +132,12 @@ export function artifactLayout(explanation: Explanation) {
     const selections = new Map<string, ArtifactSelection>();
     let column = 0;
     const visited = new Set<string>();
-    function visit(location: string, title: string, depth: number): number {
+    function visit(
+        location: string,
+        title: string,
+        depth: number,
+        allocation?: number,
+    ): number {
         const object = objects.get(location);
         if (!object || visited.has(location)) return column++ * 290;
         visited.add(location);
@@ -105,6 +150,7 @@ export function artifactLayout(explanation: Explanation) {
                     output.contract_location,
                     output.name ?? `Output ${output.index}`,
                     depth + 2,
+                    output.amount_sats,
                 );
                 edges.push({
                     id: `${templateId}:${output.index}`,
@@ -124,8 +170,16 @@ export function artifactLayout(explanation: Explanation) {
                 id: templateId,
                 type: 'artifact-template',
                 ariaLabel: `${template.kind} transaction, ${template.outputs.length} outputs, ${formatSats(template.reserved_fee_sats)} reserved fee`,
-                position: { x, y: (depth + 1) * 170 },
-                data: { template },
+                position: { x, y: (depth + 1) * 195 },
+                data: {
+                    template,
+                    linked: Boolean(
+                        binding?.occurrences[location]?.transactions[
+                            templateBindingKey(template)
+                        ],
+                    ),
+                    mock: binding?.funding.kind === 'mock',
+                },
             });
             selections.set(templateId, { kind: 'template', object, template });
             edges.push({
@@ -148,9 +202,15 @@ export function artifactLayout(explanation: Explanation) {
         nodes.push({
             id,
             type: 'artifact-output',
-            ariaLabel: `${title}, ${formatSats(object.required_input_sats)} required input`,
-            position: { x, y: depth * 170 },
-            data: { title, object },
+            ariaLabel: `${title}, ${formatSats(allocation ?? object.required_input_sats)} ${allocation === undefined ? 'required input' : 'allocated'}`,
+            position: { x, y: depth * 195 },
+            data: {
+                title,
+                object,
+                outpoint: binding?.occurrences[location]?.outpoint,
+                mock: binding?.funding.kind === 'mock',
+                allocation,
+            },
         });
         selections.set(id, { kind: 'output', object });
         return x;
@@ -162,22 +222,60 @@ export function artifactLayout(explanation: Explanation) {
     return { nodes, edges, selections };
 }
 
+export function selectionId(selection: ArtifactSelection | null) {
+    if (!selection) return 'output:';
+    const id = `output:${selection.object.location}`;
+    return selection.kind === 'output'
+        ? id
+        : `${id}:${selection.template.kind}:${selection.template.hash}`;
+}
+
+function FocusSelection({ id, request }: { id: string; request: number }) {
+    const flow = useReactFlow();
+    const lastRequest = useRef(request);
+    useEffect(() => {
+        if (request !== lastRequest.current && request)
+            void flow.fitView({
+                nodes: [{ id }],
+                padding: 0.8,
+                maxZoom: 1,
+                duration: 200,
+            });
+        lastRequest.current = request;
+        // Navigation focuses a node; ordinary selection preserves the viewport.
+    }, [request, id, flow]);
+    return null;
+}
+
 export function ArtifactGraph({
     explanation,
+    binding,
+    selection,
+    focusRequest = 0,
     onSelect,
 }: {
     explanation: Explanation;
+    binding?: BoundArtifact | null;
+    selection: ArtifactSelection | null;
+    focusRequest?: number;
     onSelect: (selection: ArtifactSelection) => void;
 }) {
-    const graph = useMemo(() => artifactLayout(explanation), [explanation]);
-    const [selectedId, setSelectedId] = useState('output:');
+    const graph = useMemo(
+        () => artifactLayout(explanation, binding),
+        [explanation, binding],
+    );
+    const [measurements, setMeasurements] = useState<
+        Record<string, { width: number; height: number }>
+    >({});
+    const selectedId = selectionId(selection);
     const nodes = useMemo(
         () =>
             graph.nodes.map((node) => ({
                 ...node,
+                measured: measurements[node.id],
                 selected: node.id === selectedId,
             })),
-        [graph.nodes, selectedId],
+        [graph.nodes, selectedId, measurements],
     );
     return (
         <div className="artifact-canvas" aria-label="Validated contract graph">
@@ -192,13 +290,33 @@ export function ArtifactGraph({
                 nodesDraggable={false}
                 nodesConnectable={false}
                 onNodesChange={(changes) => {
+                    setMeasurements((previous) => {
+                        let next = previous;
+                        for (const change of changes) {
+                            if (
+                                change.type !== 'dimensions' ||
+                                !change.dimensions ||
+                                change.dimensions.width <= 0 ||
+                                change.dimensions.height <= 0
+                            )
+                                continue;
+                            const old = previous[change.id];
+                            if (
+                                old?.width === change.dimensions.width &&
+                                old.height === change.dimensions.height
+                            )
+                                continue;
+                            if (next === previous) next = { ...previous };
+                            next[change.id] = change.dimensions;
+                        }
+                        return next;
+                    });
                     const change = changes.find(
                         (change) => change.type === 'select' && change.selected,
                     );
                     if (change?.type === 'select') {
                         const selected = graph.selections.get(change.id);
                         if (selected) {
-                            setSelectedId(change.id);
                             onSelect(selected);
                         }
                     }
@@ -206,11 +324,11 @@ export function ArtifactGraph({
                 onNodeClick={(_, node) => {
                     const selected = graph.selections.get(node.id);
                     if (selected) {
-                        setSelectedId(node.id);
                         onSelect(selected);
                     }
                 }}
             >
+                <FocusSelection id={selectedId} request={focusRequest} />
                 <Background color="#c8d2cd" gap={22} size={1} />
                 <Controls showInteractive={false} />
                 <MiniMap
@@ -237,8 +355,27 @@ export function ArtifactGraph({
 
 export function ArtifactInspector({
     selection,
+    explanation,
+    binding,
+    disabled,
+    onNavigate,
+    onBind,
+    onSpend,
+    onExportPsbt,
+    onAction,
 }: {
     selection: ArtifactSelection | null;
+    explanation: Explanation;
+    binding: BoundArtifact | null;
+    disabled: boolean;
+    onNavigate: (selection: ArtifactSelection) => void;
+    onBind: () => void;
+    onSpend: (selection: ArtifactSelection) => void;
+    onExportPsbt: (transaction: BoundTransaction) => void;
+    onAction?: (
+        object: ObjectExplanation,
+        action: ObjectExplanation['actions'][number],
+    ) => void;
 }) {
     if (!selection)
         return (
@@ -252,6 +389,17 @@ export function ArtifactInspector({
             </div>
         );
     const object = selection.object;
+    const occurrence = binding?.occurrences[object.location];
+    const boundTx =
+        selection.kind === 'template'
+            ? occurrence?.transactions[templateBindingKey(selection.template)]
+            : undefined;
+    const navigateOutput = (location: string) => {
+        const target = explanation.artifact.nodes.find(
+            (candidate) => candidate.location === location,
+        );
+        if (target) onNavigate({ kind: 'output', object: target });
+    };
     if (selection.kind === 'template') {
         const tx = selection.template;
         return (
@@ -267,6 +415,47 @@ export function ArtifactInspector({
                         ? 'This template is committed by the contract.'
                         : 'This is a proposed transaction. Its presence does not grant spending authority.'}
                 </p>
+                <div className="graph-actions">
+                    <span className={`badge ${boundTx ? 'teal' : ''}`}>
+                        {boundTx
+                            ? binding?.funding.kind === 'mock'
+                                ? 'Mock-linked PSBT'
+                                : 'Linked PSBT'
+                            : 'Unbound template'}
+                    </span>
+                    {boundTx ? (
+                        <>
+                            <button
+                                className="button primary"
+                                disabled={disabled}
+                                onClick={() => onSpend(selection)}
+                            >
+                                Review spend <ArrowRight size={14} />
+                            </button>
+                            <button
+                                className="button small"
+                                disabled={disabled}
+                                onClick={() => onExportPsbt(boundTx)}
+                            >
+                                <FileDown size={14} /> Export PSBT
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            className="button primary"
+                            disabled={disabled}
+                            onClick={onBind}
+                        >
+                            Bind graph to review spend
+                        </button>
+                    )}
+                    <button
+                        className="button subtle small"
+                        onClick={() => navigateOutput(object.location)}
+                    >
+                        <Crosshair size={13} /> Go to source contract
+                    </button>
+                </div>
                 <dl className="facts">
                     <div>
                         <dt>Minimum funding</dt>
@@ -286,7 +475,13 @@ export function ArtifactInspector({
                 <h3>Output allocation</h3>
                 <div className="allocation-list">
                     {tx.outputs.map((output) => (
-                        <div key={output.index}>
+                        <button
+                            key={output.index}
+                            onClick={() =>
+                                navigateOutput(output.contract_location)
+                            }
+                            title="Go to receiving contract"
+                        >
                             <span>
                                 <small>
                                     {output.index.toString().padStart(2, '0')}
@@ -294,7 +489,8 @@ export function ArtifactInspector({
                                 {output.name ?? 'Unnamed output'}
                             </span>
                             <strong>{formatSats(output.amount_sats)}</strong>
-                        </div>
+                            <ArrowRight size={13} />
+                        </button>
                     ))}
                 </div>
                 <JsonDetails
@@ -315,6 +511,103 @@ export function ArtifactInspector({
                     ? 'Contract root'
                     : 'Receiving contract'}
             </h2>
+            <div className="graph-actions">
+                <span className={`badge ${occurrence ? 'teal' : ''}`}>
+                    {occurrence
+                        ? binding?.funding.kind === 'mock'
+                            ? 'Mock-linked output'
+                            : 'Linked output'
+                        : 'Unbound output'}
+                </span>
+                {occurrence ? (
+                    <>
+                        <code className="outpoint-block">
+                            {occurrence.outpoint}
+                        </code>
+                        <CopyButton
+                            text={occurrence.outpoint}
+                            label="Copy outpoint"
+                        />
+                        <button
+                            className="button small"
+                            disabled={disabled}
+                            onClick={() => onSpend(selection)}
+                        >
+                            Prepare custom spend <ArrowRight size={14} />
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        className="button primary"
+                        disabled={disabled}
+                        onClick={onBind}
+                    >
+                        Bind graph
+                    </button>
+                )}
+            </div>
+            {explanation.artifact.nodes.flatMap((parent) =>
+                parent.templates
+                    .filter((tx) =>
+                        tx.outputs.some(
+                            (output) =>
+                                output.contract_location === object.location,
+                        ),
+                    )
+                    .map((tx) => (
+                        <button
+                            className="button subtle small"
+                            key={`${parent.location}:${tx.kind}:${tx.hash}`}
+                            onClick={() =>
+                                onNavigate({
+                                    kind: 'template',
+                                    object: parent,
+                                    template: tx,
+                                })
+                            }
+                        >
+                            <Crosshair size={13} /> Go to creating transaction
+                        </button>
+                    )),
+            )}
+            {object.templates.length > 0 && (
+                <>
+                    <h3>Next transactions</h3>
+                    <div className="transaction-choices">
+                        {object.templates.map((tx) => (
+                            <button
+                                key={`${tx.kind}:${tx.hash}`}
+                                onClick={() =>
+                                    onNavigate({
+                                        kind: 'template',
+                                        object,
+                                        template: tx,
+                                    })
+                                }
+                            >
+                                <span>
+                                    <strong>
+                                        {tx.kind === 'committed'
+                                            ? 'Committed'
+                                            : 'Suggested'}{' '}
+                                        · {tx.hash.slice(0, 8)}
+                                    </strong>
+                                    <small>
+                                        {tx.outputs
+                                            .map(
+                                                (output) =>
+                                                    output.name ??
+                                                    `Output ${output.index}`,
+                                            )
+                                            .join(', ')}
+                                    </small>
+                                </span>
+                                <ArrowRight size={14} />
+                            </button>
+                        ))}
+                    </div>
+                </>
+            )}
             <dl className="facts">
                 <div>
                     <dt>Required input</dt>
@@ -354,21 +647,32 @@ export function ArtifactInspector({
                             <strong>{shortValue(action.path)}</strong>
                             <span className="muted">
                                 {action.kind ?? 'Unspecified mode'} ·{' '}
-                                {action.schema
+                                {action.schema !== null
                                     ? 'JSON request'
                                     : 'Local Rust callback'}
                             </span>
-                            {action.schema && (
+                            {action.schema !== null && (
                                 <JsonDetails
                                     title="Request schema"
                                     value={action.schema}
                                 />
+                            )}
+                            {action.schema !== null && (
+                                <button
+                                    className="button small"
+                                    disabled={disabled || !onAction}
+                                    onClick={() => onAction?.(object, action)}
+                                >
+                                    Generate proposal <ArrowRight size={13} />
+                                </button>
                             )}
                         </div>
                     ))}
                     <p className="help-text">
                         An advertised action describes a request interface; it
                         is not spending authorization.
+                        {!onAction &&
+                            ' Build this contract in Studio to retain the source needed to generate proposals.'}
                     </p>
                 </>
             )}
