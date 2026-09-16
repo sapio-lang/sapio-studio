@@ -13,7 +13,7 @@ import {
     sameJsonValue,
     type CompilationSource,
 } from './compilationSource';
-import { initialValue } from './patching/schema';
+import { initialValue, object, resolveSchema } from './patching/schema';
 import { SchemaValueEditor } from './patching/SchemaValueEditor';
 import { JsonDetails, Spinner, errorMessage } from './ui';
 
@@ -37,6 +37,8 @@ export function ProposalDialog({
     onGenerated: (text: string, source: CompilationSource) => Promise<void>;
 }) {
     const schema = action.schema!;
+    const requestShape = resolveSchema(schema, schema);
+    const unitRequest = object(requestShape) && requestShape.type === 'null';
     const actionPath = typeof action.path === 'string' ? action.path : null;
     const origins = useMemo(
         () =>
@@ -49,7 +51,7 @@ export function ProposalDialog({
         origins.length === 1 ? origins[0]!.id : '',
     );
     const [value, setValue] = useState<JsonValue | undefined>(() =>
-        initialValue({ schema, root: schema }),
+        unitRequest ? null : initialValue({ schema, root: schema }),
     );
     const [invalid, setInvalid] = useState<Set<string>>(new Set());
     const [busy, setBusy] = useState(false);
@@ -153,24 +155,30 @@ export function ProposalDialog({
                     proposal.
                 </p>
             )}
-            <fieldset className="module-value-fields" disabled={busy}>
-                <SchemaValueEditor
-                    schema={schema}
-                    rootSchema={schema}
-                    value={value}
-                    onChange={setValue}
-                    label="Action request"
-                    required
-                    onValidityChange={(_, valid, editorId) =>
-                        setInvalid((previous) => {
-                            const next = new Set(previous);
-                            if (valid) next.delete(editorId);
-                            else next.add(editorId);
-                            return next;
-                        })
-                    }
-                />
-            </fieldset>
+            {unitRequest ? (
+                <p className="notice">
+                    This action takes no request parameters.
+                </p>
+            ) : (
+                <fieldset className="module-value-fields" disabled={busy}>
+                    <SchemaValueEditor
+                        schema={schema}
+                        rootSchema={schema}
+                        value={value}
+                        onChange={setValue}
+                        label="Action request"
+                        required
+                        onValidityChange={(_, valid, editorId) =>
+                            setInvalid((previous) => {
+                                const next = new Set(previous);
+                                if (valid) next.delete(editorId);
+                                else next.add(editorId);
+                                return next;
+                            })
+                        }
+                    />
+                </fieldset>
+            )}
             <JsonDetails title="Request schema" value={schema} />
             <button
                 className="button primary"
